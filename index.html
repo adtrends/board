@@ -850,16 +850,12 @@
       remember('lvl-' + who, String(lv.n));
       out += '<div class="level' + (up ? ' up' : '') + '">' +
         (up ? '<div class="levelup display">' + esc(T.levelUp(lv.name)) + '</div>' : '') +
-        '<div class="lv-row tap" data-toggle="xp"><div class="lv-badge display">' + lv.n + '</div><div class="lv-main">' +
+        '<div class="lv-row"><div class="lv-badge display">' + lv.n + '</div><div class="lv-main">' +
           '<div class="big display">' + esc(T.level(lv.n, lv.name)) + '</div>' +
           '<div class="bar"><span style="width:' + Math.round((lv.progress || 0) * 100) + '%"></span></div>' +
-          '<div class="sub">' + esc(lv.next_at ? T.toNext(lv.next_at - lv.xp, lv.next_name) : T.maxLevel) + ' · <span data-count="' + lv.xp + '">0</span> XP · <em>' + T.tapMore + '</em></div>' +
+          '<div class="sub">' + esc(lv.next_at ? T.toNext(lv.next_at - lv.xp, lv.next_name) : T.maxLevel) + ' · <span data-count="' + lv.xp + '">0</span> XP</div>' +
         '</div></div>' +
-        (lv.parts && openRows['xp'] ? '<ul class="xp">' +
-          '<li><b>' + (lv.parts.on_time || 0) + '</b> ' + T.xpOnTime + ' <span>×10</span></li>' +
-          '<li><b>' + (lv.parts.late || 0) + '</b> ' + T.xpLate + ' <span>×4</span></li>' +
-          '<li><b>' + (lv.parts.streak || 0) + '</b> ' + T.xpStreak + ' <span>×3</span></li>' +
-          '<li><b>' + (lv.parts.sales_up || 0) + '</b> ' + T.xpSales + ' <span>×20</span></li></ul>' : '') +
+
         (rk && rk.pos ? '<div class="rank"><span class="display">' + esc(T.rank(rk.pos, rk.of)) + '</span><small>' + T.rankSub + '</small></div>' : '') +
       '</div>';
     }
@@ -868,12 +864,10 @@
     var w = parseInt(st.weeks, 10) || 0;
     var cls = w >= 4 ? 'hot' : (w === 0 ? 'cold' : '');
     var hist = Array.isArray(st.history) ? st.history : [];
-    out += '<div class="streak ' + cls + ' tap" data-toggle="streak"><div class="flame" aria-hidden="true">' + (w === 0 ? '·' : '🔥') + '</div><div style="flex:1">' +
+    out += '<div class="streak ' + cls + '"><div class="flame" aria-hidden="true">' + (w === 0 ? '·' : '🔥') + '</div><div style="flex:1">' +
       '<div class="big display">' + esc(w === 0 ? T.noStreak : T.streak(w)) + '</div>' +
       '<div class="sub">' + esc(w === 0 ? T.startStreak : (T.streakSub + ' · ' + T.best(parseInt(st.best, 10) || w))) + '</div>' +
       (st.at_risk ? '<div class="risk">' + T.risk + '</div>' : '') +
-      (hist.length ? '<div class="dots" aria-hidden="true">' + hist.map(function (h, i) { return '<i class="' + (h.done ? 'on' : (h.known ? 'off' : 'na')) + '" style="animation-delay:' + (i * 0.07) + 's"></i>'; }).join('') + '</div>' : '') +
-      (openRows['streak'] && hist.length ? '<ul class="hist">' + hist.map(function (h) { var d = parseDate(h.week); return '<li class="' + (h.done ? 'on' : 'off') + '">' + (d ? fmtDay(d) : '') + ' · ' + (h.done ? T.weekDone : (h.known ? T.weekMiss : T.weekUnknown)) + '</li>'; }).join('') + '</ul>' : '') +
       '</div></div>';
     /* stamp card */
     var sp = g.stamps || {}; var slots = Array.isArray(sp.slots) ? sp.slots : [];
