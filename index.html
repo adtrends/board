@@ -593,9 +593,9 @@
   var MONTHS_MS = ['Jan', 'Feb', 'Mac', 'Apr', 'Mei', 'Jun', 'Jul', 'Ogos', 'Sep', 'Okt', 'Nov', 'Dis'];
   /* UI strings. Malay for counters, English for Brunei (Tze 2026-09-08). Row text arrives already localised from HQ. */
   var STR = {
-    ms: { done: '✓ Siap', upcoming: '○ Akan datang', pending: '! Belum siap', overdue: 'Lewat', due: 'Tarikh akhir', wasDue: 'Sepatutnya', gate: 'Tarikh tutup', now: 'SEKARANG',
-          pendingN: function (n) { return n + ' belum siap'; }, clear: 'Semua siap', tDone: 'Siap', tPending: 'Belum siap', tUpcoming: 'Akan datang', overdueN: function (n) { return n + ' lewat'; }, upcomingN: function (n) { return n + ' akan datang'; },
-          hintPending: 'Tekan item untuk butiran.', hintUpcoming: 'Tiada apa perlu dibuat sekarang. Tekan item untuk butiran.', hintClear: 'Tiada apa perlu dibuat. Syabas!',
+    ms: { done: '✓ Siap', upcoming: '○ Belum tiba masa', pending: '! Belum siap', overdue: 'Lewat', due: 'Tarikh akhir', wasDue: 'Sepatutnya', gate: 'Tarikh tutup', now: 'SEKARANG',
+          pendingN: function (n) { return n + ' belum siap'; }, clear: 'Semua siap', tDone: 'Siap', tPending: 'Belum siap', tUpcoming: 'Belum tiba masa', overdueN: function (n) { return n + ' lewat'; }, upcomingN: function (n) { return n + ' belum tiba masa'; },
+          hintPending: 'Tekan item untuk butiran.', hintUpcoming: 'Tiada apa perlu dibuat sekarang. Tarikh akhir ada pada setiap item.', hintClear: 'Tiada apa perlu dibuat. Syabas!',
           demo: 'Data contoh', demoSub: 'Outlet contoh sahaja. Buka link outlet anda dari group WhatsApp.', supervisor: 'Penyelia', month: 'Bulan', updated: 'Dikemas kini ', stale: ' · mungkin lapuk', unknown: 'Masa kemas kini tidak diketahui · mungkin lapuk',
           nothing: 'Tiada tugasan bulan ini.', foot: 'Hantar dalam group WhatsApp seperti biasa. Senarai ini dikemas kini setiap kali HQ jalankan semakan.',
           streak: function (n) { return n + ' minggu berturut-turut'; }, streakSub: 'ticketing mingguan lengkap', noStreak: 'Belum ada streak', startStreak: 'Ticket setiap hari minggu ini untuk mula', best: function (n) { return 'Rekod terbaik ' + n + ' minggu'; }, risk: 'Ticket sebelum Isnin untuk kekalkan!',
