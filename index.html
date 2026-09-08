@@ -361,6 +361,33 @@
   .gate strong { color: var(--ink); font-weight: 600; }
 
   /* Foot */
+  /* ---- game layer: streak, stamp card, badges (2026-09-08) ---- */
+  .game { margin: 0 16px 14px; display: grid; gap: 10px; }
+  .streak { display: flex; align-items: center; gap: 12px; background: var(--surface); border-radius: 14px; padding: 12px 14px; box-shadow: var(--shadow); }
+  .streak .flame { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; background: var(--amber-bg); color: var(--amber); font-size: 24px; flex: 0 0 auto; }
+  .streak.hot .flame { background: #FBE3C4; color: #C2410C; }
+  .streak.cold .flame { background: var(--upcoming-bg); color: var(--upcoming); }
+  .streak .big { font-size: 22px; line-height: 1.1; }
+  .streak .sub { color: var(--muted); font-size: 14px; margin-top: 2px; }
+  .streak .risk { color: var(--amber); font-weight: 600; font-size: 14px; margin-top: 2px; }
+  .card { background: var(--surface); border-radius: 14px; padding: 12px 14px 14px; box-shadow: var(--shadow); }
+  .card .ttl { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px; }
+  .card .ttl .display { font-size: 19px; }
+  .card .ttl .cnt { font-size: 14px; color: var(--muted); }
+  .stamps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px 6px; }
+  .stamp { text-align: center; font-size: 12px; color: var(--muted); line-height: 1.2; }
+  .stamp .c { width: 54px; height: 54px; margin: 0 auto 5px; border-radius: 50%; border: 2px dashed var(--line); display: grid; place-items: center; font-size: 22px; color: var(--upcoming); background: var(--ground); }
+  .stamp.done .c { border: 2px solid var(--done); background: var(--done-bg); color: var(--done); transform: rotate(-6deg); }
+  .stamp.done.late .c { border-color: var(--amber); background: var(--amber-bg); color: var(--amber); }
+  .stamp .d { display: block; color: var(--ink); font-weight: 600; }
+  .badges { display: flex; flex-wrap: wrap; gap: 8px; }
+  .badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 999px; background: var(--done-bg); color: var(--done); font-weight: 600; font-size: 14px; }
+  .badge.gold { background: #F6E7B4; color: #7A5A00; }
+  .badges .none { color: var(--muted); font-size: 14px; }
+  .confetti { position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 5; }
+  .confetti i { position: absolute; top: -12px; width: 9px; height: 14px; border-radius: 2px; animation: fall 2.6s ease-in forwards; }
+  @keyframes fall { to { transform: translateY(105vh) rotate(540deg); opacity: 0; } }
+  @media (prefers-reduced-motion: reduce) { .confetti { display: none; } .stamp.done .c { transform: none; } }
   .foot {
     margin-top: auto;
     padding: 0 20px 28px;
@@ -493,7 +520,21 @@
         { id: 'it_in', label: 'IT to outlet', status: 'pending', due: null, summary: '1 IT not received', detail: ['IT 26090777, 36 pcs, 5 days'] },
         { id: 'stocktake', label: 'Stocktake ' + MONTHS[m], status: 'pending', due: iso(monthEnd), summary: 'Step 2 of 4', detail: [], stocktake: { step: 2, steps: ['Clear open ITs', 'Sales matched to tickets', 'Count done, ST2 issued', 'Variance confirmed'], closeGate: iso(monthEnd) } },
         { id: 'punchcard', label: 'Punchcard ' + MONTHS[m], status: 'done', due: y + '-' + mm + '-03', summary: 'Received 1 ' + MONTHS[m], detail: [] }
-      ]
+      ],
+      game: {
+        streak: { weeks: 6, best: 8, at_risk: true },
+        stamps: { month: y + '-' + mm, slots: [
+          { id: 'ticket_week', label: 'Weekly ticketing', done: null, progress: '1/2', on_time: false },
+          { id: 'ticket_month', label: 'Monthly ticketing ' + MONTHS[(m + 11) % 12], done: null, on_time: false },
+          { id: 'ranking', label: 'Ranking ' + MONTHS[(m + 11) % 12], done: null, on_time: false },
+          { id: 'timetable', label: 'Timetable ' + MONTHS[nextM.getMonth()], done: iso(new Date(y, m, Math.max(1, now.getDate() - 2))) + 'T16:43', on_time: true },
+          { id: 'punchcard', label: 'Punchcard ' + MONTHS[(m + 11) % 12], done: iso(new Date(y, m, 1)) + 'T09:10', on_time: true },
+          { id: 'stocktake', label: 'Month close ' + MONTHS[(m + 11) % 12], done: null, on_time: false },
+          { id: 'it_in', label: 'ITs received', live: true, done: null, on_time: false }
+        ] },
+        badges: [ { month: iso(new Date(y, m - 1, 1)).slice(0, 7), label: MONTHS[(m + 11) % 12] + ' ' + (m === 0 ? y - 1 : y), gold: true } ],
+        points: { month: 2, max: 7 }
+      }
     };
   }
 
@@ -648,6 +689,49 @@
     return '<div class="headline ' + cls + '"><div class="big display">' + esc(big) + '</div>' + (sub ? '<div class="sub">' + sub + '</div>' : '') +
       '<div class="hint">' + hint + '</div></div>';
   }
+  function gameHtml(g, rows) {
+    if (!g || typeof g !== 'object') return '';
+    var out = '<div class="game">';
+    var st = g.streak || {};
+    var w = parseInt(st.weeks, 10) || 0;
+    var cls = w >= 4 ? 'hot' : (w === 0 ? 'cold' : '');
+    var sub = w === 0 ? 'Ticket every day this week to start one' : ('Best so far ' + (parseInt(st.best, 10) || w) + (st.best === 1 ? ' week' : ' weeks'));
+    out += '<div class="streak ' + cls + '"><div class="flame" aria-hidden="true">' + (w === 0 ? '·' : '🔥') + '</div><div>' +
+      '<div class="big display">' + (w === 0 ? 'No streak yet' : w + '-week ticketing streak') + '</div>' +
+      '<div class="sub">' + esc(sub) + '</div>' +
+      (st.at_risk ? '<div class="risk">Ticket by Monday to keep it</div>' : '') + '</div></div>';
+    var sp = g.stamps || {}; var slots = Array.isArray(sp.slots) ? sp.slots : [];
+    if (slots.length) {
+      var done = slots.filter(function (x) { return x.done; }).length;
+      var mm = /^(\d{4})-(\d{2})$/.exec(String(sp.month || ''));
+      var mname = mm ? MONTHS[+mm[2] - 1] : 'This month';
+      out += '<div class="card"><div class="ttl"><span class="display">' + esc(mname) + ' stamp card</span><span class="cnt">' + done + ' of ' + slots.length + ' stamped</span></div><div class="stamps">';
+      slots.forEach(function (x) {
+        var d = x.done ? parseDate(String(x.done).slice(0, 10)) : null;
+        var short = x.label.replace('Weekly ticketing', 'Weekly tickets').replace('Monthly ticketing', 'Monthly tickets');
+        out += '<div class="stamp' + (x.done ? ' done' : '') + (x.done && x.on_time === false ? ' late' : '') + '">' +
+          '<div class="c">' + (x.done ? '✓' : (x.progress ? esc(x.progress) : '')) + '</div>' +
+          esc(short) + (d ? '<span class="d">' + d.getDate() + ' ' + MONTHS[d.getMonth()] + '</span>' : (x.progress && !x.done ? '<span class="d">' + esc(x.progress) + ' weeks</span>' : '')) + '</div>';
+      });
+      out += '</div></div>';
+    }
+    var bd = Array.isArray(g.badges) ? g.badges : [];
+    out += '<div class="card"><div class="ttl"><span class="display">Badges</span><span class="cnt">' + bd.length + ' earned</span></div><div class="badges">' +
+      (bd.length ? bd.map(function (b) { return '<span class="badge' + (b.gold ? ' gold' : '') + '">' + (b.gold ? '★' : '✓') + ' ' + esc(b.label) + '</span>'; }).join('') :
+        '<span class="none">Complete every stamp in a month to earn its badge. All on time earns gold.</span>') + '</div></div>';
+    out += '</div>';
+    var pending = rows.filter(function (r) { return r.status === 'pending'; }).length;
+    if (!pending && rows.length) out += confettiHtml(sp.month);
+    return out;
+  }
+  function confettiHtml(month) {
+    var key = 'confetti-' + (month || '') + '-' + startOfToday().toDateString();
+    try { if (localStorage.getItem(key)) return ''; localStorage.setItem(key, '1'); } catch (e) { return ''; }
+    var cols = ['#2A7549', '#B8741A', '#3E4E62', '#B93A30', '#7A5A00'];
+    var h = '<div class="confetti" aria-hidden="true">';
+    for (var i = 0; i < 40; i++) h += '<i style="left:' + (Math.random() * 100) + '%;background:' + cols[i % cols.length] + ';animation-delay:' + (Math.random() * 0.8) + 's;animation-duration:' + (2 + Math.random() * 1.5) + 's"></i>';
+    return h + '</div>';
+  }
   function renderBoard(board, demo) {
     if (!board || typeof board !== 'object') { showInvalid(); return; }
     var rows = normaliseItems(board);
@@ -674,6 +758,7 @@
         : '<div class="updated stale">Update time unknown · may be out of date</div>') +
     '</div>';
     html += headlineHtml(rows);
+    html += gameHtml(board.game, rows);
     if (rows.length) html += '<div class="list">' + rows.map(rowHtml).join('') + '</div>';
     else html += '<div class="list"><div class="row"><div class="row-btn" style="cursor:default"><span class="row-main"><span class="summary">Nothing due this month.</span></span></div></div></div>';
     html += '<div class="foot">Post in your WhatsApp group as usual. This board updates after HQ’s next run.</div>';
