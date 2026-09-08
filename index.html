@@ -1,0 +1,806 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Outlet Pending Board</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&display=swap">
+<style>
+  :root {
+    --ground: #F1F3F5;
+    --surface: #FFFFFF;
+    --ink: #171B21;
+    --muted: #5B6470;
+    --line: #DDE2E7;
+    --chrome: #1D5C73;
+    --chrome-ink: #FFFFFF;
+    --chrome-soft: rgba(255,255,255,0.18);
+    --done: #1F7A48;
+    --done-bg: #E3F3EA;
+    --pending: #C4302B;
+    --pending-bg: #FBE7E5;
+    --overdue: #8B1A15;
+    --upcoming: #6B7280;
+    --upcoming-bg: #ECEEF1;
+    --amber: #A9671A;
+    --amber-bg: #FBEFDD;
+    --skeleton: #E4E8EC;
+    --focus: #1D5C73;
+    --shadow: 0 1px 2px rgba(23,27,33,0.06), 0 4px 14px rgba(23,27,33,0.06);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #0F1215;
+      --surface: #1A1F25;
+      --ink: #EDF0F3;
+      --muted: #9AA4AE;
+      --line: #2B323A;
+      --chrome: #163F4F;
+      --chrome-ink: #F3F7F9;
+      --chrome-soft: rgba(255,255,255,0.14);
+      --done: #5CC98A;
+      --done-bg: #16301F;
+      --pending: #F2716B;
+      --pending-bg: #3A1A18;
+      --overdue: #FFB3AE;
+      --upcoming: #A7B0BA;
+      --upcoming-bg: #262C33;
+      --amber: #E9AD5A;
+      --amber-bg: #33271A;
+      --skeleton: #262C33;
+      --focus: #6FB9D2;
+      --shadow: 0 1px 2px rgba(0,0,0,0.4), 0 4px 14px rgba(0,0,0,0.35);
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground: #0F1215;
+    --surface: #1A1F25;
+    --ink: #EDF0F3;
+    --muted: #9AA4AE;
+    --line: #2B323A;
+    --chrome: #163F4F;
+    --chrome-ink: #F3F7F9;
+    --chrome-soft: rgba(255,255,255,0.14);
+    --done: #5CC98A;
+    --done-bg: #16301F;
+    --pending: #F2716B;
+    --pending-bg: #3A1A18;
+    --overdue: #FFB3AE;
+    --upcoming: #A7B0BA;
+    --upcoming-bg: #262C33;
+    --amber: #E9AD5A;
+    --amber-bg: #33271A;
+    --skeleton: #262C33;
+    --focus: #6FB9D2;
+    --shadow: 0 1px 2px rgba(0,0,0,0.4), 0 4px 14px rgba(0,0,0,0.35);
+  }
+
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: "Barlow", -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-size: 16px;
+    line-height: 1.35;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+  .display {
+    font-family: "Barlow Condensed", "Arial Narrow", "Roboto Condensed", Impact, sans-serif;
+    font-weight: 700;
+    letter-spacing: 0.005em;
+  }
+  .app {
+    max-width: 480px;
+    margin: 0 auto;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background: var(--ground);
+  }
+  .banner {
+    background: var(--amber);
+    color: #FFFFFF;
+    font-weight: 600;
+    font-size: 15px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    text-align: center;
+    padding: 8px 16px;
+  }
+  .banner small {
+    display: block;
+    font-weight: 400;
+    letter-spacing: 0;
+    text-transform: none;
+    font-size: 14px;
+    opacity: 0.95;
+  }
+
+  /* Header band */
+  .head {
+    background: var(--chrome);
+    color: var(--chrome-ink);
+    padding: 18px 20px 20px;
+  }
+  .head-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .head-main { flex: 1 1 auto; min-width: 0; }
+  .code {
+    font-size: 26px;
+    line-height: 1;
+    overflow-wrap: anywhere;
+  }
+  .name {
+    margin-top: 6px;
+    font-size: 16px;
+    font-weight: 500;
+    opacity: 0.92;
+    overflow-wrap: anywhere;
+  }
+  .badge-brand {
+    flex: 0 0 auto;
+    background: var(--chrome-ink);
+    color: var(--chrome);
+    font-family: "Barlow Condensed", "Arial Narrow", sans-serif;
+    font-weight: 700;
+    font-size: 22px;
+    line-height: 1;
+    padding: 8px 10px 7px;
+    border-radius: 6px;
+    min-width: 48px;
+    text-align: center;
+  }
+  .meta {
+    margin-top: 14px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 16px;
+    font-size: 15px;
+    opacity: 0.92;
+  }
+  .meta span { white-space: nowrap; }
+  .meta .lbl { opacity: 0.75; margin-right: 4px; }
+  .updated {
+    margin-top: 8px;
+    font-size: 14px;
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 4px;
+    background: var(--chrome-soft);
+  }
+  .updated.stale {
+    background: var(--amber);
+    color: #FFFFFF;
+    font-weight: 600;
+  }
+
+  /* Headline */
+  .headline {
+    padding: 18px 20px 12px;
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .headline .big {
+    font-size: 44px;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+  .headline .sub {
+    font-size: 17px;
+    font-weight: 500;
+    color: var(--muted);
+  }
+  .headline.is-pending .big { color: var(--pending); }
+  .headline.is-clear .big { color: var(--done); }
+  .headline .overdue-note {
+    font-weight: 600;
+    color: var(--overdue);
+  }
+
+  /* Rows */
+  .list {
+    margin: 0 12px 24px;
+    background: var(--surface);
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+  .row {
+    border-top: 1px solid var(--line);
+  }
+  .row:first-child { border-top: 0; }
+  .row-btn {
+    all: unset;
+    display: flex;
+    width: 100%;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    min-height: 64px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    box-sizing: border-box;
+  }
+  .row-btn:focus-visible {
+    outline: 3px solid var(--focus);
+    outline-offset: -3px;
+  }
+  .row-btn:active { background: var(--ground); }
+  .stripe {
+    flex: 0 0 5px;
+    align-self: stretch;
+    border-radius: 3px;
+    min-height: 40px;
+  }
+  .row.done .stripe { background: var(--done); }
+  .row.pending .stripe { background: var(--pending); }
+  .row.overdue .stripe { background: var(--overdue); }
+  .row.upcoming .stripe { background: var(--upcoming); }
+  .row-main { flex: 1 1 auto; min-width: 0; }
+  .row-top {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .label {
+    font-weight: 600;
+    font-size: 17px;
+  }
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 999px;
+    white-space: nowrap;
+    line-height: 1.2;
+  }
+  .pill.done { background: var(--done-bg); color: var(--done); }
+  .pill.pending { background: var(--pending-bg); color: var(--pending); }
+  .pill.upcoming { background: var(--upcoming-bg); color: var(--upcoming); }
+  .pill.overdue { background: var(--overdue); color: #FFFFFF; }
+  .summary {
+    margin-top: 4px;
+    font-size: 15px;
+    color: var(--muted);
+    overflow-wrap: anywhere;
+  }
+  .row.pending .summary,
+  .row.overdue .summary { color: var(--ink); }
+  .due {
+    flex: 0 0 auto;
+    text-align: right;
+    font-size: 14px;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+    line-height: 1.25;
+  }
+  .due strong {
+    display: block;
+    font-weight: 600;
+    color: var(--ink);
+    font-size: 15px;
+  }
+  .row.overdue .due strong { color: var(--overdue); }
+  .chev {
+    flex: 0 0 auto;
+    width: 12px;
+    height: 12px;
+    border-right: 2px solid var(--muted);
+    border-bottom: 2px solid var(--muted);
+    transform: rotate(45deg);
+    margin: 0 4px 4px 0;
+    transition: transform 160ms ease;
+  }
+  .row.open .chev { transform: rotate(225deg); margin: 4px 4px 0 0; }
+  .detail {
+    padding: 0 16px 16px 33px;
+    font-size: 15px;
+  }
+  .detail ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .detail li {
+    padding: 8px 12px;
+    background: var(--ground);
+    border-radius: 6px;
+    font-variant-numeric: tabular-nums;
+    overflow-wrap: anywhere;
+  }
+  .detail .empty { color: var(--muted); }
+
+  /* Stocktake tracker */
+  .steps {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+  .step {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 9px 0;
+    color: var(--muted);
+  }
+  .step .n {
+    flex: 0 0 28px;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 14px;
+    border: 2px solid var(--line);
+    font-variant-numeric: tabular-nums;
+  }
+  .step.done { color: var(--ink); }
+  .step.done .n { background: var(--done); border-color: var(--done); color: #FFFFFF; }
+  .step.current { color: var(--ink); font-weight: 600; }
+  .step.current .n { border-color: var(--pending); color: var(--pending); }
+  .step .tag {
+    margin-left: auto;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--pending);
+    font-weight: 700;
+    white-space: nowrap;
+  }
+  .gate {
+    margin-top: 10px;
+    font-size: 14px;
+    color: var(--muted);
+  }
+  .gate strong { color: var(--ink); font-weight: 600; }
+
+  /* Foot */
+  .foot {
+    margin-top: auto;
+    padding: 0 20px 28px;
+    font-size: 14px;
+    color: var(--muted);
+    text-align: center;
+  }
+
+  /* Skeleton */
+  .sk {
+    background: var(--skeleton);
+    border-radius: 6px;
+    animation: pulse 1.2s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.55; } }
+  @media (prefers-reduced-motion: reduce) {
+    .sk { animation: none; }
+    .chev { transition: none; }
+  }
+
+  /* Full-screen message */
+  .msg {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 32px 28px;
+    gap: 14px;
+  }
+  .msg .icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: var(--upcoming-bg);
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 34px;
+    line-height: 1;
+  }
+  .msg h1 {
+    margin: 0;
+    font-size: 30px;
+    line-height: 1.1;
+    text-wrap: balance;
+  }
+  .msg p {
+    margin: 0;
+    font-size: 17px;
+    color: var(--muted);
+    max-width: 30ch;
+    text-wrap: balance;
+  }
+</style>
+
+<div class="app" id="app" aria-live="polite">
+  <div class="head">
+    <div class="head-row">
+      <div class="head-main">
+        <div class="sk" style="height:26px;width:60%"></div>
+        <div class="sk" style="height:16px;width:85%;margin-top:10px"></div>
+      </div>
+      <div class="sk" style="height:38px;width:48px"></div>
+    </div>
+    <div class="sk" style="height:15px;width:45%;margin-top:16px"></div>
+    <div class="sk" style="height:22px;width:55%;margin-top:10px"></div>
+  </div>
+  <div class="headline"><div class="sk" style="height:44px;width:180px"></div></div>
+  <div class="list">
+    <div class="row"><div class="row-btn"><div class="stripe sk"></div><div class="row-main"><div class="sk" style="height:17px;width:55%"></div><div class="sk" style="height:14px;width:40%;margin-top:8px"></div></div></div></div>
+    <div class="row"><div class="row-btn"><div class="stripe sk"></div><div class="row-main"><div class="sk" style="height:17px;width:65%"></div><div class="sk" style="height:14px;width:35%;margin-top:8px"></div></div></div></div>
+    <div class="row"><div class="row-btn"><div class="stripe sk"></div><div class="row-main"><div class="sk" style="height:17px;width:50%"></div><div class="sk" style="height:14px;width:45%;margin-top:8px"></div></div></div></div>
+    <div class="row"><div class="row-btn"><div class="stripe sk"></div><div class="row-main"><div class="sk" style="height:17px;width:60%"></div><div class="sk" style="height:14px;width:30%;margin-top:8px"></div></div></div></div>
+  </div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  var COLLECTION = 'boards';
+  var STALE_MS = 48 * 60 * 60 * 1000;
+  var ROW_ORDER = ['ticket_week', 'ticket_month', 'ranking', 'timetable', 'it_in', 'stocktake', 'punchcard'];
+  var NO_PUNCHCARD_CHAINS = { PG: true, SG: true };
+
+  var DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  var MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+  var app = document.getElementById('app');
+  var openRows = {};
+  var rendered = false;
+
+  /* ---------- Demo data: a fictional outlet ---------- */
+  function demoBoard() {
+    var now = new Date();
+    var y = now.getFullYear(), m = now.getMonth();
+    var mm = String(m + 1).padStart(2, '0');
+    var nextM = new Date(y, m + 1, 1);
+    var iso = function (d) { return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
+    var sunday = new Date(y, m, now.getDate() + ((7 - now.getDay()) % 7));
+    var monthEnd = new Date(y, m + 1, 0);
+    var sat = new Date(y, m, now.getDate() - ((now.getDay() + 1) % 7));
+    var fri = new Date(sat.getFullYear(), sat.getMonth(), sat.getDate() - 1);
+    return {
+      outlet: 'BFDEMOAE-C',
+      name: 'AEON EXAMPLE MALL',
+      brand: 'BF',
+      chain: 'AE',
+      pic: 'DEMO',
+      month: y + '-' + mm,
+      updatedAt: new Date(now.getTime() - 35 * 60 * 1000).toISOString(),
+      items: [
+        { id: 'ticket_week', label: 'Weekly ticketing', status: 'pending', due: iso(sunday), summary: '2 days not ticketed', detail: [DAYS[fri.getDay()] + ' ' + fri.getDate() + ' ' + MONTHS[fri.getMonth()], DAYS[sat.getDay()] + ' ' + sat.getDate() + ' ' + MONTHS[sat.getMonth()]] },
+        { id: 'ticket_month', label: 'Monthly ticketing total', status: 'pending', due: iso(monthEnd), summary: 'Short RM 4,120', detail: ['Portal RM 21,860', 'Ticketed RM 17,740', 'Last ticket ' + fri.getDate() + ' ' + MONTHS[fri.getMonth()]] },
+        { id: 'ranking', label: 'Ranking submission', status: now.getDate() < 15 ? 'upcoming' : 'pending', due: y + '-' + mm + '-20', summary: now.getDate() < 15 ? 'Opens 15 ' + MONTHS[m] : 'Send this month’s ranking', detail: ['Expected: ' + MONTHS[m] + ' ' + y] },
+        { id: 'timetable', label: 'Timetable for ' + MONTHS[nextM.getMonth()], status: 'done', due: y + '-' + mm + '-15', summary: 'Received ' + Math.max(1, now.getDate() - 2) + ' ' + MONTHS[m], detail: [] },
+        { id: 'it_in', label: 'IT to outlet', status: 'pending', due: null, summary: '1 IT not received', detail: ['IT 26090777, 36 pcs, 5 days'] },
+        { id: 'stocktake', label: 'Stocktake ' + MONTHS[m], status: 'pending', due: iso(monthEnd), summary: 'Step 2 of 4', detail: [], stocktake: { step: 2, steps: ['Clear open ITs', 'Sales matched to tickets', 'Count done, ST2 issued', 'Variance confirmed'], closeGate: iso(monthEnd) } },
+        { id: 'punchcard', label: 'Punchcard ' + MONTHS[m], status: 'done', due: y + '-' + mm + '-03', summary: 'Received 1 ' + MONTHS[m], detail: [] }
+      ]
+    };
+  }
+
+  /* ---------- Helpers ---------- */
+  function esc(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+  function parseDate(s) {
+    if (!s || typeof s !== 'string') return null;
+    var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s);
+    if (m) return new Date(+m[1], +m[2] - 1, +m[3]);
+    var d = new Date(s);
+    return isNaN(d.getTime()) ? null : d;
+  }
+  function fmtDay(d) { return DAYS[d.getDay()] + ' ' + d.getDate() + ' ' + MONTHS[d.getMonth()]; }
+  function fmtStamp(d) {
+    var h = d.getHours(), mi = d.getMinutes();
+    var ap = h >= 12 ? 'pm' : 'am';
+    var h12 = h % 12; if (h12 === 0) h12 = 12;
+    return fmtDay(d) + ', ' + h12 + ':' + (mi < 10 ? '0' : '') + mi + ' ' + ap;
+  }
+  function startOfToday() { var n = new Date(); return new Date(n.getFullYear(), n.getMonth(), n.getDate()); }
+  function pickText(v, fallback) { return (typeof v === 'string' && v.trim()) ? v : fallback; }
+
+  /* ---------- Row normalisation ---------- */
+  function normaliseItems(board) {
+    var items = Array.isArray(board.items) ? board.items : [];
+    var byId = {};
+    items.forEach(function (it) { if (it && typeof it === 'object' && it.id) byId[it.id] = it; });
+    var ordered = [];
+    ROW_ORDER.forEach(function (id) { if (byId[id]) { ordered.push(byId[id]); delete byId[id]; } });
+    items.forEach(function (it) { if (it && it.id && byId[it.id]) ordered.push(it); });
+
+    var today = startOfToday();
+    var chain = String(board.chain || '').toUpperCase();
+    var out = [];
+    ordered.forEach(function (it) {
+      var status = String(it.status || '').toLowerCase();
+      if (status === 'na') return;
+      if (it.id === 'stocktake' && !(it.stocktake && typeof it.stocktake === 'object')) return;
+      if (it.id === 'punchcard' && NO_PUNCHCARD_CHAINS[chain]) return;
+      if (status !== 'done' && status !== 'pending' && status !== 'upcoming') status = 'pending';
+
+      var due = parseDate(it.due);
+      if (it.id === 'ranking' && status === 'upcoming' && due && today.getFullYear() === due.getFullYear() && today.getMonth() === due.getMonth() && today.getDate() >= 15) {
+        status = 'pending';
+      }
+      var overdue = status === 'pending' && due && due < today;
+      out.push({
+        id: String(it.id),
+        label: pickText(it.label, String(it.id)),
+        status: status,
+        overdue: !!overdue,
+        due: due,
+        summary: pickText(it.summary, ''),
+        detail: Array.isArray(it.detail) ? it.detail.filter(function (d) { return typeof d === 'string' && d.trim(); }) : [],
+        stocktake: it.id === 'stocktake' ? it.stocktake : null
+      });
+    });
+    return out;
+  }
+
+  /* ---------- Render ---------- */
+  function pillFor(row) {
+    if (row.status === 'done') return '<span class="pill done">✓ Done</span>';
+    if (row.status === 'upcoming') return '<span class="pill upcoming">○ Upcoming</span>';
+    return '<span class="pill pending">! Pending</span>' + (row.overdue ? ' <span class="pill overdue">Overdue</span>' : '');
+  }
+  function dueFor(row) {
+    if (!row.due) return '';
+    var d = fmtDay(row.due);
+    if (row.status === 'done') return '<div class="due">Was due<strong>' + esc(d) + '</strong></div>';
+    if (row.status === 'upcoming') return '<div class="due">Due<strong>' + esc(d) + '</strong></div>';
+    return '<div class="due">' + (row.overdue ? 'Was due' : 'Due') + '<strong>' + esc(d) + '</strong></div>';
+  }
+  function detailFor(row) {
+    if (row.stocktake) {
+      var st = row.stocktake;
+      var steps = Array.isArray(st.steps) && st.steps.length ? st.steps : ['Clear open ITs', 'Sales matched to tickets', 'Count done, ST2 issued', 'Variance confirmed'];
+      var cur = parseInt(st.step, 10); if (isNaN(cur)) cur = 1;
+      if (row.status === 'done') cur = steps.length + 1;
+      var html = '<ol class="steps">';
+      steps.forEach(function (s, i) {
+        var n = i + 1;
+        var cls = n < cur ? 'done' : (n === cur ? 'current' : '');
+        html += '<li class="step ' + cls + '"><span class="n">' + (n < cur ? '✓' : n) + '</span><span>' + esc(s) + '</span>' + (n === cur ? '<span class="tag">Now</span>' : '') + '</li>';
+      });
+      html += '</ol>';
+      var gate = parseDate(st.closeGate);
+      if (gate) html += '<div class="gate">Close gate <strong>' + esc(fmtDay(gate)) + '</strong></div>';
+      if (row.detail.length) html += '<ul style="margin-top:10px">' + row.detail.map(function (d) { return '<li>' + esc(d) + '</li>'; }).join('') + '</ul>';
+      return html;
+    }
+    if (!row.detail.length) return '<div class="empty">' + esc(row.summary || 'Nothing more to show.') + '</div>';
+    return '<ul>' + row.detail.map(function (d) { return '<li>' + esc(d) + '</li>'; }).join('') + '</ul>';
+  }
+  function rowHtml(row) {
+    var open = !!openRows[row.id];
+    var cls = 'row ' + row.status + (row.overdue ? ' overdue' : '') + (open ? ' open' : '');
+    return '<div class="' + cls + '" data-id="' + esc(row.id) + '">' +
+      '<button class="row-btn" type="button" aria-expanded="' + (open ? 'true' : 'false') + '">' +
+        '<span class="stripe" aria-hidden="true"></span>' +
+        '<span class="row-main">' +
+          '<span class="row-top"><span class="label">' + esc(row.label) + '</span>' + pillFor(row) + '</span>' +
+          (row.summary ? '<span class="summary" style="display:block">' + esc(row.summary) + '</span>' : '') +
+        '</span>' +
+        dueFor(row) +
+        '<span class="chev" aria-hidden="true"></span>' +
+      '</button>' +
+      (open ? '<div class="detail">' + detailFor(row) + '</div>' : '') +
+    '</div>';
+  }
+  function headlineHtml(rows) {
+    var pending = 0, upcoming = 0, overdue = 0;
+    rows.forEach(function (r) {
+      if (r.status === 'pending') { pending++; if (r.overdue) overdue++; }
+      else if (r.status === 'upcoming') upcoming++;
+    });
+    var cls = pending ? 'is-pending' : 'is-clear';
+    var big = pending ? pending + ' pending' : 'All clear';
+    var sub = '';
+    if (overdue) sub += '<span class="overdue-note">' + overdue + ' overdue</span>';
+    if (upcoming) sub += (sub ? ' · ' : '') + upcoming + ' upcoming';
+    return '<div class="headline ' + cls + '"><div class="big display">' + esc(big) + '</div>' + (sub ? '<div class="sub">' + sub + '</div>' : '') + '</div>';
+  }
+  function renderBoard(board, demo) {
+    if (!board || typeof board !== 'object') { showInvalid(); return; }
+    var rows = normaliseItems(board);
+    var updated = parseDate(board.updatedAt);
+    var stale = updated ? (Date.now() - updated.getTime() > STALE_MS) : false;
+    var brand = pickText(board.brand, '').toUpperCase().slice(0, 3);
+    var monthLabel = '';
+    var mm = /^(\d{4})-(\d{2})$/.exec(String(board.month || ''));
+    if (mm) monthLabel = MONTHS[+mm[2] - 1] + ' ' + mm[1];
+
+    var html = '';
+    if (demo) html += '<div class="banner">Demo data<small>Sample outlet only. Open your outlet’s own link from your WhatsApp group.</small></div>';
+    html += '<div class="head">' +
+      '<div class="head-row"><div class="head-main">' +
+        '<div class="code display">' + esc(pickText(board.outlet, 'Outlet')) + '</div>' +
+        (board.name ? '<div class="name">' + esc(board.name) + '</div>' : '') +
+      '</div>' + (brand ? '<div class="badge-brand">' + esc(brand) + '</div>' : '') + '</div>' +
+      '<div class="meta">' +
+        (board.pic ? '<span><span class="lbl">Supervisor</span>' + esc(board.pic) + '</span>' : '') +
+        (monthLabel ? '<span><span class="lbl">Month</span>' + esc(monthLabel) + '</span>' : '') +
+      '</div>' +
+      (updated
+        ? '<div class="updated' + (stale ? ' stale' : '') + '">Updated ' + esc(fmtStamp(updated)) + (stale ? ' · may be out of date' : '') + '</div>'
+        : '<div class="updated stale">Update time unknown · may be out of date</div>') +
+    '</div>';
+    html += headlineHtml(rows);
+    if (rows.length) html += '<div class="list">' + rows.map(rowHtml).join('') + '</div>';
+    else html += '<div class="list"><div class="row"><div class="row-btn" style="cursor:default"><span class="row-main"><span class="summary">Nothing due this month.</span></span></div></div></div>';
+    html += '<div class="foot">Post in your WhatsApp group as usual. This board updates after HQ’s next run.</div>';
+    app.innerHTML = html;
+    rendered = true;
+    lastBoard = board; lastDemo = demo;
+  }
+  var lastBoard = null, lastDemo = false;
+
+  app.addEventListener('click', function (e) {
+    var btn = e.target.closest('.row-btn');
+    if (!btn || !lastBoard) return;
+    var rowEl = btn.closest('.row');
+    var id = rowEl && rowEl.getAttribute('data-id');
+    if (!id) return;
+    openRows[id] = !openRows[id];
+    renderBoard(lastBoard, lastDemo);
+  });
+
+  function showInvalid() {
+    rendered = true;
+    app.innerHTML = '<div class="msg">' +
+      '<div class="icon" aria-hidden="true">?</div>' +
+      '<h1 class="display">This link isn’t valid for any outlet.</h1>' +
+      '<p>Ask your supervisor for your outlet’s link.</p>' +
+    '</div>';
+  }
+  function showDemo() { renderBoard(demoBoard(), true); }
+
+  /* ---------- Crypto ---------- */
+  function readKey() {
+    var h = (location.hash || '').replace(/^#/, '').trim();
+    if (!h) return null;
+    if (h.toLowerCase() === 'demo') return 'demo';
+    if (/^[0-9a-fA-F]{64}$/.test(h)) return h.toLowerCase();
+    return false;
+  }
+  function hexToBytes(hex) {
+    var out = new Uint8Array(hex.length / 2);
+    for (var i = 0; i < out.length; i++) out[i] = parseInt(hex.substr(i * 2, 2), 16);
+    return out;
+  }
+  function b64ToBytes(b64) {
+    var bin = atob(String(b64).replace(/-/g, '+').replace(/_/g, '/'));
+    var out = new Uint8Array(bin.length);
+    for (var i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+    return out;
+  }
+  function docIdFor(keyHex) {
+    return crypto.subtle.digest('SHA-256', new TextEncoder().encode(keyHex)).then(function (buf) {
+      var b = new Uint8Array(buf), s = '';
+      for (var i = 0; i < 8; i++) s += (b[i] < 16 ? '0' : '') + b[i].toString(16);
+      return s;
+    });
+  }
+  function importKey(keyHex) {
+    return crypto.subtle.importKey('raw', hexToBytes(keyHex), { name: 'AES-GCM' }, false, ['decrypt']);
+  }
+  function decryptDoc(cryptoKey, doc) {
+    if (!doc || typeof doc.iv !== 'string' || typeof doc.ct !== 'string') return Promise.reject(new Error('bad doc'));
+    var iv = b64ToBytes(doc.iv), ct = b64ToBytes(doc.ct);
+    return crypto.subtle.decrypt({ name: 'AES-GCM', iv: iv, tagLength: 128 }, cryptoKey, ct).then(function (buf) {
+      return JSON.parse(new TextDecoder().decode(buf));
+    });
+  }
+
+  /* ---------- Boot ---------- */
+  /* Two data sources, same document format:
+     1. Static host (GitHub Pages etc.): fetch ./b/<docId>.json next to this page. No login.
+     2. Claude artifact with the db capability: read boards/<docId> live.               */
+  var unsub = null;
+  var pollTimer = null;
+  var STATIC_DIR = 'b/';
+  var POLL_MS = 5 * 60 * 1000;
+
+  function showOffline() {
+    rendered = true;
+    app.innerHTML = '<div class="msg">' +
+      '<div class="icon" aria-hidden="true">!</div>' +
+      '<h1 class="display">Couldn’t load your board.</h1>' +
+      '<p>Check your connection, then pull down to refresh or reopen the link.</p>' +
+    '</div>';
+  }
+
+  function bootStatic(key) {
+    Promise.all([docIdFor(key), importKey(key)]).then(function (r) {
+      var id = r[0], cryptoKey = r[1];
+      var url = STATIC_DIR + id + '.json';
+      var lastText = null;
+      function load(isPoll) {
+        return fetch(url, { cache: 'no-store' }).then(function (res) {
+          if (res.status === 404) { if (!isPoll) showInvalid(); return; }
+          if (!res.ok) throw new Error('http ' + res.status);
+          return res.text().then(function (text) {
+            if (isPoll && text === lastText) return;
+            lastText = text;
+            var doc; try { doc = JSON.parse(text); } catch (e) { if (!isPoll) showInvalid(); return; }
+            return decryptDoc(cryptoKey, doc).then(function (board) { renderBoard(board, false); },
+              function () { if (!isPoll) showInvalid(); });
+          });
+        }).catch(function () { if (!isPoll && !rendered) showOffline(); });
+      }
+      load(false);
+      pollTimer = setInterval(function () { if (!document.hidden) load(true); }, POLL_MS);
+      document.addEventListener('visibilitychange', function () { if (!document.hidden && rendered) load(true); });
+    }).catch(function () { showInvalid(); });
+  }
+
+  function boot() {
+    if (unsub) { try { unsub(); } catch (e) {} unsub = null; }
+    if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+    rendered = false;
+    var key = readKey();
+    var hasRuntime = !!(window.claude && typeof window.claude.use === 'function');
+    if (key === 'demo' || !window.crypto || !crypto.subtle) { showDemo(); return; }
+    if (!hasRuntime) {
+      if (key === null) { showDemo(); return; }
+      if (key === false) { showInvalid(); return; }
+      bootStatic(key);
+      return;
+    }
+
+    var settled = false;
+    window.claude.use('db').then(function (db) {
+      if (!db) { showDemo(); return; }
+      if (key === null) { showDemo(); return; }
+      if (key === false) { showInvalid(); return; }
+      return Promise.all([docIdFor(key), importKey(key)]).then(function (r) {
+        var id = r[0], cryptoKey = r[1];
+        var timer = setTimeout(function () { if (!settled) { settled = true; showInvalid(); } }, 12000);
+        unsub = db.doc(COLLECTION + '/' + id).onSnapshot(function (snap) {
+          if (!snap.exists) {
+            if (snap.metadata && snap.metadata.fromCache && !settled) return;
+            settled = true; clearTimeout(timer); showInvalid(); return;
+          }
+          decryptDoc(cryptoKey, snap.data()).then(function (board) {
+            settled = true; clearTimeout(timer);
+            renderBoard(board, false);
+          }, function () {
+            settled = true; clearTimeout(timer);
+            showInvalid();
+          });
+        }, function () {
+          if (!settled) { settled = true; clearTimeout(timer); showInvalid(); }
+        });
+      });
+    }).catch(function () { if (!rendered) showInvalid(); });
+  }
+
+  window.addEventListener('hashchange', function () { openRows = {}; boot(); });
+  boot();
+})();
+</script>
