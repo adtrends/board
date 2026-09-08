@@ -6,72 +6,75 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&display=swap">
 <style>
   :root {
-    --ground: #F1F3F5;
+    --ground: #FFF6EA;
     --surface: #FFFFFF;
-    --ink: #171B21;
-    --muted: #5B6470;
-    --line: #DDE2E7;
-    --chrome: #1D5C73;
+    --ink: #22303B;
+    --muted: #66747F;
+    --line: #F0E4D6;
+    --chrome: #17A398;
+    --chrome-grad: linear-gradient(135deg, #17A398 0%, #2EC4B6 60%, #5ED6C3 100%);
     --chrome-ink: #FFFFFF;
-    --chrome-soft: rgba(255,255,255,0.18);
-    --done: #1F7A48;
-    --done-bg: #E3F3EA;
-    --pending: #C4302B;
-    --pending-bg: #FBE7E5;
-    --overdue: #8B1A15;
-    --upcoming: #6B7280;
-    --upcoming-bg: #ECEEF1;
-    --amber: #A9671A;
-    --amber-bg: #FBEFDD;
-    --skeleton: #E4E8EC;
-    --focus: #1D5C73;
-    --shadow: 0 1px 2px rgba(23,27,33,0.06), 0 4px 14px rgba(23,27,33,0.06);
+    --chrome-soft: rgba(255,255,255,0.22);
+    --done: #149A55;
+    --done-bg: #DCF5E5;
+    --pending: #E8483E;
+    --pending-bg: #FFE4E0;
+    --overdue: #B8271E;
+    --upcoming: #7B8794;
+    --upcoming-bg: #EEF1F4;
+    --amber: #E58A17;
+    --amber-bg: #FFF0D2;
+    --skeleton: #F3E8DA;
+    --focus: #17A398;
+    --shadow: 0 1px 2px rgba(120,80,30,0.06), 0 6px 18px rgba(120,80,30,0.08);
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
-      --ground: #0F1215;
-      --surface: #1A1F25;
-      --ink: #EDF0F3;
-      --muted: #9AA4AE;
-      --line: #2B323A;
-      --chrome: #163F4F;
-      --chrome-ink: #F3F7F9;
-      --chrome-soft: rgba(255,255,255,0.14);
-      --done: #5CC98A;
-      --done-bg: #16301F;
-      --pending: #F2716B;
-      --pending-bg: #3A1A18;
-      --overdue: #FFB3AE;
-      --upcoming: #A7B0BA;
-      --upcoming-bg: #262C33;
-      --amber: #E9AD5A;
-      --amber-bg: #33271A;
-      --skeleton: #262C33;
-      --focus: #6FB9D2;
-      --shadow: 0 1px 2px rgba(0,0,0,0.4), 0 4px 14px rgba(0,0,0,0.35);
+      --ground: #1B2432;
+      --surface: #273446;
+      --ink: #F3F6F9;
+      --muted: #AEBAC6;
+      --line: #35435A;
+      --chrome: #1E9C90;
+      --chrome-grad: linear-gradient(135deg, #1B8F85 0%, #2EC4B6 70%, #4FD3BF 100%);
+      --chrome-ink: #FFFFFF;
+      --chrome-soft: rgba(255,255,255,0.2);
+      --done: #5BE08F;
+      --done-bg: #1F4531;
+      --pending: #FF847B;
+      --pending-bg: #513035;
+      --overdue: #FFC2BC;
+      --upcoming: #B5C0CC;
+      --upcoming-bg: #364457;
+      --amber: #FFC15E;
+      --amber-bg: #4E3D22;
+      --skeleton: #33415A;
+      --focus: #5ED6C3;
+      --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 6px 18px rgba(0,0,0,0.25);
     }
   }
   :root[data-theme="dark"] {
-    --ground: #0F1215;
-    --surface: #1A1F25;
-    --ink: #EDF0F3;
-    --muted: #9AA4AE;
-    --line: #2B323A;
-    --chrome: #163F4F;
-    --chrome-ink: #F3F7F9;
-    --chrome-soft: rgba(255,255,255,0.14);
-    --done: #5CC98A;
-    --done-bg: #16301F;
-    --pending: #F2716B;
-    --pending-bg: #3A1A18;
-    --overdue: #FFB3AE;
-    --upcoming: #A7B0BA;
-    --upcoming-bg: #262C33;
-    --amber: #E9AD5A;
-    --amber-bg: #33271A;
-    --skeleton: #262C33;
-    --focus: #6FB9D2;
-    --shadow: 0 1px 2px rgba(0,0,0,0.4), 0 4px 14px rgba(0,0,0,0.35);
+    --ground: #1B2432;
+    --surface: #273446;
+    --ink: #F3F6F9;
+    --muted: #AEBAC6;
+    --line: #35435A;
+    --chrome: #1E9C90;
+    --chrome-grad: linear-gradient(135deg, #1B8F85 0%, #2EC4B6 70%, #4FD3BF 100%);
+    --chrome-ink: #FFFFFF;
+    --chrome-soft: rgba(255,255,255,0.2);
+    --done: #5BE08F;
+    --done-bg: #1F4531;
+    --pending: #FF847B;
+    --pending-bg: #513035;
+    --overdue: #FFC2BC;
+    --upcoming: #B5C0CC;
+    --upcoming-bg: #364457;
+    --amber: #FFC15E;
+    --amber-bg: #4E3D22;
+    --skeleton: #33415A;
+    --focus: #5ED6C3;
+    --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 6px 18px rgba(0,0,0,0.25);
   }
 
   * { box-sizing: border-box; }
@@ -100,8 +103,8 @@
     background: var(--ground);
   }
   .banner {
-    background: var(--amber);
-    color: #FFFFFF;
+    background: var(--amber-bg);
+    color: var(--amber);
     font-weight: 600;
     font-size: 15px;
     letter-spacing: 0.08em;
@@ -121,6 +124,7 @@
   /* Header band */
   .head {
     background: var(--chrome);
+    background: var(--chrome-grad);
     color: var(--chrome-ink);
     padding: 20px 20px 22px;
     margin: 12px 12px 0;
