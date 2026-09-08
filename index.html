@@ -430,15 +430,18 @@
   .season .txt { position: relative; font-size: 24px; animation: pop .7s cubic-bezier(.2,1.4,.4,1) both; }
   .season .bits i { position: absolute; top: -20px; width: 8px; height: 16px; border-radius: 2px; opacity: .9; animation: drift 3.2s linear infinite; }
   @keyframes drift { to { transform: translateY(120px) rotate(360deg); opacity: 0; } }
+  .card.sales { margin: 18px 16px 0; }
   .sales .rm { font-size: 34px; line-height: 1; margin: 2px 0 8px; color: var(--ink); }
   .sales .pace-bar { position: relative; height: 14px; border-radius: 999px; background: var(--upcoming-bg); overflow: visible; }
   .sales .pace-bar .fill { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--chrome), #6B8BB0); transition: width 1.2s cubic-bezier(.2,.8,.2,1); }
-  .sales .pace-bar .marker { position: absolute; top: -5px; width: 3px; height: 24px; background: var(--amber); border-radius: 2px; }
-  .sales .pace-bar .marker::after { content: '▼'; position: absolute; top: -14px; left: -6px; font-size: 11px; color: var(--amber); }
   .sales .sub { color: var(--muted); font-size: 14px; margin-top: 8px; } .sales .sub.small { font-size: 12px; margin-top: 2px; }
   .sales .good { color: var(--done); font-weight: 700; margin-top: 4px; } .sales .push { color: var(--amber); font-weight: 600; margin-top: 4px; }
-  .sales .spark { display: flex; align-items: flex-end; gap: 4px; height: 44px; margin-top: 12px; }
-  .sales .spark i { flex: 1; background: var(--done-bg); border-top: 3px solid var(--done); border-radius: 3px 3px 0 0; transform-origin: bottom; animation: grow .6s cubic-bezier(.2,.9,.3,1.1) both; }
+  .sales .spark { display: flex; align-items: flex-end; gap: 2px; height: 64px; margin-top: 12px; }
+  .sales .spark .bar { flex: 1; position: relative; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; }
+  .sales .spark .bar i { display: block; background: var(--done-bg); border-top: 3px solid var(--done); border-radius: 2px 2px 0 0; transform-origin: bottom; animation: grow .6s cubic-bezier(.2,.9,.3,1.1) both; }
+  .sales .spark .bar.future { border-bottom: 2px dotted var(--line); }
+  .sales .spark .bar b { position: absolute; top: 100%; left: 0; font-size: 10px; color: var(--muted); font-weight: 500; margin-top: 3px; }
+  .sales .spark.month { margin-bottom: 14px; }
   @keyframes grow { from { transform: scaleY(0); } to { transform: scaleY(1); } }
   .news .note { background: var(--ground); border-radius: 10px; padding: 10px 12px; margin-bottom: 8px; animation: slidein .5s ease-out both; }
   .news .nt { display: flex; gap: 8px; align-items: baseline; font-size: 16px; } .news .nt .em { font-size: 20px; } .news .nb { color: var(--muted); font-size: 14px; margin-top: 4px; }
@@ -579,7 +582,7 @@
           badges: 'Lencana', earned: function (n) { return n + ' diperoleh'; }, noBadge: 'Lengkapkan semua setem dalam sebulan untuk dapat lencana bulan itu. Semua tepat masa = lencana emas.',
           level: function (n, name) { return 'Tahap ' + n + ' · ' + name; }, toNext: function (x, name) { return x + ' XP lagi ke ' + name; }, maxLevel: 'Tahap tertinggi!', rank: function (p, of) { return 'Kedudukan #' + p + ' daripada ' + of; }, rankSub: 'seluruh syarikat, dikira setiap hari',
           levelUp: function (name) { return 'NAIK TAHAP! Kini ' + name; }, doneTap: 'Siap! 👍',
-          sales: function (m) { return 'Jualan ' + m; }, salesSub: 'jualan ticket bulan ini', vs: function (m, v) { return 'Bulan lepas (' + m + '): ' + v; }, ahead: 'Anda di hadapan rentak bulan lepas! 🚀', behind: function (v) { return 'Perlu ' + v + ' sehari untuk atasi bulan lepas'; }, pace: 'rentak bulan lepas', last14: '14 hari terakhir',
+          sales: function (m) { return 'Jualan ' + m; }, salesSub: 'jualan ticket bulan ini', vs: function (m, v) { return 'Bulan lepas (' + m + '): ' + v; }, ahead: 'Anda di hadapan rentak bulan lepas! 🚀', behind: function (v) { return 'Perlu ' + v + ' sehari untuk atasi bulan lepas'; }, ofLast: function (m, v) { return 'daripada jumlah bulan lepas (' + m + ': ' + v + ')'; }, byDay: function (m) { return 'Jualan harian ' + m + ' - hari 1 hingga hari ini'; },
           news: 'Berita minggu ini', topBrand: function (b) { return 'Best seller ' + b + ' bulan ini'; }, topMine: 'Paling laris di kaunter anda', noMine: 'Belum ada ticket bulan ini', moveNew: 'BARU', moveUp: '▲', moveDown: '▼', pcs: 'helai',
           xpOnTime: 'setem tepat masa', xpLate: 'setem lewat', xpStreak: 'minggu streak', xpSales: 'jualan naik', onTime: 'Tepat masa', late: 'Lewat', notYet: 'Belum lagi', weekDone: 'Minggu lengkap', weekMiss: 'Minggu terlepas', weekUnknown: 'Tiada data', tapMore: 'tekan untuk butiran',
           target: 'Sasaran', targetAuto: 'sasaran sementara: bulan lepas +5%', targetNeed: function (v) { return v + ' sehari lagi untuk capai sasaran'; }, targetHit: 'Sasaran tercapai! 🏆', targetOnTrack: 'Di landasan untuk capai sasaran ✅', targetBehind: 'Kena pecut sikit untuk kejar sasaran 💪', toGo: function (v) { return v + ' lagi'; },
@@ -599,7 +602,7 @@
           badges: 'Badges', earned: function (n) { return n + ' earned'; }, noBadge: 'Complete every stamp in a month to earn its badge. All on time earns gold.',
           level: function (n, name) { return 'Level ' + n + ' · ' + name; }, toNext: function (x, name) { return x + ' XP to ' + name; }, maxLevel: 'Top level!', rank: function (p, of) { return 'Rank #' + p + ' of ' + of; }, rankSub: 'company-wide, updated daily',
           levelUp: function (name) { return 'LEVEL UP! Now ' + name; }, doneTap: 'Done! 👍',
-          sales: function (m) { return m + ' sales'; }, salesSub: 'ticketed sales this month', vs: function (m, v) { return 'Last month (' + m + '): ' + v; }, ahead: 'You are ahead of last month’s pace! 🚀', behind: function (v) { return 'Need ' + v + ' a day to beat last month'; }, pace: 'last month’s pace', last14: 'last 14 days',
+          sales: function (m) { return m + ' sales'; }, salesSub: 'ticketed sales this month', vs: function (m, v) { return 'Last month (' + m + '): ' + v; }, ahead: 'You are ahead of last month’s pace! 🚀', behind: function (v) { return 'Need ' + v + ' a day to beat last month'; }, ofLast: function (m, v) { return 'of last month’s total (' + m + ': ' + v + ')'; }, byDay: function (m) { return m + ' sales by day, 1st to today'; },
           news: 'This week’s news', topBrand: function (b) { return b + ' best sellers this month'; }, topMine: 'Top sellers at your counter', noMine: 'No tickets yet this month', moveNew: 'NEW', moveUp: '▲', moveDown: '▼', pcs: 'pcs',
           xpOnTime: 'on-time stamps', xpLate: 'late stamps', xpStreak: 'streak weeks', xpSales: 'sales up', onTime: 'On time', late: 'Late', notYet: 'Not yet', weekDone: 'Week complete', weekMiss: 'Week missed', weekUnknown: 'No data', tapMore: 'tap for details',
           target: 'Target', targetAuto: 'provisional target: last month +5%', targetNeed: function (v) { return v + ' a day to reach target'; }, targetHit: 'Target reached! 🏆', targetOnTrack: 'On track for target ✅', targetBehind: 'Push a little to catch the target 💪', toGo: function (v) { return v + ' to go'; },
@@ -929,25 +932,21 @@
     var mm = /^(\d{4})-(\d{2})$/.exec(String(sl.month || '')); var mname = mm ? MONTHS[+mm[2] - 1] : '';
     var pm = /^(\d{4})-(\d{2})$/.exec(String(sl.prev_month || '')); var pname = pm ? MONTHS[+pm[2] - 1] : '';
     var prev = +sl.prev_total || 0, mtd = +sl.mtd || 0;
-    var pct = prev ? Math.min(100, Math.round(mtd / prev * 100)) : 0;
-    var pacePct = prev && sl.pace ? Math.min(100, Math.round(sl.pace / prev * 100)) : 0;
+    var pct = prev ? Math.round(mtd / prev * 100) : 0;
     var daily = Array.isArray(sl.daily) ? sl.daily : [];
     var mx = daily.reduce(function (a, d) { return Math.max(a, +d[1] || 0); }, 0) || 1;
-    var bars = daily.map(function (d, i) { var h = Math.round((+d[1] || 0) / mx * 100); var dt = parseDate(d[0]); return '<i style="height:' + Math.max(4, h) + '%;animation-delay:' + (i * 0.05) + 's" title="' + (dt ? fmtDay(dt) : '') + ' ' + fmtRM(d[1]) + '"></i>'; }).join('');
-    var tgt = +sl.target || 0;
-    var base = tgt || prev;
-    var fillPct = base ? Math.min(100, Math.round(mtd / base * 100)) : 0;
-    var tPacePct = tgt && sl.target_pace ? Math.min(100, Math.round(sl.target_pace / tgt * 100)) : 0;
-    var status = '';
-    if (tgt) status = mtd >= tgt ? '<div class="good">' + T.targetHit + '</div>' : (sl.target_on_track ? '<div class="good">' + T.targetOnTrack + '</div>' : '<div class="push">' + T.targetBehind + '</div>');
+    var bars = daily.map(function (d, i) {
+      var v = d[1]; var dt = parseDate(d[0]); var day = dt ? dt.getDate() : (i + 1);
+      var lab = (day === 1 || day % 7 === 1 || day === daily.length) ? '<b>' + day + '</b>' : '';
+      if (v === null || v === undefined) return '<span class="bar future">' + lab + '</span>';
+      var h = Math.round((+v || 0) / mx * 100);
+      return '<span class="bar" title="' + day + ' ' + mname + ' ' + fmtRM(v) + '"><i style="height:' + Math.max(3, h) + '%;animation-delay:' + (i * 0.03) + 's"></i>' + lab + '</span>';
+    }).join('');
     return '<div class="card sales"><div class="ttl"><span class="display">' + esc(T.sales(mname)) + '</span><span class="cnt">' + T.salesSub + '</span></div>' +
       '<div class="rm display" data-count="' + Math.round(mtd) + '">RM 0</div>' +
-      (tgt ? '<div class="tline"><span>' + T.target + ' <b>' + fmtRM(tgt) + '</b></span><span class="togo">' + esc(T.toGo(fmtRM(sl.target_gap))) + '</span></div>' : '') +
-      (base ? '<div class="pace-bar' + (tgt ? ' tgt' : '') + '"><span class="fill" style="width:' + fillPct + '%"></span><span class="marker" style="left:' + (tgt ? tPacePct : pacePct) + '%" title="' + (tgt ? T.target : T.pace) + '"></span></div>' : '') +
-      (tgt ? '<div class="need">' + esc(mtd >= tgt ? T.targetHit : T.targetNeed(fmtRM(sl.target_need_per_day))) + '</div>' + status : '') +
-      (sl.target_src === 'auto' ? '<div class="sub small">' + T.targetAuto + '</div>' : '') +
-      (prev ? '<div class="sub">' + esc(T.vs(pname, fmtRM(prev))) + (sl.ahead ? ' · ' + T.ahead : '') + '</div>' : '') +
-      (daily.length ? '<div class="spark" aria-hidden="true">' + bars + '</div><div class="sub small">' + T.last14 + '</div>' : '') +
+      (prev ? '<div class="pace-bar"><span class="fill" style="width:' + Math.min(100, pct) + '%"></span></div>' +
+              '<div class="sub">' + pct + '% ' + esc(T.ofLast(pname, fmtRM(prev))) + '</div>' : '') +
+      (daily.length ? '<div class="spark month">' + bars + '</div><div class="sub small">' + esc(T.byDay(mname)) + '</div>' : '') +
     '</div>';
   }
   function pillarsHtml(pl) {
