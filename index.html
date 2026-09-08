@@ -1030,8 +1030,7 @@
         : '<div class="updated stale">' + T.unknown + '</div>') +
     '</div>';
     html += seasonHtml(board.lang === 'en' ? 'en' : 'ms');
-    html += headlineHtml(rows);
-    html += gameHtml(board.game, rows, board);
+    html += headlineHtml(rows);   /* game layer (level, rank, streak, stamps, badges) hidden 2026-09-08 (Tze): keep the ledger running, show nothing until the data says what a good promoter is */
     html += salesHtml(board.sales, board.lang);   /* news card removed 2026-09-08 (Tze) */
     if (rows.length) html += '<div class="list">' + rows.map(rowHtml).join('') + '</div>';
     else html += '<div class="list"><div class="row"><div class="row-btn" style="cursor:default"><span class="row-main"><span class="summary">' + T.nothing + '</span></span></div></div></div>';
