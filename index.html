@@ -449,6 +449,24 @@
   .news .mv { font-size: 11px; font-weight: 700; padding: 1px 6px; border-radius: 999px; } .news .mv.up { color: var(--done); background: var(--done-bg); } .news .mv.down { color: var(--pending); background: var(--pending-bg); } .news .mv.new { color: var(--amber); background: var(--amber-bg); }
   @keyframes slidein { from { transform: translateX(14px); opacity: 0; } to { transform: none; opacity: 1; } }
   @media (prefers-reduced-motion: reduce) { .season .bits i, .sales .spark i, .news .note, .news .top li, .streak .dots i { animation: none; } }
+  .sales .tline { display: flex; justify-content: space-between; font-size: 14px; color: var(--muted); margin-bottom: 6px; } .sales .tline b { color: var(--ink); } .sales .tline .togo { color: var(--amber); font-weight: 700; }
+  .sales .pace-bar.tgt .fill { background: linear-gradient(90deg, var(--amber), #E3A85A); }
+  .sales .need { margin-top: 8px; font-size: 16px; font-weight: 700; color: var(--ink); }
+  .pillars .pl-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .pl { text-align: center; background: var(--ground); border-radius: 12px; padding: 10px 6px; border: 2px solid transparent; transition: transform .2s, border-color .2s; }
+  .pl.open { border-color: var(--chrome); transform: translateY(-2px); background: var(--surface); }
+  .pl .ring { position: relative; width: 62px; height: 62px; margin: 0 auto 4px; }
+  .pl .ring svg { width: 62px; height: 62px; transform: rotate(-90deg); } .pl .ring circle { fill: none; stroke: var(--upcoming-bg); stroke-width: 3.5; } .pl .ring circle.v { stroke: var(--done); stroke-linecap: round; transition: stroke-dasharray 1.1s cubic-bezier(.2,.8,.2,1); }
+  .pl.s0 .ring circle.v { stroke: var(--line); } .pl.s1 .ring circle.v { stroke: var(--amber); } .pl.s2 .ring circle.v { stroke: #6B8BB0; }
+  .pl .ring .ic { position: absolute; inset: 0; display: grid; place-items: center; font-size: 24px; }
+  .pl.open .ring .ic { animation: pop .6s cubic-bezier(.2,1.4,.4,1) both; }
+  .pl .nm { font-size: 17px; } .pl .wh { font-size: 11px; color: var(--muted); line-height: 1.2; margin-top: 2px; }
+  .pl .stars i { font-style: normal; color: var(--line); font-size: 16px; } .pl .stars i.on { color: var(--amber); animation: pop .5s cubic-bezier(.2,1.4,.4,1) both; }
+  .pillars .lesson { margin-top: 10px; background: var(--ground); border-radius: 12px; padding: 12px 14px; animation: slidein .4s ease-out both; }
+  .pillars .lesson .lt { font-size: 17px; margin-bottom: 4px; } .pillars .lesson p { margin: 0 0 8px; font-size: 14px; color: var(--muted); line-height: 1.4; }
+  .pillars .lesson ol { margin: 0; padding-left: 20px; font-size: 14px; } .pillars .lesson li { margin: 3px 0; animation: slidein .4s ease-out both; }
+  .news .note .rd { margin-left: auto; font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 999px; } .news .note .rd.new { background: var(--amber-bg); color: var(--amber); } .news .note .rd.read { background: var(--done-bg); color: var(--done); }
+  .news .note.open { background: var(--surface); border: 1px solid var(--line); }
   .confetti { position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 5; }
   .confetti i { position: absolute; top: -12px; width: 9px; height: 14px; border-radius: 2px; animation: fall 2.6s ease-in forwards; }
   @keyframes fall { to { transform: translateY(105vh) rotate(540deg); opacity: 0; } }
@@ -561,7 +579,13 @@
           levelUp: function (name) { return 'NAIK TAHAP! Kini ' + name; }, doneTap: 'Siap! 👍',
           sales: function (m) { return 'Jualan ' + m; }, salesSub: 'jualan ticket bulan ini', vs: function (m, v) { return 'Bulan lepas (' + m + '): ' + v; }, ahead: 'Anda di hadapan rentak bulan lepas! 🚀', behind: function (v) { return 'Perlu ' + v + ' sehari untuk atasi bulan lepas'; }, pace: 'rentak bulan lepas', last14: '14 hari terakhir',
           news: 'Berita minggu ini', topBrand: function (b) { return 'Best seller ' + b + ' bulan ini'; }, topMine: 'Paling laris di kaunter anda', noMine: 'Belum ada ticket bulan ini', moveNew: 'BARU', moveUp: '▲', moveDown: '▼', pcs: 'helai',
-          xpOnTime: 'setem tepat masa', xpLate: 'setem lewat', xpStreak: 'minggu streak', xpSales: 'jualan naik', onTime: 'Tepat masa', late: 'Lewat', notYet: 'Belum lagi', weekDone: 'Minggu lengkap', weekMiss: 'Minggu terlepas', weekUnknown: 'Tiada data', tapMore: 'tekan untuk butiran' },
+          xpOnTime: 'setem tepat masa', xpLate: 'setem lewat', xpStreak: 'minggu streak', xpSales: 'jualan naik', onTime: 'Tepat masa', late: 'Lewat', notYet: 'Belum lagi', weekDone: 'Minggu lengkap', weekMiss: 'Minggu terlepas', weekUnknown: 'Tiada data', tapMore: 'tekan untuk butiran',
+          target: 'Sasaran', targetAuto: 'sasaran sementara: bulan lepas +5%', targetNeed: function (v) { return v + ' sehari lagi untuk capai sasaran'; }, targetHit: 'Sasaran tercapai! 🏆', targetOnTrack: 'Di landasan untuk capai sasaran ✅', targetBehind: 'Kena pecut sikit untuk kejar sasaran 💪', toGo: function (v) { return v + ' lagi'; },
+          pillars: 'Tiga Bintang anda', pillarTap: 'tekan bintang untuk belajar',
+          pillar: { tepat: { name: 'Tepat', what: 'Ticket sama dengan portal', why: 'Setiap jualan di portal mesti ada ticket yang sama. Beza kecil pun kena betulkan - ini asas laporan bulanan dan komisen.', how: ['Ticket setiap jualan pada hari yang sama', 'Semak jumlah portal vs ticket setiap Isnin', 'Betulkan beza sebelum 5 haribulan'] },
+                    cepat: { name: 'Cepat', what: 'Siap sebelum tarikh akhir', why: 'Ranking, jadual kerja dan punch card yang sampai awal bermakna HQ boleh proses awal - gaji, OT dan jadual keluar tepat masa.', how: ['Hantar ranking sebaik sahaja bulan tutup', 'Jadual kerja bulan depan sebelum 15 haribulan', 'Punch card sebelum 3 haribulan'] },
+                    laris: { name: 'Laris', what: 'Jualan capai sasaran', why: 'Sasaran dibahagi ikut hari. Tahu berapa perlu sehari buat jualan lebih mudah dikejar - dan best seller adalah senjata paling senang.', how: ['Pastikan best seller sentiasa ada di rak', 'Tawarkan padanan: seluar + kemeja', 'Semak jualan sehari di sini setiap pagi'] } },
+          read: 'Dibaca', unread: 'Baru' },
     en: { done: '✓ Done', upcoming: '○ Upcoming', pending: '! Pending', overdue: 'Overdue', due: 'Due', wasDue: 'Was due', gate: 'Close gate', now: 'NOW',
           pendingN: function (n) { return n + ' pending'; }, clear: 'All clear', overdueN: function (n) { return n + ' overdue'; }, upcomingN: function (n) { return n + ' upcoming'; },
           hintPending: 'Tap an item to see what’s needed.', hintUpcoming: 'Nothing to do right now. Tap an item for details.', hintClear: 'Nothing to do. Nice work!',
@@ -575,7 +599,13 @@
           levelUp: function (name) { return 'LEVEL UP! Now ' + name; }, doneTap: 'Done! 👍',
           sales: function (m) { return m + ' sales'; }, salesSub: 'ticketed sales this month', vs: function (m, v) { return 'Last month (' + m + '): ' + v; }, ahead: 'You are ahead of last month’s pace! 🚀', behind: function (v) { return 'Need ' + v + ' a day to beat last month'; }, pace: 'last month’s pace', last14: 'last 14 days',
           news: 'This week’s news', topBrand: function (b) { return b + ' best sellers this month'; }, topMine: 'Top sellers at your counter', noMine: 'No tickets yet this month', moveNew: 'NEW', moveUp: '▲', moveDown: '▼', pcs: 'pcs',
-          xpOnTime: 'on-time stamps', xpLate: 'late stamps', xpStreak: 'streak weeks', xpSales: 'sales up', onTime: 'On time', late: 'Late', notYet: 'Not yet', weekDone: 'Week complete', weekMiss: 'Week missed', weekUnknown: 'No data', tapMore: 'tap for details' }
+          xpOnTime: 'on-time stamps', xpLate: 'late stamps', xpStreak: 'streak weeks', xpSales: 'sales up', onTime: 'On time', late: 'Late', notYet: 'Not yet', weekDone: 'Week complete', weekMiss: 'Week missed', weekUnknown: 'No data', tapMore: 'tap for details',
+          target: 'Target', targetAuto: 'provisional target: last month +5%', targetNeed: function (v) { return v + ' a day to reach target'; }, targetHit: 'Target reached! 🏆', targetOnTrack: 'On track for target ✅', targetBehind: 'Push a little to catch the target 💪', toGo: function (v) { return v + ' to go'; },
+          pillars: 'Your three stars', pillarTap: 'tap a star to learn',
+          pillar: { tepat: { name: 'Accurate', what: 'Tickets match the portal', why: 'Every portal sale needs a matching ticket. Even small gaps must be fixed - this is the base of the monthly report and commission.', how: ['Ticket every sale the same day', 'Check portal vs ticket every Monday', 'Fix gaps before the 5th'] },
+                    cepat: { name: 'Timely', what: 'Done before the deadline', why: 'Rankings, timetables and punch cards that arrive early let HQ process early - pay, OT and schedules go out on time.', how: ['Send the ranking as soon as the month closes', 'Next month’s timetable before the 15th', 'Punch card before the 3rd'] },
+                    laris: { name: 'Sales', what: 'Sales reach the target', why: 'The target is split by day. Knowing what you need per day makes it easier to chase - and best sellers are the easiest weapon.', how: ['Keep best sellers on the rack', 'Offer the pair: pants + shirt', 'Check your daily sales here every morning'] } },
+          read: 'Read', unread: 'New' }
   };
   var T = STR.ms;
   function setLang(lang) {
@@ -643,7 +673,9 @@
         rank: { pos: 27, of: 137 }
       },
       lang: 'ms',
+      pillars: [ { id: 'tepat', stars: 2 }, { id: 'cepat', stars: 3 }, { id: 'laris', stars: 1 } ],
       sales: { month: y + '-' + mm, mtd: 12340, prev_month: iso(new Date(y, m - 1, 1)).slice(0, 7), prev_total: 39076, day: now.getDate(), days_in_month: 30, pace: 39076 * now.getDate() / 30, ahead: 12340 >= 39076 * now.getDate() / 30, need_per_day: Math.max(0, (39076 - 12340) / Math.max(1, 30 - now.getDate())),
+               target: 42000, target_src: 'file', target_pct: 12340 / 42000, target_pace: 42000 * now.getDate() / 30, target_need_per_day: Math.max(0, (42000 - 12340) / Math.max(1, 30 - now.getDate())), target_on_track: 12340 >= 42000 * now.getDate() / 30, target_gap: 42000 - 12340,
                daily: (function () { var a = []; for (var i = 13; i >= 0; i--) { var d = new Date(y, m, now.getDate() - i); a.push([iso(d), Math.round(600 + Math.random() * 1800)]); } return a; })() },
       news: { month: y + '-' + mm, brand: brand, top_brand: [ { code: '12024005-99', name: 'Ctnmx Slim Fit Plain Flat Front Pcs', qty: 16, move: 'up' }, { code: '15026001-90', name: 'Ctnrc With Pocket Plain Collar', qty: 14, move: 'same' }, { code: '12019012-99', name: 'Slim Fit Chino Stretch', qty: 12, move: 'new' } ],
               top_outlet: [ { name: 'Ctnmx Slim Fit Plain Flat Front Pcs', qty: 6 }, { name: 'Plain Collar Short Sleeve', qty: 4 } ],
@@ -908,19 +940,49 @@
     var daily = Array.isArray(sl.daily) ? sl.daily : [];
     var mx = daily.reduce(function (a, d) { return Math.max(a, +d[1] || 0); }, 0) || 1;
     var bars = daily.map(function (d, i) { var h = Math.round((+d[1] || 0) / mx * 100); var dt = parseDate(d[0]); return '<i style="height:' + Math.max(4, h) + '%;animation-delay:' + (i * 0.05) + 's" title="' + (dt ? fmtDay(dt) : '') + ' ' + fmtRM(d[1]) + '"></i>'; }).join('');
+    var tgt = +sl.target || 0;
+    var base = tgt || prev;
+    var fillPct = base ? Math.min(100, Math.round(mtd / base * 100)) : 0;
+    var tPacePct = tgt && sl.target_pace ? Math.min(100, Math.round(sl.target_pace / tgt * 100)) : 0;
+    var status = '';
+    if (tgt) status = mtd >= tgt ? '<div class="good">' + T.targetHit + '</div>' : (sl.target_on_track ? '<div class="good">' + T.targetOnTrack + '</div>' : '<div class="push">' + T.targetBehind + '</div>');
     return '<div class="card sales"><div class="ttl"><span class="display">' + esc(T.sales(mname)) + '</span><span class="cnt">' + T.salesSub + '</span></div>' +
       '<div class="rm display" data-count="' + Math.round(mtd) + '">RM 0</div>' +
-      (prev ? '<div class="pace-bar"><span class="fill" style="width:' + pct + '%"></span><span class="marker" style="left:' + pacePct + '%" title="' + T.pace + '"></span></div>' +
-              '<div class="sub">' + esc(T.vs(pname, fmtRM(prev))) + '</div>' +
-              '<div class="' + (sl.ahead ? 'good' : 'push') + '">' + esc(sl.ahead ? T.ahead : T.behind(fmtRM(sl.need_per_day))) + '</div>' : '') +
+      (tgt ? '<div class="tline"><span>' + T.target + ' <b>' + fmtRM(tgt) + '</b></span><span class="togo">' + esc(T.toGo(fmtRM(sl.target_gap))) + '</span></div>' : '') +
+      (base ? '<div class="pace-bar' + (tgt ? ' tgt' : '') + '"><span class="fill" style="width:' + fillPct + '%"></span><span class="marker" style="left:' + (tgt ? tPacePct : pacePct) + '%" title="' + (tgt ? T.target : T.pace) + '"></span></div>' : '') +
+      (tgt ? '<div class="need">' + esc(mtd >= tgt ? T.targetHit : T.targetNeed(fmtRM(sl.target_need_per_day))) + '</div>' + status : '') +
+      (sl.target_src === 'auto' ? '<div class="sub small">' + T.targetAuto + '</div>' : '') +
+      (prev ? '<div class="sub">' + esc(T.vs(pname, fmtRM(prev))) + (sl.ahead ? ' · ' + T.ahead : '') + '</div>' : '') +
       (daily.length ? '<div class="spark" aria-hidden="true">' + bars + '</div><div class="sub small">' + T.last14 + '</div>' : '') +
     '</div>';
+  }
+  function pillarsHtml(pl) {
+    if (!Array.isArray(pl) || !pl.length) return '';
+    var out = '<div class="card pillars"><div class="ttl"><span class="display">' + T.pillars + '</span><span class="cnt">' + T.pillarTap + '</span></div><div class="pl-row">';
+    pl.forEach(function (x, i) {
+      var d = T.pillar[x.id] || { name: x.id, what: '' };
+      var open = !!openRows['pl-' + x.id];
+      var stars = '';
+      for (var k = 1; k <= 3; k++) stars += '<i class="' + (k <= (x.stars || 0) ? 'on' : '') + '" style="animation-delay:' + (i * 0.1 + k * 0.12) + 's">★</i>';
+      out += '<div class="pl tap' + (open ? ' open' : '') + ' s' + (x.stars || 0) + '" data-toggle="pl-' + esc(x.id) + '">' +
+        '<div class="ring"><svg viewBox="0 0 36 36"><circle cx="18" cy="18" r="15.5"/><circle class="v" cx="18" cy="18" r="15.5" style="stroke-dasharray:' + Math.round(((x.stars || 0) / 3) * 97.4) + ' 97.4"/></svg><span class="ic">' + (x.id === 'tepat' ? '🎯' : (x.id === 'cepat' ? '⚡' : '🛍️')) + '</span></div>' +
+        '<div class="nm display">' + esc(d.name) + '</div><div class="stars">' + stars + '</div><div class="wh">' + esc(d.what) + '</div></div>';
+    });
+    out += '</div>';
+    pl.forEach(function (x) {
+      if (!openRows['pl-' + x.id]) return;
+      var d = T.pillar[x.id]; if (!d) return;
+      out += '<div class="lesson"><div class="lt display">' + esc(d.name) + ' · ' + esc(d.what) + '</div><p>' + esc(d.why) + '</p><ol>' + (d.how || []).map(function (h, i) { return '<li style="animation-delay:' + (0.15 + i * 0.1) + 's">' + esc(h) + '</li>'; }).join('') + '</ol></div>';
+    });
+    return out + '</div>';
   }
   function newsHtml(nw, brand) {
     if (!nw || typeof nw !== 'object') return '';
     var out = '<div class="card news"><div class="ttl"><span class="display">' + T.news + '</span></div>';
     (Array.isArray(nw.hq) ? nw.hq : []).forEach(function (it, i) {
-      out += '<div class="note" style="animation-delay:' + (i * 0.12) + 's"><div class="nt"><span class="em">' + esc(it.emoji || '📌') + '</span><b>' + esc(it.title || '') + '</b></div><div class="nb">' + esc(it.body || '') + '</div></div>';
+      var key = 'news-' + (it.id || i); var open = !!openRows[key]; var wasRead = !!seen('read-' + (it.id || i));
+      if (open) remember('read-' + (it.id || i), '1');
+      out += '<div class="note tap' + (open ? ' open' : '') + '" data-toggle="' + esc(key) + '" style="animation-delay:' + (i * 0.12) + 's"><div class="nt"><span class="em">' + esc(it.emoji || '📌') + '</span><b>' + esc(it.title || '') + '</b><span class="rd ' + (wasRead || open ? 'read' : 'new') + '">' + (wasRead || open ? T.read : T.unread) + '</span></div>' + (open ? '<div class="nb">' + esc(it.body || '') + '</div>' : '') + '</div>';
     });
     var tb = Array.isArray(nw.top_brand) ? nw.top_brand : [];
     if (tb.length) {
@@ -989,6 +1051,7 @@
     html += headlineHtml(rows);
     html += gameHtml(board.game, rows, board);
     html += salesHtml(board.sales, board.lang);
+    html += pillarsHtml(board.pillars);
     html += newsHtml(board.news, brand);
     if (rows.length) html += '<div class="list">' + rows.map(rowHtml).join('') + '</div>';
     else html += '<div class="list"><div class="row"><div class="row-btn" style="cursor:default"><span class="row-main"><span class="summary">' + T.nothing + '</span></span></div></div></div>';
