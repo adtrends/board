@@ -593,9 +593,9 @@
   var MONTHS_MS = ['Jan', 'Feb', 'Mac', 'Apr', 'Mei', 'Jun', 'Jul', 'Ogos', 'Sep', 'Okt', 'Nov', 'Dis'];
   /* UI strings. Malay for counters, English for Brunei (Tze 2026-09-08). Row text arrives already localised from HQ. */
   var STR = {
-    ms: { done: '✓ Siap', upcoming: '○ Belum tiba masa', pending: '! Belum siap', overdue: 'Lewat', due: 'Tarikh akhir', wasDue: 'Sepatutnya', gate: 'Tarikh tutup', now: 'SEKARANG',
-          pendingN: function (n) { return n + ' belum siap'; }, clear: 'Semua siap', tDone: 'Siap', tPending: 'Belum siap', tUpcoming: 'Belum tiba masa', overdueN: function (n) { return n + ' lewat'; }, upcomingN: function (n) { return n + ' belum tiba masa'; },
-          hintPending: 'Tekan item untuk butiran.', hintUpcoming: 'Tiada apa perlu dibuat sekarang. Tarikh akhir ada pada setiap item.', hintClear: 'Tiada apa perlu dibuat. Syabas!',
+    ms: { done: '✓ Siap', upcoming: '○ Hampir tiba masa', pending: '! Belum siap', overdue: 'Lewat', due: 'Tarikh akhir', wasDue: 'Sepatutnya', gate: 'Tarikh tutup', now: 'SEKARANG',
+          pendingN: function (n) { return n + ' belum siap'; }, clear: 'Semua siap', tDone: 'Siap', tPending: 'Belum siap', tUpcoming: 'Hampir tiba masa', overdueN: function (n) { return n + ' lewat'; }, upcomingN: function (n) { return n + ' hampir tiba masa'; },
+          hintPending: 'Tekan item untuk butiran.', hintUpcoming: 'Boleh siapkan awal - tarikh akhir ada pada setiap item.', hintClear: 'Tiada apa perlu dibuat. Syabas!',
           demo: 'Data contoh', demoSub: 'Outlet contoh sahaja. Buka link outlet anda dari group WhatsApp.', supervisor: 'Penyelia', month: 'Bulan', updated: 'Dikemas kini ', stale: ' · mungkin lapuk', unknown: 'Masa kemas kini tidak diketahui · mungkin lapuk',
           nothing: 'Tiada tugasan bulan ini.', foot: 'Hantar dalam group WhatsApp seperti biasa. Senarai ini dikemas kini setiap kali HQ jalankan semakan.',
           streak: function (n) { return n + ' minggu berturut-turut'; }, streakSub: 'ticketing mingguan lengkap', noStreak: 'Belum ada streak', startStreak: 'Ticket setiap hari minggu ini untuk mula', best: function (n) { return 'Rekod terbaik ' + n + ' minggu'; }, risk: 'Ticket sebelum Isnin untuk kekalkan!',
@@ -613,9 +613,9 @@
                     cepat: { name: 'Cepat', what: 'Siap sebelum tarikh akhir', why: 'Ranking, jadual kerja dan punch card yang sampai awal bermakna HQ boleh proses awal - gaji, OT dan jadual keluar tepat masa.', how: ['Hantar ranking sebaik sahaja bulan tutup', 'Jadual kerja bulan depan sebelum 15 haribulan', 'Punch card sebelum 3 haribulan'] },
                     laris: { name: 'Laris', what: 'Jualan capai sasaran', why: 'Sasaran dibahagi ikut hari. Tahu berapa perlu sehari buat jualan lebih mudah dikejar - dan best seller adalah senjata paling senang.', how: ['Pastikan best seller sentiasa ada di rak', 'Tawarkan padanan: seluar + kemeja', 'Semak jualan sehari di sini setiap pagi'] } },
           read: 'Dibaca', unread: 'Baru' },
-    en: { done: '✓ Done', upcoming: '○ Upcoming', pending: '! Pending', overdue: 'Overdue', due: 'Due', wasDue: 'Was due', gate: 'Close gate', now: 'NOW',
-          pendingN: function (n) { return n + ' pending'; }, clear: 'All clear', tDone: 'Done', tPending: 'To do', tUpcoming: 'Upcoming', overdueN: function (n) { return n + ' overdue'; }, upcomingN: function (n) { return n + ' upcoming'; },
-          hintPending: 'Tap an item to see what’s needed.', hintUpcoming: 'Nothing to do right now. Tap an item for details.', hintClear: 'Nothing to do. Nice work!',
+    en: { done: '✓ Done', upcoming: '○ Due soon', pending: '! Pending', overdue: 'Overdue', due: 'Due', wasDue: 'Was due', gate: 'Close gate', now: 'NOW',
+          pendingN: function (n) { return n + ' pending'; }, clear: 'All clear', tDone: 'Done', tPending: 'To do', tUpcoming: 'Due soon', overdueN: function (n) { return n + ' overdue'; }, upcomingN: function (n) { return n + ' due soon'; },
+          hintPending: 'Tap an item to see what’s needed.', hintUpcoming: 'You can finish early - the due date is on each item.', hintClear: 'Nothing to do. Nice work!',
           demo: 'Demo data', demoSub: 'Sample outlet only. Open your outlet’s own link from your WhatsApp group.', supervisor: 'Supervisor', month: 'Month', updated: 'Updated ', stale: ' · may be out of date', unknown: 'Update time unknown · may be out of date',
           nothing: 'Nothing due this month.', foot: 'Post in your WhatsApp group as usual. This list updates after HQ’s next run.',
           streak: function (n) { return n + '-week streak'; }, streakSub: 'weekly ticketing complete', noStreak: 'No streak yet', startStreak: 'Ticket every day this week to start one', best: function (n) { return 'Best so far ' + n + ' weeks'; }, risk: 'Ticket by Monday to keep it!',
