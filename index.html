@@ -450,6 +450,18 @@
   .sales .spark .bar { flex: 1; position: relative; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; }
   .sales .spark .bar i { display: block; background: var(--done-bg); border-top: 3px solid var(--done); border-radius: 2px 2px 0 0; transform-origin: bottom; animation: grow .6s cubic-bezier(.2,.9,.3,1.1) both; }
   .sales .spark .bar.future { border-bottom: 2px dotted var(--line); }
+  .sales .spark .bar.wk { background: linear-gradient(to top, rgba(62,78,98,0.10), rgba(62,78,98,0)); border-radius: 3px 3px 0 0; }
+  .sales .spark .bar.wk i { background: #DCE4EE; border-top-color: var(--chrome); }
+  .sales .spark .bar.hol { background: linear-gradient(to top, rgba(184,116,26,0.18), rgba(184,116,26,0)); }
+  .sales .spark .bar.hol i { background: var(--amber-bg); border-top-color: var(--amber); }
+  .sales .spark .bar.future.wk { border-bottom-color: var(--chrome); }
+  .sales .spark .bar.future.hol { border-bottom-color: var(--amber); }
+  .sales .spark .bar em { position: absolute; top: -14px; left: 50%; transform: translateX(-50%); font-style: normal; font-size: 11px; color: var(--amber); }
+  .sales .legend { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: 8px; font-size: 12px; color: var(--muted); }
+  .sales .legend span::before { content: ''; display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; }
+  .sales .legend .wk::before { background: #DCE4EE; border-top: 2px solid var(--chrome); }
+  .sales .legend .hol::before { background: var(--amber-bg); border-top: 2px solid var(--amber); }
+  .sales .spark.month { margin-top: 22px; }
   .sales .spark .bar b { position: absolute; top: 100%; left: 0; font-size: 10px; color: var(--muted); font-weight: 500; margin-top: 3px; }
   .sales .spark.month { margin-bottom: 14px; }
   @keyframes grow { from { transform: scaleY(0); } to { transform: scaleY(1); } }
@@ -592,7 +604,7 @@
           badges: 'Lencana', earned: function (n) { return n + ' diperoleh'; }, noBadge: 'Lengkapkan semua setem dalam sebulan untuk dapat lencana bulan itu. Semua tepat masa = lencana emas.',
           level: function (n, name) { return 'Tahap ' + n + ' · ' + name; }, toNext: function (x, name) { return x + ' XP lagi ke ' + name; }, maxLevel: 'Tahap tertinggi!', rank: function (p, of) { return 'Kedudukan #' + p + ' daripada ' + of; }, rankSub: 'seluruh syarikat, dikira setiap hari',
           levelUp: function (name) { return 'NAIK TAHAP! Kini ' + name; }, doneTap: 'Siap! 👍',
-          sales: function (m) { return 'Jualan ' + m; }, salesSub: 'jualan ticket bulan ini', vs: function (m, v) { return 'Bulan lepas (' + m + '): ' + v; }, ahead: 'Anda di hadapan rentak bulan lepas! 🚀', behind: function (v) { return 'Perlu ' + v + ' sehari untuk atasi bulan lepas'; }, ofLast: function (m, v) { return 'daripada jumlah bulan lepas (' + m + ': ' + v + ')'; }, byDay: function (m) { return 'Jualan harian ' + m + ' - hari 1 hingga hari ini'; },
+          sales: function (m) { return 'Jualan ' + m; }, salesSub: 'jualan ticket bulan ini', vs: function (m, v) { return 'Bulan lepas (' + m + '): ' + v; }, ahead: 'Anda di hadapan rentak bulan lepas! 🚀', behind: function (v) { return 'Perlu ' + v + ' sehari untuk atasi bulan lepas'; }, ofLast: function (m, v) { return 'daripada jumlah bulan lepas (' + m + ': ' + v + ')'; }, byDay: function (m) { return 'Jualan harian ' + m + ' - hari 1 hingga hari ini'; }, legWeekend: 'Hujung minggu', legHoliday: 'Cuti umum',
           news: 'Berita minggu ini', topBrand: function (b) { return 'Best seller ' + b + ' bulan ini'; }, topMine: 'Paling laris di kaunter anda', noMine: 'Belum ada ticket bulan ini', moveNew: 'BARU', moveUp: '▲', moveDown: '▼', pcs: 'helai',
           xpOnTime: 'setem tepat masa', xpLate: 'setem lewat', xpStreak: 'minggu streak', xpSales: 'jualan naik', onTime: 'Tepat masa', late: 'Lewat', notYet: 'Belum lagi', weekDone: 'Minggu lengkap', weekMiss: 'Minggu terlepas', weekUnknown: 'Tiada data', tapMore: 'tekan untuk butiran',
           target: 'Sasaran', targetAuto: 'sasaran sementara: bulan lepas +5%', targetNeed: function (v) { return v + ' sehari lagi untuk capai sasaran'; }, targetHit: 'Sasaran tercapai! 🏆', targetOnTrack: 'Di landasan untuk capai sasaran ✅', targetBehind: 'Kena pecut sikit untuk kejar sasaran 💪', toGo: function (v) { return v + ' lagi'; },
@@ -612,7 +624,7 @@
           badges: 'Badges', earned: function (n) { return n + ' earned'; }, noBadge: 'Complete every stamp in a month to earn its badge. All on time earns gold.',
           level: function (n, name) { return 'Level ' + n + ' · ' + name; }, toNext: function (x, name) { return x + ' XP to ' + name; }, maxLevel: 'Top level!', rank: function (p, of) { return 'Rank #' + p + ' of ' + of; }, rankSub: 'company-wide, updated daily',
           levelUp: function (name) { return 'LEVEL UP! Now ' + name; }, doneTap: 'Done! 👍',
-          sales: function (m) { return m + ' sales'; }, salesSub: 'ticketed sales this month', vs: function (m, v) { return 'Last month (' + m + '): ' + v; }, ahead: 'You are ahead of last month’s pace! 🚀', behind: function (v) { return 'Need ' + v + ' a day to beat last month'; }, ofLast: function (m, v) { return 'of last month’s total (' + m + ': ' + v + ')'; }, byDay: function (m) { return m + ' sales by day, 1st to today'; },
+          sales: function (m) { return m + ' sales'; }, salesSub: 'ticketed sales this month', vs: function (m, v) { return 'Last month (' + m + '): ' + v; }, ahead: 'You are ahead of last month’s pace! 🚀', behind: function (v) { return 'Need ' + v + ' a day to beat last month'; }, ofLast: function (m, v) { return 'of last month’s total (' + m + ': ' + v + ')'; }, byDay: function (m) { return m + ' sales by day, 1st to today'; }, legWeekend: 'Weekend', legHoliday: 'Public holiday',
           news: 'This week’s news', topBrand: function (b) { return b + ' best sellers this month'; }, topMine: 'Top sellers at your counter', noMine: 'No tickets yet this month', moveNew: 'NEW', moveUp: '▲', moveDown: '▼', pcs: 'pcs',
           xpOnTime: 'on-time stamps', xpLate: 'late stamps', xpStreak: 'streak weeks', xpSales: 'sales up', onTime: 'On time', late: 'Late', notYet: 'Not yet', weekDone: 'Week complete', weekMiss: 'Week missed', weekUnknown: 'No data', tapMore: 'tap for details',
           target: 'Target', targetAuto: 'provisional target: last month +5%', targetNeed: function (v) { return v + ' a day to reach target'; }, targetHit: 'Target reached! 🏆', targetOnTrack: 'On track for target ✅', targetBehind: 'Push a little to catch the target 💪', toGo: function (v) { return v + ' to go'; },
@@ -689,7 +701,8 @@
       },
       lang: 'ms',
       sales: { month: y + '-' + mm, mtd: 12340, prev_month: iso(new Date(y, m - 1, 1)).slice(0, 7), prev_total: 39076, day: now.getDate(), days_in_month: 30, pace: 39076 * now.getDate() / 30, ahead: 12340 >= 39076 * now.getDate() / 30, need_per_day: Math.max(0, (39076 - 12340) / Math.max(1, 30 - now.getDate())),
-               daily: (function () { var a = []; for (var i = 13; i >= 0; i--) { var d = new Date(y, m, now.getDate() - i); a.push([iso(d), Math.round(600 + Math.random() * 1800)]); } return a; })() },
+               daily: (function () { var a = []; var dim = new Date(y, m + 1, 0).getDate(); for (var i = 1; i <= dim; i++) { var d = new Date(y, m, i); a.push([iso(d), i <= now.getDate() ? Math.round(600 + Math.random() * 1800) : null]); } return a; })(),
+               special: (function () { var o = {}; o[iso(new Date(y, m, Math.min(16, new Date(y, m + 1, 0).getDate())))] = 'Hari Malaysia'; return o; })() },
       news: { month: y + '-' + mm, brand: brand, top_brand: [ { code: '12024005-99', name: 'Ctnmx Slim Fit Plain Flat Front Pcs', qty: 16, move: 'up' }, { code: '15026001-90', name: 'Ctnrc With Pocket Plain Collar', qty: 14, move: 'same' }, { code: '12019012-99', name: 'Slim Fit Chino Stretch', qty: 12, move: 'new' } ],
               top_outlet: [ { name: 'Ctnmx Slim Fit Plain Flat Front Pcs', qty: 6 }, { name: 'Plain Collar Short Sleeve', qty: 4 } ],
               hq: [ { id: 'd1', emoji: '🆕', title: 'To Do List baru: kad setem, streak & tahap', body: 'Setiap tugasan siap tepat masa = 1 setem + XP. Ticket setiap hari = streak.' } ] }
@@ -944,18 +957,26 @@
     var pct = prev ? Math.round(mtd / prev * 100) : 0;
     var daily = Array.isArray(sl.daily) ? sl.daily : [];
     var mx = daily.reduce(function (a, d) { return Math.max(a, +d[1] || 0); }, 0) || 1;
+    var special = (sl.special && typeof sl.special === 'object') ? sl.special : {};
+    var hasHol = false;
     var bars = daily.map(function (d, i) {
       var v = d[1]; var dt = parseDate(d[0]); var day = dt ? dt.getDate() : (i + 1);
+      var wk = dt && (dt.getDay() === 0 || dt.getDay() === 6);
+      var hol = special[d[0]] || ''; if (hol) hasHol = true;
+      var cls = 'bar' + (wk ? ' wk' : '') + (hol ? ' hol' : '') + ((v === null || v === undefined) ? ' future' : '');
       var lab = (day === 1 || day % 7 === 1 || day === daily.length) ? '<b>' + day + '</b>' : '';
-      if (v === null || v === undefined) return '<span class="bar future">' + lab + '</span>';
+      var star = hol ? '<em title="' + esc(hol) + '">★</em>' : '';
+      if (v === null || v === undefined) return '<span class="' + cls + '" title="' + day + ' ' + mname + (hol ? ' · ' + esc(hol) : '') + '">' + star + lab + '</span>';
       var h = Math.round((+v || 0) / mx * 100);
-      return '<span class="bar" title="' + day + ' ' + mname + ' ' + fmtRM(v) + '"><i style="height:' + Math.max(3, h) + '%;animation-delay:' + (i * 0.03) + 's"></i>' + lab + '</span>';
+      return '<span class="' + cls + '" title="' + day + ' ' + mname + (hol ? ' · ' + esc(hol) : '') + ' ' + fmtRM(v) + '"><i style="height:' + Math.max(3, h) + '%;animation-delay:' + (i * 0.03) + 's"></i>' + star + lab + '</span>';
     }).join('');
+    var holNames = Object.keys(special).sort().map(function (k) { var dd = parseDate(k); return (dd ? dd.getDate() + ' ' + mname : k) + ' ' + special[k]; }).join(' · ');
+    var legend = '<div class="legend"><span class="wk">' + T.legWeekend + '</span>' + (hasHol ? '<span class="hol">★ ' + T.legHoliday + (holNames ? ': ' + esc(holNames) : '') + '</span>' : '') + '</div>';
     return '<div class="card sales"><div class="ttl"><span class="display">' + esc(T.sales(mname)) + '</span><span class="cnt">' + T.salesSub + '</span></div>' +
       '<div class="rm display" data-count="' + Math.round(mtd) + '">RM 0</div>' +
       (prev ? '<div class="pace-bar"><span class="fill" style="width:' + Math.min(100, pct) + '%"></span></div>' +
               '<div class="sub">' + pct + '% ' + esc(T.ofLast(pname, fmtRM(prev))) + '</div>' : '') +
-      (daily.length ? '<div class="spark month">' + bars + '</div><div class="sub small">' + esc(T.byDay(mname)) + '</div>' : '') +
+      (daily.length ? '<div class="spark month">' + bars + '</div><div class="sub small">' + esc(T.byDay(mname)) + '</div>' + legend : '') +
     '</div>';
   }
   function pillarsHtml(pl) {
