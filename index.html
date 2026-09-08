@@ -1038,8 +1038,7 @@
     html += seasonHtml(board.lang === 'en' ? 'en' : 'ms');
     html += headlineHtml(rows);
     html += gameHtml(board.game, rows, board);
-    html += salesHtml(board.sales, board.lang);
-    html += newsHtml(board.news, brand);
+    html += salesHtml(board.sales, board.lang);   /* news card removed 2026-09-08 (Tze) */
     if (rows.length) html += '<div class="list">' + rows.map(rowHtml).join('') + '</div>';
     else html += '<div class="list"><div class="row"><div class="row-btn" style="cursor:default"><span class="row-main"><span class="summary">' + T.nothing + '</span></span></div></div></div>';
     html += '<div class="foot">' + T.foot + '</div>';
