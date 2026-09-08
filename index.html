@@ -384,6 +384,34 @@
   .badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 999px; background: var(--done-bg); color: var(--done); font-weight: 600; font-size: 14px; }
   .badge.gold { background: #F6E7B4; color: #7A5A00; }
   .badges .none { color: var(--muted); font-size: 14px; }
+  .level { background: var(--surface); border-radius: 14px; padding: 12px 14px; box-shadow: var(--shadow); position: relative; overflow: hidden; }
+  .level .lv-row { display: flex; gap: 12px; align-items: center; }
+  .level .lv-badge { width: 44px; height: 44px; border-radius: 12px; background: var(--chrome-grad); color: var(--chrome-ink); display: grid; place-items: center; font-size: 22px; flex: 0 0 auto; }
+  .level .lv-main { flex: 1; min-width: 0; }
+  .level .big { font-size: 20px; line-height: 1.1; }
+  .level .bar { height: 10px; border-radius: 999px; background: var(--upcoming-bg); margin: 6px 0 4px; overflow: hidden; }
+  .level .bar span { display: block; height: 100%; width: 0; border-radius: 999px; background: linear-gradient(90deg, var(--done), #6CC28A); transition: width 1.2s cubic-bezier(.2,.8,.2,1); }
+  .level .sub { color: var(--muted); font-size: 14px; }
+  .level .rank { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--line); display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  .level .rank .display { font-size: 18px; }
+  .level .rank small { color: var(--muted); font-size: 12px; text-align: right; }
+  .level .levelup { text-align: center; background: #F6E7B4; color: #7A5A00; border-radius: 10px; padding: 8px; margin-bottom: 10px; font-size: 18px; animation: pop .6s cubic-bezier(.2,1.4,.4,1) both; }
+  .level.up { animation: glow 1.6s ease-out 1; }
+  @keyframes pop { 0% { transform: scale(.6); opacity: 0; } 60% { transform: scale(1.08); opacity: 1; } 100% { transform: scale(1); } }
+  @keyframes glow { 0% { box-shadow: 0 0 0 0 rgba(184,116,26,.55); } 100% { box-shadow: 0 0 0 24px rgba(184,116,26,0); } }
+  .streak.hot .flame { animation: flicker 1.6s ease-in-out infinite; }
+  @keyframes flicker { 0%,100% { transform: scale(1); } 50% { transform: scale(1.12) rotate(-4deg); } }
+  .stamp .c { position: relative; transition: transform .3s; }
+  .stamp.new .c { animation: stampin .7s cubic-bezier(.2,1.4,.4,1) both; }
+  .stamp.new .c::after { content: '✦'; position: absolute; top: -8px; right: -6px; color: var(--amber); font-size: 16px; animation: twinkle 1.2s ease-in-out 3; }
+  .stamp .tag { position: absolute; bottom: -6px; left: 50%; transform: translateX(-50%); background: var(--amber); color: #fff; font-size: 10px; padding: 1px 6px; border-radius: 999px; font-weight: 700; }
+  @keyframes stampin { 0% { transform: scale(2.2) rotate(-20deg); opacity: 0; } 70% { transform: scale(.92) rotate(-6deg); opacity: 1; } 100% { transform: scale(1) rotate(-6deg); } }
+  @keyframes twinkle { 0%,100% { opacity: 0; transform: scale(.6); } 50% { opacity: 1; transform: scale(1.2); } }
+  .row.done.cheer .ico { animation: pop .6s cubic-bezier(.2,1.4,.4,1) both; }
+  .row .pop { position: absolute; right: 16px; top: 8px; background: var(--done); color: #fff; font-weight: 700; padding: 4px 10px; border-radius: 999px; font-size: 14px; animation: rise 1.4s ease-out both; pointer-events: none; }
+  .row { position: relative; }
+  @keyframes rise { 0% { transform: translateY(6px); opacity: 0; } 20% { opacity: 1; } 100% { transform: translateY(-22px); opacity: 0; } }
+  @media (prefers-reduced-motion: reduce) { .streak.hot .flame, .stamp.new .c, .level.up, .row.done.cheer .ico, .row .pop, .level .levelup { animation: none; } }
   .confetti { position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 5; }
   .confetti i { position: absolute; top: -12px; width: 9px; height: 14px; border-radius: 2px; animation: fall 2.6s ease-in forwards; }
   @keyframes fall { to { transform: translateY(105vh) rotate(540deg); opacity: 0; } }
@@ -478,6 +506,40 @@
 
   var DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
   var MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  var DAYS_EN = DAYS.slice(), MONTHS_EN = MONTHS.slice();
+  var DAYS_MS = ['Ahd', 'Isn', 'Sel', 'Rab', 'Kha', 'Jum', 'Sab'];
+  var MONTHS_MS = ['Jan', 'Feb', 'Mac', 'Apr', 'Mei', 'Jun', 'Jul', 'Ogos', 'Sep', 'Okt', 'Nov', 'Dis'];
+  /* UI strings. Malay for counters, English for Brunei (Tze 2026-09-08). Row text arrives already localised from HQ. */
+  var STR = {
+    ms: { done: '✓ Siap', upcoming: '○ Akan datang', pending: '! Belum siap', overdue: 'Lewat', due: 'Tarikh akhir', wasDue: 'Sepatutnya', gate: 'Tarikh tutup', now: 'SEKARANG',
+          pendingN: function (n) { return n + ' belum siap'; }, clear: 'Semua siap', overdueN: function (n) { return n + ' lewat'; }, upcomingN: function (n) { return n + ' akan datang'; },
+          hintPending: 'Tekan item untuk lihat apa yang perlu dibuat.', hintUpcoming: 'Tiada apa perlu dibuat sekarang. Tekan item untuk butiran.', hintClear: 'Tiada apa perlu dibuat. Syabas!',
+          demo: 'Data contoh', demoSub: 'Outlet contoh sahaja. Buka link outlet anda dari group WhatsApp.', supervisor: 'Penyelia', month: 'Bulan', updated: 'Dikemas kini ', stale: ' · mungkin lapuk', unknown: 'Masa kemas kini tidak diketahui · mungkin lapuk',
+          nothing: 'Tiada tugasan bulan ini.', foot: 'Hantar dalam group WhatsApp seperti biasa. Senarai ini dikemas kini setiap kali HQ jalankan semakan.',
+          streak: function (n) { return n + ' minggu berturut-turut'; }, streakSub: 'ticketing mingguan lengkap', noStreak: 'Belum ada streak', startStreak: 'Ticket setiap hari minggu ini untuk mula', best: function (n) { return 'Rekod terbaik ' + n + ' minggu'; }, risk: 'Ticket sebelum Isnin untuk kekalkan!',
+          card: function (m) { return 'Kad setem ' + m; }, stamped: function (a, b) { return a + ' dari ' + b + ' dicap'; }, weeks: ' minggu', newStamp: 'Baru!',
+          slots: { ticket_week: 'Ticket mingguan', ticket_month: 'Ticket bulanan', ranking: 'Ranking', timetable: 'Jadual kerja', punchcard: 'Punch card', stocktake: 'Tutup bulan', it_in: 'IT diterima' },
+          badges: 'Lencana', earned: function (n) { return n + ' diperoleh'; }, noBadge: 'Lengkapkan semua setem dalam sebulan untuk dapat lencana bulan itu. Semua tepat masa = lencana emas.',
+          level: function (n, name) { return 'Tahap ' + n + ' · ' + name; }, toNext: function (x, name) { return x + ' XP lagi ke ' + name; }, maxLevel: 'Tahap tertinggi!', rank: function (p, of) { return 'Kedudukan #' + p + ' daripada ' + of; }, rankSub: 'seluruh syarikat, dikira setiap hari',
+          levelUp: function (name) { return 'NAIK TAHAP! Kini ' + name; }, doneTap: 'Siap! 👍' },
+    en: { done: '✓ Done', upcoming: '○ Upcoming', pending: '! Pending', overdue: 'Overdue', due: 'Due', wasDue: 'Was due', gate: 'Close gate', now: 'NOW',
+          pendingN: function (n) { return n + ' pending'; }, clear: 'All clear', overdueN: function (n) { return n + ' overdue'; }, upcomingN: function (n) { return n + ' upcoming'; },
+          hintPending: 'Tap an item to see what’s needed.', hintUpcoming: 'Nothing to do right now. Tap an item for details.', hintClear: 'Nothing to do. Nice work!',
+          demo: 'Demo data', demoSub: 'Sample outlet only. Open your outlet’s own link from your WhatsApp group.', supervisor: 'Supervisor', month: 'Month', updated: 'Updated ', stale: ' · may be out of date', unknown: 'Update time unknown · may be out of date',
+          nothing: 'Nothing due this month.', foot: 'Post in your WhatsApp group as usual. This list updates after HQ’s next run.',
+          streak: function (n) { return n + '-week streak'; }, streakSub: 'weekly ticketing complete', noStreak: 'No streak yet', startStreak: 'Ticket every day this week to start one', best: function (n) { return 'Best so far ' + n + ' weeks'; }, risk: 'Ticket by Monday to keep it!',
+          card: function (m) { return m + ' stamp card'; }, stamped: function (a, b) { return a + ' of ' + b + ' stamped'; }, weeks: ' weeks', newStamp: 'New!',
+          slots: { ticket_week: 'Weekly tickets', ticket_month: 'Monthly tickets', ranking: 'Ranking', timetable: 'Timetable', punchcard: 'Punch card', stocktake: 'Month close', it_in: 'ITs received' },
+          badges: 'Badges', earned: function (n) { return n + ' earned'; }, noBadge: 'Complete every stamp in a month to earn its badge. All on time earns gold.',
+          level: function (n, name) { return 'Level ' + n + ' · ' + name; }, toNext: function (x, name) { return x + ' XP to ' + name; }, maxLevel: 'Top level!', rank: function (p, of) { return 'Rank #' + p + ' of ' + of; }, rankSub: 'company-wide, updated daily',
+          levelUp: function (name) { return 'LEVEL UP! Now ' + name; }, doneTap: 'Done! 👍' }
+  };
+  var T = STR.ms;
+  function setLang(lang) {
+    T = STR[lang] || STR.ms;
+    var ms = (lang !== 'en');
+    DAYS = ms ? DAYS_MS : DAYS_EN; MONTHS = ms ? MONTHS_MS : MONTHS_EN;
+  }
 
   var app = document.getElementById('app');
   var openRows = {};
@@ -533,8 +595,11 @@
           { id: 'it_in', label: 'ITs received', live: true, done: null, on_time: false }
         ] },
         badges: [ { month: iso(new Date(y, m - 1, 1)).slice(0, 7), label: MONTHS[(m + 11) % 12] + ' ' + (m === 0 ? y - 1 : y), gold: true } ],
-        points: { month: 2, max: 7 }
-      }
+        points: { month: 2, max: 7 },
+        level: { n: 2, name: 'Rajin', xp: 96, next_at: 140, next_name: 'Mantap', progress: 0.45 },
+        rank: { pos: 27, of: 137 }
+      },
+      lang: 'ms'
     };
   }
 
@@ -624,16 +689,16 @@
 
   /* ---------- Render ---------- */
   function pillFor(row) {
-    if (row.status === 'done') return '<span class="pill done">✓ Done</span>';
-    if (row.status === 'upcoming') return '<span class="pill upcoming">○ Upcoming</span>';
-    return '<span class="pill pending">! Pending</span>' + (row.overdue ? ' <span class="pill overdue">Overdue</span>' : '');
+    if (row.status === 'done') return '<span class="pill done">' + T.done + '</span>';
+    if (row.status === 'upcoming') return '<span class="pill upcoming">' + T.upcoming + '</span>';
+    return '<span class="pill pending">' + T.pending + '</span>' + (row.overdue ? ' <span class="pill overdue">' + T.overdue + '</span>' : '');
   }
   function dueFor(row) {
     if (!row.due) return '';
     var d = fmtDay(row.due);
-    if (row.status === 'done') { var dd = parseDate(row.due); return '<div class="due">' + (dd && dd.getTime() < Date.now() ? 'Was due' : 'Due') + '<strong>' + esc(d) + '</strong></div>'; }
-    if (row.status === 'upcoming') return '<div class="due">Due<strong>' + esc(d) + '</strong></div>';
-    return '<div class="due">' + (row.overdue ? 'Was due' : 'Due') + '<strong>' + esc(d) + '</strong></div>';
+    if (row.status === 'done') { var dd = parseDate(row.due); return '<div class="due">' + (dd && dd.getTime() < Date.now() ? T.wasDue : T.due) + '<strong>' + esc(d) + '</strong></div>'; }
+    if (row.status === 'upcoming') return '<div class="due">' + T.due + '<strong>' + esc(d) + '</strong></div>';
+    return '<div class="due">' + (row.overdue ? T.wasDue : T.due) + '<strong>' + esc(d) + '</strong></div>';
   }
   function detailFor(row) {
     if (row.stocktake) {
@@ -649,7 +714,7 @@
       });
       html += '</ol>';
       var gate = parseDate(st.closeGate);
-      if (gate) html += '<div class="gate">Close gate <strong>' + esc(fmtDay(gate)) + '</strong></div>';
+      if (gate) html += '<div class="gate">' + T.gate + ' <strong>' + esc(fmtDay(gate)) + '</strong></div>';
       if (row.detail.length) html += '<ul style="margin-top:10px">' + row.detail.map(function (d) { return '<li>' + esc(d) + '</li>'; }).join('') + '</ul>';
       return html;
     }
@@ -679,46 +744,74 @@
       else if (r.status === 'upcoming') upcoming++;
     });
     var cls = pending ? 'is-pending' : 'is-clear';
-    var big = pending ? pending + ' pending' : 'All clear';
+    var big = pending ? T.pendingN(pending) : T.clear;
     var sub = '';
-    if (overdue) sub += '<span class="overdue-note">' + overdue + ' overdue</span>';
-    if (upcoming) sub += (sub ? ' · ' : '') + upcoming + ' upcoming';
-    var hint = pending
-      ? 'Tap an item to see what’s needed.'
-      : (upcoming ? 'Nothing to do right now. Tap an item for details.' : 'Nothing to do. Nice work!');
+    if (overdue) sub += '<span class="overdue-note">' + T.overdueN(overdue) + '</span>';
+    if (upcoming) sub += (sub ? ' · ' : '') + T.upcomingN(upcoming);
+    var hint = pending ? T.hintPending : (upcoming ? T.hintUpcoming : T.hintClear);
     return '<div class="headline ' + cls + '"><div class="big display">' + esc(big) + '</div>' + (sub ? '<div class="sub">' + sub + '</div>' : '') +
       '<div class="hint">' + hint + '</div></div>';
   }
-  function gameHtml(g, rows) {
+  function monthWord(label) {   /* 'Monthly ticketing Aug' -> localised 'Ogos' */
+    var m = /\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\b/.exec(String(label || ''));
+    return m ? MONTHS[MONTHS_EN.indexOf(m[1])] : '';
+  }
+  function seen(key) { try { return localStorage.getItem(key); } catch (e) { return null; } }
+  function remember(key, v) { try { localStorage.setItem(key, v); } catch (e) {} }
+  function gameHtml(g, rows, board) {
     if (!g || typeof g !== 'object') return '';
+    var who = pickText(board && board.outlet, 'x');
     var out = '<div class="game">';
+    /* level + rank */
+    var lv = g.level || null, rk = g.rank || null;
+    if (lv) {
+      var lastLv = parseInt(seen('lvl-' + who), 10);
+      var up = lastLv && lv.n > lastLv;
+      remember('lvl-' + who, String(lv.n));
+      out += '<div class="level' + (up ? ' up' : '') + '">' +
+        (up ? '<div class="levelup display">' + esc(T.levelUp(lv.name)) + '</div>' : '') +
+        '<div class="lv-row"><div class="lv-badge display">' + lv.n + '</div><div class="lv-main">' +
+          '<div class="big display">' + esc(T.level(lv.n, lv.name)) + '</div>' +
+          '<div class="bar"><span style="width:' + Math.round((lv.progress || 0) * 100) + '%"></span></div>' +
+          '<div class="sub">' + esc(lv.next_at ? T.toNext(lv.next_at - lv.xp, lv.next_name) : T.maxLevel) + ' · ' + lv.xp + ' XP</div>' +
+        '</div></div>' +
+        (rk && rk.pos ? '<div class="rank"><span class="display">' + esc(T.rank(rk.pos, rk.of)) + '</span><small>' + T.rankSub + '</small></div>' : '') +
+      '</div>';
+    }
+    /* streak */
     var st = g.streak || {};
     var w = parseInt(st.weeks, 10) || 0;
     var cls = w >= 4 ? 'hot' : (w === 0 ? 'cold' : '');
-    var sub = w === 0 ? 'Ticket every day this week to start one' : ('Best so far ' + (parseInt(st.best, 10) || w) + (st.best === 1 ? ' week' : ' weeks'));
     out += '<div class="streak ' + cls + '"><div class="flame" aria-hidden="true">' + (w === 0 ? '·' : '🔥') + '</div><div>' +
-      '<div class="big display">' + (w === 0 ? 'No streak yet' : w + '-week ticketing streak') + '</div>' +
-      '<div class="sub">' + esc(sub) + '</div>' +
-      (st.at_risk ? '<div class="risk">Ticket by Monday to keep it</div>' : '') + '</div></div>';
+      '<div class="big display">' + esc(w === 0 ? T.noStreak : T.streak(w)) + '</div>' +
+      '<div class="sub">' + esc(w === 0 ? T.startStreak : (T.streakSub + ' · ' + T.best(parseInt(st.best, 10) || w))) + '</div>' +
+      (st.at_risk ? '<div class="risk">' + T.risk + '</div>' : '') + '</div></div>';
+    /* stamp card */
     var sp = g.stamps || {}; var slots = Array.isArray(sp.slots) ? sp.slots : [];
     if (slots.length) {
       var done = slots.filter(function (x) { return x.done; }).length;
       var mm = /^(\d{4})-(\d{2})$/.exec(String(sp.month || ''));
-      var mname = mm ? MONTHS[+mm[2] - 1] : 'This month';
-      out += '<div class="card"><div class="ttl"><span class="display">' + esc(mname) + ' stamp card</span><span class="cnt">' + done + ' of ' + slots.length + ' stamped</span></div><div class="stamps">';
+      var mname = mm ? MONTHS[+mm[2] - 1] : '';
+      var seenKey = 'stamps-' + who + '-' + (sp.month || '');
+      var before = (seen(seenKey) || '').split(',');
+      var nowDone = slots.filter(function (x) { return x.done; }).map(function (x) { return x.id; });
+      var isNew = {}; nowDone.forEach(function (id) { if (before.length && before[0] !== '' && before.indexOf(id) < 0) isNew[id] = true; });
+      remember(seenKey, nowDone.join(','));
+      out += '<div class="card"><div class="ttl"><span class="display">' + esc(T.card(mname)) + '</span><span class="cnt">' + esc(T.stamped(done, slots.length)) + '</span></div><div class="stamps">';
       slots.forEach(function (x) {
         var d = x.done ? parseDate(String(x.done).slice(0, 10)) : null;
-        var short = x.label.replace('Weekly ticketing', 'Weekly tickets').replace('Monthly ticketing', 'Monthly tickets');
-        out += '<div class="stamp' + (x.done ? ' done' : '') + (x.done && x.on_time === false ? ' late' : '') + '">' +
-          '<div class="c">' + (x.done ? '✓' : (x.progress ? esc(x.progress) : '')) + '</div>' +
-          esc(short) + (d ? '<span class="d">' + d.getDate() + ' ' + MONTHS[d.getMonth()] + '</span>' : (x.progress && !x.done ? '<span class="d">' + esc(x.progress) + ' weeks</span>' : '')) + '</div>';
+        var lbl = (T.slots[x.id] || x.label) + (x.id === 'it_in' || x.id === 'ticket_week' ? '' : (' ' + monthWord(x.label)));
+        out += '<div class="stamp' + (x.done ? ' done' : '') + (x.done && x.on_time === false ? ' late' : '') + (isNew[x.id] ? ' new' : '') + '">' +
+          '<div class="c">' + (x.done ? '✓' : (x.progress ? esc(x.progress) : '')) + (isNew[x.id] ? '<b class="tag">' + T.newStamp + '</b>' : '') + '</div>' +
+          esc(lbl) + (d ? '<span class="d">' + d.getDate() + ' ' + MONTHS[d.getMonth()] + '</span>' : (x.progress && !x.done ? '<span class="d">' + esc(x.progress) + T.weeks + '</span>' : '')) + '</div>';
       });
       out += '</div></div>';
     }
+    /* badges */
     var bd = Array.isArray(g.badges) ? g.badges : [];
-    out += '<div class="card"><div class="ttl"><span class="display">Badges</span><span class="cnt">' + bd.length + ' earned</span></div><div class="badges">' +
-      (bd.length ? bd.map(function (b) { return '<span class="badge' + (b.gold ? ' gold' : '') + '">' + (b.gold ? '★' : '✓') + ' ' + esc(b.label) + '</span>'; }).join('') :
-        '<span class="none">Complete every stamp in a month to earn its badge. All on time earns gold.</span>') + '</div></div>';
+    out += '<div class="card"><div class="ttl"><span class="display">' + T.badges + '</span><span class="cnt">' + esc(T.earned(bd.length)) + '</span></div><div class="badges">' +
+      (bd.length ? bd.map(function (b) { var mm2 = /^(\d{4})-(\d{2})$/.exec(String(b.month || '')); var lab = mm2 ? MONTHS[+mm2[2] - 1] + ' ' + mm2[1] : b.label; return '<span class="badge' + (b.gold ? ' gold' : '') + '">' + (b.gold ? '★' : '✓') + ' ' + esc(lab) + '</span>'; }).join('') :
+        '<span class="none">' + T.noBadge + '</span>') + '</div></div>';
     out += '</div>';
     var pending = rows.filter(function (r) { return r.status === 'pending'; }).length;
     if (!pending && rows.length) out += confettiHtml(sp.month);
@@ -734,6 +827,7 @@
   }
   function renderBoard(board, demo) {
     if (!board || typeof board !== 'object') { showInvalid(); return; }
+    setLang(board.lang === 'en' ? 'en' : 'ms');
     var rows = normaliseItems(board);
     var updated = parseDate(board.updatedAt);
     var stale = updated ? (Date.now() - updated.getTime() > STALE_MS) : false;
@@ -743,25 +837,25 @@
     if (mm) monthLabel = MONTHS[+mm[2] - 1] + ' ' + mm[1];
 
     var html = '';
-    if (demo) html += '<div class="banner">Demo data<small>Sample outlet only. Open your outlet’s own link from your WhatsApp group.</small></div>';
+    if (demo) html += '<div class="banner">' + T.demo + '<small>' + T.demoSub + '</small></div>';
     html += '<div class="head' + (brand ? ' brand-' + esc(brand) : '') + '">' +
       '<div class="head-row"><div class="head-main">' +
         '<div class="code display">' + esc(pickText(board.outlet, 'Outlet')) + '</div>' +
         (board.name ? '<div class="name">' + esc(board.name) + '</div>' : '') +
       '</div>' + (brand ? '<div class="badge-brand">' + esc(brand) + '</div>' : '') + '</div>' +
       '<div class="meta">' +
-        (board.pic ? '<span><span class="lbl">Supervisor</span>' + esc(board.pic) + '</span>' : '') +
-        (monthLabel ? '<span><span class="lbl">Month</span>' + esc(monthLabel) + '</span>' : '') +
+        (board.pic ? '<span><span class="lbl">' + T.supervisor + '</span>' + esc(board.pic) + '</span>' : '') +
+        (monthLabel ? '<span><span class="lbl">' + T.month + '</span>' + esc(monthLabel) + '</span>' : '') +
       '</div>' +
       (updated
-        ? '<div class="updated' + (stale ? ' stale' : '') + '">Updated ' + esc(fmtStamp(updated)) + (stale ? ' · may be out of date' : '') + '</div>'
-        : '<div class="updated stale">Update time unknown · may be out of date</div>') +
+        ? '<div class="updated' + (stale ? ' stale' : '') + '">' + T.updated + esc(fmtStamp(updated)) + (stale ? T.stale : '') + '</div>'
+        : '<div class="updated stale">' + T.unknown + '</div>') +
     '</div>';
     html += headlineHtml(rows);
-    html += gameHtml(board.game, rows);
+    html += gameHtml(board.game, rows, board);
     if (rows.length) html += '<div class="list">' + rows.map(rowHtml).join('') + '</div>';
-    else html += '<div class="list"><div class="row"><div class="row-btn" style="cursor:default"><span class="row-main"><span class="summary">Nothing due this month.</span></span></div></div></div>';
-    html += '<div class="foot">Post in your WhatsApp group as usual. This board updates after HQ’s next run.</div>';
+    else html += '<div class="list"><div class="row"><div class="row-btn" style="cursor:default"><span class="row-main"><span class="summary">' + T.nothing + '</span></span></div></div></div>';
+    html += '<div class="foot">' + T.foot + '</div>';
     app.innerHTML = html;
     rendered = true;
     lastBoard = board; lastDemo = demo;
@@ -776,6 +870,15 @@
     if (!id) return;
     openRows[id] = !openRows[id];
     renderBoard(lastBoard, lastDemo);
+    if (openRows[id]) {
+      var el = app.querySelector('.row[data-id="' + id + '"]');
+      if (el && el.classList.contains('done')) {
+        el.classList.add('cheer');
+        var pop = document.createElement('div'); pop.className = 'pop'; pop.textContent = T.doneTap;
+        el.appendChild(pop);
+        setTimeout(function () { el.classList.remove('cheer'); if (pop.parentNode) pop.parentNode.removeChild(pop); }, 1400);
+      }
+    }
   });
 
   function showInvalid() {
