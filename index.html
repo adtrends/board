@@ -460,9 +460,11 @@
   .pl.s0 .ring circle.v { stroke: var(--line); } .pl.s1 .ring circle.v { stroke: var(--amber); } .pl.s2 .ring circle.v { stroke: #6B8BB0; }
   .pl .ring .ic { position: absolute; inset: 0; display: grid; place-items: center; font-size: 24px; }
   .pl.open .ring .ic { animation: pop .6s cubic-bezier(.2,1.4,.4,1) both; }
+  .pl.open .stars i.on { animation: pop .5s cubic-bezier(.2,1.4,.4,1) both; }
   .pl .nm { font-size: 17px; } .pl .wh { font-size: 11px; color: var(--muted); line-height: 1.2; margin-top: 2px; }
   .pl .stars i { font-style: normal; color: var(--line); font-size: 16px; } .pl .stars i.on { color: var(--amber); animation: pop .5s cubic-bezier(.2,1.4,.4,1) both; }
   .pillars .lesson { margin-top: 10px; background: var(--ground); border-radius: 12px; padding: 12px 14px; animation: slidein .4s ease-out both; }
+  .pillars .lesson.one { font-size: 15px; text-align: center; padding: 10px; } .pillars .lesson.one .ic { font-size: 18px; margin-right: 4px; }
   .pillars .lesson .lt { font-size: 17px; margin-bottom: 4px; } .pillars .lesson p { margin: 0 0 8px; font-size: 14px; color: var(--muted); line-height: 1.4; }
   .pillars .lesson ol { margin: 0; padding-left: 20px; font-size: 14px; } .pillars .lesson li { margin: 3px 0; animation: slidein .4s ease-out both; }
   .news .note .rd { margin-left: auto; font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 999px; } .news .note .rd.new { background: var(--amber-bg); color: var(--amber); } .news .note .rd.read { background: var(--done-bg); color: var(--done); }
@@ -581,7 +583,7 @@
           news: 'Berita minggu ini', topBrand: function (b) { return 'Best seller ' + b + ' bulan ini'; }, topMine: 'Paling laris di kaunter anda', noMine: 'Belum ada ticket bulan ini', moveNew: 'BARU', moveUp: '▲', moveDown: '▼', pcs: 'helai',
           xpOnTime: 'setem tepat masa', xpLate: 'setem lewat', xpStreak: 'minggu streak', xpSales: 'jualan naik', onTime: 'Tepat masa', late: 'Lewat', notYet: 'Belum lagi', weekDone: 'Minggu lengkap', weekMiss: 'Minggu terlepas', weekUnknown: 'Tiada data', tapMore: 'tekan untuk butiran',
           target: 'Sasaran', targetAuto: 'sasaran sementara: bulan lepas +5%', targetNeed: function (v) { return v + ' sehari lagi untuk capai sasaran'; }, targetHit: 'Sasaran tercapai! 🏆', targetOnTrack: 'Di landasan untuk capai sasaran ✅', targetBehind: 'Kena pecut sikit untuk kejar sasaran 💪', toGo: function (v) { return v + ' lagi'; },
-          pillars: 'Tiga Bintang anda', pillarTap: 'tekan bintang untuk belajar',
+          pillars: 'Tiga Bintang anda', pillarTap: '',
           pillar: { tepat: { name: 'Tepat', what: 'Ticket sama dengan portal', why: 'Setiap jualan di portal mesti ada ticket yang sama. Beza kecil pun kena betulkan - ini asas laporan bulanan dan komisen.', how: ['Ticket setiap jualan pada hari yang sama', 'Semak jumlah portal vs ticket setiap Isnin', 'Betulkan beza sebelum 5 haribulan'] },
                     cepat: { name: 'Cepat', what: 'Siap sebelum tarikh akhir', why: 'Ranking, jadual kerja dan punch card yang sampai awal bermakna HQ boleh proses awal - gaji, OT dan jadual keluar tepat masa.', how: ['Hantar ranking sebaik sahaja bulan tutup', 'Jadual kerja bulan depan sebelum 15 haribulan', 'Punch card sebelum 3 haribulan'] },
                     laris: { name: 'Laris', what: 'Jualan capai sasaran', why: 'Sasaran dibahagi ikut hari. Tahu berapa perlu sehari buat jualan lebih mudah dikejar - dan best seller adalah senjata paling senang.', how: ['Pastikan best seller sentiasa ada di rak', 'Tawarkan padanan: seluar + kemeja', 'Semak jualan sehari di sini setiap pagi'] } },
@@ -601,7 +603,7 @@
           news: 'This week’s news', topBrand: function (b) { return b + ' best sellers this month'; }, topMine: 'Top sellers at your counter', noMine: 'No tickets yet this month', moveNew: 'NEW', moveUp: '▲', moveDown: '▼', pcs: 'pcs',
           xpOnTime: 'on-time stamps', xpLate: 'late stamps', xpStreak: 'streak weeks', xpSales: 'sales up', onTime: 'On time', late: 'Late', notYet: 'Not yet', weekDone: 'Week complete', weekMiss: 'Week missed', weekUnknown: 'No data', tapMore: 'tap for details',
           target: 'Target', targetAuto: 'provisional target: last month +5%', targetNeed: function (v) { return v + ' a day to reach target'; }, targetHit: 'Target reached! 🏆', targetOnTrack: 'On track for target ✅', targetBehind: 'Push a little to catch the target 💪', toGo: function (v) { return v + ' to go'; },
-          pillars: 'Your three stars', pillarTap: 'tap a star to learn',
+          pillars: 'Your three stars', pillarTap: '',
           pillar: { tepat: { name: 'Accurate', what: 'Tickets match the portal', why: 'Every portal sale needs a matching ticket. Even small gaps must be fixed - this is the base of the monthly report and commission.', how: ['Ticket every sale the same day', 'Check portal vs ticket every Monday', 'Fix gaps before the 5th'] },
                     cepat: { name: 'Timely', what: 'Done before the deadline', why: 'Rankings, timetables and punch cards that arrive early let HQ process early - pay, OT and schedules go out on time.', how: ['Send the ranking as soon as the month closes', 'Next month’s timetable before the 15th', 'Punch card before the 3rd'] },
                     laris: { name: 'Sales', what: 'Sales reach the target', why: 'The target is split by day. Knowing what you need per day makes it easier to chase - and best sellers are the easiest weapon.', how: ['Keep best sellers on the rack', 'Offer the pair: pants + shirt', 'Check your daily sales here every morning'] } },
@@ -966,13 +968,13 @@
       for (var k = 1; k <= 3; k++) stars += '<i class="' + (k <= (x.stars || 0) ? 'on' : '') + '" style="animation-delay:' + (i * 0.1 + k * 0.12) + 's">★</i>';
       out += '<div class="pl tap' + (open ? ' open' : '') + ' s' + (x.stars || 0) + '" data-toggle="pl-' + esc(x.id) + '">' +
         '<div class="ring"><svg viewBox="0 0 36 36"><circle cx="18" cy="18" r="15.5"/><circle class="v" cx="18" cy="18" r="15.5" style="stroke-dasharray:' + Math.round(((x.stars || 0) / 3) * 97.4) + ' 97.4"/></svg><span class="ic">' + (x.id === 'tepat' ? '🎯' : (x.id === 'cepat' ? '⚡' : '🛍️')) + '</span></div>' +
-        '<div class="nm display">' + esc(d.name) + '</div><div class="stars">' + stars + '</div><div class="wh">' + esc(d.what) + '</div></div>';
+        '<div class="nm display">' + esc(d.name) + '</div><div class="stars">' + stars + '</div></div>';
     });
     out += '</div>';
     pl.forEach(function (x) {
       if (!openRows['pl-' + x.id]) return;
       var d = T.pillar[x.id]; if (!d) return;
-      out += '<div class="lesson"><div class="lt display">' + esc(d.name) + ' · ' + esc(d.what) + '</div><p>' + esc(d.why) + '</p><ol>' + (d.how || []).map(function (h, i) { return '<li style="animation-delay:' + (0.15 + i * 0.1) + 's">' + esc(h) + '</li>'; }).join('') + '</ol></div>';
+      out += '<div class="lesson one"><span class="ic">' + (x.id === 'tepat' ? '🎯' : (x.id === 'cepat' ? '⚡' : '🛍️')) + '</span> ' + esc(d.what) + '</div>';
     });
     return out + '</div>';
   }
