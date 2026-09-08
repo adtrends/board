@@ -675,9 +675,7 @@
         rank: { pos: 27, of: 137 }
       },
       lang: 'ms',
-      pillars: [ { id: 'tepat', stars: 2 }, { id: 'cepat', stars: 3 }, { id: 'laris', stars: 1 } ],
       sales: { month: y + '-' + mm, mtd: 12340, prev_month: iso(new Date(y, m - 1, 1)).slice(0, 7), prev_total: 39076, day: now.getDate(), days_in_month: 30, pace: 39076 * now.getDate() / 30, ahead: 12340 >= 39076 * now.getDate() / 30, need_per_day: Math.max(0, (39076 - 12340) / Math.max(1, 30 - now.getDate())),
-               target: 42000, target_src: 'file', target_pct: 12340 / 42000, target_pace: 42000 * now.getDate() / 30, target_need_per_day: Math.max(0, (42000 - 12340) / Math.max(1, 30 - now.getDate())), target_on_track: 12340 >= 42000 * now.getDate() / 30, target_gap: 42000 - 12340,
                daily: (function () { var a = []; for (var i = 13; i >= 0; i--) { var d = new Date(y, m, now.getDate() - i); a.push([iso(d), Math.round(600 + Math.random() * 1800)]); } return a; })() },
       news: { month: y + '-' + mm, brand: brand, top_brand: [ { code: '12024005-99', name: 'Ctnmx Slim Fit Plain Flat Front Pcs', qty: 16, move: 'up' }, { code: '15026001-90', name: 'Ctnrc With Pocket Plain Collar', qty: 14, move: 'same' }, { code: '12019012-99', name: 'Slim Fit Chino Stretch', qty: 12, move: 'new' } ],
               top_outlet: [ { name: 'Ctnmx Slim Fit Plain Flat Front Pcs', qty: 6 }, { name: 'Plain Collar Short Sleeve', qty: 4 } ],
@@ -1053,7 +1051,6 @@
     html += headlineHtml(rows);
     html += gameHtml(board.game, rows, board);
     html += salesHtml(board.sales, board.lang);
-    html += pillarsHtml(board.pillars);
     html += newsHtml(board.news, brand);
     if (rows.length) html += '<div class="list">' + rows.map(rowHtml).join('') + '</div>';
     else html += '<div class="list"><div class="row"><div class="row-btn" style="cursor:default"><span class="row-main"><span class="summary">' + T.nothing + '</span></span></div></div></div>';
