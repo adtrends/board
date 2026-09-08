@@ -431,6 +431,10 @@
   .season .bits i { position: absolute; top: -20px; width: 8px; height: 16px; border-radius: 2px; opacity: .9; animation: drift 3.2s linear infinite; }
   @keyframes drift { to { transform: translateY(120px) rotate(360deg); opacity: 0; } }
   .card.sales { margin: 6px 16px 26px; }
+  .langsw { position: absolute; right: 16px; bottom: 14px; display: inline-flex; border: 1px solid var(--chrome-soft); border-radius: 999px; overflow: hidden; }
+  .langsw button { border: 0; background: transparent; color: var(--chrome-ink); font: 600 12px "Barlow", sans-serif; padding: 4px 10px; cursor: pointer; opacity: .75; }
+  .langsw button.on { background: var(--chrome-ink); color: var(--chrome); opacity: 1; }
+  .head { position: relative; }
   .summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 18px 16px 8px; }
   .summary .tile { border-radius: 14px; padding: 12px 8px 10px; text-align: center; background: var(--surface); box-shadow: var(--shadow); position: relative; }
   .summary .tile .n { font-size: 30px; line-height: 1; }
@@ -1032,9 +1036,12 @@
     for (var i = 0; i < 40; i++) h += '<i style="left:' + (Math.random() * 100) + '%;background:' + cols[i % cols.length] + ';animation-delay:' + (Math.random() * 0.8) + 's;animation-duration:' + (2 + Math.random() * 1.5) + 's"></i>';
     return h + '</div>';
   }
+  function chosenLang(board) { var v = seen('lang'); return (v === 'en' || v === 'ms') ? v : (board.lang === 'en' ? 'en' : 'ms'); }
   function renderBoard(board, demo) {
     if (!board || typeof board !== 'object') { showInvalid(); return; }
-    setLang(board.lang === 'en' ? 'en' : 'ms');
+    var lang = chosenLang(board);
+    setLang(lang);
+    if (lang === 'en' && Array.isArray(board.items_en)) { board = Object.assign({}, board, { items: board.items_en }); }
     var rows = normaliseItems(board);
     var updated = parseDate(board.updatedAt);
     var stale = updated ? (Date.now() - updated.getTime() > STALE_MS) : false;
@@ -1050,6 +1057,7 @@
         '<div class="code display">' + esc(pickText(board.outlet, 'Outlet')) + '</div>' +
         (board.name ? '<div class="name">' + esc(board.name) + '</div>' : '') +
       '</div>' + (brand ? '<div class="badge-brand">' + esc(brand) + '</div>' : '') + '</div>' +
+      '<div class="langsw" role="group" aria-label="Bahasa / Language"><button type="button" data-lang="ms"' + (lang === 'ms' ? ' class="on"' : '') + '>BM</button><button type="button" data-lang="en"' + (lang === 'en' ? ' class="on"' : '') + '>EN</button></div>' +
       '<div class="meta">' +
         (board.pic ? '<span><span class="lbl">' + T.supervisor + '</span>' + esc(board.pic) + '</span>' : '') +
         (monthLabel ? '<span><span class="lbl">' + T.month + '</span>' + esc(monthLabel) + '</span>' : '') +
@@ -1072,6 +1080,8 @@
   var lastBoard = null, lastDemo = false;
 
   app.addEventListener('click', function (e) {
+    var lb = e.target.closest('.langsw button[data-lang]');
+    if (lb && lastBoard) { remember('lang', lb.getAttribute('data-lang')); renderBoard(lastBoard, lastDemo); return; }
     var tg = e.target.closest('[data-toggle]');
     if (tg && lastBoard) { var k = tg.getAttribute('data-toggle'); openRows[k] = !openRows[k]; var y = window.scrollY; renderBoard(lastBoard, lastDemo); window.scrollTo(0, y); return; }
     var btn = e.target.closest('.row-btn');
