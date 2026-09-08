@@ -844,6 +844,173 @@
       '<div class="tile upcoming"><div class="n display">' + upcoming + '</div><div class="l">' + T.tUpcoming + '</div></div>' +
     '</div><div class="hint">' + hint + '</div>';
   }
+  function monthWord(label) {   /* 'Monthly ticketing Aug' -> localised 'Ogos' */
+    var m = /\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\b/.exec(String(label || ''));
+    return m ? MONTHS[MONTHS_EN.indexOf(m[1])] : '';
+  }
+  function seen(key) { try { return localStorage.getItem(key); } catch (e) { return null; } }
+  function remember(key, v) { try { localStorage.setItem(key, v); } catch (e) {} }
+  function gameHtml(g, rows, board) {
+    if (!g || typeof g !== 'object') return '';
+    var who = pickText(board && board.outlet, 'x');
+    var out = '<div class="game">';
+    /* level + rank */
+    var lv = g.level || null, rk = g.rank || null;
+    if (lv) {
+      var lastLv = parseInt(seen('lvl-' + who), 10);
+      var up = lastLv && lv.n > lastLv;
+      remember('lvl-' + who, String(lv.n));
+      out += '<div class="level' + (up ? ' up' : '') + '">' +
+        (up ? '<div class="levelup display">' + esc(T.levelUp(lv.name)) + '</div>' : '') +
+        '<div class="lv-row"><div class="lv-badge display">' + lv.n + '</div><div class="lv-main">' +
+          '<div class="big display">' + esc(T.level(lv.n, lv.name)) + '</div>' +
+          '<div class="bar"><span style="width:' + Math.round((lv.progress || 0) * 100) + '%"></span></div>' +
+          '<div class="sub">' + esc(lv.next_at ? T.toNext(lv.next_at - lv.xp, lv.next_name) : T.maxLevel) + ' · <span data-count="' + lv.xp + '">0</span> XP</div>' +
+        '</div></div>' +
+
+        (rk && rk.pos ? '<div class="rank"><span class="display">' + esc(T.rank(rk.pos, rk.of)) + '</span><small>' + T.rankSub + '</small></div>' : '') +
+      '</div>';
+    }
+    /* streak */
+    var st = g.streak || {};
+    var w = parseInt(st.weeks, 10) || 0;
+    var cls = w >= 4 ? 'hot' : (w === 0 ? 'cold' : '');
+    var hist = Array.isArray(st.history) ? st.history : [];
+    out += '<div class="streak ' + cls + '"><div class="flame" aria-hidden="true">' + (w === 0 ? '·' : '🔥') + '</div><div style="flex:1">' +
+      '<div class="big display">' + esc(w === 0 ? T.noStreak : T.streak(w)) + '</div>' +
+      '<div class="sub">' + esc(w === 0 ? T.startStreak : (T.streakSub + ' · ' + T.best(parseInt(st.best, 10) || w))) + '</div>' +
+      (st.at_risk ? '<div class="risk">' + T.risk + '</div>' : '') +
+      '</div></div>';
+    /* stamp card */
+    var sp = g.stamps || {}; var slots = Array.isArray(sp.slots) ? sp.slots : [];
+    if (slots.length) {
+      var done = slots.filter(function (x) { return x.done; }).length;
+      var mm = /^(\d{4})-(\d{2})$/.exec(String(sp.month || ''));
+      var mname = mm ? MONTHS[+mm[2] - 1] : '';
+      var seenKey = 'stamps-' + who + '-' + (sp.month || '');
+      var before = (seen(seenKey) || '').split(',');
+      var nowDone = slots.filter(function (x) { return x.done; }).map(function (x) { return x.id; });
+      var isNew = {}; nowDone.forEach(function (id) { if (before.length && before[0] !== '' && before.indexOf(id) < 0) isNew[id] = true; });
+      remember(seenKey, nowDone.join(','));
+      out += '<div class="card"><div class="ttl"><span class="display">' + esc(T.card(mname)) + '</span><span class="cnt">' + esc(T.stamped(done, slots.length)) + '</span></div><div class="stamps">';
+      slots.forEach(function (x) {
+        var d = x.done ? parseDate(String(x.done).slice(0, 10)) : null;
+        var lbl = (T.slots[x.id] || x.label) + (x.id === 'it_in' || x.id === 'ticket_week' ? '' : (' ' + monthWord(x.label)));
+        var flipped = !!openRows['st-' + x.id];
+        var back = x.done ? ((x.on_time === false ? T.late : T.onTime) + (d ? '<br>' + d.getDate() + ' ' + MONTHS[d.getMonth()] : '')) : T.notYet;
+        out += '<div class="stamp tap' + (x.done ? ' done' : '') + (x.done && x.on_time === false ? ' late' : '') + (isNew[x.id] ? ' new' : '') + (flipped ? ' flip' : '') + '" data-toggle="st-' + esc(x.id) + '">' +
+          '<div class="c"><span class="face">' + (x.done ? '✓' : (x.progress ? esc(x.progress) : '')) + '</span><span class="back">' + back + '</span>' + (isNew[x.id] ? '<b class="tag">' + T.newStamp + '</b>' : '') + '</div>' +
+          esc(lbl) + (d ? '<span class="d">' + d.getDate() + ' ' + MONTHS[d.getMonth()] + '</span>' : (x.progress && !x.done ? '<span class="d">' + esc(x.progress) + T.weeks + '</span>' : '')) + '</div>';
+      });
+      out += '</div></div>';
+    }
+    /* badges */
+    var bd = Array.isArray(g.badges) ? g.badges : [];
+    out += '<div class="card"><div class="ttl"><span class="display">' + T.badges + '</span><span class="cnt">' + esc(T.earned(bd.length)) + '</span></div><div class="badges">' +
+      (bd.length ? bd.map(function (b) { var mm2 = /^(\d{4})-(\d{2})$/.exec(String(b.month || '')); var lab = mm2 ? MONTHS[+mm2[2] - 1] + ' ' + mm2[1] : b.label; return '<span class="badge' + (b.gold ? ' gold' : '') + '">' + (b.gold ? '★' : '✓') + ' ' + esc(lab) + '</span>'; }).join('') :
+        '<span class="none">' + T.noBadge + '</span>') + '</div></div>';
+    out += '</div>';
+    var pending = rows.filter(function (r) { return r.status === 'pending'; }).length;
+    if (!pending && rows.length) out += confettiHtml(sp.month);
+    return out;
+  }
+  /* seasonal greetings: [mm-dd from, mm-dd to, ms, en, emoji, colours] - Malaysian public days, greetings only */
+  var SEASONS = [
+    ['09-14', '09-17', 'Selamat Hari Malaysia! 🇲🇾', 'Happy Malaysia Day! 🇲🇾', '🇲🇾', ['#0032A0', '#FFCC00', '#CC0001', '#FFFFFF']],
+    ['08-29', '08-31', 'Selamat Hari Merdeka! 🇲🇾', 'Happy Merdeka Day! 🇲🇾', '🇲🇾', ['#0032A0', '#FFCC00', '#CC0001', '#FFFFFF']],
+    ['12-20', '12-26', 'Selamat Hari Krismas! 🎄', 'Merry Christmas! 🎄', '🎄', ['#2A7549', '#B93A30', '#F6E7B4']],
+    ['12-30', '01-02', 'Selamat Tahun Baru! 🎉', 'Happy New Year! 🎉', '🎉', ['#B8741A', '#3E4E62', '#F6E7B4']],
+    ['11-06', '11-09', 'Selamat Hari Deepavali! 🪔', 'Happy Deepavali! 🪔', '🪔', ['#B8741A', '#B93A30', '#F6E7B4']],
+    ['02-04', '02-08', 'Gong Xi Fa Cai! 🧧', 'Gong Xi Fa Cai! 🧧', '🏮', ['#B93A30', '#F6E7B4', '#B8741A']],
+    ['03-19', '03-22', 'Selamat Hari Raya Aidilfitri! ✨', 'Selamat Hari Raya Aidilfitri! ✨', '✨', ['#2A7549', '#F6E7B4', '#3E4E62']]
+  ];
+  function seasonHtml(lang) {
+    var now = new Date(); var md = String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
+    for (var i = 0; i < SEASONS.length; i++) {
+      var sn = SEASONS[i], inRange = sn[0] <= sn[1] ? (md >= sn[0] && md <= sn[1]) : (md >= sn[0] || md <= sn[1]);
+      if (!inRange) continue;
+      var bits = '';
+      for (var k = 0; k < 14; k++) bits += '<i style="left:' + (k * 7 + 2) + '%;background:' + sn[5][k % sn[5].length] + ';animation-delay:' + (k * 0.25) + 's"></i>';
+      return '<div class="season"><div class="bits" aria-hidden="true">' + bits + '</div><div class="txt display">' + (lang === 'en' ? sn[3] : sn[2]) + '</div></div>';
+    }
+    return '';
+  }
+  function fmtRM(v) { v = Math.round(v || 0); return 'RM ' + String(v).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
+  function salesHtml(sl, lang) {
+    if (!sl || typeof sl !== 'object') return '';
+    var mm = /^(\d{4})-(\d{2})$/.exec(String(sl.month || '')); var mname = mm ? MONTHS[+mm[2] - 1] : '';
+    var pm = /^(\d{4})-(\d{2})$/.exec(String(sl.prev_month || '')); var pname = pm ? MONTHS[+pm[2] - 1] : '';
+    var prev = +sl.prev_total || 0, mtd = +sl.mtd || 0;
+    var pct = prev ? Math.round(mtd / prev * 100) : 0;
+    var daily = Array.isArray(sl.daily) ? sl.daily : [];
+    var mx = daily.reduce(function (a, d) { return Math.max(a, +d[1] || 0); }, 0) || 1;
+    var bars = daily.map(function (d, i) {
+      var v = d[1]; var dt = parseDate(d[0]); var day = dt ? dt.getDate() : (i + 1);
+      var lab = (day === 1 || day % 7 === 1 || day === daily.length) ? '<b>' + day + '</b>' : '';
+      if (v === null || v === undefined) return '<span class="bar future">' + lab + '</span>';
+      var h = Math.round((+v || 0) / mx * 100);
+      return '<span class="bar" title="' + day + ' ' + mname + ' ' + fmtRM(v) + '"><i style="height:' + Math.max(3, h) + '%;animation-delay:' + (i * 0.03) + 's"></i>' + lab + '</span>';
+    }).join('');
+    return '<div class="card sales"><div class="ttl"><span class="display">' + esc(T.sales(mname)) + '</span><span class="cnt">' + T.salesSub + '</span></div>' +
+      '<div class="rm display" data-count="' + Math.round(mtd) + '">RM 0</div>' +
+      (prev ? '<div class="pace-bar"><span class="fill" style="width:' + Math.min(100, pct) + '%"></span></div>' +
+              '<div class="sub">' + pct + '% ' + esc(T.ofLast(pname, fmtRM(prev))) + '</div>' : '') +
+      (daily.length ? '<div class="spark month">' + bars + '</div><div class="sub small">' + esc(T.byDay(mname)) + '</div>' : '') +
+    '</div>';
+  }
+  function pillarsHtml(pl) {
+    if (!Array.isArray(pl) || !pl.length) return '';
+    var out = '<div class="card pillars"><div class="ttl"><span class="display">' + T.pillars + '</span><span class="cnt">' + T.pillarTap + '</span></div><div class="pl-row">';
+    pl.forEach(function (x, i) {
+      var d = T.pillar[x.id] || { name: x.id, what: '' };
+      var open = !!openRows['pl-' + x.id];
+      var stars = '';
+      for (var k = 1; k <= 3; k++) stars += '<i class="' + (k <= (x.stars || 0) ? 'on' : '') + '" style="animation-delay:' + (i * 0.1 + k * 0.12) + 's">★</i>';
+      out += '<div class="pl tap' + (open ? ' open' : '') + ' s' + (x.stars || 0) + '" data-toggle="pl-' + esc(x.id) + '">' +
+        '<div class="ring"><svg viewBox="0 0 36 36"><circle cx="18" cy="18" r="15.5"/><circle class="v" cx="18" cy="18" r="15.5" style="stroke-dasharray:' + Math.round(((x.stars || 0) / 3) * 97.4) + ' 97.4"/></svg><span class="ic">' + (x.id === 'tepat' ? '🎯' : (x.id === 'cepat' ? '⚡' : '🛍️')) + '</span></div>' +
+        '<div class="nm display">' + esc(d.name) + '</div><div class="stars">' + stars + '</div></div>';
+    });
+    out += '</div>';
+    pl.forEach(function (x) {
+      if (!openRows['pl-' + x.id]) return;
+      var d = T.pillar[x.id]; if (!d) return;
+      out += '<div class="lesson one"><span class="ic">' + (x.id === 'tepat' ? '🎯' : (x.id === 'cepat' ? '⚡' : '🛍️')) + '</span> ' + esc(d.what) + '</div>';
+    });
+    return out + '</div>';
+  }
+  function newsHtml(nw, brand) {
+    if (!nw || typeof nw !== 'object') return '';
+    var out = '<div class="card news"><div class="ttl"><span class="display">' + T.news + '</span></div>';
+    (Array.isArray(nw.hq) ? nw.hq : []).forEach(function (it, i) {
+      var key = 'news-' + (it.id || i); var open = !!openRows[key]; var wasRead = !!seen('read-' + (it.id || i));
+      if (open) remember('read-' + (it.id || i), '1');
+      out += '<div class="note tap' + (open ? ' open' : '') + '" data-toggle="' + esc(key) + '" style="animation-delay:' + (i * 0.12) + 's"><div class="nt"><span class="em">' + esc(it.emoji || '📌') + '</span><b>' + esc(it.title || '') + '</b><span class="rd ' + (wasRead || open ? 'read' : 'new') + '">' + (wasRead || open ? T.read : T.unread) + '</span></div>' + (open ? '<div class="nb">' + esc(it.body || '') + '</div>' : '') + '</div>';
+    });
+    if (!(Array.isArray(nw.hq) && nw.hq.length)) return '';   /* Tze 2026-09-08: HQ notes only, no best-seller lists */
+    return out + '</div>';
+  }
+  var countUpSkip = false;
+  function countUp() {
+    if (countUpSkip) { countUpSkip = false; app.querySelectorAll('[data-count]').forEach(function (el) { var t = parseInt(el.getAttribute('data-count'), 10) || 0; el.textContent = /^RM/.test(el.textContent) ? fmtRM(t) : String(t); }); app.querySelectorAll('.level .bar span, .pace-bar .fill').forEach(function (b) { b.style.transition = 'none'; }); return; }
+    var els = app.querySelectorAll('[data-count]');
+    els.forEach(function (el) {
+      var target = parseInt(el.getAttribute('data-count'), 10) || 0, start = null, dur = 1100;
+      var prefix = /^RM/.test(el.textContent) ? 'RM ' : '';
+      function step(ts) { if (!start) start = ts; var t = Math.min(1, (ts - start) / dur); var v = Math.round(target * (1 - Math.pow(1 - t, 3))); el.textContent = prefix ? fmtRM(v) : String(v); if (t < 1) requestAnimationFrame(step); }
+      if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) { el.textContent = prefix ? fmtRM(target) : String(target); return; }
+      requestAnimationFrame(step);
+    });
+    var bars = app.querySelectorAll('.level .bar span, .pace-bar .fill');
+    bars.forEach(function (b) { var w = b.style.width; b.style.width = '0%'; requestAnimationFrame(function () { requestAnimationFrame(function () { b.style.width = w; }); }); });
+  }
+  function confettiHtml(month) {
+    var key = 'confetti-' + (month || '') + '-' + startOfToday().toDateString();
+    try { if (localStorage.getItem(key)) return ''; localStorage.setItem(key, '1'); } catch (e) { return ''; }
+    var cols = ['#2A7549', '#B8741A', '#3E4E62', '#B93A30', '#7A5A00'];
+    var h = '<div class="confetti" aria-hidden="true">';
+    for (var i = 0; i < 40; i++) h += '<i style="left:' + (Math.random() * 100) + '%;background:' + cols[i % cols.length] + ';animation-delay:' + (Math.random() * 0.8) + 's;animation-duration:' + (2 + Math.random() * 1.5) + 's"></i>';
+    return h + '</div>';
+  }
   function renderBoard(board, demo) {
     if (!board || typeof board !== 'object') { showInvalid(); return; }
     setLang(board.lang === 'en' ? 'en' : 'ms');
