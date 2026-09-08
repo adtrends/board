@@ -412,6 +412,43 @@
   .row { position: relative; }
   @keyframes rise { 0% { transform: translateY(6px); opacity: 0; } 20% { opacity: 1; } 100% { transform: translateY(-22px); opacity: 0; } }
   @media (prefers-reduced-motion: reduce) { .streak.hot .flame, .stamp.new .c, .level.up, .row.done.cheer .ico, .row .pop, .level .levelup { animation: none; } }
+  .tap { cursor: pointer; }
+  .level .sub em { font-style: normal; color: var(--upcoming); font-size: 12px; }
+  .level .xp { list-style: none; margin: 10px 0 0; padding: 10px 0 0; border-top: 1px dashed var(--line); display: grid; grid-template-columns: 1fr 1fr; gap: 6px 12px; font-size: 14px; animation: pop .4s ease-out both; }
+  .level .xp li b { font-size: 18px; margin-right: 4px; } .level .xp li span { color: var(--muted); font-size: 12px; }
+  .streak .dots { display: flex; gap: 6px; margin-top: 8px; }
+  .streak .dots i { width: 14px; height: 14px; border-radius: 50%; background: var(--upcoming-bg); animation: pop .5s cubic-bezier(.2,1.4,.4,1) both; }
+  .streak .dots i.on { background: var(--amber); box-shadow: 0 0 0 2px #FBE3C4 inset; } .streak .dots i.off { background: var(--pending-bg); } .streak .dots i.na { background: var(--line); }
+  .streak .hist { list-style: none; margin: 8px 0 0; padding: 8px 0 0; border-top: 1px dashed var(--line); font-size: 13px; color: var(--muted); animation: pop .4s ease-out both; }
+  .streak .hist li.on { color: var(--done); } .streak .hist li.off { color: var(--pending); }
+  .stamp .c { transition: transform .5s cubic-bezier(.2,.9,.3,1.2); transform-style: preserve-3d; }
+  .stamp .c .face, .stamp .c .back { backface-visibility: hidden; position: absolute; inset: 0; display: grid; place-items: center; border-radius: 50%; }
+  .stamp .c .back { transform: rotateY(180deg); font-size: 11px; line-height: 1.15; color: var(--ink); background: var(--surface); border: 2px solid var(--line); }
+  .stamp.flip .c { transform: rotateY(180deg); }
+  .stamp.done.flip .c { transform: rotateY(180deg); }
+  .season { position: relative; margin: 0 16px 12px; padding: 14px; border-radius: 14px; background: var(--chrome-grad); color: var(--chrome-ink); overflow: hidden; text-align: center; box-shadow: var(--shadow); }
+  .season .txt { position: relative; font-size: 24px; animation: pop .7s cubic-bezier(.2,1.4,.4,1) both; }
+  .season .bits i { position: absolute; top: -20px; width: 8px; height: 16px; border-radius: 2px; opacity: .9; animation: drift 3.2s linear infinite; }
+  @keyframes drift { to { transform: translateY(120px) rotate(360deg); opacity: 0; } }
+  .sales .rm { font-size: 34px; line-height: 1; margin: 2px 0 8px; color: var(--ink); }
+  .sales .pace-bar { position: relative; height: 14px; border-radius: 999px; background: var(--upcoming-bg); overflow: visible; }
+  .sales .pace-bar .fill { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--chrome), #6B8BB0); transition: width 1.2s cubic-bezier(.2,.8,.2,1); }
+  .sales .pace-bar .marker { position: absolute; top: -5px; width: 3px; height: 24px; background: var(--amber); border-radius: 2px; }
+  .sales .pace-bar .marker::after { content: '▼'; position: absolute; top: -14px; left: -6px; font-size: 11px; color: var(--amber); }
+  .sales .sub { color: var(--muted); font-size: 14px; margin-top: 8px; } .sales .sub.small { font-size: 12px; margin-top: 2px; }
+  .sales .good { color: var(--done); font-weight: 700; margin-top: 4px; } .sales .push { color: var(--amber); font-weight: 600; margin-top: 4px; }
+  .sales .spark { display: flex; align-items: flex-end; gap: 4px; height: 44px; margin-top: 12px; }
+  .sales .spark i { flex: 1; background: var(--done-bg); border-top: 3px solid var(--done); border-radius: 3px 3px 0 0; transform-origin: bottom; animation: grow .6s cubic-bezier(.2,.9,.3,1.1) both; }
+  @keyframes grow { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+  .news .note { background: var(--ground); border-radius: 10px; padding: 10px 12px; margin-bottom: 8px; animation: slidein .5s ease-out both; }
+  .news .nt { display: flex; gap: 8px; align-items: baseline; font-size: 16px; } .news .nt .em { font-size: 20px; } .news .nb { color: var(--muted); font-size: 14px; margin-top: 4px; }
+  .news .sec { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 700; margin: 12px 0 6px; }
+  .news .top { list-style: none; margin: 0; padding: 0; } .news .top li { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid var(--line); font-size: 15px; animation: slidein .5s ease-out both; }
+  .news .top .n { width: 22px; height: 22px; border-radius: 50%; background: var(--chrome); color: #fff; font-size: 12px; font-weight: 700; display: grid; place-items: center; flex: 0 0 auto; }
+  .news .top .nm { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .news .top .q { color: var(--muted); font-size: 13px; }
+  .news .mv { font-size: 11px; font-weight: 700; padding: 1px 6px; border-radius: 999px; } .news .mv.up { color: var(--done); background: var(--done-bg); } .news .mv.down { color: var(--pending); background: var(--pending-bg); } .news .mv.new { color: var(--amber); background: var(--amber-bg); }
+  @keyframes slidein { from { transform: translateX(14px); opacity: 0; } to { transform: none; opacity: 1; } }
+  @media (prefers-reduced-motion: reduce) { .season .bits i, .sales .spark i, .news .note, .news .top li, .streak .dots i { animation: none; } }
   .confetti { position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 5; }
   .confetti i { position: absolute; top: -12px; width: 9px; height: 14px; border-radius: 2px; animation: fall 2.6s ease-in forwards; }
   @keyframes fall { to { transform: translateY(105vh) rotate(540deg); opacity: 0; } }
@@ -521,7 +558,10 @@
           slots: { ticket_week: 'Ticket mingguan', ticket_month: 'Ticket bulanan', ranking: 'Ranking', timetable: 'Jadual kerja', punchcard: 'Punch card', stocktake: 'Tutup bulan', it_in: 'IT diterima' },
           badges: 'Lencana', earned: function (n) { return n + ' diperoleh'; }, noBadge: 'Lengkapkan semua setem dalam sebulan untuk dapat lencana bulan itu. Semua tepat masa = lencana emas.',
           level: function (n, name) { return 'Tahap ' + n + ' · ' + name; }, toNext: function (x, name) { return x + ' XP lagi ke ' + name; }, maxLevel: 'Tahap tertinggi!', rank: function (p, of) { return 'Kedudukan #' + p + ' daripada ' + of; }, rankSub: 'seluruh syarikat, dikira setiap hari',
-          levelUp: function (name) { return 'NAIK TAHAP! Kini ' + name; }, doneTap: 'Siap! 👍' },
+          levelUp: function (name) { return 'NAIK TAHAP! Kini ' + name; }, doneTap: 'Siap! 👍',
+          sales: function (m) { return 'Jualan ' + m; }, salesSub: 'jualan ticket bulan ini', vs: function (m, v) { return 'Bulan lepas (' + m + '): ' + v; }, ahead: 'Anda di hadapan rentak bulan lepas! 🚀', behind: function (v) { return 'Perlu ' + v + ' sehari untuk atasi bulan lepas'; }, pace: 'rentak bulan lepas', last14: '14 hari terakhir',
+          news: 'Berita minggu ini', topBrand: function (b) { return 'Best seller ' + b + ' bulan ini'; }, topMine: 'Paling laris di kaunter anda', noMine: 'Belum ada ticket bulan ini', moveNew: 'BARU', moveUp: '▲', moveDown: '▼', pcs: 'helai',
+          xpOnTime: 'setem tepat masa', xpLate: 'setem lewat', xpStreak: 'minggu streak', xpSales: 'jualan naik', onTime: 'Tepat masa', late: 'Lewat', notYet: 'Belum lagi', weekDone: 'Minggu lengkap', weekMiss: 'Minggu terlepas', weekUnknown: 'Tiada data', tapMore: 'tekan untuk butiran' },
     en: { done: '✓ Done', upcoming: '○ Upcoming', pending: '! Pending', overdue: 'Overdue', due: 'Due', wasDue: 'Was due', gate: 'Close gate', now: 'NOW',
           pendingN: function (n) { return n + ' pending'; }, clear: 'All clear', overdueN: function (n) { return n + ' overdue'; }, upcomingN: function (n) { return n + ' upcoming'; },
           hintPending: 'Tap an item to see what’s needed.', hintUpcoming: 'Nothing to do right now. Tap an item for details.', hintClear: 'Nothing to do. Nice work!',
@@ -532,7 +572,10 @@
           slots: { ticket_week: 'Weekly tickets', ticket_month: 'Monthly tickets', ranking: 'Ranking', timetable: 'Timetable', punchcard: 'Punch card', stocktake: 'Month close', it_in: 'ITs received' },
           badges: 'Badges', earned: function (n) { return n + ' earned'; }, noBadge: 'Complete every stamp in a month to earn its badge. All on time earns gold.',
           level: function (n, name) { return 'Level ' + n + ' · ' + name; }, toNext: function (x, name) { return x + ' XP to ' + name; }, maxLevel: 'Top level!', rank: function (p, of) { return 'Rank #' + p + ' of ' + of; }, rankSub: 'company-wide, updated daily',
-          levelUp: function (name) { return 'LEVEL UP! Now ' + name; }, doneTap: 'Done! 👍' }
+          levelUp: function (name) { return 'LEVEL UP! Now ' + name; }, doneTap: 'Done! 👍',
+          sales: function (m) { return m + ' sales'; }, salesSub: 'ticketed sales this month', vs: function (m, v) { return 'Last month (' + m + '): ' + v; }, ahead: 'You are ahead of last month’s pace! 🚀', behind: function (v) { return 'Need ' + v + ' a day to beat last month'; }, pace: 'last month’s pace', last14: 'last 14 days',
+          news: 'This week’s news', topBrand: function (b) { return b + ' best sellers this month'; }, topMine: 'Top sellers at your counter', noMine: 'No tickets yet this month', moveNew: 'NEW', moveUp: '▲', moveDown: '▼', pcs: 'pcs',
+          xpOnTime: 'on-time stamps', xpLate: 'late stamps', xpStreak: 'streak weeks', xpSales: 'sales up', onTime: 'On time', late: 'Late', notYet: 'Not yet', weekDone: 'Week complete', weekMiss: 'Week missed', weekUnknown: 'No data', tapMore: 'tap for details' }
   };
   var T = STR.ms;
   function setLang(lang) {
@@ -599,7 +642,12 @@
         level: { n: 2, name: 'Power', xp: 96, next_at: 140, next_name: 'Padu', progress: 0.45 },
         rank: { pos: 27, of: 137 }
       },
-      lang: 'ms'
+      lang: 'ms',
+      sales: { month: y + '-' + mm, mtd: 12340, prev_month: iso(new Date(y, m - 1, 1)).slice(0, 7), prev_total: 39076, day: now.getDate(), days_in_month: 30, pace: 39076 * now.getDate() / 30, ahead: 12340 >= 39076 * now.getDate() / 30, need_per_day: Math.max(0, (39076 - 12340) / Math.max(1, 30 - now.getDate())),
+               daily: (function () { var a = []; for (var i = 13; i >= 0; i--) { var d = new Date(y, m, now.getDate() - i); a.push([iso(d), Math.round(600 + Math.random() * 1800)]); } return a; })() },
+      news: { month: y + '-' + mm, brand: brand, top_brand: [ { code: '12024005-99', name: 'Ctnmx Slim Fit Plain Flat Front Pcs', qty: 16, move: 'up' }, { code: '15026001-90', name: 'Ctnrc With Pocket Plain Collar', qty: 14, move: 'same' }, { code: '12019012-99', name: 'Slim Fit Chino Stretch', qty: 12, move: 'new' } ],
+              top_outlet: [ { name: 'Ctnmx Slim Fit Plain Flat Front Pcs', qty: 6 }, { name: 'Plain Collar Short Sleeve', qty: 4 } ],
+              hq: [ { id: 'd1', emoji: '🆕', title: 'To Do List baru: kad setem, streak & tahap', body: 'Setiap tugasan siap tepat masa = 1 setem + XP. Ticket setiap hari = streak.' } ] }
     };
   }
 
@@ -770,11 +818,16 @@
       remember('lvl-' + who, String(lv.n));
       out += '<div class="level' + (up ? ' up' : '') + '">' +
         (up ? '<div class="levelup display">' + esc(T.levelUp(lv.name)) + '</div>' : '') +
-        '<div class="lv-row"><div class="lv-badge display">' + lv.n + '</div><div class="lv-main">' +
+        '<div class="lv-row tap" data-toggle="xp"><div class="lv-badge display">' + lv.n + '</div><div class="lv-main">' +
           '<div class="big display">' + esc(T.level(lv.n, lv.name)) + '</div>' +
           '<div class="bar"><span style="width:' + Math.round((lv.progress || 0) * 100) + '%"></span></div>' +
-          '<div class="sub">' + esc(lv.next_at ? T.toNext(lv.next_at - lv.xp, lv.next_name) : T.maxLevel) + ' · ' + lv.xp + ' XP</div>' +
+          '<div class="sub">' + esc(lv.next_at ? T.toNext(lv.next_at - lv.xp, lv.next_name) : T.maxLevel) + ' · <span data-count="' + lv.xp + '">0</span> XP · <em>' + T.tapMore + '</em></div>' +
         '</div></div>' +
+        (lv.parts && openRows['xp'] ? '<ul class="xp">' +
+          '<li><b>' + (lv.parts.on_time || 0) + '</b> ' + T.xpOnTime + ' <span>×10</span></li>' +
+          '<li><b>' + (lv.parts.late || 0) + '</b> ' + T.xpLate + ' <span>×4</span></li>' +
+          '<li><b>' + (lv.parts.streak || 0) + '</b> ' + T.xpStreak + ' <span>×3</span></li>' +
+          '<li><b>' + (lv.parts.sales_up || 0) + '</b> ' + T.xpSales + ' <span>×20</span></li></ul>' : '') +
         (rk && rk.pos ? '<div class="rank"><span class="display">' + esc(T.rank(rk.pos, rk.of)) + '</span><small>' + T.rankSub + '</small></div>' : '') +
       '</div>';
     }
@@ -782,10 +835,14 @@
     var st = g.streak || {};
     var w = parseInt(st.weeks, 10) || 0;
     var cls = w >= 4 ? 'hot' : (w === 0 ? 'cold' : '');
-    out += '<div class="streak ' + cls + '"><div class="flame" aria-hidden="true">' + (w === 0 ? '·' : '🔥') + '</div><div>' +
+    var hist = Array.isArray(st.history) ? st.history : [];
+    out += '<div class="streak ' + cls + ' tap" data-toggle="streak"><div class="flame" aria-hidden="true">' + (w === 0 ? '·' : '🔥') + '</div><div style="flex:1">' +
       '<div class="big display">' + esc(w === 0 ? T.noStreak : T.streak(w)) + '</div>' +
       '<div class="sub">' + esc(w === 0 ? T.startStreak : (T.streakSub + ' · ' + T.best(parseInt(st.best, 10) || w))) + '</div>' +
-      (st.at_risk ? '<div class="risk">' + T.risk + '</div>' : '') + '</div></div>';
+      (st.at_risk ? '<div class="risk">' + T.risk + '</div>' : '') +
+      (hist.length ? '<div class="dots" aria-hidden="true">' + hist.map(function (h, i) { return '<i class="' + (h.done ? 'on' : (h.known ? 'off' : 'na')) + '" style="animation-delay:' + (i * 0.07) + 's"></i>'; }).join('') + '</div>' : '') +
+      (openRows['streak'] && hist.length ? '<ul class="hist">' + hist.map(function (h) { var d = parseDate(h.week); return '<li class="' + (h.done ? 'on' : 'off') + '">' + (d ? fmtDay(d) : '') + ' · ' + (h.done ? T.weekDone : (h.known ? T.weekMiss : T.weekUnknown)) + '</li>'; }).join('') + '</ul>' : '') +
+      '</div></div>';
     /* stamp card */
     var sp = g.stamps || {}; var slots = Array.isArray(sp.slots) ? sp.slots : [];
     if (slots.length) {
@@ -801,8 +858,10 @@
       slots.forEach(function (x) {
         var d = x.done ? parseDate(String(x.done).slice(0, 10)) : null;
         var lbl = (T.slots[x.id] || x.label) + (x.id === 'it_in' || x.id === 'ticket_week' ? '' : (' ' + monthWord(x.label)));
-        out += '<div class="stamp' + (x.done ? ' done' : '') + (x.done && x.on_time === false ? ' late' : '') + (isNew[x.id] ? ' new' : '') + '">' +
-          '<div class="c">' + (x.done ? '✓' : (x.progress ? esc(x.progress) : '')) + (isNew[x.id] ? '<b class="tag">' + T.newStamp + '</b>' : '') + '</div>' +
+        var flipped = !!openRows['st-' + x.id];
+        var back = x.done ? ((x.on_time === false ? T.late : T.onTime) + (d ? '<br>' + d.getDate() + ' ' + MONTHS[d.getMonth()] : '')) : T.notYet;
+        out += '<div class="stamp tap' + (x.done ? ' done' : '') + (x.done && x.on_time === false ? ' late' : '') + (isNew[x.id] ? ' new' : '') + (flipped ? ' flip' : '') + '" data-toggle="st-' + esc(x.id) + '">' +
+          '<div class="c"><span class="face">' + (x.done ? '✓' : (x.progress ? esc(x.progress) : '')) + '</span><span class="back">' + back + '</span>' + (isNew[x.id] ? '<b class="tag">' + T.newStamp + '</b>' : '') + '</div>' +
           esc(lbl) + (d ? '<span class="d">' + d.getDate() + ' ' + MONTHS[d.getMonth()] + '</span>' : (x.progress && !x.done ? '<span class="d">' + esc(x.progress) + T.weeks + '</span>' : '')) + '</div>';
       });
       out += '</div></div>';
@@ -816,6 +875,81 @@
     var pending = rows.filter(function (r) { return r.status === 'pending'; }).length;
     if (!pending && rows.length) out += confettiHtml(sp.month);
     return out;
+  }
+  /* seasonal greetings: [mm-dd from, mm-dd to, ms, en, emoji, colours] - Malaysian public days, greetings only */
+  var SEASONS = [
+    ['09-14', '09-17', 'Selamat Hari Malaysia! 🇲🇾', 'Happy Malaysia Day! 🇲🇾', '🇲🇾', ['#0032A0', '#FFCC00', '#CC0001', '#FFFFFF']],
+    ['08-29', '08-31', 'Selamat Hari Merdeka! 🇲🇾', 'Happy Merdeka Day! 🇲🇾', '🇲🇾', ['#0032A0', '#FFCC00', '#CC0001', '#FFFFFF']],
+    ['12-20', '12-26', 'Selamat Hari Krismas! 🎄', 'Merry Christmas! 🎄', '🎄', ['#2A7549', '#B93A30', '#F6E7B4']],
+    ['12-30', '01-02', 'Selamat Tahun Baru! 🎉', 'Happy New Year! 🎉', '🎉', ['#B8741A', '#3E4E62', '#F6E7B4']],
+    ['11-06', '11-09', 'Selamat Hari Deepavali! 🪔', 'Happy Deepavali! 🪔', '🪔', ['#B8741A', '#B93A30', '#F6E7B4']],
+    ['02-04', '02-08', 'Gong Xi Fa Cai! 🧧', 'Gong Xi Fa Cai! 🧧', '🏮', ['#B93A30', '#F6E7B4', '#B8741A']],
+    ['03-19', '03-22', 'Selamat Hari Raya Aidilfitri! ✨', 'Selamat Hari Raya Aidilfitri! ✨', '✨', ['#2A7549', '#F6E7B4', '#3E4E62']]
+  ];
+  function seasonHtml(lang) {
+    var now = new Date(); var md = String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
+    for (var i = 0; i < SEASONS.length; i++) {
+      var sn = SEASONS[i], inRange = sn[0] <= sn[1] ? (md >= sn[0] && md <= sn[1]) : (md >= sn[0] || md <= sn[1]);
+      if (!inRange) continue;
+      var bits = '';
+      for (var k = 0; k < 14; k++) bits += '<i style="left:' + (k * 7 + 2) + '%;background:' + sn[5][k % sn[5].length] + ';animation-delay:' + (k * 0.25) + 's"></i>';
+      return '<div class="season"><div class="bits" aria-hidden="true">' + bits + '</div><div class="txt display">' + (lang === 'en' ? sn[3] : sn[2]) + '</div></div>';
+    }
+    return '';
+  }
+  function fmtRM(v) { v = Math.round(v || 0); return 'RM ' + String(v).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
+  function salesHtml(sl, lang) {
+    if (!sl || typeof sl !== 'object') return '';
+    var mm = /^(\d{4})-(\d{2})$/.exec(String(sl.month || '')); var mname = mm ? MONTHS[+mm[2] - 1] : '';
+    var pm = /^(\d{4})-(\d{2})$/.exec(String(sl.prev_month || '')); var pname = pm ? MONTHS[+pm[2] - 1] : '';
+    var prev = +sl.prev_total || 0, mtd = +sl.mtd || 0;
+    var pct = prev ? Math.min(100, Math.round(mtd / prev * 100)) : 0;
+    var pacePct = prev && sl.pace ? Math.min(100, Math.round(sl.pace / prev * 100)) : 0;
+    var daily = Array.isArray(sl.daily) ? sl.daily : [];
+    var mx = daily.reduce(function (a, d) { return Math.max(a, +d[1] || 0); }, 0) || 1;
+    var bars = daily.map(function (d, i) { var h = Math.round((+d[1] || 0) / mx * 100); var dt = parseDate(d[0]); return '<i style="height:' + Math.max(4, h) + '%;animation-delay:' + (i * 0.05) + 's" title="' + (dt ? fmtDay(dt) : '') + ' ' + fmtRM(d[1]) + '"></i>'; }).join('');
+    return '<div class="card sales"><div class="ttl"><span class="display">' + esc(T.sales(mname)) + '</span><span class="cnt">' + T.salesSub + '</span></div>' +
+      '<div class="rm display" data-count="' + Math.round(mtd) + '">RM 0</div>' +
+      (prev ? '<div class="pace-bar"><span class="fill" style="width:' + pct + '%"></span><span class="marker" style="left:' + pacePct + '%" title="' + T.pace + '"></span></div>' +
+              '<div class="sub">' + esc(T.vs(pname, fmtRM(prev))) + '</div>' +
+              '<div class="' + (sl.ahead ? 'good' : 'push') + '">' + esc(sl.ahead ? T.ahead : T.behind(fmtRM(sl.need_per_day))) + '</div>' : '') +
+      (daily.length ? '<div class="spark" aria-hidden="true">' + bars + '</div><div class="sub small">' + T.last14 + '</div>' : '') +
+    '</div>';
+  }
+  function newsHtml(nw, brand) {
+    if (!nw || typeof nw !== 'object') return '';
+    var out = '<div class="card news"><div class="ttl"><span class="display">' + T.news + '</span></div>';
+    (Array.isArray(nw.hq) ? nw.hq : []).forEach(function (it, i) {
+      out += '<div class="note" style="animation-delay:' + (i * 0.12) + 's"><div class="nt"><span class="em">' + esc(it.emoji || '📌') + '</span><b>' + esc(it.title || '') + '</b></div><div class="nb">' + esc(it.body || '') + '</div></div>';
+    });
+    var tb = Array.isArray(nw.top_brand) ? nw.top_brand : [];
+    if (tb.length) {
+      out += '<div class="sec">' + esc(T.topBrand(brand === 'BF' ? 'Byford' : 'AD')) + '</div><ol class="top">';
+      tb.forEach(function (it, i) {
+        var mv = it.move === 'new' ? '<span class="mv new">' + T.moveNew + '</span>' : (it.move === 'up' ? '<span class="mv up">' + T.moveUp + '</span>' : (it.move === 'down' ? '<span class="mv down">' + T.moveDown + '</span>' : ''));
+        out += '<li style="animation-delay:' + (0.3 + i * 0.08) + 's"><span class="n">' + (i + 1) + '</span><span class="nm">' + esc(it.name || it.code) + '</span>' + mv + '<span class="q">' + (it.qty || 0) + ' ' + T.pcs + '</span></li>';
+      });
+      out += '</ol>';
+    }
+    var tm = Array.isArray(nw.top_outlet) ? nw.top_outlet : [];
+    out += '<div class="sec">' + T.topMine + '</div>';
+    if (tm.length) { out += '<ol class="top mine">' + tm.map(function (it, i) { return '<li style="animation-delay:' + (0.6 + i * 0.08) + 's"><span class="n">' + (i + 1) + '</span><span class="nm">' + esc(it.name) + '</span><span class="q">' + (it.qty || 0) + ' ' + T.pcs + '</span></li>'; }).join('') + '</ol>'; }
+    else out += '<div class="sub">' + T.noMine + '</div>';
+    return out + '</div>';
+  }
+  var countUpSkip = false;
+  function countUp() {
+    if (countUpSkip) { countUpSkip = false; app.querySelectorAll('[data-count]').forEach(function (el) { var t = parseInt(el.getAttribute('data-count'), 10) || 0; el.textContent = /^RM/.test(el.textContent) ? fmtRM(t) : String(t); }); app.querySelectorAll('.level .bar span, .pace-bar .fill').forEach(function (b) { b.style.transition = 'none'; }); return; }
+    var els = app.querySelectorAll('[data-count]');
+    els.forEach(function (el) {
+      var target = parseInt(el.getAttribute('data-count'), 10) || 0, start = null, dur = 1100;
+      var prefix = /^RM/.test(el.textContent) ? 'RM ' : '';
+      function step(ts) { if (!start) start = ts; var t = Math.min(1, (ts - start) / dur); var v = Math.round(target * (1 - Math.pow(1 - t, 3))); el.textContent = prefix ? fmtRM(v) : String(v); if (t < 1) requestAnimationFrame(step); }
+      if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) { el.textContent = prefix ? fmtRM(target) : String(target); return; }
+      requestAnimationFrame(step);
+    });
+    var bars = app.querySelectorAll('.level .bar span, .pace-bar .fill');
+    bars.forEach(function (b) { var w = b.style.width; b.style.width = '0%'; requestAnimationFrame(function () { requestAnimationFrame(function () { b.style.width = w; }); }); });
   }
   function confettiHtml(month) {
     var key = 'confetti-' + (month || '') + '-' + startOfToday().toDateString();
@@ -851,25 +985,31 @@
         ? '<div class="updated' + (stale ? ' stale' : '') + '">' + T.updated + esc(fmtStamp(updated)) + (stale ? T.stale : '') + '</div>'
         : '<div class="updated stale">' + T.unknown + '</div>') +
     '</div>';
+    html += seasonHtml(board.lang === 'en' ? 'en' : 'ms');
     html += headlineHtml(rows);
     html += gameHtml(board.game, rows, board);
+    html += salesHtml(board.sales, board.lang);
+    html += newsHtml(board.news, brand);
     if (rows.length) html += '<div class="list">' + rows.map(rowHtml).join('') + '</div>';
     else html += '<div class="list"><div class="row"><div class="row-btn" style="cursor:default"><span class="row-main"><span class="summary">' + T.nothing + '</span></span></div></div></div>';
     html += '<div class="foot">' + T.foot + '</div>';
     app.innerHTML = html;
     rendered = true;
     lastBoard = board; lastDemo = demo;
+    countUp();
   }
   var lastBoard = null, lastDemo = false;
 
   app.addEventListener('click', function (e) {
+    var tg = e.target.closest('[data-toggle]');
+    if (tg && lastBoard) { var k = tg.getAttribute('data-toggle'); openRows[k] = !openRows[k]; var y = window.scrollY; renderBoard(lastBoard, lastDemo); window.scrollTo(0, y); return; }
     var btn = e.target.closest('.row-btn');
     if (!btn || !lastBoard) return;
     var rowEl = btn.closest('.row');
     var id = rowEl && rowEl.getAttribute('data-id');
     if (!id) return;
     openRows[id] = !openRows[id];
-    renderBoard(lastBoard, lastDemo);
+    var y0 = window.scrollY; renderBoard(lastBoard, lastDemo); window.scrollTo(0, y0); countUpSkip = true;
     if (openRows[id]) {
       var el = app.querySelector('.row[data-id="' + id + '"]');
       if (el && el.classList.contains('done')) {
