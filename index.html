@@ -6,76 +6,30 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&display=swap">
 <style>
   :root {
-    --ground: #F5F1E8;
+    color-scheme: light;
+    --ground: #F7F5F0;
     --surface: #FFFFFF;
-    --ink: #1F2D33;
-    --muted: #55656B;
-    --line: #E6DFD2;
-    --chrome: #3A5560;
-    --chrome-grad: linear-gradient(135deg, #34505B 0%, #4A6873 100%);
+    --ink: #1E2A3A;
+    --muted: #57636F;
+    --line: #E7E2D8;
+    --chrome: #3E4E62;
+    --chrome-grad: linear-gradient(135deg, #384759 0%, #4B5B70 100%);
     --chrome-ink: #FFFFFF;
     --chrome-soft: rgba(255,255,255,0.2);
-    --done: #2B7A4C;
-    --done-bg: #DCEFE3;
-    --pending: #BC3A2F;
-    --pending-bg: #F8E3DF;
-    --overdue: #8E2419;
-    --upcoming: #66747A;
-    --upcoming-bg: #E9EBE7;
+    --done: #2A7549;
+    --done-bg: #DBEEE2;
+    --pending: #B93A30;
+    --pending-bg: #F8E2DE;
+    --overdue: #8C2119;
+    --upcoming: #67727D;
+    --upcoming-bg: #EAECEE;
     --amber: #B8741A;
     --amber-bg: #F8EBD3;
     --skeleton: #EAE4D8;
-    --focus: #2F6474;
+    --focus: #2E4466;
     --shadow: 0 1px 2px rgba(60,50,30,0.06), 0 6px 18px rgba(60,50,30,0.08);
   }
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) {
-      --ground: #1A2327;
-      --surface: #263237;
-      --ink: #EEF3F4;
-      --muted: #ACBABF;
-      --line: #35434A;
-      --chrome: #3F5A66;
-      --chrome-grad: linear-gradient(135deg, #3A545F 0%, #4F6C78 100%);
-      --chrome-ink: #FFFFFF;
-      --chrome-soft: rgba(255,255,255,0.18);
-      --done: #6BCA90;
-      --done-bg: #224733;
-      --pending: #F28B7F;
-      --pending-bg: #4A2E2C;
-      --overdue: #FFC4BE;
-      --upcoming: #ACBABF;
-      --upcoming-bg: #344145;
-      --amber: #E9B366;
-      --amber-bg: #4A3A20;
-      --skeleton: #33414A;
-      --focus: #7FB3C4;
-      --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 6px 18px rgba(0,0,0,0.25);
-    }
-  }
-  :root[data-theme="dark"] {
-    --ground: #1A2327;
-    --surface: #263237;
-    --ink: #EEF3F4;
-    --muted: #ACBABF;
-    --line: #35434A;
-    --chrome: #3F5A66;
-    --chrome-grad: linear-gradient(135deg, #3A545F 0%, #4F6C78 100%);
-    --chrome-ink: #FFFFFF;
-    --chrome-soft: rgba(255,255,255,0.18);
-    --done: #6BCA90;
-    --done-bg: #224733;
-    --pending: #F28B7F;
-    --pending-bg: #4A2E2C;
-    --overdue: #FFC4BE;
-    --upcoming: #ACBABF;
-    --upcoming-bg: #344145;
-    --amber: #E9B366;
-    --amber-bg: #4A3A20;
-    --skeleton: #33414A;
-    --focus: #7FB3C4;
-    --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 6px 18px rgba(0,0,0,0.25);
-  }
+  /* Light-only by decision (2026-09-08): the board shows the same palette on phones set to dark mode. */
 
   * { box-sizing: border-box; }
   html { -webkit-text-size-adjust: 100%; }
@@ -122,14 +76,14 @@
   }
 
   /* Header band */
-  /* Brand colours for the header card: AD teal-navy, BF bronze. Unknown brand keeps the slate base. */
+  /* Brand colours for the header card: AD navy, BF forest green. Unknown brand keeps the slate base. */
   .head.brand-AD {
-    --chrome: #2F6474;
-    --chrome-grad: linear-gradient(135deg, #2A5B6A 0%, #3F7686 100%);
+    --chrome: #2E4466;
+    --chrome-grad: linear-gradient(135deg, #293D5C 0%, #3A5478 100%);
   }
   .head.brand-BF {
-    --chrome: #6E5540;
-    --chrome-grad: linear-gradient(135deg, #64503B 0%, #7E6650 100%);
+    --chrome: #3D6450;
+    --chrome-grad: linear-gradient(135deg, #365A48 0%, #497560 100%);
   }
   .head {
     background: var(--chrome);
