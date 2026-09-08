@@ -984,19 +984,7 @@
       if (open) remember('read-' + (it.id || i), '1');
       out += '<div class="note tap' + (open ? ' open' : '') + '" data-toggle="' + esc(key) + '" style="animation-delay:' + (i * 0.12) + 's"><div class="nt"><span class="em">' + esc(it.emoji || '📌') + '</span><b>' + esc(it.title || '') + '</b><span class="rd ' + (wasRead || open ? 'read' : 'new') + '">' + (wasRead || open ? T.read : T.unread) + '</span></div>' + (open ? '<div class="nb">' + esc(it.body || '') + '</div>' : '') + '</div>';
     });
-    var tb = Array.isArray(nw.top_brand) ? nw.top_brand : [];
-    if (tb.length) {
-      out += '<div class="sec">' + esc(T.topBrand(brand === 'BF' ? 'Byford' : 'AD')) + '</div><ol class="top">';
-      tb.forEach(function (it, i) {
-        var mv = it.move === 'new' ? '<span class="mv new">' + T.moveNew + '</span>' : (it.move === 'up' ? '<span class="mv up">' + T.moveUp + '</span>' : (it.move === 'down' ? '<span class="mv down">' + T.moveDown + '</span>' : ''));
-        out += '<li style="animation-delay:' + (0.3 + i * 0.08) + 's"><span class="n">' + (i + 1) + '</span><span class="nm">' + esc(it.name || it.code) + '</span>' + mv + '<span class="q">' + (it.qty || 0) + ' ' + T.pcs + '</span></li>';
-      });
-      out += '</ol>';
-    }
-    var tm = Array.isArray(nw.top_outlet) ? nw.top_outlet : [];
-    out += '<div class="sec">' + T.topMine + '</div>';
-    if (tm.length) { out += '<ol class="top mine">' + tm.map(function (it, i) { return '<li style="animation-delay:' + (0.6 + i * 0.08) + 's"><span class="n">' + (i + 1) + '</span><span class="nm">' + esc(it.name) + '</span><span class="q">' + (it.qty || 0) + ' ' + T.pcs + '</span></li>'; }).join('') + '</ol>'; }
-    else out += '<div class="sub">' + T.noMine + '</div>';
+    if (!(Array.isArray(nw.hq) && nw.hq.length)) return '';   /* Tze 2026-09-08: HQ notes only, no best-seller lists */
     return out + '</div>';
   }
   var countUpSkip = false;
