@@ -590,7 +590,7 @@
   function dueFor(row) {
     if (!row.due) return '';
     var d = fmtDay(row.due);
-    if (row.status === 'done') return '<div class="due">Was due<strong>' + esc(d) + '</strong></div>';
+    if (row.status === 'done') { var dd = parseDate(row.due); return '<div class="due">' + (dd && dd.getTime() < Date.now() ? 'Was due' : 'Due') + '<strong>' + esc(d) + '</strong></div>'; }
     if (row.status === 'upcoming') return '<div class="due">Due<strong>' + esc(d) + '</strong></div>';
     return '<div class="due">' + (row.overdue ? 'Was due' : 'Due') + '<strong>' + esc(d) + '</strong></div>';
   }
