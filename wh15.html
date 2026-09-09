@@ -7,7 +7,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
 <style>
 :root{
-  --ground:#F4F6F9; --panel:#FFFFFF; --ink:#1B2430; --muted:#5E6B7A; --line:#D3DAE3; --line-strong:#9AA6B4;
+  --ground:#F3F5F8; --panel:#FFFFFF; --ink:#151C26; --muted:#46525F; --r:14px; --r-sm:9px; --line:#D3DAE3; --line-strong:#9AA6B4;
   --navy:#1F3A5F; --navy-soft:#E3ECF7; --rack:#F2C94C; --rack-soft:#FBEFC2; --rack-edge:#A9821A;
   --carton:#0B4A9E; --carton-soft:#DCE7F6; --sorter:#CBD2DA; --scan:#F5D77A; --stair:#BBD3F0;
   --hit:#D9480F; --hit-soft:#FDE3D6; --ok:#2E7D32;
@@ -16,66 +16,66 @@
   --f-display:"Barlow Condensed","Arial Narrow",Arial,sans-serif; --f-body:"IBM Plex Sans","Segoe UI",Helvetica,Arial,sans-serif; --f-mono:"IBM Plex Mono",Consolas,monospace;
 }
 @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
-  --ground:#121922; --panel:#1A222D; --ink:#E6EBF1; --muted:#9AA6B4; --line:#2B3744; --line-strong:#4A5868;
+  --ground:#121922; --panel:#1A222D; --ink:#EEF2F7; --muted:#B3BECB; --line:#2B3744; --line-strong:#4A5868;
   --navy:#8FB4E8; --navy-soft:#213247; --rack:#D9B23A; --rack-soft:#4A3F14; --rack-edge:#E8C65A;
   --carton:#6FA3F0; --carton-soft:#1E3556; --sorter:#3A4653; --scan:#8A7423; --stair:#2F4A6B;
   --hit:#FF8A50; --hit-soft:#4A2A1A; --shadow:0 6px 24px rgba(0,0,0,.35);
 }}
 :root[data-theme="dark"]{
-  --ground:#121922; --panel:#1A222D; --ink:#E6EBF1; --muted:#9AA6B4; --line:#2B3744; --line-strong:#4A5868;
+  --ground:#121922; --panel:#1A222D; --ink:#EEF2F7; --muted:#B3BECB; --line:#2B3744; --line-strong:#4A5868;
   --navy:#8FB4E8; --navy-soft:#213247; --rack:#D9B23A; --rack-soft:#4A3F14; --rack-edge:#E8C65A;
   --carton:#6FA3F0; --carton-soft:#1E3556; --sorter:#3A4653; --scan:#8A7423; --stair:#2F4A6B;
   --hit:#FF8A50; --hit-soft:#4A2A1A; --shadow:0 6px 24px rgba(0,0,0,.35);
 }
 *{box-sizing:border-box}
-body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--f-body);font-size:14px;line-height:1.45}
+body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.5}
 h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0;letter-spacing:.01em}
 button{font:inherit;color:inherit;cursor:pointer}
 button:focus-visible,input:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--hit);outline-offset:2px}
 .top{display:flex;flex-wrap:wrap;gap:14px 28px;align-items:center;padding:16px 24px 10px;border-bottom:1px solid var(--line);background:var(--panel)}
-.top h1{font-size:30px;font-weight:700;line-height:1}
-.top h1 small{display:block;font-family:var(--f-body);font-size:12px;font-weight:500;color:var(--muted);letter-spacing:.02em;margin-top:3px}
+.top h1{font-size:34px;font-weight:700;line-height:1}
+.top h1 small{display:block;font-family:var(--f-body);font-size:13.5px;font-weight:500;color:var(--muted);letter-spacing:.02em;margin-top:3px}
 .chips{display:flex;flex-wrap:wrap;gap:8px}
-.chip{display:flex;align-items:baseline;gap:6px;padding:6px 10px;border:1px solid var(--line);border-radius:4px;background:var(--ground)}
-.chip b{font-family:var(--f-display);font-size:20px;font-weight:700;font-variant-numeric:tabular-nums}
-.chip span{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
-.chip.pr b{color:var(--rack-edge)} .chip.bs b{color:var(--carton)}
+.chip{display:flex;align-items:baseline;gap:7px;padding:8px 13px;border:1px solid var(--line);border-radius:999px;background:var(--ground)}
+.chip b{font-family:var(--f-display);font-size:23px;font-weight:700;font-variant-numeric:tabular-nums}
+.chip span{font-size:12.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.chip.pr b{color:var(--rack-edge)} .chip.bs b{color:var(--carton)} .chip.cap{background:var(--navy-soft);border-color:transparent} .chip.cap b{color:var(--navy)}
 .search{margin-left:auto;display:flex;gap:6px;align-items:center}
-.search input{font:500 14px var(--f-mono);padding:8px 10px;border:1px solid var(--line-strong);border-radius:4px;background:var(--ground);color:var(--ink);width:210px;text-transform:uppercase}
-.search .hint{font-size:11.5px;color:var(--muted);max-width:200px}
+.search input{font:500 15px var(--f-mono);padding:10px 14px;border:1px solid var(--line-strong);border-radius:999px;background:var(--ground);color:var(--ink);width:210px;text-transform:uppercase}
+.search .hint{font-size:12.5px;color:var(--muted);max-width:220px}
 .tabs{display:flex;gap:4px;padding:10px 24px 0;background:var(--panel);border-bottom:1px solid var(--line);overflow-x:auto}
-.tab{border:1px solid transparent;border-bottom:none;border-radius:6px 6px 0 0;padding:9px 14px;background:transparent;font-family:var(--f-display);font-size:17px;font-weight:600;color:var(--muted);white-space:nowrap}
+.tab{border:1px solid transparent;border-bottom:none;border-radius:var(--r) var(--r) 0 0;padding:10px 18px;background:transparent;font-family:var(--f-display);font-size:19px;font-weight:600;color:var(--muted);white-space:nowrap}
 .tab[aria-selected="true"]{background:var(--ground);border-color:var(--line);color:var(--ink);position:relative;top:1px}
-.tab .sub{display:block;font-family:var(--f-body);font-size:11px;font-weight:400;letter-spacing:.02em}
+.tab .sub{display:block;font-family:var(--f-body);font-size:12.5px;font-weight:400;letter-spacing:.02em}
 main{display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:18px;padding:18px 24px 40px;align-items:start}
 @media (max-width:1000px){main{grid-template-columns:1fr}}
-.plan{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:14px 16px 10px;overflow:hidden}
+.plan{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px 12px;overflow:hidden}
 .plan header{display:flex;flex-wrap:wrap;gap:6px 18px;align-items:baseline;margin-bottom:8px}
-.plan h2{font-size:22px;font-weight:700}
-.plan .meta{font-size:12px;color:var(--muted)}
+.plan h2{font-size:26px;font-weight:700}
+.plan .meta{font-size:13.5px;color:var(--muted)}
 .plan svg{width:100%;height:auto;display:block}
-.legend{display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:8px;font-size:12px;color:var(--muted)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:10px;font-size:13.5px;color:var(--muted)}
 .legend i{display:inline-block;width:14px;height:10px;border:1px solid var(--line-strong);vertical-align:-1px;margin-right:5px}
-.panel{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:16px;position:sticky;top:12px;box-shadow:var(--shadow)}
-.panel h2{font-size:24px;font-weight:700;line-height:1.05}
-.panel .zone{display:inline-block;font-size:11px;letter-spacing:.08em;text-transform:uppercase;padding:3px 7px;border-radius:3px;margin-bottom:8px;font-weight:600}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:18px 20px;position:sticky;top:12px;box-shadow:var(--shadow)}
+.panel h2{font-size:28px;font-weight:700;line-height:1.05}
+.panel .zone{display:inline-block;font-size:12px;letter-spacing:.08em;text-transform:uppercase;padding:4px 10px;border-radius:999px;margin-bottom:8px;font-weight:600}
 .zone.pr{background:var(--rack-soft);color:var(--rack-edge)} .zone.bs{background:var(--carton-soft);color:var(--carton)} .zone.so{background:var(--navy-soft);color:var(--navy)}
-.kv{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:12.5px;margin:10px 0 12px}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;font-size:14px;margin:10px 0 12px}
 .kv dt{color:var(--muted)} .kv dd{margin:0;font-variant-numeric:tabular-nums}
 .elev{display:flex;flex-direction:column;gap:4px;margin:8px 0 14px}
 .elev .lv{display:grid;grid-template-columns:54px 1fr 1fr;gap:4px;align-items:stretch}
 .elev .lv.one{grid-template-columns:54px 1fr}
-.elev .tag{font-family:var(--f-display);font-size:13px;font-weight:600;color:#fff;border-radius:3px;padding:4px 6px;line-height:1.05;display:flex;flex-direction:column;justify-content:center}
-.elev .tag small{font-family:var(--f-body);font-size:10px;font-weight:400;opacity:.9}
-.elev .cell{border:1px solid var(--line-strong);border-radius:3px;padding:6px 8px;background:var(--ground);text-align:left;font-family:var(--f-mono);font-size:13px;line-height:1.2}
+.elev .tag{font-family:var(--f-display);font-size:15px;font-weight:600;color:#fff;border-radius:var(--r-sm);padding:4px 6px;line-height:1.05;display:flex;flex-direction:column;justify-content:center}
+.elev .tag small{font-family:var(--f-body);font-size:11px;font-weight:400;opacity:.9}
+.elev .cell{border:1px solid var(--line-strong);border-radius:var(--r-sm);padding:7px 10px;background:var(--ground);text-align:left;font-family:var(--f-mono);font-size:14px;line-height:1.2}
 .elev .cell:hover{border-color:var(--hit);background:var(--hit-soft)}
 .elev .cell.on{border-color:var(--hit);box-shadow:inset 0 0 0 1px var(--hit)}
-.elev .cell small{display:block;font-family:var(--f-body);font-size:10.5px;color:var(--muted)}
-.floorline{border-top:3px solid var(--line-strong);margin-top:2px;font-size:11px;color:var(--muted);padding-top:3px}
+.elev .cell small{display:block;font-family:var(--f-body);font-size:12px;color:var(--muted)}
+.floorline{border-top:3px solid var(--line-strong);margin-top:2px;font-size:12.5px;color:var(--muted);padding-top:3px}
 .labelwrap{margin-top:6px}
-.labelwrap h3{font-size:16px;font-weight:600;margin-bottom:6px}
-.labelwrap .note{font-size:11.5px;color:var(--muted);margin-top:6px}
-.lbl{position:relative;background:#FFF;color:#111;border:1px solid #333;overflow:hidden;font-family:var(--f-body);transform-origin:top left}
+.labelwrap h3{font-size:18px;font-weight:600;margin-bottom:8px}
+.labelwrap .note{font-size:13px;color:var(--muted);margin-top:8px}
+.lbl{position:relative;background:#FFF;color:#111;border:1px solid #333;border-radius:2mm;overflow:hidden;font-family:var(--f-body);transform-origin:top left}
 .lbl .band{position:absolute;left:0;right:0;top:0;color:#fff;font-weight:700;display:flex;justify-content:space-between;align-items:center;padding:0 3mm}
 .lbl .code{position:absolute;left:4mm;font-family:var(--f-display);font-weight:700;letter-spacing:.01em;line-height:1}
 .lbl .bc{position:absolute;left:4mm;bottom:4mm}
@@ -90,31 +90,31 @@ main{display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:18px;padding:18p
 .lbl.carton .code{top:7mm;font-size:17pt;left:2.5mm}
 .lbl.carton .bc{left:2.5mm;bottom:2mm}
 .lbl.carton .info{font-size:6pt;right:2mm;bottom:2.5mm}
-.cartons{width:100%;border-collapse:collapse;font-size:12px;margin-top:6px}
+.cartons{width:100%;border-collapse:collapse;font-size:13.5px;margin-top:6px}
 .cartons th,.cartons td{padding:4px 6px;border-bottom:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums}
 .cartons th:first-child,.cartons td:first-child{text-align:left}
-.cartons th{font-weight:600;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.04em}
-.empty{color:var(--muted);font-size:13px}
+.cartons th{font-weight:600;color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.04em}
+.empty{color:var(--muted);font-size:15px}
 .gallery{display:grid;gap:22px}
-.gallery .card{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:16px 18px}
-.gallery .card h2{font-size:22px;margin-bottom:4px}
+.gallery .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:20px 24px}
+.gallery .card h2{font-size:26px;margin-bottom:6px}
 .gallery .card p{max-width:66ch;margin:6px 0}
 .gallery .two{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:18px;align-items:start}
-.anat{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:12.5px;margin-top:10px}
+.anat{display:grid;grid-template-columns:auto 1fr;gap:5px 14px;font-size:14px;margin-top:12px}
 .anat dt{font-family:var(--f-mono);color:var(--carton)} .anat dd{margin:0}
 .swatches{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
-.sw{display:flex;align-items:center;gap:6px;font-size:12px}
-.sw i{width:26px;height:14px;border-radius:2px;display:inline-block}
-.filelist{font-family:var(--f-mono);font-size:12px;line-height:1.7}
-.codeguide code{font-family:var(--f-mono);background:var(--ground);padding:1px 5px;border-radius:3px;font-size:12.5px}
+.sw{display:flex;align-items:center;gap:6px;font-size:13.5px}
+.sw i{width:26px;height:14px;border-radius:999px;display:inline-block}
+.filelist{font-family:var(--f-mono);font-size:13.5px;line-height:1.8}
+.codeguide code{font-family:var(--f-mono);background:var(--ground);padding:2px 7px;border-radius:6px;font-size:14px}
 svg text{font-family:var(--f-display);fill:var(--ink)}
 svg .bay{cursor:pointer}
 svg .bay rect{transition:fill .12s}
 svg .bay:hover rect.body, svg .bay.on rect.body{fill:var(--hit-soft);stroke:var(--hit);stroke-width:60}
-svg .lbl-row{font-size:520px;font-weight:700;fill:var(--hit)}
-svg .lbl-bay{font-size:400px;font-weight:600}
-svg .lbl-small{font-size:300px;font-weight:500;fill:var(--muted)}
-svg .lbl-note{font-family:var(--f-body);font-size:260px;fill:var(--muted)}
+svg .lbl-row{font-size:600px;font-weight:700;fill:var(--hit)}
+svg .lbl-bay{font-size:470px;font-weight:600}
+svg .lbl-small{font-size:340px;font-weight:500;fill:var(--ink)}
+svg .lbl-note{font-family:var(--f-body);font-size:290px;fill:var(--muted)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 @media print{.top,.tabs{display:none}}
 </style>
@@ -147,6 +147,12 @@ for (const d of B.decks) for (const run of d.runs) run.rows.forEach((rr, i) => {
     cartonBins.push({ kind: "BS", code: `${d.deck}-${rr.row}-${pad2(b)}-${sh}`, deck: d.deck, row: rr.row, bay: b, shelf: sh, depth: run.depths[i] });
 });
 const bayCount = B.decks.reduce((a, d) => a + d.bays, 0);
+const CAP = (() => { const lo = DATA.cartons[0], hi = DATA.cartons[3];  // woven (least dense) .. dense polo (most dense)
+  const pal = palletBins.length, sh = cartonBins.length;
+  return { ctnLo: pal * lo.pallet + sh * lo.shelf600, ctnHi: pal * hi.pallet + sh * hi.shelf600,
+           pcsLo: pal * lo.pallet * lo.pcs + sh * lo.shelf600 * lo.pcs, pcsHi: pal * hi.pallet * hi.pcs + sh * hi.shelf600 * hi.pcs,
+           palPcsLo: pal * lo.pallet * lo.pcs, palPcsHi: pal * hi.pallet * hi.pcs, shPcsLo: sh * lo.shelf600 * lo.pcs, shPcsHi: sh * hi.shelf600 * hi.pcs }; })();
+const k = n => n >= 1000 ? (Math.round(n / 100) / 10).toLocaleString("en-US") + "k" : String(n);
 
 /* ---------- chips ---------- */
 document.getElementById("chips").innerHTML = `
@@ -154,7 +160,9 @@ document.getElementById("chips").innerHTML = `
   <div class="chip pr"><b>${P.rows.length * P.bays}</b><span>pallet bays</span></div>
   <div class="chip bs"><b>${bayCount}</b><span>carton bays</span></div>
   <div class="chip bs"><b>${cartonBins.length}</b><span>carton bins</span></div>
-  <div class="chip"><b>36</b><span>sorter chutes</span></div>`;
+  <div class="chip"><b>36</b><span>sorter chutes</span></div>
+  <div class="chip cap" title="every bin full: woven cartons at the low end, dense-packed polo at the high end"><b>${k(CAP.ctnLo)}&ndash;${k(CAP.ctnHi)}</b><span>cartons capacity</span></div>
+  <div class="chip cap" title="every bin full: woven cartons at the low end, dense-packed polo at the high end"><b>${k(CAP.pcsLo)}&ndash;${k(CAP.pcsHi)}</b><span>pieces capacity</span></div>`;
 
 /* ---------- tabs ---------- */
 const TABS = [
@@ -191,7 +199,7 @@ function groundSVG() {
     const y0 = rowY[r];
     for (let k = 0; k < P.bays; k++) {
       const bay = P.bays - k, x0 = k * g.bay;
-      s += `<g class="bay" data-kind="PR" data-id="${r}-${pad2(bay)}" tabindex="0"><rect class="body" x="${x0}" y="${y0}" width="${g.bay}" height="${g.depth}" fill="var(--rack)" stroke="var(--rack-edge)" stroke-width="30"/>
+      s += `<g class="bay" data-kind="PR" data-id="${r}-${pad2(bay)}" tabindex="0"><rect class="body" rx="140" x="${x0}" y="${y0}" width="${g.bay}" height="${g.depth}" fill="var(--rack)" stroke="var(--rack-edge)" stroke-width="30"/>
         <line x1="${x0 + g.bay / 2}" y1="${y0}" x2="${x0 + g.bay / 2}" y2="${y0 + g.depth}" stroke="var(--rack-edge)" stroke-width="15"/>
         <text class="lbl-bay" x="${x0 + g.bay / 2}" y="${y0 + 640}" text-anchor="middle">${r}-${pad2(bay)}</text></g>`;
     }
@@ -202,7 +210,7 @@ function groundSVG() {
     s += `<text class="lbl-small" x="${rackW / 2}" y="${yy}" text-anchor="middle">AISLE ${n}  &middot;  3,600 clear  &middot;  entry from platform side &rarr;</text>`;
   });
   // platform
-  s += `<rect x="${X0}" y="0" width="${PW}" height="${PL}" fill="var(--navy-soft)" stroke="var(--navy)" stroke-width="40"/>`;
+  s += `<rect rx="300" x="${X0}" y="0" width="${PW}" height="${PL}" fill="var(--navy-soft)" stroke="var(--navy)" stroke-width="40"/>`;
   for (const gx of [X0, X0 + g.p1_w, X0 + PW]) s += `<line x1="${gx}" y1="0" x2="${gx}" y2="${PL}" stroke="var(--navy)" stroke-width="20" stroke-dasharray="120 120"/>`;
   for (const gy of [0, 5750, 11500, 17250]) { s += `<line x1="${X0}" y1="${gy}" x2="${X0 + PW}" y2="${gy}" stroke="var(--navy)" stroke-width="20" stroke-dasharray="120 120"/>`;
     for (const gx of [X0, X0 + g.p1_w, X0 + PW]) s += `<rect x="${gx - 110}" y="${gy - 110}" width="220" height="220" fill="var(--navy)"/>`; }
@@ -227,7 +235,7 @@ function groundSVG() {
   const pitch = (15400 - 6000) / 18;
   for (let i = 0; i < 18; i++) { const cy = 6000 + i * pitch;
     for (const [side, x0, n] of [["L", SX - 1050, i + 1], ["R", SX + 450, i + 19]])
-      s += `<g class="bay" data-kind="SO" data-id="CH${pad2(n)}" tabindex="0"><rect class="body" x="${x0}" y="${cy + 40}" width="600" height="${pitch - 80}" fill="var(--panel)" stroke="var(--ink)" stroke-width="15"/>
+      s += `<g class="bay" data-kind="SO" data-id="CH${pad2(n)}" tabindex="0"><rect class="body" rx="90" x="${x0}" y="${cy + 40}" width="600" height="${pitch - 80}" fill="var(--panel)" stroke="var(--ink)" stroke-width="15"/>
             <text x="${x0 + 300}" y="${cy + pitch / 2 + 90}" text-anchor="middle" style="font-size:250px">CH${pad2(n)}</text></g>`; }
   // power points
   s += `<circle cx="${SX + 900}" cy="867" r="180" fill="var(--hit)"/><text class="lbl-note" x="${SX + 1150}" y="950" fill="var(--hit)">PP-1 3-ph 32A + LAN</text>`;
@@ -254,7 +262,7 @@ function deckSVG(d) {
   for (const run of d.runs) { let x = run.x;
     run.rows.forEach((rr, i) => { const dp = run.depths[i];
       for (const b of rr.slots) { const y = (b - 1) * B.pitch;
-        s += `<g class="bay" data-kind="BS" data-id="${d.deck}-${rr.row}-${pad2(b)}" tabindex="0"><rect class="body" x="${y}" y="${x}" width="${B.pitch}" height="${dp}" fill="var(--panel)" stroke="var(--carton)" stroke-width="25"/>
+        s += `<g class="bay" data-kind="BS" data-id="${d.deck}-${rr.row}-${pad2(b)}" tabindex="0"><rect class="body" rx="120" x="${y}" y="${x}" width="${B.pitch}" height="${dp}" fill="var(--panel)" stroke="var(--carton)" stroke-width="25"/>
               <text class="lbl-small" x="${y + B.pitch / 2}" y="${x + dp / 2 + 110}" text-anchor="middle" style="fill:var(--ink)">${rr.row}-${pad2(b)}</text></g>`; }
       s += `<text class="lbl-row" x="-250" y="${x + dp / 2 + 180}" text-anchor="end">${rr.row}</text>`;
       x += dp; });
@@ -284,7 +292,7 @@ function renderPanel() {
     }
     const bin = bins.find(b => b.code === selected.bin) || bins.find(b => b.level === 2 && b.slot === "A");
     el.innerHTML = `<span class="zone pr">Pallet racking</span><h2>Bay ${id}</h2>
-      <dl class="kv"><dt>Aisle</dt><dd>${P.aisle_of[row]} &middot; 3,600 clear</dd><dt>Bay</dt><dd>2,790 pitch &middot; 900 deep &middot; 2 pallets 1,200 x 1,000</dd><dt>Levels</dt><dd>floor + 4 beam levels, 1,500 kg per level</dd><dt>Bins</dt><dd>10 (5 levels x 2 slots)</dd></dl>
+      <dl class="kv"><dt>Aisle</dt><dd>${P.aisle_of[row]} &middot; 3,600 clear</dd><dt>Bay</dt><dd>2,790 pitch &middot; 900 deep &middot; 2 pallets 1,200 x 1,000</dd><dt>Levels</dt><dd>floor + 4 beam levels, 1,500 kg per level</dd><dt>Bins</dt><dd>10 (5 levels x 2 slots)</dd><dt>Holds</dt><dd>${DATA.cartons[0].pallet * 10}&ndash;${DATA.cartons[3].pallet * 10} cartons &middot; ${fmt(DATA.cartons[0].pallet * 10 * DATA.cartons[0].pcs)}&ndash;${fmt(DATA.cartons[3].pallet * 10 * DATA.cartons[3].pcs)} pieces when full</dd></dl>
       <div class="elev">${lv}<div class="floorline">floor &middot; slot A is left, B is right, facing the rack from aisle ${P.aisle_of[row]}</div></div>
       <div class="labelwrap"><h3>Label for ${bin.code}</h3>${palletLabel(bin)}<div class="note">Yellow 100 x 50 mm, level colour band, Code128. Levels 2 to 5 go on the beam face, level 1 on the upright at floor.</div></div>`;
     el.querySelectorAll(".cell").forEach(c => c.addEventListener("click", () => selectBay("PR", id, c.dataset.code)));
@@ -297,7 +305,7 @@ function renderPanel() {
       sh += `<div class="lv one"><div class="tag" style="background:var(--carton)">S${l}<small>${l === 1 ? "bottom" : "shelf"}</small></div><button class="cell ${selected.bin === x.code ? "on" : ""}" data-code="${x.code}">${x.code}</button></div>`; }
     const bin = bins.find(b => b.code === selected.bin) || bins.find(b => b.shelf === 2);
     el.innerHTML = `<span class="zone bs">Carton shelving &middot; deck ${deck}</span><h2>Bay ${row}-${pad2(bay)}</h2>
-      <dl class="kv"><dt>Deck</dt><dd>${deck} at +${fmt(d.height)} mm</dd><dt>Bay</dt><dd>1,800 wide x ${fmt(bins[0].depth)} deep</dd><dt>Position</dt><dd>slot ${pad2(bay)} from the top of the MySteel sheet</dd><dt>Shelves</dt><dd>${B.shelves[deck]} (assumed, not on the PDF)</dd><dt>Per 600 shelf</dt><dd>4 woven / 10 pants / 8 polo / 12 dense polo</dd></dl>
+      <dl class="kv"><dt>Deck</dt><dd>${deck} at +${fmt(d.height)} mm</dd><dt>Bay</dt><dd>1,800 wide x ${fmt(bins[0].depth)} deep</dd><dt>Position</dt><dd>slot ${pad2(bay)} from the top of the MySteel sheet</dd><dt>Shelves</dt><dd>${B.shelves[deck]} (assumed, not on the PDF)</dd><dt>Per shelf</dt><dd>4 woven / 10 pants / 8 polo / 12 dense polo</dd><dt>Holds</dt><dd>${DATA.cartons[0].shelf600 * B.shelves[deck]}&ndash;${DATA.cartons[3].shelf600 * B.shelves[deck]} cartons &middot; ${fmt(DATA.cartons[0].shelf600 * B.shelves[deck] * DATA.cartons[0].pcs)}&ndash;${fmt(DATA.cartons[3].shelf600 * B.shelves[deck] * DATA.cartons[3].pcs)} pieces when full</dd></dl>
       <div class="elev">${sh}<div class="floorline">deck ${deck} &middot; shelf 1 is the bottom shelf</div></div>
       <div class="labelwrap"><h3>Label for ${bin.code}</h3>${cartonLabel(bin)}<div class="note">White 70 x 30 mm with blue band, Code128. One on the front edge of every shelf.</div></div>`;
     el.querySelectorAll(".cell").forEach(c => c.addEventListener("click", () => selectBay("BS", id, c.dataset.code)));
@@ -315,7 +323,7 @@ function cartonTable(mode) {
   const col = mode === "pallet" ? ["Per pallet slot", c => c.pallet] : ["Per 1,800 x 600 shelf", c => c.shelf600];
   return `<h3 style="margin-top:14px;font-size:15px">Cartons that fit &middot; ${col[0]}</h3><table class="cartons"><tr><th>Carton</th><th>Size</th><th>Pcs</th><th>Ctn</th><th>Pcs</th></tr>
     ${DATA.cartons.map(c => `<tr><td>${c.name}</td><td>${c.dims}</td><td>${c.pcs}</td><td>${col[1](c)}</td><td>${col[1](c) * c.pcs}</td></tr>`).join("")}</table>
-    <p class="note" style="font-size:11.5px;color:var(--muted)">${mode === "pallet" ? "1,200 x 1,000 pallet, stack up to 130 cm. Levels 4 and 5 need a reach truck with 7 m lift." : "Single layer, best orientation. Standing pants and polo cartons need a 650 mm shelf opening."}</p>`;
+    <p style="font-size:14px;margin:8px 0 0"><b>Whole warehouse when full:</b> ${fmt(CAP.ctnLo)}&ndash;${fmt(CAP.ctnHi)} cartons, ${fmt(CAP.pcsLo)}&ndash;${fmt(CAP.pcsHi)} pieces (woven to dense polo).</p><p class="note" style="font-size:13px;color:var(--muted)">${mode === "pallet" ? "1,200 x 1,000 pallet, stack up to 130 cm. Levels 4 and 5 need a reach truck with 7 m lift." : "Single layer, best orientation. Standing pants and polo cartons need a 650 mm shelf opening."}</p>`;
 }
 
 /* ---------- labels ---------- */
@@ -370,10 +378,11 @@ function guidePage() {
       <p><b>Shelves per bay.</b> The MySteel carton drawing is a plan with no elevation. Five shelves on 1F and 2F, four on 3F are placeholders.</p>
       <p><b>1F block A/B.</b> Drawn on the PDF with one column about 1,150 deep and partly outside the platform column line. Ask MySteel whether it is a deeper bay or a drafting slip.</p></div>
     <div class="card"><h2>Capacity at a glance</h2>
-      <table class="cartons"><tr><th>Zone</th><th>Bays</th><th>Bins</th><th>Woven ctn</th><th>Polo ctn</th></tr>
-        <tr><td>Pallet racking (180 slots)</td><td>${P.rows.length * P.bays}</td><td>${palletBins.length}</td><td>${fmt(palletBins.length * 18)}</td><td>${fmt(palletBins.length * 18)}</td></tr>
-        ${B.decks.map(d => `<tr><td>Deck ${d.deck} shelving</td><td>${d.bays}</td><td>${d.bays * B.shelves[d.deck]}</td><td>${fmt(d.bays * B.shelves[d.deck] * 4)}</td><td>${fmt(d.bays * B.shelves[d.deck] * 8)}</td></tr>`).join("")}</table>
-      <p style="font-size:12px;color:var(--muted)">Carton counts use the fit tables in the brief: 18 woven or 18 polo per pallet, 4 woven or 8 polo per 600-deep shelf. Every slot full, which never happens in practice.</p></div>
+      <table class="cartons"><tr><th>Zone</th><th>Bays</th><th>Bins</th><th>Woven ctn</th><th>Woven pcs</th><th>Dense polo ctn</th><th>Dense polo pcs</th></tr>
+        <tr><td>Pallet racking (180 slots)</td><td>${P.rows.length * P.bays}</td><td>${palletBins.length}</td><td>${fmt(palletBins.length * 18)}</td><td>${fmt(palletBins.length * 18 * 24)}</td><td>${fmt(palletBins.length * 30)}</td><td>${fmt(palletBins.length * 30 * 28)}</td></tr>
+        ${B.decks.map(d => `<tr><td>Deck ${d.deck} shelving</td><td>${d.bays}</td><td>${d.bays * B.shelves[d.deck]}</td><td>${fmt(d.bays * B.shelves[d.deck] * 4)}</td><td>${fmt(d.bays * B.shelves[d.deck] * 4 * 24)}</td><td>${fmt(d.bays * B.shelves[d.deck] * 12)}</td><td>${fmt(d.bays * B.shelves[d.deck] * 12 * 28)}</td></tr>`).join("")}
+        <tr><td><b>Whole warehouse</b></td><td>${P.rows.length * P.bays + bayCount}</td><td>${palletBins.length + cartonBins.length}</td><td><b>${fmt(CAP.ctnLo)}</b></td><td><b>${fmt(CAP.pcsLo)}</b></td><td><b>${fmt(CAP.ctnHi)}</b></td><td><b>${fmt(CAP.pcsHi)}</b></td></tr></table>
+      <p style="font-size:12px;color:var(--muted)">Woven = 18 cartons of 24 pcs per pallet, 4 per shelf. Dense polo = 30 cartons of 28 pcs per pallet, 12 per shelf. Every bin full, which never happens in practice; plan on 75 to 85 percent of these figures.</p></div>
   </div>`;
 }
 
