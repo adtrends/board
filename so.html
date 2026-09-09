@@ -1,0 +1,454 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Pending SO Board</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&display=swap">
+<style>
+  :root {
+    color-scheme: light;
+    --ground: #F7F5F0;
+    --surface: #FFFFFF;
+    --ink: #1E2A3A;
+    --muted: #57636F;
+    --line: #E7E2D8;
+    --line-soft: #F0ECE4;
+    --chrome: #3E4E62;
+    --chrome-grad: linear-gradient(135deg, #384759 0%, #4B5B70 100%);
+    --chrome-ink: #FFFFFF;
+    --chrome-soft: rgba(255,255,255,0.18);
+    --vol: #1F6F78;          /* the page's one accent: cubic metres waiting */
+    --vol-track: #D6E8E9;
+    --vol-tick: #1E2A3A;
+    --ready: #2A7549;
+    --ready-bg: #DBEEE2;
+    --amber: #B8741A;
+    --amber-bg: #F8EBD3;
+    --stuck: #8C2119;
+    --stuck-bg: #F2CFC9;
+    --chip: #EAECEE;
+    --chip-ink: #3E4E62;
+    --focus: #2E4466;
+    --shadow: 0 1px 2px rgba(60,50,30,0.06), 0 6px 18px rgba(60,50,30,0.08);
+  }
+  /* Light-only, same decision as the outlet and coordinator boards: the warehouse reads this on
+     the WH PC or a phone in a lit room, and the family should look like one system. */
+
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: "Barlow", -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-size: 15px;
+    line-height: 1.35;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+  .display {
+    font-family: "Barlow Condensed", "Arial Narrow", "Roboto Condensed", Impact, sans-serif;
+    font-weight: 700;
+    letter-spacing: 0.005em;
+  }
+  .num { font-variant-numeric: tabular-nums; }
+  button, input { font-family: inherit; font-size: inherit; }
+  button:focus-visible, input:focus-visible, .store-head:focus-visible {
+    outline: 2px solid var(--focus); outline-offset: 2px;
+  }
+
+  .app { max-width: 820px; margin: 0 auto; min-height: 100vh; display: flex; flex-direction: column; }
+
+  /* ---------- Chrome ---------- */
+  .chrome {
+    background: var(--chrome-grad); color: var(--chrome-ink);
+    padding: 18px 18px 16px;
+  }
+  .chrome .eyebrow { font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.85; }
+  .chrome h1 { margin: 2px 0 0; font-size: 30px; line-height: 1.05; text-wrap: balance; }
+  .chrome .sub { margin: 6px 0 0; font-size: 13px; opacity: 0.85; }
+  .totals { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 14px; }
+  .tot { background: var(--chrome-soft); border-radius: 8px; padding: 8px 10px; }
+  .tot .v { font-size: 24px; line-height: 1; }
+  .tot .l { font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; opacity: 0.85; margin-top: 4px; }
+  .tot.ready .v { color: #BFE6CC; }
+
+  /* ---------- Controls ---------- */
+  .controls {
+    display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+    padding: 12px 16px; background: var(--surface); border-bottom: 1px solid var(--line);
+    position: sticky; top: 0; z-index: 5;
+  }
+  .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: var(--ground); }
+  .seg button {
+    border: 0; background: transparent; color: var(--muted); padding: 7px 11px; cursor: pointer; font-weight: 500;
+  }
+  .seg button[aria-pressed="true"] { background: var(--chrome); color: var(--chrome-ink); }
+  .search { flex: 1 1 160px; min-width: 140px; }
+  .search input {
+    width: 100%; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--ground); color: var(--ink);
+  }
+  .scale-note { width: 100%; font-size: 12px; color: var(--muted); }
+
+  /* ---------- Sections ---------- */
+  main { padding: 6px 12px 28px; display: flex; flex-direction: column; gap: 18px; }
+  section h2 {
+    margin: 12px 4px 8px; font-size: 13px; letter-spacing: 0.09em; text-transform: uppercase; color: var(--muted);
+    display: flex; align-items: baseline; gap: 8px;
+  }
+  section h2 .count { font-weight: 500; letter-spacing: 0; text-transform: none; }
+  section h2.ready { color: var(--ready); }
+  .stores { display: flex; flex-direction: column; gap: 8px; }
+  .empty { color: var(--muted); font-size: 14px; padding: 6px 8px 0; }
+
+  /* ---------- Store row ---------- */
+  .store { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+  .store.is-ready { border-color: #B9DCC5; box-shadow: var(--shadow); }
+  .store-head {
+    display: grid; grid-template-columns: 1fr auto; grid-template-areas: "name m3" "bar bar" "meta meta";
+    gap: 6px 12px; padding: 12px 14px; cursor: pointer; width: 100%; text-align: left; border: 0; background: transparent; color: inherit;
+  }
+  .store-head .name { grid-area: name; font-size: 20px; line-height: 1.05; }
+  .store-head .name small { display: block; font-family: "Barlow", sans-serif; font-weight: 500; font-size: 13px; color: var(--muted); margin-top: 2px; }
+  .store-head .m3 { grid-area: m3; text-align: right; font-size: 26px; line-height: 1; color: var(--vol); }
+  .store.is-ready .store-head .m3 { color: var(--ready); }
+  .store-head .m3 small { display: block; font-family: "Barlow", sans-serif; font-weight: 500; font-size: 12px; color: var(--muted); margin-top: 3px; }
+  .bar { grid-area: bar; position: relative; height: 12px; border-radius: 6px; background: var(--vol-track); margin-top: 2px; }
+  .bar .fill { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 6px; background: var(--vol); min-width: 3px; }
+  .store.is-ready .bar .fill { background: var(--ready); }
+  .bar .tick { position: absolute; top: -4px; bottom: -4px; width: 2px; background: var(--vol-tick); }
+  .bar .tick::after {
+    content: attr(data-label); position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
+    font-size: 10px; color: var(--muted); white-space: nowrap; margin-top: 2px; font-variant-numeric: tabular-nums;
+  }
+  .meta { grid-area: meta; display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; font-size: 13px; color: var(--muted); margin-top: 8px; }
+  .chip { display: inline-block; padding: 1px 7px; border-radius: 999px; background: var(--chip); color: var(--chip-ink); font-size: 12px; font-weight: 600; }
+  .chip.age-ok { background: var(--chip); }
+  .chip.age-amber { background: var(--amber-bg); color: var(--amber); }
+  .chip.age-stuck { background: var(--stuck-bg); color: var(--stuck); }
+  .chip.ready { background: var(--ready-bg); color: var(--ready); }
+  .chip.brand { background: transparent; border: 1px solid var(--line); color: var(--muted); font-weight: 500; }
+
+  /* ---------- SO detail ---------- */
+  .detail { display: none; border-top: 1px solid var(--line-soft); background: var(--ground); padding: 10px 12px 12px; }
+  .store.open .detail { display: block; }
+  .note { font-size: 12px; color: var(--muted); margin: 0 2px 8px; }
+  .so { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; margin-bottom: 8px; }
+  .so-head { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; }
+  .so-head .id { font-size: 17px; }
+  .so-head .when { color: var(--muted); font-size: 13px; }
+  .so-head .right { margin-left: auto; font-size: 13px; color: var(--muted); }
+  .so-head .right b { color: var(--ink); font-weight: 600; }
+  .so-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+  table.lines { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 13px; }
+  table.lines th { text-align: left; font-weight: 600; color: var(--muted); font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; padding: 0 6px 4px 0; border-bottom: 1px solid var(--line-soft); }
+  table.lines td { padding: 5px 6px 5px 0; vertical-align: top; border-bottom: 1px solid var(--line-soft); }
+  table.lines tr:last-child td { border-bottom: 0; }
+  table.lines td.q { text-align: right; white-space: nowrap; font-weight: 600; }
+  table.lines th.q { text-align: right; }
+  .sizes { color: var(--muted); }
+  .sizes b { color: var(--ink); font-weight: 600; }
+  .item-code { font-weight: 600; }
+  .item-desc { color: var(--muted); font-size: 12px; display: block; }
+  .lines-wrap { overflow-x: auto; }
+  details.stale { margin-top: 4px; }
+  details.stale > summary { cursor: pointer; font-size: 13px; color: var(--stuck); font-weight: 600; padding: 8px 2px; list-style: none; }
+  details.stale > summary::-webkit-details-marker { display: none; }
+  details.stale > summary::before { content: "\25B8"; display: inline-block; width: 14px; }
+  details.stale[open] > summary::before { content: "\25BE"; }
+  details.stale .so { border-style: dashed; }
+  section h2.stale { color: var(--stuck); }
+
+  /* ---------- Footer / messages ---------- */
+  footer { padding: 8px 16px 40px; font-size: 12px; color: var(--muted); line-height: 1.5; }
+  footer p { margin: 0 0 6px; max-width: 65ch; }
+  .msg { padding: 48px 24px; text-align: center; }
+  .msg .icon { width: 44px; height: 44px; border-radius: 22px; background: var(--chip); color: var(--chip-ink); display: inline-flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 700; margin-bottom: 12px; }
+  .msg h1 { margin: 0 0 6px; font-size: 24px; }
+  .msg p { color: var(--muted); margin: 0; }
+  .skeleton { height: 64px; border-radius: 10px; background: var(--line-soft); margin: 8px 12px; }
+
+  @media (min-width: 640px) {
+    .chrome { padding: 22px 24px 18px; }
+    .chrome h1 { font-size: 34px; }
+    .store-head { grid-template-columns: 1fr 200px auto; grid-template-areas: "name bar m3" "meta meta meta"; align-items: center; }
+    .bar { margin-top: 0; }
+    .meta { margin-top: 4px; }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .bar .fill { transition: width 240ms ease; }
+  }
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <div class="skeleton" aria-hidden="true"></div>
+  <div class="skeleton" aria-hidden="true"></div>
+  <div class="skeleton" aria-hidden="true"></div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+  var app = document.getElementById('app');
+  var rendered = false;
+  var DOC = null;
+  var state = { origin: 'ALL', q: '', open: {} };
+
+  /* ---------- Helpers ---------- */
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function m3(v) { return (Math.round((v || 0) * 1000) / 1000).toFixed(3); }
+  function pct(v) { return Math.round(v * 100); }
+  function fmtDate(iso) {
+    if (!iso) return '';
+    var d = new Date(iso + 'T00:00:00');
+    return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+  }
+  function fmtStamp(iso) {
+    if (!iso) return '';
+    var d = new Date(iso);
+    return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) + ' ' + d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+  }
+  function ageClass(days) { return days == null ? 'age-ok' : days >= 60 ? 'age-stuck' : days >= 14 ? 'age-amber' : 'age-ok'; }
+  function ageText(days) { return days == null ? '' : days + ' d'; }
+
+  /* ---------- Derive per current filter ---------- */
+  function storeView(st) {
+    var all = st.sos.filter(function (s) { return state.origin === 'ALL' || s.origin === state.origin; });
+    var q = state.q.trim().toLowerCase();
+    if (q) {
+      var hay = (st.name + ' ' + st.town + ' ' + st.stem + ' ' + st.counters.map(function (c) { return c.code; }).join(' ')).toLowerCase();
+      var hit = hay.indexOf(q) >= 0 || all.some(function (s) {
+        return s.so.toLowerCase().indexOf(q) >= 0 || s.items.some(function (it) { return (it.item + ' ' + it.desc).toLowerCase().indexOf(q) >= 0; });
+      });
+      if (!hit) return null;
+    }
+    if (!all.length) return null;
+    var sos = all.filter(function (s) { return !s.stale; });
+    var stale = all.filter(function (s) { return s.stale; });
+    var vol = 0, pcs = 0, ctn = 0, oldest = null, staleVol = 0, stalePcs = 0;
+    sos.forEach(function (s) { vol += s.m3; pcs += s.pcs; ctn += s.cartons; if (s.age != null && (oldest == null || s.age > oldest)) oldest = s.age; });
+    stale.forEach(function (s) { staleVol += s.m3; stalePcs += s.pcs; });
+    return { st: st, sos: sos, stale: stale, staleM3: staleVol, stalePcs: stalePcs, m3: vol, pcs: pcs, cartons: ctn, oldestAge: oldest, ratio: st.minM3 ? vol / st.minM3 : 0 };
+  }
+
+  /* ---------- Render ---------- */
+  function renderAll() {
+    if (!DOC) return;
+    var views = DOC.stores.map(storeView).filter(Boolean);
+    views.sort(function (a, b) { return (b.ratio - a.ratio) || ((b.oldestAge || 0) - (a.oldestAge || 0)); });
+    var ready = views.filter(function (v) { return v.ratio >= 1; });
+    var building = views.filter(function (v) { return v.ratio < 1 && v.ratio >= 0.5; });
+    var started = views.filter(function (v) { return v.ratio < 0.5 && v.sos.length; });
+    var staleOnly = views.filter(function (v) { return !v.sos.length; });
+    var staleSos = views.reduce(function (a, v) { return a + v.stale.length; }, 0);
+    var stalePcs = views.reduce(function (a, v) { return a + v.stalePcs; }, 0);
+    var scale = null; // per store: twice its own minimum - the bar answers "reached the minimum?", not "how big"
+    var totM3 = views.reduce(function (a, v) { return a + v.m3; }, 0);
+    var totPcs = views.reduce(function (a, v) { return a + v.pcs; }, 0);
+    var totSO = views.reduce(function (a, v) { return a + v.sos.length; }, 0);
+
+    var html = '';
+    html += '<header class="chrome">' +
+      '<div class="eyebrow">Warehouse dispatch tally</div>' +
+      '<h1 class="display">Pending SO &mdash; East Malaysia &amp; Brunei</h1>' +
+      '<p class="sub">SOs raised but not yet transferred, added up per store against the SASA minimum per drop. Updated ' + esc(fmtStamp(DOC.updatedAt)) + '.</p>' +
+      '<div class="totals">' +
+        '<div class="tot ready"><div class="v display num">' + ready.length + '</div><div class="l">Ready to ship</div></div>' +
+        '<div class="tot"><div class="v display num">' + views.length + '</div><div class="l">Stores waiting</div></div>' +
+        '<div class="tot"><div class="v display num">' + totSO + '</div><div class="l">Open SOs</div></div>' +
+        '<div class="tot"><div class="v display num">' + m3(totM3) + '</div><div class="l">m&sup3; on the floor</div></div>' +
+      '</div>' +
+    '</header>';
+
+    html += '<div class="controls">' +
+      '<div class="seg" role="group" aria-label="Origin warehouse">' +
+        segBtn('ALL', 'All') + segBtn('ADCEWHTR-O', 'AD warehouse') + segBtn('ADECOMM', 'E-comm warehouse') +
+      '</div>' +
+      '<div class="search"><input type="search" id="q" placeholder="Store, town, SO or item code" value="' + esc(state.q) + '" aria-label="Search"></div>' +
+      '<div class="scale-note">Each bar runs to twice the store&rsquo;s minimum and counts SOs raised in the last ' + DOC.staleDays + ' days. The tick is the minimum per drop: 0.30 m&sup3; East Malaysia, 0.50 m&sup3; Brunei. ' + totPcs.toLocaleString('en-GB') + ' pcs in view' +
+        (staleSos ? '; a further ' + staleSos + ' older SO' + (staleSos === 1 ? '' : 's') + ' (' + stalePcs.toLocaleString('en-GB') + ' pcs) are listed under their stores for HQ to confirm or close, not counted.' : '.') + '</div>' +
+    '</div>';
+
+    html += '<main>';
+    html += section('ready', 'Ready to ship', ready, scale, 'Nothing has reached its minimum yet.');
+    html += section('building', 'Building up &middot; past halfway', building, scale, 'No store is past halfway.');
+    html += section('started', 'Just started', started, scale, 'No store below halfway.');
+    if (staleOnly.length) html += section('stale', 'Only older SOs &middot; nothing live', staleOnly, scale, '');
+    html += '</main>';
+
+    html += '<footer>' +
+      '<p>' + esc(DOC.m3Basis) + ' The carton count on each SO is the warehouse’s own figure from iDCP.</p>' +
+      '<p>Source: ' + esc(DOC.source.report) + ', pulled ' + esc(fmtStamp(DOC.source.pulledAt)) + '. ' + esc(DOC.source.rule) + '. China-direct SOs are not shown &mdash; they never sit on this floor.</p>' +
+      '<p>Labuan and Lahad Datu: 0.30 m&sup3; on the A.D. Trends SASA quote, 1.00 m&sup3; on the BMM Marketing one &mdash; check which entity is shipping. Every SASA shipment under 1 m&sup3; also carries RM30 of flat surcharges, so bundling several stores into one sailing is cheaper again.</p>' +
+    '</footer>';
+
+    app.innerHTML = html;
+    rendered = true;
+
+    Array.prototype.forEach.call(app.querySelectorAll('.seg button'), function (b) {
+      b.addEventListener('click', function () { state.origin = b.getAttribute('data-origin'); renderAll(); });
+    });
+    var qEl = document.getElementById('q');
+    qEl.addEventListener('input', function () { state.q = qEl.value; var pos = qEl.selectionStart; renderAll(); var n = document.getElementById('q'); n.focus(); try { n.setSelectionRange(pos, pos); } catch (e) {} });
+    Array.prototype.forEach.call(app.querySelectorAll('.store-head'), function (h) {
+      h.addEventListener('click', function () {
+        var id = h.getAttribute('data-stem');
+        state.open[id] = !state.open[id];
+        var el = h.parentNode;
+        el.classList.toggle('open', !!state.open[id]);
+        h.setAttribute('aria-expanded', state.open[id] ? 'true' : 'false');
+      });
+    });
+  }
+
+  function segBtn(val, label) {
+    return '<button type="button" data-origin="' + val + '" aria-pressed="' + (state.origin === val ? 'true' : 'false') + '">' + label + '</button>';
+  }
+
+  function section(cls, title, list, scale, emptyText) {
+    var h = '<section><h2 class="' + cls + '">' + title + ' <span class="count num">' + list.length + '</span></h2>';
+    if (!list.length) return h + '<div class="empty">' + emptyText + '</div></section>';
+    h += '<div class="stores">' + list.map(function (v) { return storeRow(v, scale); }).join('') + '</div></section>';
+    return h;
+  }
+
+  function storeRow(v, scale) {
+    var st = v.st;
+    var isReady = v.ratio >= 1;
+    var open = !!state.open[st.stem];
+    var barMax = st.minM3 * 2;
+    var fillPct = Math.min(100, (v.m3 / barMax) * 100);
+    var tickPct = 50;
+    var brands = st.counters.map(function (c) { return '<span class="chip brand">' + esc(c.brand) + '</span>'; }).join('');
+    var h = '<article class="store' + (isReady ? ' is-ready' : '') + (open ? ' open' : '') + '">';
+    h += '<button type="button" class="store-head" data-stem="' + esc(st.stem) + '" aria-expanded="' + (open ? 'true' : 'false') + '">' +
+      '<div class="name display">' + esc(st.name) + '<small>' + esc(st.town || st.region) + ' &middot; ' + v.sos.length + ' SO' + (v.sos.length === 1 ? '' : 's') + '</small></div>' +
+      '<div class="bar" aria-hidden="true"><div class="fill" style="width:' + fillPct + '%"></div><div class="tick" style="left:' + tickPct + '%" data-label="' + m3(st.minM3) + '"></div></div>' +
+      '<div class="m3 display num">' + m3(v.m3) + '<small>of ' + m3(st.minM3) + ' m&sup3; &middot; ' + pct(v.ratio) + '%</small></div>' +
+      '<div class="meta">' +
+        (isReady ? '<span class="chip ready">Ready</span>' : '') +
+        '<span class="num">' + v.pcs.toLocaleString('en-GB') + ' pcs</span>' +
+        '<span class="num">' + v.cartons + ' ctn</span>' +
+        (v.oldestAge != null ? '<span class="chip ' + ageClass(v.oldestAge) + ' num">oldest ' + ageText(v.oldestAge) + '</span>' : '') +
+        (v.stale.length ? '<span class="chip age-stuck num">' + v.stale.length + ' older SO' + (v.stale.length === 1 ? '' : 's') + ' to confirm</span>' : '') +
+        brands +
+      '</div>' +
+    '</button>';
+    h += '<div class="detail">';
+    if (st.minNote) h += '<p class="note">' + esc(st.minNote) + '</p>';
+    if (!v.sos.length) h += '<p class="note">No SO in the last ' + DOC.staleDays + ' days. Everything below is older &mdash; confirm with HQ whether it still ships or should be closed.</p>';
+    h += v.sos.map(soCard).join('');
+    if (v.stale.length) {
+      h += '<details class="stale"><summary class="num">Older than ' + DOC.staleDays + ' days &middot; ' + v.stale.length + ' SO' + (v.stale.length === 1 ? '' : 's') + ' &middot; ' + v.stalePcs + ' pcs &middot; ' + m3(v.staleM3) + ' m&sup3; est &mdash; confirm with HQ before picking</summary>' +
+        v.stale.map(soCard).join('') + '</details>';
+    }
+    h += '</div></article>';
+    return h;
+  }
+
+  function soCard(s) {
+    var h = '<div class="so">';
+    h += '<div class="so-head">' +
+      '<span class="id display">' + esc(s.so) + '</span>' +
+      '<span class="when num">' + esc(fmtDate(s.date)) + (s.age != null ? ' &middot; ' + s.age + ' d' : '') + '</span>' +
+      '<span class="right num"><b>' + s.pcs + '</b> pcs &middot; <b>' + s.cartons + '</b> ctn &middot; <b>' + m3(s.m3) + '</b> m&sup3; est</span>' +
+    '</div>';
+    h += '<div class="so-tags">' +
+      '<span class="chip">' + esc(s.counter) + '</span>' +
+      '<span class="chip brand">' + esc(s.brand) + '</span>' +
+      '<span class="chip brand">' + esc(s.originName) + '</span>' +
+      (s.carrier ? '<span class="chip ready">Booked: ' + esc(s.carrier) + '</span>' : '') +
+      (s.partial ? '<span class="chip age-amber">Part transferred' + (s.it ? ' &middot; IT ' + esc(s.it) : '') + '</span>' : '') +
+      (s.pcs < s.ordered ? '<span class="chip age-amber num">' + (s.ordered - s.pcs) + ' of ' + s.ordered + ' already sent</span>' : '') +
+      (s.byCounter ? '<span class="chip">Raised by the counter</span>' : '') +
+      (s.stale ? '<span class="chip age-stuck num">' + s.age + ' d old</span>' : '') +
+    '</div>';
+    h += '<div class="lines-wrap"><table class="lines"><thead><tr><th>Item</th><th>Colour</th><th>Sizes</th><th class="q">Qty</th></tr></thead><tbody>';
+    h += s.items.map(function (it) {
+      var sizes = it.sizes.map(function (p) { return '<b>' + esc(p[0]) + '</b>&times;' + p[1]; }).join(' ');
+      return '<tr>' +
+        '<td><span class="item-code">' + esc(it.item) + '</span><span class="item-desc">' + esc(it.desc) + '</span></td>' +
+        '<td>' + esc(it.colourName || it.colour) + '</td>' +
+        '<td class="sizes num">' + sizes + '</td>' +
+        '<td class="q num">' + it.qty + '</td>' +
+      '</tr>';
+    }).join('');
+    h += '</tbody></table></div></div>';
+    return h;
+  }
+
+  /* ---------- Messages ---------- */
+  function showInvalid() {
+    rendered = true;
+    app.innerHTML = '<div class="msg"><div class="icon" aria-hidden="true">?</div>' +
+      '<h1 class="display">This link isn’t valid.</h1>' +
+      '<p>Ask HQ for the warehouse Pending SO link &mdash; it carries the key after the #.</p></div>';
+  }
+  function showOffline() {
+    rendered = true;
+    app.innerHTML = '<div class="msg"><div class="icon" aria-hidden="true">!</div>' +
+      '<h1 class="display">Couldn’t load the board.</h1>' +
+      '<p>Check the connection, then pull down to refresh or reopen the link.</p></div>';
+  }
+
+  /* ---------- Crypto (same contract as push_board.py / index.html) ---------- */
+  function readKey() {
+    var h = (location.hash || '').replace(/^#/, '').trim();
+    if (!h) return null;
+    if (/^[0-9a-fA-F]{64}$/.test(h)) return h.toLowerCase();
+    return false;
+  }
+  function hexToBytes(hex) { var out = new Uint8Array(hex.length / 2); for (var i = 0; i < out.length; i++) out[i] = parseInt(hex.substr(i * 2, 2), 16); return out; }
+  function b64ToBytes(b64) { var bin = atob(String(b64).replace(/-/g, '+').replace(/_/g, '/')); var out = new Uint8Array(bin.length); for (var i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i); return out; }
+  function docIdFor(keyHex) {
+    return crypto.subtle.digest('SHA-256', new TextEncoder().encode(keyHex)).then(function (buf) {
+      var b = new Uint8Array(buf), s = '';
+      for (var i = 0; i < 8; i++) s += (b[i] < 16 ? '0' : '') + b[i].toString(16);
+      return s;
+    });
+  }
+  function importKey(keyHex) { return crypto.subtle.importKey('raw', hexToBytes(keyHex), { name: 'AES-GCM' }, false, ['decrypt']); }
+  function decryptDoc(cryptoKey, doc) {
+    if (!doc || typeof doc.iv !== 'string' || typeof doc.ct !== 'string') return Promise.reject(new Error('bad doc'));
+    return crypto.subtle.decrypt({ name: 'AES-GCM', iv: b64ToBytes(doc.iv), tagLength: 128 }, cryptoKey, b64ToBytes(doc.ct))
+      .then(function (buf) { return JSON.parse(new TextDecoder().decode(buf)); });
+  }
+
+  /* ---------- Boot ---------- */
+  var STATIC_DIR = 's/';
+  var POLL_MS = 5 * 60 * 1000;
+  function bootStatic(key) {
+    Promise.all([docIdFor(key), importKey(key)]).then(function (r) {
+      var url = STATIC_DIR + r[0] + '.json', cryptoKey = r[1], lastText = null;
+      function load(isPoll) {
+        return fetch(url, { cache: 'no-store' }).then(function (res) {
+          if (res.status === 404) { if (!isPoll) showInvalid(); return; }
+          if (!res.ok) throw new Error('http ' + res.status);
+          return res.text().then(function (text) {
+            if (isPoll && text === lastText) return;
+            lastText = text;
+            var doc; try { doc = JSON.parse(text); } catch (e) { if (!isPoll) showInvalid(); return; }
+            return decryptDoc(cryptoKey, doc).then(function (d) { DOC = d; renderAll(); }, function () { if (!isPoll) showInvalid(); });
+          });
+        }).catch(function () { if (!isPoll && !rendered) showOffline(); });
+      }
+      load(false);
+      setInterval(function () { if (!document.hidden) load(true); }, POLL_MS);
+    });
+  }
+  function boot() {
+    if (!window.crypto || !crypto.subtle) { showOffline(); return; }
+    var key = readKey();
+    if (key === null || key === false) { showInvalid(); return; }
+    bootStatic(key);
+  }
+  window.addEventListener('hashchange', function () { location.reload(); });
+  boot();
+})();
+</script>
+</body>
+</html>
