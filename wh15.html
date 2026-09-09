@@ -1,0 +1,392 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>WH15 Location Map</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+:root{
+  --ground:#F4F6F9; --panel:#FFFFFF; --ink:#1B2430; --muted:#5E6B7A; --line:#D3DAE3; --line-strong:#9AA6B4;
+  --navy:#1F3A5F; --navy-soft:#E3ECF7; --rack:#F2C94C; --rack-soft:#FBEFC2; --rack-edge:#A9821A;
+  --carton:#0B4A9E; --carton-soft:#DCE7F6; --sorter:#CBD2DA; --scan:#F5D77A; --stair:#BBD3F0;
+  --hit:#D9480F; --hit-soft:#FDE3D6; --ok:#2E7D32;
+  --lv1:#9E9E9E; --lv2:#2E7D32; --lv3:#1565C0; --lv4:#F9A825; --lv5:#C62828;
+  --shadow:0 6px 24px rgba(27,36,48,.10);
+  --f-display:"Barlow Condensed","Arial Narrow",Arial,sans-serif; --f-body:"IBM Plex Sans","Segoe UI",Helvetica,Arial,sans-serif; --f-mono:"IBM Plex Mono",Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --ground:#121922; --panel:#1A222D; --ink:#E6EBF1; --muted:#9AA6B4; --line:#2B3744; --line-strong:#4A5868;
+  --navy:#8FB4E8; --navy-soft:#213247; --rack:#D9B23A; --rack-soft:#4A3F14; --rack-edge:#E8C65A;
+  --carton:#6FA3F0; --carton-soft:#1E3556; --sorter:#3A4653; --scan:#8A7423; --stair:#2F4A6B;
+  --hit:#FF8A50; --hit-soft:#4A2A1A; --shadow:0 6px 24px rgba(0,0,0,.35);
+}}
+:root[data-theme="dark"]{
+  --ground:#121922; --panel:#1A222D; --ink:#E6EBF1; --muted:#9AA6B4; --line:#2B3744; --line-strong:#4A5868;
+  --navy:#8FB4E8; --navy-soft:#213247; --rack:#D9B23A; --rack-soft:#4A3F14; --rack-edge:#E8C65A;
+  --carton:#6FA3F0; --carton-soft:#1E3556; --sorter:#3A4653; --scan:#8A7423; --stair:#2F4A6B;
+  --hit:#FF8A50; --hit-soft:#4A2A1A; --shadow:0 6px 24px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--f-body);font-size:14px;line-height:1.45}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0;letter-spacing:.01em}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--hit);outline-offset:2px}
+.top{display:flex;flex-wrap:wrap;gap:14px 28px;align-items:center;padding:16px 24px 10px;border-bottom:1px solid var(--line);background:var(--panel)}
+.top h1{font-size:30px;font-weight:700;line-height:1}
+.top h1 small{display:block;font-family:var(--f-body);font-size:12px;font-weight:500;color:var(--muted);letter-spacing:.02em;margin-top:3px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{display:flex;align-items:baseline;gap:6px;padding:6px 10px;border:1px solid var(--line);border-radius:4px;background:var(--ground)}
+.chip b{font-family:var(--f-display);font-size:20px;font-weight:700;font-variant-numeric:tabular-nums}
+.chip span{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.chip.pr b{color:var(--rack-edge)} .chip.bs b{color:var(--carton)}
+.search{margin-left:auto;display:flex;gap:6px;align-items:center}
+.search input{font:500 14px var(--f-mono);padding:8px 10px;border:1px solid var(--line-strong);border-radius:4px;background:var(--ground);color:var(--ink);width:210px;text-transform:uppercase}
+.search .hint{font-size:11.5px;color:var(--muted);max-width:200px}
+.tabs{display:flex;gap:4px;padding:10px 24px 0;background:var(--panel);border-bottom:1px solid var(--line);overflow-x:auto}
+.tab{border:1px solid transparent;border-bottom:none;border-radius:6px 6px 0 0;padding:9px 14px;background:transparent;font-family:var(--f-display);font-size:17px;font-weight:600;color:var(--muted);white-space:nowrap}
+.tab[aria-selected="true"]{background:var(--ground);border-color:var(--line);color:var(--ink);position:relative;top:1px}
+.tab .sub{display:block;font-family:var(--f-body);font-size:11px;font-weight:400;letter-spacing:.02em}
+main{display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:18px;padding:18px 24px 40px;align-items:start}
+@media (max-width:1000px){main{grid-template-columns:1fr}}
+.plan{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:14px 16px 10px;overflow:hidden}
+.plan header{display:flex;flex-wrap:wrap;gap:6px 18px;align-items:baseline;margin-bottom:8px}
+.plan h2{font-size:22px;font-weight:700}
+.plan .meta{font-size:12px;color:var(--muted)}
+.plan svg{width:100%;height:auto;display:block}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:8px;font-size:12px;color:var(--muted)}
+.legend i{display:inline-block;width:14px;height:10px;border:1px solid var(--line-strong);vertical-align:-1px;margin-right:5px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:16px;position:sticky;top:12px;box-shadow:var(--shadow)}
+.panel h2{font-size:24px;font-weight:700;line-height:1.05}
+.panel .zone{display:inline-block;font-size:11px;letter-spacing:.08em;text-transform:uppercase;padding:3px 7px;border-radius:3px;margin-bottom:8px;font-weight:600}
+.zone.pr{background:var(--rack-soft);color:var(--rack-edge)} .zone.bs{background:var(--carton-soft);color:var(--carton)} .zone.so{background:var(--navy-soft);color:var(--navy)}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:12.5px;margin:10px 0 12px}
+.kv dt{color:var(--muted)} .kv dd{margin:0;font-variant-numeric:tabular-nums}
+.elev{display:flex;flex-direction:column;gap:4px;margin:8px 0 14px}
+.elev .lv{display:grid;grid-template-columns:54px 1fr 1fr;gap:4px;align-items:stretch}
+.elev .lv.one{grid-template-columns:54px 1fr}
+.elev .tag{font-family:var(--f-display);font-size:13px;font-weight:600;color:#fff;border-radius:3px;padding:4px 6px;line-height:1.05;display:flex;flex-direction:column;justify-content:center}
+.elev .tag small{font-family:var(--f-body);font-size:10px;font-weight:400;opacity:.9}
+.elev .cell{border:1px solid var(--line-strong);border-radius:3px;padding:6px 8px;background:var(--ground);text-align:left;font-family:var(--f-mono);font-size:13px;line-height:1.2}
+.elev .cell:hover{border-color:var(--hit);background:var(--hit-soft)}
+.elev .cell.on{border-color:var(--hit);box-shadow:inset 0 0 0 1px var(--hit)}
+.elev .cell small{display:block;font-family:var(--f-body);font-size:10.5px;color:var(--muted)}
+.floorline{border-top:3px solid var(--line-strong);margin-top:2px;font-size:11px;color:var(--muted);padding-top:3px}
+.labelwrap{margin-top:6px}
+.labelwrap h3{font-size:16px;font-weight:600;margin-bottom:6px}
+.labelwrap .note{font-size:11.5px;color:var(--muted);margin-top:6px}
+.lbl{position:relative;background:#FFF;color:#111;border:1px solid #333;overflow:hidden;font-family:var(--f-body);transform-origin:top left}
+.lbl .band{position:absolute;left:0;right:0;top:0;color:#fff;font-weight:700;display:flex;justify-content:space-between;align-items:center;padding:0 3mm}
+.lbl .code{position:absolute;left:4mm;font-family:var(--f-display);font-weight:700;letter-spacing:.01em;line-height:1}
+.lbl .bc{position:absolute;left:4mm;bottom:4mm}
+.lbl .bc svg{display:block}
+.lbl .info{position:absolute;right:3mm;bottom:3.5mm;text-align:right;line-height:1.35}
+.lbl.pallet{width:100mm;height:50mm;background:#FBEC8C}
+.lbl.pallet .band{height:9mm;font-size:9pt}
+.lbl.pallet .code{top:11mm;font-size:30pt}
+.lbl.pallet .info{font-size:8pt}
+.lbl.carton{width:70mm;height:30mm}
+.lbl.carton .band{height:6mm;font-size:7pt;background:#0D4AA0}
+.lbl.carton .code{top:7mm;font-size:17pt;left:2.5mm}
+.lbl.carton .bc{left:2.5mm;bottom:2mm}
+.lbl.carton .info{font-size:6pt;right:2mm;bottom:2.5mm}
+.cartons{width:100%;border-collapse:collapse;font-size:12px;margin-top:6px}
+.cartons th,.cartons td{padding:4px 6px;border-bottom:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums}
+.cartons th:first-child,.cartons td:first-child{text-align:left}
+.cartons th{font-weight:600;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.04em}
+.empty{color:var(--muted);font-size:13px}
+.gallery{display:grid;gap:22px}
+.gallery .card{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:16px 18px}
+.gallery .card h2{font-size:22px;margin-bottom:4px}
+.gallery .card p{max-width:66ch;margin:6px 0}
+.gallery .two{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:18px;align-items:start}
+.anat{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:12.5px;margin-top:10px}
+.anat dt{font-family:var(--f-mono);color:var(--carton)} .anat dd{margin:0}
+.swatches{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.sw{display:flex;align-items:center;gap:6px;font-size:12px}
+.sw i{width:26px;height:14px;border-radius:2px;display:inline-block}
+.filelist{font-family:var(--f-mono);font-size:12px;line-height:1.7}
+.codeguide code{font-family:var(--f-mono);background:var(--ground);padding:1px 5px;border-radius:3px;font-size:12.5px}
+svg text{font-family:var(--f-display);fill:var(--ink)}
+svg .bay{cursor:pointer}
+svg .bay rect{transition:fill .12s}
+svg .bay:hover rect.body, svg .bay.on rect.body{fill:var(--hit-soft);stroke:var(--hit);stroke-width:60}
+svg .lbl-row{font-size:520px;font-weight:700;fill:var(--hit)}
+svg .lbl-bay{font-size:400px;font-weight:600}
+svg .lbl-small{font-size:300px;font-weight:500;fill:var(--muted)}
+svg .lbl-note{font-family:var(--f-body);font-size:260px;fill:var(--muted)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+@media print{.top,.tabs{display:none}}
+</style>
+
+<div class="top">
+  <h1>WH15 Location Map<small>No. 15 Jalan 2/118C, Desa Tun Razak &middot; pallet racking, carton shelving, sorter &middot; draft 09 Sep 2026</small></h1>
+  <div class="chips" id="chips"></div>
+  <div class="search">
+    <input id="q" placeholder="Find a code, e.g. B-02-3-A" aria-label="Find a location code" autocomplete="off" spellcheck="false">
+    <div class="hint">Pallet: ROW-BAY-LEVEL-SLOT &middot; Carton: DECK-ROW-BAY-SHELF</div>
+  </div>
+</div>
+<div class="tabs" role="tablist" id="tabs"></div>
+<main id="main"></main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jsbarcode/3.11.5/JsBarcode.all.min.js"></script>
+<script>
+const DATA = {"generated": "2026-09-09", "pallet": {"rows": ["A", "B", "C", "D", "E", "F"], "bays": 3, "levels": 5, "slots": ["A", "B"], "beam": {"1": 0, "2": 1740, "3": 3450, "4": 5160, "5": 6870}, "aisle_of": {"A": 1, "B": 1, "C": 2, "D": 2, "E": 3, "F": 3}, "colour": {"1": "#9E9E9E", "2": "#2E7D32", "3": "#1565C0", "4": "#F9A825", "5": "#C62828"}, "colour_name": {"1": "GREY", "2": "GREEN", "3": "BLUE", "4": "YELLOW", "5": "RED"}, "geom": {"bay": 2790, "depth": 900, "aisle": 3600, "bb": 400, "plat_x0": 8870, "plat_w": 12029, "plat_l": 17250, "p1_w": 4945, "p2_w": 7084, "front_hall": 7625}}, "boltless": {"bay_w": 1800, "bay_d": 600, "pitch": 1800, "shelves": {"1F": 5, "2F": 5, "3F": 4}, "decks": [{"deck": "1F", "height": 2979, "W": 7250, "L": 17453, "aisle": 1000, "stairs": [[1290, 2815, 830, 2815], [1290, 8950, 830, 2680]], "col_lines": [0, 7200], "bays": 36, "note": "36 bays: A/B 2+2, C 7, D/E 8+8, F 9. Stairs x2 between the column line and row C.", "runs": [{"x": -830, "rows": [{"row": "A", "slots": [8, 9]}, {"row": "B", "slots": [8, 9]}], "depths": [1150, 690], "note": "block near the stairs; left column drawn ~1,150 deep on the PDF - verify"}, {"x": 2630, "rows": [{"row": "C", "slots": [1, 2, 3, 5, 6, 8, 9]}], "depths": [600], "note": ""}, {"x": 4246, "rows": [{"row": "D", "slots": [1, 2, 3, 5, 6, 7, 8, 9]}, {"row": "E", "slots": [1, 2, 3, 5, 6, 7, 8, 9]}], "depths": [600, 600], "note": ""}, {"x": 6461, "rows": [{"row": "F", "slots": [1, 2, 3, 4, 5, 6, 7, 8, 9]}], "depths": [600], "note": ""}]}, {"deck": "2F", "height": 5958, "W": 12125, "L": 17453, "aisle": 1000, "stairs": [[6217, 8720, 877, 2680], [6217, 12780, 877, 2720]], "col_lines": [4925, 12125], "bays": 68, "note": "68 bays: A 9, B/C 7+7, D 7, E 3, F/G 3+7, H/J 8+8, K 9. Column line between D and E (765 gap). Stairs x2 between G and H.", "runs": [{"x": 180, "rows": [{"row": "A", "slots": [1, 2, 3, 4, 5, 6, 7, 8, 9]}], "depths": [600], "note": ""}, {"x": 1780, "rows": [{"row": "B", "slots": [1, 2, 3, 5, 6, 8, 9]}, {"row": "C", "slots": [1, 2, 3, 5, 6, 8, 9]}], "depths": [600, 600], "note": ""}, {"x": 3980, "rows": [{"row": "D", "slots": [1, 2, 3, 5, 6, 8, 9]}], "depths": [600], "note": ""}, {"x": 5345, "rows": [{"row": "E", "slots": [1, 2, 3]}], "depths": [600], "note": ""}, {"x": 6945, "rows": [{"row": "F", "slots": [1, 2, 3]}, {"row": "G", "slots": [1, 2, 3, 5, 6, 8, 9]}], "depths": [600, 600], "note": ""}, {"x": 9145, "rows": [{"row": "H", "slots": [1, 2, 3, 5, 6, 7, 8, 9]}, {"row": "J", "slots": [1, 2, 3, 5, 6, 7, 8, 9]}], "depths": [600, 600], "note": ""}, {"x": 11345, "rows": [{"row": "K", "slots": [1, 2, 3, 4, 5, 6, 7, 8, 9]}], "depths": [600], "note": ""}]}, {"deck": "3F", "height": 8100, "W": 7287, "L": 17453, "aisle": 800, "stairs": [[1385, 13020, 900, 2630]], "col_lines": [0, 7287], "bays": 51, "note": "51 bays: A/B 6+6, C/D 6+6, E/F 9+9, G 9. Aisles 800 (not 1,000). Open area 6,653 below A-D with the stair.", "runs": [{"x": 687, "rows": [{"row": "A", "slots": [1, 2, 3, 4, 5, 6]}, {"row": "B", "slots": [1, 2, 3, 4, 5, 6]}], "depths": [600, 600], "note": ""}, {"x": 2687, "rows": [{"row": "C", "slots": [1, 2, 3, 4, 5, 6]}, {"row": "D", "slots": [1, 2, 3, 4, 5, 6]}], "depths": [600, 600], "note": ""}, {"x": 4687, "rows": [{"row": "E", "slots": [1, 2, 3, 4, 5, 6, 7, 8, 9]}, {"row": "F", "slots": [1, 2, 3, 4, 5, 6, 7, 8, 9]}], "depths": [600, 600], "note": ""}, {"x": 6687, "rows": [{"row": "G", "slots": [1, 2, 3, 4, 5, 6, 7, 8, 9]}], "depths": [600], "note": ""}]}]}, "cartons": [{"name": "Woven LS/SS", "dims": "48 x 41 x 37.5 cm", "pcs": 24, "pallet": 18, "shelf600": 4, "shelf1200": 12}, {"name": "Slack pants", "dims": "24 x 36 x 64 cm", "pcs": 26, "pallet": 24, "shelf600": 10, "shelf1200": 25}, {"name": "Polo assorted", "dims": "63 x 39 x 26 cm", "pcs": 28, "pallet": 18, "shelf600": 8, "shelf1200": 18}, {"name": "Polo dense-pack", "dims": "64 x 38 x 20 cm", "pcs": 28, "pallet": 30, "shelf600": 12, "shelf1200": 27}]};
+const P = DATA.pallet, B = DATA.boltless;
+const fmt = n => n.toLocaleString("en-US");
+const pad2 = n => String(n).padStart(2, "0");
+
+/* ---------- bins ---------- */
+const palletBins = [];
+for (const r of P.rows) for (let b = 1; b <= P.bays; b++) for (let lv = 1; lv <= P.levels; lv++) for (const s of P.slots)
+  palletBins.push({ kind: "PR", code: `${r}-${pad2(b)}-${lv}-${s}`, row: r, bay: b, level: lv, slot: s, beam: P.beam[lv], aisle: P.aisle_of[r] });
+const cartonBins = [];
+for (const d of B.decks) for (const run of d.runs) run.rows.forEach((rr, i) => {
+  for (const b of rr.slots) for (let sh = 1; sh <= B.shelves[d.deck]; sh++)
+    cartonBins.push({ kind: "BS", code: `${d.deck}-${rr.row}-${pad2(b)}-${sh}`, deck: d.deck, row: rr.row, bay: b, shelf: sh, depth: run.depths[i] });
+});
+const bayCount = B.decks.reduce((a, d) => a + d.bays, 0);
+
+/* ---------- chips ---------- */
+document.getElementById("chips").innerHTML = `
+  <div class="chip pr"><b>${palletBins.length}</b><span>pallet bins</span></div>
+  <div class="chip pr"><b>${P.rows.length * P.bays}</b><span>pallet bays</span></div>
+  <div class="chip bs"><b>${bayCount}</b><span>carton bays</span></div>
+  <div class="chip bs"><b>${cartonBins.length}</b><span>carton bins</span></div>
+  <div class="chip"><b>36</b><span>sorter chutes</span></div>`;
+
+/* ---------- tabs ---------- */
+const TABS = [
+  { id: "GF", title: "Ground floor", sub: "pallet racking + sorter" },
+  ...B.decks.map(d => ({ id: d.deck, title: `Deck ${d.deck}`, sub: `${d.bays} carton bays, +${fmt(d.height)} mm` })),
+  { id: "LABELS", title: "Labels", sub: "the two label types" },
+  { id: "GUIDE", title: "Code guide", sub: "how to read a location" },
+];
+let current = "GF", selected = null;
+const tabsEl = document.getElementById("tabs");
+tabsEl.innerHTML = TABS.map(t => `<button class="tab" role="tab" data-id="${t.id}" aria-selected="false">${t.title}<span class="sub">${t.sub}</span></button>`).join("");
+tabsEl.addEventListener("click", e => { const b = e.target.closest(".tab"); if (b) show(b.dataset.id); });
+
+function show(id, keepSel) {
+  current = id; if (!keepSel) selected = null;
+  [...tabsEl.children].forEach(b => b.setAttribute("aria-selected", b.dataset.id === id));
+  const main = document.getElementById("main");
+  if (id === "GF") main.innerHTML = `<section class="plan">${groundSVG()}</section><aside class="panel" id="panel"></aside>`;
+  else if (id === "LABELS") { main.innerHTML = labelsPage(); drawGalleryBarcodes(); return; }
+  else if (id === "GUIDE") { main.innerHTML = guidePage(); return; }
+  else main.innerHTML = `<section class="plan">${deckSVG(B.decks.find(d => d.deck === id))}</section><aside class="panel" id="panel"></aside>`;
+  main.querySelectorAll(".bay").forEach(g => g.addEventListener("click", () => selectBay(g.dataset.kind, g.dataset.id)));
+  renderPanel();
+}
+
+/* ---------- ground floor SVG (mm coordinates) ---------- */
+function groundSVG() {
+  const g = P.geom, rackW = g.bay * P.bays, X0 = g.plat_x0, PW = g.plat_w, PL = g.plat_l;
+  const rowY = {}; let y = 0;
+  P.rows.forEach((r, i) => { rowY[r] = y; y += g.depth + ([0, 2, 4].includes(i) ? g.aisle : g.bb); });
+  let s = "";
+  // rack rows
+  for (const r of P.rows) {
+    const y0 = rowY[r];
+    for (let k = 0; k < P.bays; k++) {
+      const bay = P.bays - k, x0 = k * g.bay;
+      s += `<g class="bay" data-kind="PR" data-id="${r}-${pad2(bay)}" tabindex="0"><rect class="body" x="${x0}" y="${y0}" width="${g.bay}" height="${g.depth}" fill="var(--rack)" stroke="var(--rack-edge)" stroke-width="30"/>
+        <line x1="${x0 + g.bay / 2}" y1="${y0}" x2="${x0 + g.bay / 2}" y2="${y0 + g.depth}" stroke="var(--rack-edge)" stroke-width="15"/>
+        <text class="lbl-bay" x="${x0 + g.bay / 2}" y="${y0 + 640}" text-anchor="middle">${r}-${pad2(bay)}</text></g>`;
+    }
+    s += `<text class="lbl-row" x="-300" y="${y0 + 680}" text-anchor="end">ROW ${r}</text>`;
+  }
+  [["A", 1], ["C", 2], ["E", 3]].forEach(([r, n]) => {
+    const yy = rowY[r] + g.depth + g.aisle / 2 + 130;
+    s += `<text class="lbl-small" x="${rackW / 2}" y="${yy}" text-anchor="middle">AISLE ${n}  &middot;  3,600 clear  &middot;  entry from platform side &rarr;</text>`;
+  });
+  // platform
+  s += `<rect x="${X0}" y="0" width="${PW}" height="${PL}" fill="var(--navy-soft)" stroke="var(--navy)" stroke-width="40"/>`;
+  for (const gx of [X0, X0 + g.p1_w, X0 + PW]) s += `<line x1="${gx}" y1="0" x2="${gx}" y2="${PL}" stroke="var(--navy)" stroke-width="20" stroke-dasharray="120 120"/>`;
+  for (const gy of [0, 5750, 11500, 17250]) { s += `<line x1="${X0}" y1="${gy}" x2="${X0 + PW}" y2="${gy}" stroke="var(--navy)" stroke-width="20" stroke-dasharray="120 120"/>`;
+    for (const gx of [X0, X0 + g.p1_w, X0 + PW]) s += `<rect x="${gx - 110}" y="${gy - 110}" width="220" height="220" fill="var(--navy)"/>`; }
+  s += `<text class="lbl-small" x="${X0 + g.p1_w / 2}" y="500" text-anchor="middle">PLATFORM BAY P-1 &middot; 4,945 wide</text>
+        <text class="lbl-note" x="${X0 + g.p1_w / 2}" y="850" text-anchor="middle">deck 2F only above &middot; ground = cross-aisle + conveyors</text>
+        <text class="lbl-small" x="${X0 + g.p1_w + g.p2_w / 2}" y="500" text-anchor="middle">PLATFORM BAY P-2 &middot; 7,084 wide</text>
+        <text class="lbl-note" x="${X0 + g.p1_w + g.p2_w / 2}" y="850" text-anchor="middle">decks 1F +2,979 &middot; 2F +5,958 &middot; 3F +8,100</text>`;
+  // conveyors
+  [[2000, "C1"], [8500, "C2"]].forEach(([cy, id]) => {
+    s += `<g class="bay" data-kind="SO" data-id="${id}" tabindex="0"><rect class="body" x="${X0 + 1000}" y="${cy}" width="900" height="3200" fill="var(--panel)" stroke="var(--ink)" stroke-width="25"/>
+      <text class="lbl-small" x="${X0 + 1450}" y="${cy + 1600}" text-anchor="middle" transform="rotate(-90 ${X0 + 1450} ${cy + 1600})">CONVEYOR ${id}</text>
+      <polygon points="${X0 + 2300},${cy} ${X0 + 3300},${cy} ${X0 + 2800},${cy + 3200}" fill="var(--panel)" stroke="var(--ink)" stroke-width="25"/></g>`;
+  });
+  // sorter
+  const SX = X0 + g.p1_w + 3542;
+  s += `<g class="bay" data-kind="SO" data-id="IN-1" tabindex="0"><rect class="body" x="${SX - 550}" y="1250" width="1100" height="4500" fill="var(--panel)" stroke="var(--ink)" stroke-width="25"/>
+        <text class="lbl-small" x="${SX}" y="3500" text-anchor="middle" transform="rotate(-90 ${SX} 3500)">INDUCTION IN-1</text></g>
+        <rect x="${SX - 350}" y="5750" width="700" height="11300" fill="var(--sorter)" stroke="var(--ink)" stroke-width="25"/>
+        <text class="lbl-bay" x="${SX + 130}" y="11400" text-anchor="middle" transform="rotate(-90 ${SX + 130} 11400)">WHEEL SORTER</text>
+        <g class="bay" data-kind="SO" data-id="SC-1" tabindex="0"><rect class="body" x="${SX - 350}" y="15600" width="700" height="1400" fill="var(--scan)" stroke="var(--ink)" stroke-width="25"/>
+        <text class="lbl-small" x="${SX}" y="16300" text-anchor="middle" transform="rotate(-90 ${SX} 16300)">SCAN</text></g>`;
+  const pitch = (15400 - 6000) / 18;
+  for (let i = 0; i < 18; i++) { const cy = 6000 + i * pitch;
+    for (const [side, x0, n] of [["L", SX - 1050, i + 1], ["R", SX + 450, i + 19]])
+      s += `<g class="bay" data-kind="SO" data-id="CH${pad2(n)}" tabindex="0"><rect class="body" x="${x0}" y="${cy + 40}" width="600" height="${pitch - 80}" fill="var(--panel)" stroke="var(--ink)" stroke-width="15"/>
+            <text x="${x0 + 300}" y="${cy + pitch / 2 + 90}" text-anchor="middle" style="font-size:250px">CH${pad2(n)}</text></g>`; }
+  // power points
+  s += `<circle cx="${SX + 900}" cy="867" r="180" fill="var(--hit)"/><text class="lbl-note" x="${SX + 1150}" y="950" fill="var(--hit)">PP-1 3-ph 32A + LAN</text>`;
+  [8000, 10800, 13600].forEach((cy, i) => s += `<circle cx="${SX + 1300}" cy="${cy}" r="150" fill="var(--hit)"/><text class="lbl-note" x="${SX + 1550}" y="${cy + 90}" fill="var(--hit)">PP-${i + 2} printer</text>`);
+  // envelope + front hall
+  s += `<rect x="-300" y="-300" width="${X0 + PW + 600}" height="${PL + 600}" fill="none" stroke="var(--ink)" stroke-width="60"/>
+        <rect x="-300" y="${PL + 900}" width="${X0 + PW + 600}" height="2600" fill="none" stroke="var(--line-strong)" stroke-width="40" stroke-dasharray="300 200"/>
+        <text class="lbl-note" x="${(X0 + PW) / 2}" y="${PL + 2350}" text-anchor="middle">FRONT HALL 26.4 x 7.6 m &middot; receiving / dispatch &middot; orientation assumed, confirm on site</text>`;
+  const w = X0 + PW + 4600;
+  return `<header><h2>Ground floor</h2><span class="meta">MySteel DWG D.20094.26 &middot; all mm &middot; click a bay, chute or conveyor</span></header>
+    <svg viewBox="-2600 -900 ${w + 2600} ${PL + 4600}" role="img" aria-label="Ground floor plan">${s}</svg>
+    <div class="legend"><span><i style="background:var(--rack)"></i>pallet racking, 2 pallets per bay, 5 levels</span><span><i style="background:var(--navy-soft)"></i>steel platform footprint</span><span><i style="background:var(--sorter)"></i>wheel sorter, 36 chutes</span><span><i style="background:var(--hit);border-color:var(--hit)"></i>power point (Forwardlog P250072)</span></div>`;
+}
+
+/* ---------- deck SVG, rotated so the deck runs left to right ---------- */
+function deckSVG(d) {
+  // sheet x (across) -> screen y ; sheet y (along, slot 1 at top of sheet) -> screen x
+  const xmin = Math.min(0, ...d.runs.map(r => r.x)) - 300;
+  let s = `<rect x="0" y="${xmin}" width="${d.L}" height="${d.W - xmin}" fill="var(--navy-soft)" stroke="var(--navy)" stroke-width="40"/>`;
+  for (const cx of d.col_lines) { s += `<line x1="0" y1="${cx}" x2="${d.L}" y2="${cx}" stroke="var(--navy)" stroke-width="20" stroke-dasharray="120 120"/>`;
+    for (const cy of [0, 5750, 11500, 17250]) s += `<rect x="${cy - 110}" y="${cx - 110}" width="220" height="220" fill="var(--navy)"/>`; }
+  for (const [sx, sy, sw, sl] of d.stairs) s += `<rect x="${sy}" y="${sx}" width="${sl}" height="${sw}" fill="var(--stair)" stroke="var(--navy)" stroke-width="20"/><text class="lbl-small" x="${sy + sl / 2}" y="${sx + sw / 2 + 110}" text-anchor="middle">STAIR</text>`;
+  for (let k = 1; k <= 9; k++) s += `<text class="lbl-small" x="${(k - 0.5) * B.pitch}" y="${xmin - 250}" text-anchor="middle">bay ${pad2(k)}</text>`;
+  for (const run of d.runs) { let x = run.x;
+    run.rows.forEach((rr, i) => { const dp = run.depths[i];
+      for (const b of rr.slots) { const y = (b - 1) * B.pitch;
+        s += `<g class="bay" data-kind="BS" data-id="${d.deck}-${rr.row}-${pad2(b)}" tabindex="0"><rect class="body" x="${y}" y="${x}" width="${B.pitch}" height="${dp}" fill="var(--panel)" stroke="var(--carton)" stroke-width="25"/>
+              <text class="lbl-small" x="${y + B.pitch / 2}" y="${x + dp / 2 + 110}" text-anchor="middle" style="fill:var(--ink)">${rr.row}-${pad2(b)}</text></g>`; }
+      s += `<text class="lbl-row" x="-250" y="${x + dp / 2 + 180}" text-anchor="end">${rr.row}</text>`;
+      x += dp; });
+  }
+  return `<header><h2>Deck ${d.deck} &middot; +${fmt(d.height)} mm</h2><span class="meta">${d.bays} bays of 1,800 x 600 &middot; ${B.shelves[d.deck]} shelves per bay (assumed) &middot; aisles ${fmt(d.aisle)} &middot; top of the MySteel sheet is at the left</span></header>
+    <svg viewBox="-1500 ${xmin - 700} ${d.L + 1900} ${d.W - xmin + 1400}" role="img" aria-label="Deck ${d.deck} plan">${s}</svg>
+    <div class="legend"><span><i style="background:var(--panel);border-color:var(--carton)"></i>carton shelving bay, click to see its shelves</span><span><i style="background:var(--stair)"></i>stair</span><span>${d.note}</span></div>`;
+}
+
+/* ---------- selection + panel ---------- */
+function selectBay(kind, id, binCode) {
+  selected = { kind, id, bin: binCode || null };
+  document.querySelectorAll("svg .bay").forEach(g => g.classList.toggle("on", g.dataset.id === id));
+  renderPanel();
+}
+function renderPanel() {
+  const el = document.getElementById("panel"); if (!el) return;
+  if (!selected) { el.innerHTML = `<h2>Pick a location</h2><p class="empty">Click any bay on the plan to see its bins and the label that goes on each one. Or type a code in the search box.</p>${cartonTable(current === "GF" ? "pallet" : "shelf")}`; return; }
+  const { kind, id } = selected;
+  if (kind === "PR") {
+    const [row, bay] = id.split("-"); const bins = palletBins.filter(b => b.row === row && b.bay === +bay);
+    let lv = "";
+    for (let l = P.levels; l >= 1; l--) {
+      const a = bins.find(b => b.level === l && b.slot === "A"), bb = bins.find(b => b.level === l && b.slot === "B");
+      lv += `<div class="lv"><div class="tag" style="background:${P.colour[l]}">L${l}<small>${l === 1 ? "floor" : "beam " + fmt(P.beam[l])}</small></div>
+        ${[a, bb].map(x => `<button class="cell ${selected.bin === x.code ? "on" : ""}" data-code="${x.code}">${x.code}<small>slot ${x.slot}</small></button>`).join("")}</div>`;
+    }
+    const bin = bins.find(b => b.code === selected.bin) || bins.find(b => b.level === 2 && b.slot === "A");
+    el.innerHTML = `<span class="zone pr">Pallet racking</span><h2>Bay ${id}</h2>
+      <dl class="kv"><dt>Aisle</dt><dd>${P.aisle_of[row]} &middot; 3,600 clear</dd><dt>Bay</dt><dd>2,790 pitch &middot; 900 deep &middot; 2 pallets 1,200 x 1,000</dd><dt>Levels</dt><dd>floor + 4 beam levels, 1,500 kg per level</dd><dt>Bins</dt><dd>10 (5 levels x 2 slots)</dd></dl>
+      <div class="elev">${lv}<div class="floorline">floor &middot; slot A is left, B is right, facing the rack from aisle ${P.aisle_of[row]}</div></div>
+      <div class="labelwrap"><h3>Label for ${bin.code}</h3>${palletLabel(bin)}<div class="note">Yellow 100 x 50 mm, level colour band, Code128. Levels 2 to 5 go on the beam face, level 1 on the upright at floor.</div></div>`;
+    el.querySelectorAll(".cell").forEach(c => c.addEventListener("click", () => selectBay("PR", id, c.dataset.code)));
+    drawBarcode(el, bin.code);
+  } else if (kind === "BS") {
+    const [deck, row, bay] = id.split("-"); const bins = cartonBins.filter(b => b.deck === deck && b.row === row && b.bay === +bay);
+    const d = B.decks.find(x => x.deck === deck);
+    let sh = "";
+    for (let l = B.shelves[deck]; l >= 1; l--) { const x = bins.find(b => b.shelf === l);
+      sh += `<div class="lv one"><div class="tag" style="background:var(--carton)">S${l}<small>${l === 1 ? "bottom" : "shelf"}</small></div><button class="cell ${selected.bin === x.code ? "on" : ""}" data-code="${x.code}">${x.code}</button></div>`; }
+    const bin = bins.find(b => b.code === selected.bin) || bins.find(b => b.shelf === 2);
+    el.innerHTML = `<span class="zone bs">Carton shelving &middot; deck ${deck}</span><h2>Bay ${row}-${pad2(bay)}</h2>
+      <dl class="kv"><dt>Deck</dt><dd>${deck} at +${fmt(d.height)} mm</dd><dt>Bay</dt><dd>1,800 wide x ${fmt(bins[0].depth)} deep</dd><dt>Position</dt><dd>slot ${pad2(bay)} from the top of the MySteel sheet</dd><dt>Shelves</dt><dd>${B.shelves[deck]} (assumed, not on the PDF)</dd><dt>Per 600 shelf</dt><dd>4 woven / 10 pants / 8 polo / 12 dense polo</dd></dl>
+      <div class="elev">${sh}<div class="floorline">deck ${deck} &middot; shelf 1 is the bottom shelf</div></div>
+      <div class="labelwrap"><h3>Label for ${bin.code}</h3>${cartonLabel(bin)}<div class="note">White 70 x 30 mm with blue band, Code128. One on the front edge of every shelf.</div></div>`;
+    el.querySelectorAll(".cell").forEach(c => c.addEventListener("click", () => selectBay("BS", id, c.dataset.code)));
+    drawBarcode(el, bin.code);
+  } else {
+    const info = {
+      "IN-1": ["Sorter induction", "Conveyor belt feeding the wheel sorter. PP-1 (3-phase 380 V 32 A, 2 x 16 A, LAN) sits 867 mm from the column line beside it."],
+      "SC-1": ["Scanning gantry", "2.0 to 2.2 m high. The emergency light beside the existing stair sits on this line and has to move (Adams, 3 Sep, unanswered)."],
+      "C1": ["Conveyor 1", "77 x 85 cm x 2.65 m, under platform bay P-1."], "C2": ["Conveyor 2", "77 x 78 cm x 2.75 m, under platform bay P-1. Conveyor 3 (77 x 68 x 2.6 m) is not placed on the DWG."],
+    }[id] || [`Sorter chute ${id}`, `${+id.slice(2) <= 18 ? "Left" : "Right"} side, position ${+id.slice(2) <= 18 ? +id.slice(2) : +id.slice(2) - 18} of 18 from the induction end. One destination outlet per chute, mapped in the WMS before the 1 to 2 Oct integration test.`];
+    el.innerHTML = `<span class="zone so">Sorter &amp; conveyors</span><h2>${info[0]}</h2><p>${info[1]}</p><p class="empty">Chute labels are 100 x 50 mm, CH01 to CH36, printed separately.</p>`;
+  }
+}
+function cartonTable(mode) {
+  const col = mode === "pallet" ? ["Per pallet slot", c => c.pallet] : ["Per 1,800 x 600 shelf", c => c.shelf600];
+  return `<h3 style="margin-top:14px;font-size:15px">Cartons that fit &middot; ${col[0]}</h3><table class="cartons"><tr><th>Carton</th><th>Size</th><th>Pcs</th><th>Ctn</th><th>Pcs</th></tr>
+    ${DATA.cartons.map(c => `<tr><td>${c.name}</td><td>${c.dims}</td><td>${c.pcs}</td><td>${col[1](c)}</td><td>${col[1](c) * c.pcs}</td></tr>`).join("")}</table>
+    <p class="note" style="font-size:11.5px;color:var(--muted)">${mode === "pallet" ? "1,200 x 1,000 pallet, stack up to 130 cm. Levels 4 and 5 need a reach truck with 7 m lift." : "Single layer, best orientation. Standing pants and polo cartons need a 650 mm shelf opening."}</p>`;
+}
+
+/* ---------- labels ---------- */
+function palletLabel(b) {
+  return `<div class="lbl pallet"><div class="band" style="background:${P.colour[b.level]}"><span>PALLET RACK &nbsp; LEVEL ${b.level} &nbsp;${P.colour_name[b.level]}</span><span style="font-weight:400">WH15</span></div>
+    <div class="code">${b.code}</div><div class="bc"><svg data-code="${b.code}"></svg></div>
+    <div class="info">Row ${b.row} &nbsp;Bay ${pad2(b.bay)}<br>Level ${b.level} &nbsp;Slot ${b.slot}<br>Aisle ${b.aisle} &nbsp;beam ${fmt(b.beam)}</div></div>`;
+}
+function cartonLabel(b) {
+  return `<div class="lbl carton"><div class="band"><span>CARTON SHELF &nbsp; DECK ${b.deck}</span><span>WH15</span></div>
+    <div class="code">${b.code}</div><div class="bc"><svg data-code="${b.code}"></svg></div>
+    <div class="info">Row ${b.row} &nbsp;Bay ${pad2(b.bay)}<br>Shelf ${b.shelf} (1 = bottom)</div></div>`;
+}
+function drawBarcode(root, code) {
+  root.querySelectorAll("svg[data-code]").forEach(svg => {
+    const carton = svg.closest(".carton");
+    try { JsBarcode(svg, svg.dataset.code, { format: "CODE128", displayValue: false, width: carton ? 1.2 : 1.6, height: carton ? 22 : 36, margin: 0, background: "transparent", lineColor: "#111" }); }
+    catch (e) { svg.outerHTML = `<span style="font:10px monospace">${svg.dataset.code}</span>`; }
+  });
+}
+
+/* ---------- labels page ---------- */
+function labelsPage() {
+  const pb = palletBins.find(b => b.code === "B-02-3-A"), cb = cartonBins.find(b => b.code === "2F-C-05-2");
+  return `<div class="gallery" style="grid-column:1/-1">
+    <div class="card"><h2>Two storage systems, two labels</h2><p>A pallet label is yellow and lands on a beam; a carton label is white with a blue band and lands on a shelf edge. A pallet code always starts with a single row letter (A to F), a carton code always starts with the deck (1F, 2F, 3F), so a scanned code can never be filed in the wrong zone.</p>
+      <div class="two">
+        <div><h3 style="font-size:17px;margin-bottom:8px">Pallet rack label &middot; 100 x 50 mm &middot; ${palletBins.length} to print</h3>${palletLabel(pb)}
+          <dl class="anat"><dt>Band</dt><dd>colour of the level, readable from the aisle</dd><dt>B</dt><dd>row (A to F)</dd><dt>02</dt><dd>bay, 01 nearest the platform cross-aisle</dd><dt>3</dt><dd>level, 1 = floor, 2 to 5 = beams</dd><dt>A</dt><dd>slot, left pallet facing the rack</dd></dl>
+          <div class="swatches">${[1, 2, 3, 4, 5].map(l => `<span class="sw"><i style="background:${P.colour[l]}"></i>L${l} ${P.colour_name[l].toLowerCase()} &middot; ${l === 1 ? "floor" : fmt(P.beam[l]) + " mm"}</span>`).join("")}</div></div>
+        <div><h3 style="font-size:17px;margin-bottom:8px">Carton shelf label &middot; 70 x 30 mm &middot; ${cartonBins.length} to print</h3>${cartonLabel(cb)}
+          <dl class="anat"><dt>2F</dt><dd>deck (1F, 2F or 3F)</dd><dt>C</dt><dd>row, lettered left to right on each deck, no I or O</dd><dt>05</dt><dd>bay = position from the top of the MySteel sheet (01 to 09)</dd><dt>2</dt><dd>shelf, 1 = bottom</dd></dl>
+          <p style="font-size:12.5px;color:var(--muted)">Shelves per bay are assumed (5 on 1F and 2F, 4 on 3F) until MySteel confirms the frame. Hold printing until then.</p></div>
+      </div></div>
+    <div class="card"><h2>Print files</h2><p>Both sets are A4 sticker sheets at 100% scale, in the project folder:</p>
+      <div class="filelist">WH15_Labels_PALLET_RACK.pdf &nbsp;&middot;&nbsp; 18 pages, 10 labels each<br>WH15_Labels_CARTON_SHELF.pdf &nbsp;&middot;&nbsp; 41 pages, 18 labels each<br>WH15_Bin_Locations.xlsx &nbsp;&middot;&nbsp; every code, for the iDCP bin import</div>
+      <p>Other signage: 18 pallet bay labels, 12 row-end boards, 3 aisle boards, 18 load notices (1,500 kg per level), 36 chute labels, 3 deck signs.</p></div>
+  </div>`;
+}
+function drawGalleryBarcodes() { drawBarcode(document.getElementById("main")); }
+
+/* ---------- code guide ---------- */
+function guidePage() {
+  return `<div class="gallery codeguide" style="grid-column:1/-1">
+    <div class="card"><h2>Reading a location code</h2>
+      <p><code>B-02-3-A</code> &rarr; ground floor, pallet row <b>B</b>, bay <b>02</b>, level <b>3</b> (beam at 3,450 mm), slot <b>A</b>. Ten bins per bay, 180 in total.</p>
+      <p><code>2F-C-05-2</code> &rarr; deck <b>2F</b> (+5,958 mm), carton row <b>C</b>, bay position <b>05</b>, shelf <b>2</b>. Bay numbers are grid positions along the deck, so bay 05 is the same spot in every row and rows with a gap simply skip a number.</p>
+      <p><code>CH21</code> &rarr; sorter chute 21, right side, third from the induction end.</p>
+      <p>Compact forms without dashes (<code>B023A</code>, <code>2FC052</code>) are in the spreadsheet in case iDCP rejects the dash.</p></div>
+    <div class="card"><h2>What is still assumed</h2>
+      <p><b>Ground floor orientation.</b> Which wall carries row A and which end faces the front hall has not been confirmed on site.</p>
+      <p><b>Shelves per bay.</b> The MySteel carton drawing is a plan with no elevation. Five shelves on 1F and 2F, four on 3F are placeholders.</p>
+      <p><b>1F block A/B.</b> Drawn on the PDF with one column about 1,150 deep and partly outside the platform column line. Ask MySteel whether it is a deeper bay or a drafting slip.</p></div>
+    <div class="card"><h2>Capacity at a glance</h2>
+      <table class="cartons"><tr><th>Zone</th><th>Bays</th><th>Bins</th><th>Woven ctn</th><th>Polo ctn</th></tr>
+        <tr><td>Pallet racking (180 slots)</td><td>${P.rows.length * P.bays}</td><td>${palletBins.length}</td><td>${fmt(palletBins.length * 18)}</td><td>${fmt(palletBins.length * 18)}</td></tr>
+        ${B.decks.map(d => `<tr><td>Deck ${d.deck} shelving</td><td>${d.bays}</td><td>${d.bays * B.shelves[d.deck]}</td><td>${fmt(d.bays * B.shelves[d.deck] * 4)}</td><td>${fmt(d.bays * B.shelves[d.deck] * 8)}</td></tr>`).join("")}</table>
+      <p style="font-size:12px;color:var(--muted)">Carton counts use the fit tables in the brief: 18 woven or 18 polo per pallet, 4 woven or 8 polo per 600-deep shelf. Every slot full, which never happens in practice.</p></div>
+  </div>`;
+}
+
+/* ---------- search ---------- */
+document.getElementById("q").addEventListener("input", e => {
+  const q = e.target.value.trim().toUpperCase().replace(/\s+/g, ""); if (q.length < 3) return;
+  let m;
+  if ((m = q.match(/^([A-F])-?(\d{2})(?:-?([1-5])-?([AB])?)?$/))) { show("GF", true); selectBay("PR", `${m[1]}-${m[2]}`, m[3] && m[4] ? `${m[1]}-${m[2]}-${m[3]}-${m[4]}` : null); return; }
+  if ((m = q.match(/^([123]F)-?([A-Z])-?(\d{2})(?:-?(\d))?$/))) { const b = cartonBins.find(x => x.deck === m[1] && x.row === m[2] && x.bay === +m[3]); if (!b) return;
+    show(m[1], true); selectBay("BS", `${m[1]}-${m[2]}-${m[3]}`, m[4] ? `${m[1]}-${m[2]}-${m[3]}-${m[4]}` : null); return; }
+  if ((m = q.match(/^CH(\d{2})$/))) { show("GF", true); selectBay("SO", `CH${m[1]}`); }
+});
+show("GF");
+</script>
+
+</html>
