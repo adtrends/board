@@ -34,153 +34,146 @@
     --focus: #2E4466;
     --shadow: 0 1px 2px rgba(60,50,30,0.06), 0 6px 18px rgba(60,50,30,0.08);
   }
-  /* Light-only, same decision as the outlet and coordinator boards: the warehouse reads this on
-     the WH PC or a phone in a lit room, and the family should look like one system. */
+  /* Light-only, same decision as the outlet and coordinator boards. */
 
   * { box-sizing: border-box; }
-  html { -webkit-text-size-adjust: 100%; }
+  html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
   body {
-    margin: 0;
-    background: var(--ground);
-    color: var(--ink);
+    margin: 0; background: var(--ground); color: var(--ink);
     font-family: "Barlow", -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    font-size: 15px;
-    line-height: 1.35;
-    overflow-x: hidden;
-    -webkit-font-smoothing: antialiased;
+    font-size: 15px; line-height: 1.35; overflow-x: hidden; -webkit-font-smoothing: antialiased;
   }
-  .display {
-    font-family: "Barlow Condensed", "Arial Narrow", "Roboto Condensed", Impact, sans-serif;
-    font-weight: 700;
-    letter-spacing: 0.005em;
-  }
+  .display { font-family: "Barlow Condensed", "Arial Narrow", "Roboto Condensed", Impact, sans-serif; font-weight: 700; letter-spacing: 0.005em; }
   .num { font-variant-numeric: tabular-nums; }
-  button, input { font-family: inherit; font-size: inherit; }
-  button:focus-visible, input:focus-visible, .store-head:focus-visible {
-    outline: 2px solid var(--focus); outline-offset: 2px;
-  }
+  button, input, select { font-family: inherit; font-size: inherit; }
+  button:focus-visible, input:focus-visible, select:focus-visible, .row:focus-visible, .so-row:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
 
-  .app { max-width: 820px; margin: 0 auto; min-height: 100vh; display: flex; flex-direction: column; }
+  .app { max-width: 900px; margin: 0 auto; min-height: 100vh; display: flex; flex-direction: column; }
 
   /* ---------- Chrome ---------- */
-  .chrome {
-    background: var(--chrome-grad); color: var(--chrome-ink);
-    padding: 18px 18px 16px;
-  }
+  .chrome { background: var(--chrome-grad); color: var(--chrome-ink); padding: 16px 18px 14px; }
   .chrome .eyebrow { font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.85; }
-  .chrome h1 { margin: 2px 0 0; font-size: 30px; line-height: 1.05; text-wrap: balance; }
-  .chrome .sub { margin: 6px 0 0; font-size: 13px; opacity: 0.85; }
-  .totals { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 14px; }
-  .tot { background: var(--chrome-soft); border-radius: 8px; padding: 8px 10px; }
-  .tot .v { font-size: 24px; line-height: 1; }
-  .tot .l { font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; opacity: 0.85; margin-top: 4px; }
+  .chrome h1 { margin: 2px 0 0; font-size: 28px; line-height: 1.05; text-wrap: balance; }
+  .chrome .sub { margin: 5px 0 0; font-size: 13px; opacity: 0.85; }
+  .totals { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 12px; }
+  .tot { background: var(--chrome-soft); border-radius: 8px; padding: 7px 10px; }
+  .tot .v { font-size: 22px; line-height: 1; }
+  .tot .l { font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; opacity: 0.85; margin-top: 3px; }
   .tot.ready .v { color: #BFE6CC; }
 
   /* ---------- Controls ---------- */
   .controls {
     display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
-    padding: 12px 16px; background: var(--surface); border-bottom: 1px solid var(--line);
+    padding: 10px 14px; background: var(--surface); border-bottom: 1px solid var(--line);
     position: sticky; top: 0; z-index: 5;
   }
+  .jump { flex: 1 1 220px; min-width: 200px; }
+  .jump select {
+    width: 100%; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--ground); color: var(--ink); font-weight: 500;
+  }
   .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: var(--ground); }
-  .seg button {
-    border: 0; background: transparent; color: var(--muted); padding: 7px 11px; cursor: pointer; font-weight: 500;
-  }
+  .seg button { border: 0; background: transparent; color: var(--muted); padding: 7px 10px; cursor: pointer; font-weight: 500; }
   .seg button[aria-pressed="true"] { background: var(--chrome); color: var(--chrome-ink); }
-  .search { flex: 1 1 160px; min-width: 140px; }
-  .search input {
-    width: 100%; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--ground); color: var(--ink);
-  }
+  .search { flex: 1 1 150px; min-width: 130px; }
+  .search input { width: 100%; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--ground); color: var(--ink); }
   .scale-note { width: 100%; font-size: 12px; color: var(--muted); }
 
-  /* ---------- Sections ---------- */
-  main { padding: 6px 12px 28px; display: flex; flex-direction: column; gap: 18px; }
-  section h2 {
-    margin: 12px 4px 8px; font-size: 13px; letter-spacing: 0.09em; text-transform: uppercase; color: var(--muted);
-    display: flex; align-items: baseline; gap: 8px;
-  }
+  /* ---------- Store list (compact) ---------- */
+  main { padding: 6px 12px 28px; display: flex; flex-direction: column; gap: 14px; }
+  section h2 { margin: 10px 4px 6px; font-size: 13px; letter-spacing: 0.09em; text-transform: uppercase; color: var(--muted); display: flex; align-items: baseline; gap: 8px; }
   section h2 .count { font-weight: 500; letter-spacing: 0; text-transform: none; }
   section h2.ready { color: var(--ready); }
-  .stores { display: flex; flex-direction: column; gap: 8px; }
-  .empty { color: var(--muted); font-size: 14px; padding: 6px 8px 0; }
+  section h2.stale { color: var(--stuck); }
+  .stores { display: flex; flex-direction: column; gap: 6px; }
+  .empty { color: var(--muted); font-size: 14px; padding: 4px 8px 0; }
 
-  /* ---------- Store row ---------- */
   .store { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
-  .store.is-ready { border-color: #B9DCC5; box-shadow: var(--shadow); }
-  .store-head {
-    display: grid; grid-template-columns: 1fr auto; grid-template-areas: "name m3" "bar bar" "meta meta";
-    gap: 6px 12px; padding: 12px 14px; cursor: pointer; width: 100%; text-align: left; border: 0; background: transparent; color: inherit;
+  .store.is-ready { border-color: #B9DCC5; }
+  .store.open { box-shadow: var(--shadow); }
+  .row {
+    display: grid; grid-template-columns: 1fr 64px; grid-template-areas: "name m3" "bar bar" "meta meta";
+    gap: 4px 10px; padding: 10px 12px; cursor: pointer; width: 100%; text-align: left; border: 0; background: transparent; color: inherit;
   }
-  .store-head .name { grid-area: name; font-size: 20px; line-height: 1.05; }
-  .store-head .name small { display: block; font-family: "Barlow", sans-serif; font-weight: 500; font-size: 13px; color: var(--muted); margin-top: 2px; }
-  .store-head .m3 { grid-area: m3; text-align: right; font-size: 26px; line-height: 1; color: var(--vol); }
-  .store.is-ready .store-head .m3 { color: var(--ready); }
-  .store-head .m3 small { display: block; font-family: "Barlow", sans-serif; font-weight: 500; font-size: 12px; color: var(--muted); margin-top: 3px; }
-  .bar { grid-area: bar; position: relative; height: 12px; border-radius: 6px; background: var(--vol-track); margin-top: 2px; }
-  .bar .fill { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 6px; background: var(--vol); min-width: 3px; }
+  .row .name { grid-area: name; font-size: 18px; line-height: 1.05; }
+  .row .name small { display: block; font-family: "Barlow", sans-serif; font-weight: 500; font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .row .m3 { grid-area: m3; text-align: right; font-size: 22px; line-height: 1; color: var(--vol); align-self: start; }
+  .store.is-ready .row .m3 { color: var(--ready); }
+  .row .m3 small { display: block; font-family: "Barlow", sans-serif; font-weight: 500; font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .bar { grid-area: bar; position: relative; height: 9px; border-radius: 5px; background: var(--vol-track); margin: 2px 0 6px; }
+  .bar .fill { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 5px; background: var(--vol); min-width: 3px; }
   .store.is-ready .bar .fill { background: var(--ready); }
-  .bar .tick { position: absolute; top: -4px; bottom: -4px; width: 2px; background: var(--vol-tick); }
-  .bar .tick::after {
-    content: attr(data-label); position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
-    font-size: 10px; color: var(--muted); white-space: nowrap; margin-top: 2px; font-variant-numeric: tabular-nums;
-  }
-  .meta { grid-area: meta; display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; font-size: 13px; color: var(--muted); margin-top: 8px; }
-  .chip { display: inline-block; padding: 1px 7px; border-radius: 999px; background: var(--chip); color: var(--chip-ink); font-size: 12px; font-weight: 600; }
-  .chip.age-ok { background: var(--chip); }
+  .bar .tick { position: absolute; top: -3px; bottom: -3px; left: 50%; width: 2px; background: var(--vol-tick); }
+  .meta { grid-area: meta; display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: center; font-size: 13px; color: var(--muted); }
+  .chip { display: inline-block; padding: 1px 7px; border-radius: 999px; background: var(--chip); color: var(--chip-ink); font-size: 12px; font-weight: 600; white-space: nowrap; }
   .chip.age-amber { background: var(--amber-bg); color: var(--amber); }
   .chip.age-stuck { background: var(--stuck-bg); color: var(--stuck); }
   .chip.ready { background: var(--ready-bg); color: var(--ready); }
   .chip.brand { background: transparent; border: 1px solid var(--line); color: var(--muted); font-weight: 500; }
 
-  /* ---------- SO detail ---------- */
-  .detail { display: none; border-top: 1px solid var(--line-soft); background: var(--ground); padding: 10px 12px 12px; }
+  /* ---------- Store detail: one line per SO ---------- */
+  .detail { display: none; border-top: 1px solid var(--line-soft); background: var(--ground); padding: 8px 10px 10px; }
   .store.open .detail { display: block; }
-  .note { font-size: 12px; color: var(--muted); margin: 0 2px 8px; }
-  .so { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; margin-bottom: 8px; }
-  .so-head { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; }
-  .so-head .id { font-size: 17px; }
-  .so-head .when { color: var(--muted); font-size: 13px; }
-  .so-head .right { margin-left: auto; font-size: 13px; color: var(--muted); }
-  .so-head .right b { color: var(--ink); font-weight: 600; }
-  .so-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
-  table.lines { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 13px; }
-  table.lines th { text-align: left; font-weight: 600; color: var(--muted); font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; padding: 0 6px 4px 0; border-bottom: 1px solid var(--line-soft); }
+  .note { font-size: 12px; color: var(--muted); margin: 2px 2px 8px; }
+  .packsum { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 12px; color: var(--muted); margin: 0 2px 8px; }
+  .packsum b { color: var(--ink); font-weight: 600; }
+  .so-list { display: flex; flex-direction: column; gap: 4px; }
+  .so { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+  .so-row {
+    display: grid; grid-template-columns: minmax(96px, auto) 1fr auto; gap: 2px 10px; align-items: center;
+    width: 100%; padding: 8px 10px; border: 0; background: transparent; color: inherit; text-align: left; cursor: pointer;
+  }
+  .so-row .id { font-size: 16px; }
+  .so-row .id small { display: block; font-family: "Barlow", sans-serif; font-weight: 500; font-size: 11px; color: var(--muted); }
+  .so-row .what { font-size: 13px; color: var(--muted); min-width: 0; }
+  .so-row .what b { color: var(--ink); font-weight: 600; }
+  .so-row .figs { font-size: 13px; color: var(--muted); text-align: right; white-space: nowrap; }
+  .so-row .figs b { color: var(--ink); font-weight: 600; }
+  .so-row .figs .v { color: var(--vol); font-weight: 700; }
+  .so-tags { display: flex; flex-wrap: wrap; gap: 4px; grid-column: 1 / -1; }
+  .so .lines-wrap { display: none; border-top: 1px solid var(--line-soft); padding: 6px 10px 8px; overflow-x: auto; }
+  .so.open .lines-wrap { display: block; }
+  table.lines { width: 100%; border-collapse: collapse; font-size: 13px; }
+  table.lines th { text-align: left; font-weight: 600; color: var(--muted); font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; padding: 2px 6px 4px 0; border-bottom: 1px solid var(--line-soft); }
   table.lines td { padding: 5px 6px 5px 0; vertical-align: top; border-bottom: 1px solid var(--line-soft); }
   table.lines tr:last-child td { border-bottom: 0; }
-  table.lines td.q { text-align: right; white-space: nowrap; font-weight: 600; }
-  table.lines th.q { text-align: right; }
+  table.lines td.q, table.lines th.q { text-align: right; white-space: nowrap; }
+  table.lines td.q { font-weight: 600; }
   .sizes { color: var(--muted); }
   .sizes b { color: var(--ink); font-weight: 600; }
   .item-code { font-weight: 600; }
   .item-desc { color: var(--muted); font-size: 12px; display: block; }
-  .lines-wrap { overflow-x: auto; }
-  details.stale { margin-top: 4px; }
-  details.stale > summary { cursor: pointer; font-size: 13px; color: var(--stuck); font-weight: 600; padding: 8px 2px; list-style: none; }
+  .pack { font-size: 12px; color: var(--muted); padding: 6px 0 2px; }
+  details.stale { margin-top: 6px; }
+  details.stale > summary { cursor: pointer; font-size: 13px; color: var(--stuck); font-weight: 600; padding: 6px 2px; list-style: none; }
   details.stale > summary::-webkit-details-marker { display: none; }
   details.stale > summary::before { content: "\25B8"; display: inline-block; width: 14px; }
   details.stale[open] > summary::before { content: "\25BE"; }
   details.stale .so { border-style: dashed; }
-  section h2.stale { color: var(--stuck); }
 
   /* ---------- Footer / messages ---------- */
   footer { padding: 8px 16px 40px; font-size: 12px; color: var(--muted); line-height: 1.5; }
-  footer p { margin: 0 0 6px; max-width: 65ch; }
+  footer p { margin: 0 0 6px; max-width: 70ch; }
+  footer table { border-collapse: collapse; font-size: 12px; margin: 4px 0 8px; }
+  footer th, footer td { text-align: left; padding: 2px 12px 2px 0; }
+  footer th { font-weight: 600; color: var(--ink); }
   .msg { padding: 48px 24px; text-align: center; }
   .msg .icon { width: 44px; height: 44px; border-radius: 22px; background: var(--chip); color: var(--chip-ink); display: inline-flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 700; margin-bottom: 12px; }
   .msg h1 { margin: 0 0 6px; font-size: 24px; }
   .msg p { color: var(--muted); margin: 0; }
-  .skeleton { height: 64px; border-radius: 10px; background: var(--line-soft); margin: 8px 12px; }
+  .skeleton { height: 56px; border-radius: 10px; background: var(--line-soft); margin: 8px 12px; }
 
-  @media (min-width: 640px) {
-    .chrome { padding: 22px 24px 18px; }
-    .chrome h1 { font-size: 34px; }
-    .store-head { grid-template-columns: 1fr 200px auto; grid-template-areas: "name bar m3" "meta meta meta"; align-items: center; }
-    .bar { margin-top: 0; }
-    .meta { margin-top: 4px; }
+  @media (min-width: 680px) {
+    .chrome { padding: 20px 24px 16px; }
+    .chrome h1 { font-size: 32px; }
+    .row { grid-template-columns: minmax(220px, 1fr) 180px 92px; grid-template-areas: "name bar m3" "meta meta meta"; align-items: center; padding: 8px 12px; }
+    .bar { margin: 0; }
+    .row .name { font-size: 17px; }
+    .row .m3 { font-size: 20px; align-self: center; }
+    .meta { margin-top: 0; }
+    .so-row { grid-template-columns: 120px 1fr auto; }
   }
-  @media (prefers-reduced-motion: no-preference) {
-    .bar .fill { transition: width 240ms ease; }
-  }
+  @media (prefers-reduced-motion: no-preference) { .bar .fill { transition: width 240ms ease; } }
 </style>
 </head>
 <body>
@@ -196,27 +189,34 @@
   var app = document.getElementById('app');
   var rendered = false;
   var DOC = null;
-  var state = { origin: 'ALL', q: '', open: {} };
+  var state = { origin: 'ALL', q: '', only: '', open: {}, openSo: {} };
 
   /* ---------- Helpers ---------- */
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
   function m3(v) { return (Math.round((v || 0) * 1000) / 1000).toFixed(3); }
+  function m2(v) { return (Math.round((v || 0) * 100) / 100).toFixed(2); }
   function pct(v) { return Math.round(v * 100); }
-  function fmtDate(iso) {
-    if (!iso) return '';
-    var d = new Date(iso + 'T00:00:00');
-    return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+  function fmtDate(iso) { if (!iso) return ''; var d = new Date(iso + 'T00:00:00'); return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }); }
+  function fmtStamp(iso) { if (!iso) return ''; var d = new Date(iso); return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) + ' ' + d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }); }
+  function ageClass(days) { return days == null ? '' : days >= 60 ? 'age-stuck' : days >= 14 ? 'age-amber' : ''; }
+  function shortName(n) {
+    return String(n || '').replace(/\s+SDN\.?\s*BHD\.?/i, '').replace(/\s+BRANCH\b.*$/i, '').replace(/\s*\(.*?\)\s*$/, '').replace(/\s+HYPERMARKET\s*&\s*DEPARTMENTAL.*$/i, ' HYPERMARKET').trim();
   }
-  function fmtStamp(iso) {
-    if (!iso) return '';
-    var d = new Date(iso);
-    return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) + ' ' + d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+  function itemSummary(s) {
+    var top = s.items.slice(0, 3).map(function (it) { return it.item + '×' + it.qty; });
+    var more = s.items.length - top.length;
+    return top.join(', ') + (more > 0 ? ' +' + more + ' more' : '');
   }
-  function ageClass(days) { return days == null ? 'age-ok' : days >= 60 ? 'age-stuck' : days >= 14 ? 'age-amber' : 'age-ok'; }
-  function ageText(days) { return days == null ? '' : days + ' d'; }
+  function packNote(s) {
+    if (!s.packing || !s.packing.length) return '';
+    var p = s.packing[0];
+    var extra = s.packing.length > 1 ? ' + ' + (s.packing.length - 1) + ' other' + (s.packing.length > 2 ? 's' : '') : '';
+    return p.group + ' ' + p.dims + ' cm' + extra;
+  }
 
   /* ---------- Derive per current filter ---------- */
   function storeView(st) {
+    if (state.only && st.stem !== state.only) return null;
     var all = st.sos.filter(function (s) { return state.origin === 'ALL' || s.origin === state.origin; });
     var q = state.q.trim().toLowerCase();
     if (q) {
@@ -229,14 +229,18 @@
     if (!all.length) return null;
     var sos = all.filter(function (s) { return !s.stale; });
     var stale = all.filter(function (s) { return s.stale; });
-    var vol = 0, pcs = 0, ctn = 0, oldest = null, staleVol = 0, stalePcs = 0;
-    sos.forEach(function (s) { vol += s.m3; pcs += s.pcs; ctn += s.cartons; if (s.age != null && (oldest == null || s.age > oldest)) oldest = s.age; });
+    var vol = 0, pcs = 0, ctn = 0, oldest = null, staleVol = 0, stalePcs = 0, groups = {};
+    sos.forEach(function (s) {
+      vol += s.m3; pcs += s.pcs; ctn += s.cartons;
+      if (s.age != null && (oldest == null || s.age > oldest)) oldest = s.age;
+      (s.packing || []).forEach(function (p) { groups[p.group] = (groups[p.group] || 0) + p.pcs; });
+    });
     stale.forEach(function (s) { staleVol += s.m3; stalePcs += s.pcs; });
-    return { st: st, sos: sos, stale: stale, staleM3: staleVol, stalePcs: stalePcs, m3: vol, pcs: pcs, cartons: ctn, oldestAge: oldest, ratio: st.minM3 ? vol / st.minM3 : 0 };
+    return { st: st, sos: sos, stale: stale, staleM3: staleVol, stalePcs: stalePcs, m3: vol, pcs: pcs, cartons: ctn, oldestAge: oldest, groups: groups, ratio: st.minM3 ? vol / st.minM3 : 0 };
   }
 
   /* ---------- Render ---------- */
-  function renderAll() {
+  function renderAll(keepFocus) {
     if (!DOC) return;
     var views = DOC.stores.map(storeView).filter(Boolean);
     views.sort(function (a, b) { return (b.ratio - a.ratio) || ((b.oldestAge || 0) - (a.oldestAge || 0)); });
@@ -246,9 +250,8 @@
     var staleOnly = views.filter(function (v) { return !v.sos.length; });
     var staleSos = views.reduce(function (a, v) { return a + v.stale.length; }, 0);
     var stalePcs = views.reduce(function (a, v) { return a + v.stalePcs; }, 0);
-    var scale = null; // per store: twice its own minimum - the bar answers "reached the minimum?", not "how big"
     var totM3 = views.reduce(function (a, v) { return a + v.m3; }, 0);
-    var totPcs = views.reduce(function (a, v) { return a + v.pcs; }, 0);
+    var totCtn = views.reduce(function (a, v) { return a + v.cartons; }, 0);
     var totSO = views.reduce(function (a, v) { return a + v.sos.length; }, 0);
 
     var html = '';
@@ -259,29 +262,41 @@
       '<div class="totals">' +
         '<div class="tot ready"><div class="v display num">' + ready.length + '</div><div class="l">Ready to ship</div></div>' +
         '<div class="tot"><div class="v display num">' + views.length + '</div><div class="l">Stores waiting</div></div>' +
-        '<div class="tot"><div class="v display num">' + totSO + '</div><div class="l">Open SOs</div></div>' +
-        '<div class="tot"><div class="v display num">' + m3(totM3) + '</div><div class="l">m&sup3; on the floor</div></div>' +
+        '<div class="tot"><div class="v display num">' + totCtn + '</div><div class="l">Cartons est</div></div>' +
+        '<div class="tot"><div class="v display num">' + m2(totM3) + '</div><div class="l">m&sup3; est</div></div>' +
       '</div>' +
     '</header>';
 
+    var allStores = DOC.stores.slice().sort(function (a, b) { return (a.town || '').localeCompare(b.town || '') || a.name.localeCompare(b.name); });
     html += '<div class="controls">' +
-      '<div class="seg" role="group" aria-label="Origin warehouse">' +
-        segBtn('ALL', 'All') + segBtn('ADCEWHTR-O', 'AD warehouse') + segBtn('ADECOMM', 'E-comm warehouse') +
-      '</div>' +
-      '<div class="search"><input type="search" id="q" placeholder="Store, town, SO or item code" value="' + esc(state.q) + '" aria-label="Search"></div>' +
-      '<div class="scale-note">Each bar runs to twice the store&rsquo;s minimum and counts SOs raised in the last ' + DOC.staleDays + ' days. The tick is the minimum per drop: 0.30 m&sup3; East Malaysia, 0.50 m&sup3; Brunei. ' + totPcs.toLocaleString('en-GB') + ' pcs in view' +
-        (staleSos ? '; a further ' + staleSos + ' older SO' + (staleSos === 1 ? '' : 's') + ' (' + stalePcs.toLocaleString('en-GB') + ' pcs) are listed under their stores for HQ to confirm or close, not counted.' : '.') + '</div>' +
+      '<div class="jump"><select id="jump" aria-label="Go to store"><option value="">All stores &mdash; pick one to see only it</option>' +
+        allStores.map(function (s) {
+          var live = s.sos.filter(function (x) { return !x.stale; }).length;
+          return '<option value="' + esc(s.stem) + '"' + (state.only === s.stem ? ' selected' : '') + '>' + esc((s.town ? s.town + ' · ' : '') + shortName(s.name)) + ' — ' + m2(s.m3) + ' m³, ' + live + ' SO' + (live === 1 ? '' : 's') + '</option>';
+        }).join('') +
+      '</select></div>' +
+      '<div class="seg" role="group" aria-label="Origin warehouse">' + segBtn('ALL', 'All') + segBtn('ADCEWHTR-O', 'AD WH') + segBtn('ADECOMM', 'E-comm WH') + '</div>' +
+      '<div class="search"><input type="search" id="q" placeholder="SO or item code" value="' + esc(state.q) + '" aria-label="Search"></div>' +
+      '<div class="scale-note">Bar = this store&rsquo;s pile against its minimum per drop (tick = 0.30 m&sup3; East Malaysia, 0.50 m&sup3; Brunei); a full bar is twice the minimum. Counts SOs from the last ' + DOC.staleDays + ' days &middot; ' + totSO + ' SOs in view' +
+        (staleSos ? ' &middot; ' + staleSos + ' older SO' + (staleSos === 1 ? '' : 's') + ' (' + stalePcs.toLocaleString('en-GB') + ' pcs) parked under their stores for HQ, not counted.' : '.') + '</div>' +
     '</div>';
 
     html += '<main>';
-    html += section('ready', 'Ready to ship', ready, scale, 'Nothing has reached its minimum yet.');
-    html += section('building', 'Building up &middot; past halfway', building, scale, 'No store is past halfway.');
-    html += section('started', 'Just started', started, scale, 'No store below halfway.');
-    if (staleOnly.length) html += section('stale', 'Only older SOs &middot; nothing live', staleOnly, scale, '');
+    if (state.only) {
+      html += section('only', 'Selected store', views, 'No live SO for this store under the current filter.');
+    } else {
+      html += section('ready', 'Ready to ship', ready, 'Nothing has reached its minimum yet.');
+      html += section('building', 'Building up &middot; past halfway', building, 'No store is past halfway.');
+      html += section('started', 'Just started', started, 'No store below halfway.');
+      if (staleOnly.length) html += section('stale', 'Only older SOs &middot; nothing live', staleOnly, '');
+    }
     html += '</main>';
 
     html += '<footer>' +
-      '<p>' + esc(DOC.m3Basis) + ' The carton count on each SO is the warehouse’s own figure from iDCP.</p>' +
+      '<p>' + esc(DOC.m3Basis) + '</p>' +
+      '<table><thead><tr><th>Product</th><th>Pcs / carton</th><th>Carton (cm)</th><th>m&sup3; / carton</th></tr></thead><tbody>' +
+        Object.keys(DOC.cartonSpec || {}).map(function (k) { var c = DOC.cartonSpec[k]; return '<tr><td>' + esc(k) + '</td><td class="num">' + c.pcs + '</td><td class="num">' + esc(c.dims) + '</td><td class="num">' + c.m3.toFixed(4) + '</td></tr>'; }).join('') +
+      '</tbody></table>' +
       '<p>Source: ' + esc(DOC.source.report) + ', pulled ' + esc(fmtStamp(DOC.source.pulledAt)) + '. ' + esc(DOC.source.rule) + '. China-direct SOs are not shown &mdash; they never sit on this floor.</p>' +
       '<p>Labuan and Lahad Datu: 0.30 m&sup3; on the A.D. Trends SASA quote, 1.00 m&sup3; on the BMM Marketing one &mdash; check which entity is shipping. Every SASA shipment under 1 m&sup3; also carries RM30 of flat surcharges, so bundling several stores into one sailing is cheaper again.</p>' +
     '</footer>';
@@ -292,15 +307,29 @@
     Array.prototype.forEach.call(app.querySelectorAll('.seg button'), function (b) {
       b.addEventListener('click', function () { state.origin = b.getAttribute('data-origin'); renderAll(); });
     });
+    var jump = document.getElementById('jump');
+    jump.addEventListener('change', function () {
+      state.only = jump.value;
+      if (state.only) state.open[state.only] = true;
+      renderAll();
+      window.scrollTo(0, 0);
+    });
     var qEl = document.getElementById('q');
-    qEl.addEventListener('input', function () { state.q = qEl.value; var pos = qEl.selectionStart; renderAll(); var n = document.getElementById('q'); n.focus(); try { n.setSelectionRange(pos, pos); } catch (e) {} });
-    Array.prototype.forEach.call(app.querySelectorAll('.store-head'), function (h) {
+    qEl.addEventListener('input', function () { state.q = qEl.value; var pos = qEl.selectionStart; renderAll(true); var n = document.getElementById('q'); n.focus(); try { n.setSelectionRange(pos, pos); } catch (e) {} });
+    Array.prototype.forEach.call(app.querySelectorAll('.row'), function (h) {
       h.addEventListener('click', function () {
         var id = h.getAttribute('data-stem');
         state.open[id] = !state.open[id];
-        var el = h.parentNode;
-        el.classList.toggle('open', !!state.open[id]);
+        h.parentNode.classList.toggle('open', !!state.open[id]);
         h.setAttribute('aria-expanded', state.open[id] ? 'true' : 'false');
+      });
+    });
+    Array.prototype.forEach.call(app.querySelectorAll('.so-row'), function (h) {
+      h.addEventListener('click', function () {
+        var id = h.getAttribute('data-so');
+        state.openSo[id] = !state.openSo[id];
+        h.parentNode.classList.toggle('open', !!state.openSo[id]);
+        h.setAttribute('aria-expanded', state.openSo[id] ? 'true' : 'false');
       });
     });
   }
@@ -309,113 +338,105 @@
     return '<button type="button" data-origin="' + val + '" aria-pressed="' + (state.origin === val ? 'true' : 'false') + '">' + label + '</button>';
   }
 
-  function section(cls, title, list, scale, emptyText) {
+  function section(cls, title, list, emptyText) {
     var h = '<section><h2 class="' + cls + '">' + title + ' <span class="count num">' + list.length + '</span></h2>';
     if (!list.length) return h + '<div class="empty">' + emptyText + '</div></section>';
-    h += '<div class="stores">' + list.map(function (v) { return storeRow(v, scale); }).join('') + '</div></section>';
+    h += '<div class="stores">' + list.map(storeRow).join('') + '</div></section>';
     return h;
   }
 
-  function storeRow(v, scale) {
+  function storeRow(v) {
     var st = v.st;
     var isReady = v.ratio >= 1;
     var open = !!state.open[st.stem];
-    var barMax = st.minM3 * 2;
-    var fillPct = Math.min(100, (v.m3 / barMax) * 100);
-    var tickPct = 50;
-    var brands = st.counters.map(function (c) { return '<span class="chip brand">' + esc(c.brand) + '</span>'; }).join('');
-    var h = '<article class="store' + (isReady ? ' is-ready' : '') + (open ? ' open' : '') + '">';
-    h += '<button type="button" class="store-head" data-stem="' + esc(st.stem) + '" aria-expanded="' + (open ? 'true' : 'false') + '">' +
-      '<div class="name display">' + esc(st.name) + '<small>' + esc(st.town || st.region) + ' &middot; ' + v.sos.length + ' SO' + (v.sos.length === 1 ? '' : 's') + '</small></div>' +
-      '<div class="bar" aria-hidden="true"><div class="fill" style="width:' + fillPct + '%"></div><div class="tick" style="left:' + tickPct + '%" data-label="' + m3(st.minM3) + '"></div></div>' +
-      '<div class="m3 display num">' + m3(v.m3) + '<small>of ' + m3(st.minM3) + ' m&sup3; &middot; ' + pct(v.ratio) + '%</small></div>' +
+    var fillPct = Math.min(100, (v.m3 / (st.minM3 * 2)) * 100);
+    var brands = st.counters.map(function (c) { return c.brand; }).join(' · ');
+    var h = '<article class="store' + (isReady ? ' is-ready' : '') + (open ? ' open' : '') + '" id="s-' + esc(st.stem) + '">';
+    h += '<button type="button" class="row" data-stem="' + esc(st.stem) + '" aria-expanded="' + (open ? 'true' : 'false') + '">' +
+      '<div class="name display">' + esc(shortName(st.name)) + '<small>' + esc(st.town || st.region) + ' &middot; ' + esc(brands) + '</small></div>' +
+      '<div class="bar" aria-hidden="true"><div class="fill" style="width:' + fillPct + '%"></div><div class="tick"></div></div>' +
+      '<div class="m3 display num">' + m2(v.m3) + '<small>m&sup3; &middot; ' + pct(v.ratio) + '%</small></div>' +
       '<div class="meta">' +
         (isReady ? '<span class="chip ready">Ready</span>' : '') +
+        '<span class="num">' + v.sos.length + ' SO' + (v.sos.length === 1 ? '' : 's') + '</span>' +
         '<span class="num">' + v.pcs.toLocaleString('en-GB') + ' pcs</span>' +
-        '<span class="num">' + v.cartons + ' ctn</span>' +
-        (v.oldestAge != null ? '<span class="chip ' + ageClass(v.oldestAge) + ' num">oldest ' + ageText(v.oldestAge) + '</span>' : '') +
-        (v.stale.length ? '<span class="chip age-stuck num">' + v.stale.length + ' older SO' + (v.stale.length === 1 ? '' : 's') + ' to confirm</span>' : '') +
-        brands +
+        '<span class="num">&asymp; ' + v.cartons + ' ctn</span>' +
+        (v.oldestAge != null ? '<span class="chip ' + ageClass(v.oldestAge) + ' num">oldest ' + v.oldestAge + ' d</span>' : '') +
+        (v.stale.length ? '<span class="chip age-stuck num">' + v.stale.length + ' older to confirm</span>' : '') +
       '</div>' +
     '</button>';
     h += '<div class="detail">';
     if (st.minNote) h += '<p class="note">' + esc(st.minNote) + '</p>';
-    if (!v.sos.length) h += '<p class="note">No SO in the last ' + DOC.staleDays + ' days. Everything below is older &mdash; confirm with HQ whether it still ships or should be closed.</p>';
-    h += v.sos.map(soCard).join('');
+    if (v.sos.length) {
+      var gk = Object.keys(v.groups).sort(function (a, b) { return v.groups[b] - v.groups[a]; });
+      h += '<div class="packsum">' + gk.map(function (g) { return '<span><b class="num">' + v.groups[g] + '</b> ' + esc(g.toLowerCase()) + '</span>'; }).join('') + '</div>';
+    } else {
+      h += '<p class="note">No SO in the last ' + DOC.staleDays + ' days. Everything below is older &mdash; confirm with HQ whether it still ships or should be closed.</p>';
+    }
+    h += '<div class="so-list">' + v.sos.map(soCard).join('') + '</div>';
     if (v.stale.length) {
-      h += '<details class="stale"><summary class="num">Older than ' + DOC.staleDays + ' days &middot; ' + v.stale.length + ' SO' + (v.stale.length === 1 ? '' : 's') + ' &middot; ' + v.stalePcs + ' pcs &middot; ' + m3(v.staleM3) + ' m&sup3; est &mdash; confirm with HQ before picking</summary>' +
-        v.stale.map(soCard).join('') + '</details>';
+      h += '<details class="stale"><summary class="num">Older than ' + DOC.staleDays + ' days &middot; ' + v.stale.length + ' SO' + (v.stale.length === 1 ? '' : 's') + ' &middot; ' + v.stalePcs + ' pcs &middot; ' + m2(v.staleM3) + ' m&sup3; &mdash; confirm with HQ before picking</summary>' +
+        '<div class="so-list">' + v.stale.map(soCard).join('') + '</div></details>';
     }
     h += '</div></article>';
     return h;
   }
 
   function soCard(s) {
-    var h = '<div class="so">';
-    h += '<div class="so-head">' +
-      '<span class="id display">' + esc(s.so) + '</span>' +
-      '<span class="when num">' + esc(fmtDate(s.date)) + (s.age != null ? ' &middot; ' + s.age + ' d' : '') + '</span>' +
-      '<span class="right num"><b>' + s.pcs + '</b> pcs &middot; <b>' + s.cartons + '</b> ctn &middot; <b>' + m3(s.m3) + '</b> m&sup3; est</span>' +
-    '</div>';
-    h += '<div class="so-tags">' +
-      '<span class="chip">' + esc(s.counter) + '</span>' +
-      '<span class="chip brand">' + esc(s.brand) + '</span>' +
-      '<span class="chip brand">' + esc(s.originName) + '</span>' +
-      (s.carrier ? '<span class="chip ready">Booked: ' + esc(s.carrier) + '</span>' : '') +
-      (s.partial ? '<span class="chip age-amber">Part transferred' + (s.it ? ' &middot; IT ' + esc(s.it) : '') + '</span>' : '') +
-      (s.pcs < s.ordered ? '<span class="chip age-amber num">' + (s.ordered - s.pcs) + ' of ' + s.ordered + ' already sent</span>' : '') +
-      (s.byCounter ? '<span class="chip">Raised by the counter</span>' : '') +
-      (s.stale ? '<span class="chip age-stuck num">' + s.age + ' d old</span>' : '') +
-    '</div>';
+    var open = !!state.openSo[s.so];
+    var h = '<div class="so' + (open ? ' open' : '') + '">';
+    h += '<button type="button" class="so-row" data-so="' + esc(s.so) + '" aria-expanded="' + (open ? 'true' : 'false') + '">' +
+      '<div class="id display">' + esc(s.so) + '<small class="num">' + esc(fmtDate(s.date)) + (s.age != null ? ' &middot; ' + s.age + ' d' : '') + '</small></div>' +
+      '<div class="what"><b>' + esc(s.brand) + '</b> &middot; ' + esc(itemSummary(s)) + '<br>' + esc(packNote(s)) + '</div>' +
+      '<div class="figs num"><b>' + s.pcs + '</b> pcs<br>&asymp; <b>' + s.cartons + '</b> ctn &middot; <span class="v">' + m3(s.m3) + '</span> m&sup3;</div>' +
+      '<div class="so-tags">' +
+        '<span class="chip">' + esc(s.counter) + '</span>' +
+        (s.origin !== 'ADCEWHTR-O' ? '<span class="chip brand">' + esc(s.originName) + '</span>' : '') +
+        (s.carrier ? '<span class="chip ready">Booked: ' + esc(s.carrier) + '</span>' : '') +
+        (s.partial ? '<span class="chip age-amber">Part transferred' + (s.it ? ' &middot; IT ' + esc(s.it) : '') + '</span>' : '') +
+        (s.pcs < s.ordered ? '<span class="chip age-amber num">' + (s.ordered - s.pcs) + ' of ' + s.ordered + ' already sent</span>' : '') +
+        (s.byCounter ? '<span class="chip">Raised by the counter</span>' : '') +
+        (s.stale ? '<span class="chip age-stuck num">' + s.age + ' d old</span>' : '') +
+      '</div>' +
+    '</button>';
     h += '<div class="lines-wrap"><table class="lines"><thead><tr><th>Item</th><th>Colour</th><th>Sizes</th><th class="q">Qty</th></tr></thead><tbody>';
     h += s.items.map(function (it) {
       var sizes = it.sizes.map(function (p) { return '<b>' + esc(p[0]) + '</b>&times;' + p[1]; }).join(' ');
-      return '<tr>' +
-        '<td><span class="item-code">' + esc(it.item) + '</span><span class="item-desc">' + esc(it.desc) + '</span></td>' +
-        '<td>' + esc(it.colourName || it.colour) + '</td>' +
-        '<td class="sizes num">' + sizes + '</td>' +
-        '<td class="q num">' + it.qty + '</td>' +
-      '</tr>';
+      return '<tr><td><span class="item-code">' + esc(it.item) + '</span><span class="item-desc">' + esc(it.desc) + '</span></td>' +
+        '<td>' + esc(it.colourName || it.colour) + '</td><td class="sizes num">' + sizes + '</td><td class="q num">' + it.qty + '</td></tr>';
     }).join('');
-    h += '</tbody></table></div></div>';
+    h += '</tbody></table>';
+    if (s.packing && s.packing.length) {
+      h += '<div class="pack num">Packing estimate: ' + s.packing.map(function (p) { return p.pcs + ' ' + esc(p.group.toLowerCase()) + ' = ' + p.ctn + ' ctn of ' + esc(p.dims) + ' cm'; }).join('; ') + ' &rarr; rounded up to ' + s.cartons + ' carton' + (s.cartons === 1 ? '' : 's') + ', ' + m3(s.m3) + ' m&sup3;.' +
+        (s.cartonsTyped ? ' iDCP carton field says ' + s.cartonsTyped + ' (not used).' : '') + '</div>';
+    }
+    h += '</div></div>';
     return h;
   }
 
   /* ---------- Messages ---------- */
   function showInvalid() {
     rendered = true;
-    app.innerHTML = '<div class="msg"><div class="icon" aria-hidden="true">?</div>' +
-      '<h1 class="display">This link isn’t valid.</h1>' +
-      '<p>Ask HQ for the warehouse Pending SO link &mdash; it carries the key after the #.</p></div>';
+    app.innerHTML = '<div class="msg"><div class="icon" aria-hidden="true">?</div><h1 class="display">This link isn’t valid.</h1><p>Ask HQ for the warehouse Pending SO link &mdash; it carries the key after the #.</p></div>';
   }
   function showOffline() {
     rendered = true;
-    app.innerHTML = '<div class="msg"><div class="icon" aria-hidden="true">!</div>' +
-      '<h1 class="display">Couldn’t load the board.</h1>' +
-      '<p>Check the connection, then pull down to refresh or reopen the link.</p></div>';
+    app.innerHTML = '<div class="msg"><div class="icon" aria-hidden="true">!</div><h1 class="display">Couldn’t load the board.</h1><p>Check the connection, then pull down to refresh or reopen the link.</p></div>';
   }
 
   /* ---------- Crypto (same contract as push_board.py / index.html) ---------- */
-  function readKey() {
-    var h = (location.hash || '').replace(/^#/, '').trim();
-    if (!h) return null;
-    if (/^[0-9a-fA-F]{64}$/.test(h)) return h.toLowerCase();
-    return false;
-  }
+  function readKey() { var h = (location.hash || '').replace(/^#/, '').trim(); if (!h) return null; if (/^[0-9a-fA-F]{64}$/.test(h)) return h.toLowerCase(); return false; }
   function hexToBytes(hex) { var out = new Uint8Array(hex.length / 2); for (var i = 0; i < out.length; i++) out[i] = parseInt(hex.substr(i * 2, 2), 16); return out; }
   function b64ToBytes(b64) { var bin = atob(String(b64).replace(/-/g, '+').replace(/_/g, '/')); var out = new Uint8Array(bin.length); for (var i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i); return out; }
   function docIdFor(keyHex) {
     return crypto.subtle.digest('SHA-256', new TextEncoder().encode(keyHex)).then(function (buf) {
-      var b = new Uint8Array(buf), s = '';
-      for (var i = 0; i < 8; i++) s += (b[i] < 16 ? '0' : '') + b[i].toString(16);
-      return s;
+      var b = new Uint8Array(buf), s = ''; for (var i = 0; i < 8; i++) s += (b[i] < 16 ? '0' : '') + b[i].toString(16); return s;
     });
   }
   function importKey(keyHex) { return crypto.subtle.importKey('raw', hexToBytes(keyHex), { name: 'AES-GCM' }, false, ['decrypt']); }
   function decryptDoc(cryptoKey, doc) {
     if (!doc || typeof doc.iv !== 'string' || typeof doc.ct !== 'string') return Promise.reject(new Error('bad doc'));
-    return crypto.subtle.decrypt({ name: 'AES-GCM', iv: b64ToBytes(doc.iv), tagLength: 128 }, cryptoKey, b64ToBytes(doc.ct))
-      .then(function (buf) { return JSON.parse(new TextDecoder().decode(buf)); });
+    return crypto.subtle.decrypt({ name: 'AES-GCM', iv: b64ToBytes(doc.iv), tagLength: 128 }, cryptoKey, b64ToBytes(doc.ct)).then(function (buf) { return JSON.parse(new TextDecoder().decode(buf)); });
   }
 
   /* ---------- Boot ---------- */
