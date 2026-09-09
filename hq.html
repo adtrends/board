@@ -61,6 +61,30 @@
   .nav a b { color: var(--pending); margin-left: 4px; }
   .nav a b.ok { color: var(--done); }
 
+  /* ---------- Two tabs: Today (focus) / System (everything) ---------- */
+  .tabs { position: sticky; top: 0; z-index: 6; background: var(--ground); display: flex; gap: 6px; padding: 10px 0 6px; }
+  .tabs button { flex: 1; font-size: 15px; font-weight: 700; padding: 10px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); color: var(--muted); cursor: pointer; }
+  .tabs button.on { background: var(--chrome); color: #fff; border-color: var(--chrome); }
+  .tabs button b { margin-left: 6px; color: var(--pending); }
+  .tabs button.on b { color: #FFD9D4; }
+  .nav { top: 58px; z-index: 5; }
+  .cbars { display: flex; flex-direction: column; gap: 6px; }
+  .cbar { all: unset; box-sizing: border-box; display: grid; grid-template-columns: 1fr 130px 76px; gap: 10px; align-items: center; background: var(--surface); border-radius: 10px; box-shadow: var(--shadow); padding: 8px 12px; cursor: pointer; border: 2px solid transparent; width: 100%; }
+  .cbar:hover { border-color: var(--line); }
+  .cbar.on { border-color: var(--chrome); }
+  .cbar .l { font-weight: 600; font-size: 14px; min-width: 0; }
+  .cbar .l small { display: block; color: var(--muted); font-weight: 500; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .cbar .bar { margin: 0; }
+  .cbar .n { text-align: right; font-family: "Barlow Condensed", sans-serif; font-weight: 700; font-size: 22px; line-height: 1; color: var(--pending); font-variant-numeric: tabular-nums; }
+  .cbar.clear .n { color: var(--done); }
+  .cbar .n small { display: block; font-family: "Barlow", sans-serif; font-size: 11px; font-weight: 700; color: var(--overdue); }
+  .rep { display: flex; flex-wrap: wrap; gap: 6px; }
+  .rep span { background: var(--surface); box-shadow: var(--shadow); border-radius: 999px; padding: 4px 11px; font-size: 12px; }
+  .rep span b { font-family: "Barlow Condensed", sans-serif; font-size: 14px; margin-right: 5px; }
+  .stat { font-size: 13px; color: var(--muted); margin-top: 8px; }
+  .stat a { font-weight: 600; }
+  @media (max-width: 600px) { .cbar { grid-template-columns: 1fr 84px 60px; } }
+
   /* ---------- Sections ---------- */
   section { margin-top: 18px; scroll-margin-top: 56px; }
   h2 { margin: 0 0 8px; font-size: 22px; line-height: 1; display: flex; align-items: baseline; gap: 10px; }
@@ -238,7 +262,8 @@
   var STATUS_TEXT = { done: 'Done', ran: 'Ran', live: 'Live', due: 'Due', running: 'Running', missing: 'Missing', stalled: 'Stalled', off: 'Paused', later: 'Later', manual: 'On demand' };
   var app = document.getElementById('app');
   var rendered = false;
-  var ui = { openRows: {}, cycle: null };
+  var ui = { openRows: {}, cycle: null, tab: 'focus' };
+  try { if (localStorage.getItem('hq.tab') === 'system') ui.tab = 'system'; } catch (e) {}
 
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
   function parseDate(s) { if (!s) return null; var d = new Date(s); return isNaN(d.getTime()) ? null : d; }
@@ -267,15 +292,49 @@
       '</div></div>';
   }
 
+  function counts(doc) {
+    return {
+      missing: doc.routines.filter(function (r) { return r.status === 'missing' || r.status === 'stalled'; }).length,
+      needs: (doc.needsMe || []).filter(function (n) { return !n.closed; }).length,
+      pend: (doc.cycles || []).reduce(function (a, c) { return a + (c.pending || 0); }, 0)
+    };
+  }
+  function renderTabs(doc) {
+    var c = counts(doc);
+    return '<div class="tabs">' +
+      '<button data-tab="focus" class="' + (ui.tab === 'focus' ? 'on' : '') + '">Today' + (c.needs + c.missing ? '<b>' + (c.needs + c.missing) + '</b>' : '') + '</button>' +
+      '<button data-tab="system" class="' + (ui.tab === 'system' ? 'on' : '') + '">System</button></div>';
+  }
   function renderNav(doc) {
-    var missing = doc.routines.filter(function (r) { return r.status === 'missing' || r.status === 'stalled'; }).length;
-    var needs = (doc.needsMe || []).filter(function (n) { return !n.closed; }).length;
-    var pend = (doc.cycles || []).reduce(function (a, c) { return a + (c.pending || 0); }, 0);
+    var c = counts(doc);
     return '<nav class="nav">' +
-      '<a href="#today">Today' + (missing ? '<b>' + missing + '</b>' : '<b class="ok">✓</b>') + '</a>' +
-      '<a href="#needs">Needs me' + (needs ? '<b>' + needs + '</b>' : '') + '</a>' +
-      '<a href="#chase">Chase' + (pend ? '<b>' + pend + '</b>' : '') + '</a>' +
-      '<a href="#map">Map</a><a href="#week">Week</a><a href="#projects">Projects</a><a href="#sources">Sources</a></nav>';
+      '<a href="#today">Runs' + (c.missing ? '<b>' + c.missing + '</b>' : '<b class="ok">✓</b>') + '</a>' +
+      '<a href="#chase">Chase' + (c.pend ? '<b>' + c.pend + '</b>' : '') + '</a>' +
+      '<a href="#map">Map</a><a href="#week">Rhythm</a><a href="#projects">Projects</a><a href="#sources">Sources</a></nav>';
+  }
+
+  /* ---------- Today tab: only what needs Tze ---------- */
+  function renderFocus(doc) {
+    var rs = doc.routines || [];
+    var todays = rs.filter(function (r) { return r.slots && r.slots.length && r.status !== 'off' && r.status !== 'manual'; });
+    var bad = todays.filter(function (r) { return r.status === 'missing' || r.status === 'stalled'; });
+    var done = todays.filter(function (r) { return r.status === 'done' || r.status === 'ran'; }).length;
+    var due = todays.filter(function (r) { return r.status === 'due' || r.status === 'running'; }).sort(function (a, b) { return (a.slots[0] || '').localeCompare(b.slots[0] || ''); });
+    var live = todays.filter(function (r) { return r.status === 'live'; }).length;
+    var html = renderNeeds(doc);
+    html += '<section id="alerts"><h2 class="display">Needs a look <small>routines that should have run and did not</small></h2>';
+    html += bad.length ? '<div class="rows">' + bad.map(function (r) { return rowHtml(doc, r); }).join('') + '</div>'
+                       : '<div class="card empty">Everything due so far has run.</div>';
+    html += '<div class="stat">' + done + ' done · ' + due.length + ' still to run' + (due.length ? ' (next ' + esc(due[0].name) + ' ' + esc(due[0].slots[0]) + ')' : '') + ' · ' + live + ' live · <a href="#" data-tab-link="system">see all in System</a></div></section>';
+    html += renderChase(doc, true);
+    var tz = (doc.sends && doc.sends.toTze) || [];
+    html += '<section id="arrived"><h2 class="display">Arrived today <small>reports sent to your WhatsApp</small></h2>';
+    html += tz.length ? '<div class="rep">' + tz.map(function (t) { return '<span><b>' + esc(t.time) + '</b>' + esc(t.routine) + '</span>'; }).join('') + '</div>' : '<div class="card empty">Nothing yet.</div>';
+    html += '</section>';
+    return html;
+  }
+  function renderSystem(doc) {
+    return renderNav(doc) + renderToday(doc) + renderChase(doc, false) + renderMap(doc) + renderWeek(doc) + renderProjects(doc) + renderSources(doc);
   }
 
   /* ---------- Today ---------- */
@@ -353,11 +412,21 @@
   }
 
   /* ---------- Chase cycles ---------- */
-  function renderChase(doc) {
+  function renderChase(doc, compact) {
     var cs = doc.cycles || [];
-    var html = '<section id="chase"><h2 class="display">Chase cycles <small>across ' + esc(doc.outlets || 0) + ' outlets · tap a tile</small></h2>';
+    var html = '<section id="chase"><h2 class="display">Chase cycles <small>across ' + esc(doc.outlets || 0) + ' outlets · tap a row</small></h2>';
     if (!cs.length) return html + '<div class="card empty">No outlet lists found.</div></section>';
-    html += '<div class="cycles">' + cs.map(function (c) {
+    if (compact) {
+      html += '<div class="cbars">' + cs.map(function (c) {
+        var scope = (c.done || 0) + (c.pending || 0) + (c.upcoming || 0);
+        var pct = scope ? Math.round((c.done || 0) / scope * 100) : 0;
+        var on = ui.cycle === c.id ? ' on' : '';
+        return '<button class="cbar' + (c.pending ? '' : ' clear') + on + '" data-cycle="' + esc(c.id) + '">' +
+          '<span class="l">' + esc(c.sublabel || c.label) + '<small>' + (c.due ? 'due ' + esc(fmtDay(c.due)) : (c.upcoming ? esc(c.upcoming) + ' on the way' : 'no due date')) + ' · ' + pct + '% done</small></span>' +
+          '<span class="bar"><i style="width:' + pct + '%"></i></span>' +
+          '<span class="n">' + esc(c.pending || 0) + '<small>' + (c.overdue ? esc(c.overdue) + ' overdue' : '&nbsp;') + '</small></span></button>';
+      }).join('') + '</div>';
+    } else html += '<div class="cycles">' + cs.map(function (c) {
       var scope = (c.done || 0) + (c.pending || 0) + (c.upcoming || 0);
       var pct = scope ? Math.round((c.done || 0) / scope * 100) : 0;
       var on = ui.cycle === c.id ? ' on' : '';
@@ -475,7 +544,10 @@
   function render(doc, isDemo) {
     rendered = true;
     document.title = 'HQ Board · ' + (doc.todayText || '');
-    app.innerHTML = renderHead(doc, isDemo) + renderNav(doc) + renderToday(doc) + renderNeeds(doc) + renderChase(doc) + renderMap(doc) + renderWeek(doc) + renderProjects(doc) + renderSources(doc);
+    app.innerHTML = renderHead(doc, isDemo) + renderTabs(doc) + (ui.tab === 'system' ? renderSystem(doc) : renderFocus(doc));
+    function setTab(t) { ui.tab = t; try { localStorage.setItem('hq.tab', t); } catch (e) {} render(doc, isDemo); window.scrollTo(0, 0); }
+    app.querySelectorAll('[data-tab]').forEach(function (el) { el.addEventListener('click', function () { setTab(el.getAttribute('data-tab')); }); });
+    app.querySelectorAll('[data-tab-link]').forEach(function (el) { el.addEventListener('click', function (ev) { ev.preventDefault(); setTab(el.getAttribute('data-tab-link')); }); });
     app.querySelectorAll('[data-row]').forEach(function (el) {
       el.addEventListener('click', function () { var id = el.getAttribute('data-row'); ui.openRows[id] = !ui.openRows[id]; el.classList.toggle('open', !!ui.openRows[id]); });
     });
@@ -578,7 +650,7 @@
     if (key === false) { showInvalid(); return; }
     bootStatic(key);
   }
-  window.addEventListener('hashchange', function () { if (/^#(today|needs|chase|map|week|projects|sources)$/.test(location.hash)) return; ui = { openRows: {}, cycle: null }; boot(); });
+  window.addEventListener('hashchange', function () { if (/^#(today|needs|chase|map|week|projects|sources|alerts|arrived)?$/.test(location.hash)) return; ui = { openRows: {}, cycle: null, tab: ui.tab }; boot(); });
   boot();
 })();
 </script>
