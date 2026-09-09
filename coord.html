@@ -12,6 +12,7 @@
     --ink: #1E2A3A;
     --muted: #57636F;
     --line: #E7E2D8;
+    --line-soft: #F0ECE4;
     --chrome: #3E4E62;
     --chrome-grad: linear-gradient(135deg, #384759 0%, #4B5B70 100%);
     --chrome-ink: #FFFFFF;
@@ -21,6 +22,7 @@
     --pending: #B93A30;
     --pending-bg: #F8E2DE;
     --overdue: #8C2119;
+    --overdue-bg: #F2CFC9;
     --upcoming: #67727D;
     --upcoming-bg: #EAECEE;
     --amber: #B8741A;
@@ -29,7 +31,7 @@
     --focus: #2E4466;
     --shadow: 0 1px 2px rgba(60,50,30,0.06), 0 6px 18px rgba(60,50,30,0.08);
   }
-  /* Light-only, same decision as the outlet board (2026-09-08). */
+  /* Light-only, same decision as the outlet board (2026-09-08). Desktop-first: the coordinators work on a laptop. */
 
   * { box-sizing: border-box; }
   html { -webkit-text-size-adjust: 100%; }
@@ -38,7 +40,7 @@
     background: var(--ground);
     color: var(--ink);
     font-family: "Barlow", -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    font-size: 16px;
+    font-size: 15px;
     line-height: 1.35;
     overflow-x: hidden;
     -webkit-font-smoothing: antialiased;
@@ -48,13 +50,15 @@
     font-weight: 700;
     letter-spacing: 0.005em;
   }
+  button { font-family: inherit; }
   .app {
-    max-width: 640px;
+    max-width: 1480px;
     margin: 0 auto;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
     background: var(--ground);
+    padding: 0 16px;
   }
   .banner {
     background: var(--amber-bg);
@@ -65,238 +69,343 @@
     text-transform: uppercase;
     text-align: center;
     padding: 8px 16px;
+    margin: 12px 0 0;
+    border-radius: 12px;
   }
   .banner small { display: block; font-weight: 400; letter-spacing: 0; text-transform: none; font-size: 14px; }
 
-  /* Header band */
+  /* ---------- Header band ---------- */
   .head {
     position: relative;
     background: var(--chrome);
     background: var(--chrome-grad);
     color: var(--chrome-ink);
-    padding: 18px 20px 20px;
-    margin: 12px 12px 0;
-    border-radius: 22px;
+    padding: 16px 22px 16px;
+    margin: 12px 0 0;
+    border-radius: 18px;
     box-shadow: var(--shadow);
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    flex-wrap: wrap;
   }
-  .head-row { display: flex; align-items: flex-start; gap: 12px; }
-  .head-main { flex: 1 1 auto; min-width: 0; }
-  .kicker { font-size: 13px; letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.8; font-weight: 600; }
+  .head-main { flex: 1 1 260px; min-width: 0; }
+  .kicker { font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; opacity: 0.8; font-weight: 600; }
   .scope { font-size: 30px; line-height: 1; margin-top: 4px; overflow-wrap: anywhere; }
-  .badge { flex: 0 0 auto; background: var(--chrome-ink); color: var(--chrome); font-family: "Barlow Condensed", "Arial Narrow", sans-serif; font-weight: 700; font-size: 20px; line-height: 1; padding: 9px 10px 8px; border-radius: 14px; min-width: 50px; text-align: center; }
-  .meta { margin-top: 12px; display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 15px; opacity: 0.92; }
+  .meta { display: flex; flex-wrap: wrap; gap: 6px 22px; font-size: 15px; opacity: 0.95; align-items: center; }
   .meta span { white-space: nowrap; }
-  .meta .lbl { opacity: 0.75; margin-right: 4px; }
-  .updated { margin-top: 10px; font-size: 14px; display: inline-block; padding: 4px 12px; border-radius: 999px; background: var(--chrome-soft); }
+  .meta .lbl { opacity: 0.7; margin-right: 5px; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; }
+  .meta strong { font-weight: 600; }
+  .updated { font-size: 14px; display: inline-block; padding: 4px 12px; border-radius: 999px; background: var(--chrome-soft); white-space: nowrap; }
   .updated.stale { background: var(--amber); color: #FFFFFF; font-weight: 600; }
 
-  /* Task chips */
-  .chips {
-    display: flex;
-    gap: 8px;
-    overflow-x: auto;
-    padding: 14px 12px 4px;
-    scrollbar-width: none;
-    -webkit-overflow-scrolling: touch;
+  /* ---------- Tiles (one per item) ---------- */
+  .tiles {
+    display: grid;
+    grid-template-columns: repeat(8, minmax(0, 1fr));
+    gap: 10px;
+    padding: 14px 0 0;
   }
-  .chips::-webkit-scrollbar { display: none; }
-  .chip {
+  .tile {
     all: unset;
-    flex: 0 0 auto;
+    box-sizing: border-box;
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
     gap: 2px;
-    min-width: 96px;
-    padding: 10px 12px 9px;
-    border-radius: 16px;
+    padding: 12px 14px 10px;
+    border-radius: 14px;
     background: var(--surface);
     box-shadow: var(--shadow);
     cursor: pointer;
     border: 2px solid transparent;
+    min-width: 0;
     -webkit-tap-highlight-color: transparent;
   }
-  .chip:focus-visible { outline: 3px solid var(--focus); outline-offset: 1px; }
-  .chip.on { border-color: var(--chrome); }
-  .chip .n { font-size: 26px; line-height: 1; font-variant-numeric: tabular-nums; color: var(--pending); }
-  .chip.clear .n { color: var(--done); }
-  .chip .t { font-size: 13px; font-weight: 600; color: var(--muted); white-space: nowrap; }
-  .chip .o { font-size: 12px; color: var(--overdue); font-weight: 700; white-space: nowrap; min-height: 14px; }
-  .chip.all-chip { background: var(--chrome); color: var(--chrome-ink); }
-  .chip.all-chip .n, .chip.all-chip .t { color: var(--chrome-ink); }
-  .chip.all-chip .o { color: #FFD9D4; }
+  .tile:hover { border-color: var(--line); }
+  .tile:focus-visible { outline: 3px solid var(--focus); outline-offset: 1px; }
+  .tile.on, .tile.on:hover { border-color: var(--chrome); }
+  .tile .n { font-size: 30px; line-height: 1; font-variant-numeric: tabular-nums; color: var(--pending); }
+  .tile.clear .n { color: var(--done); }
+  .tile .t { font-size: 13px; font-weight: 600; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tile .o { font-size: 12px; color: var(--overdue); font-weight: 700; white-space: nowrap; min-height: 15px; }
+  .tile.all-tile { background: var(--chrome); color: var(--chrome-ink); }
+  .tile.all-tile .n, .tile.all-tile .t { color: var(--chrome-ink); }
+  .tile.all-tile .o { color: #FFD9D4; }
+  .tile.all-tile.on { border-color: var(--ink); }
 
-  /* Toolbar */
+  /* ---------- Toolbar ---------- */
   .bar {
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
-    padding: 10px 12px 0;
+    padding: 12px 0 0;
     align-items: center;
   }
+  .bar .grow { flex: 1 1 auto; }
   .bar select, .bar input[type=search] {
-    font: 500 15px "Barlow", sans-serif;
+    font: 500 14px "Barlow", sans-serif;
     color: var(--ink);
     background: var(--surface);
     border: 1px solid var(--line);
-    border-radius: 12px;
-    padding: 8px 10px;
-    min-height: 40px;
+    border-radius: 10px;
+    padding: 7px 10px;
+    min-height: 38px;
   }
-  .bar input[type=search] { flex: 1 1 140px; min-width: 120px; }
-  .bar select { flex: 0 1 auto; max-width: 46%; }
+  .bar input[type=search] { width: 240px; max-width: 100%; }
   .tbtn {
     all: unset;
     font: 600 14px "Barlow", sans-serif;
     padding: 0 12px;
-    min-height: 40px;
+    min-height: 38px;
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    border-radius: 12px;
+    border-radius: 10px;
     background: var(--surface);
     border: 1px solid var(--line);
     cursor: pointer;
     color: var(--ink);
+    white-space: nowrap;
     -webkit-tap-highlight-color: transparent;
   }
+  .tbtn:hover { border-color: var(--muted); }
   .tbtn:focus-visible { outline: 3px solid var(--focus); }
   .tbtn.on { background: var(--chrome); color: var(--chrome-ink); border-color: var(--chrome); }
   .tbtn.warn.on { background: var(--overdue); border-color: var(--overdue); }
-  .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: var(--surface); }
-  .seg .tbtn { border: 0; border-radius: 0; }
+  .legend { display: flex; gap: 10px; align-items: center; font-size: 13px; color: var(--muted); flex-wrap: wrap; }
+  .legend .sw { display: inline-block; width: 12px; height: 12px; border-radius: 4px; vertical-align: -1px; margin-right: 4px; }
   .toast {
     position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%);
     background: var(--ink); color: #fff; font-weight: 600; font-size: 14px;
-    padding: 10px 16px; border-radius: 999px; box-shadow: var(--shadow); z-index: 9;
+    padding: 10px 16px; border-radius: 999px; box-shadow: var(--shadow); z-index: 30;
     opacity: 0; transition: opacity 160ms ease; pointer-events: none;
   }
   .toast.show { opacity: 1; }
 
-  /* Section headline */
-  .headline { padding: 16px 20px 10px; display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
-  .headline .big { font-size: 34px; line-height: 1; font-variant-numeric: tabular-nums; }
-  .headline .sub { font-size: 16px; font-weight: 500; color: var(--muted); }
+  /* ---------- Headline ---------- */
+  .headline { padding: 14px 4px 8px; display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+  .headline .big { font-size: 30px; line-height: 1; font-variant-numeric: tabular-nums; }
+  .headline .sub { font-size: 15px; font-weight: 500; color: var(--muted); }
   .headline.is-pending .big { color: var(--pending); }
   .headline.is-clear .big { color: var(--done); }
   .headline .overdue-note { font-weight: 600; color: var(--overdue); }
-  .headline .hint { flex: 1 0 100%; font-size: 15px; color: var(--muted); }
+  .headline .hint { margin-left: auto; font-size: 14px; color: var(--muted); }
 
-  /* Rows */
-  .list { margin: 0 12px 24px; display: flex; flex-direction: column; gap: 8px; }
-  .row { background: var(--surface); border-radius: 18px; box-shadow: var(--shadow); overflow: hidden; }
-  .row-btn {
-    all: unset;
-    display: flex;
-    width: 100%;
-    align-items: center;
-    gap: 10px;
-    padding: 11px 14px 11px 12px;
-    min-height: 62px;
-    cursor: pointer;
-    -webkit-tap-highlight-color: transparent;
-    box-sizing: border-box;
+  /* ---------- Matrix table (desktop) ---------- */
+  .wrap {
+    background: var(--surface);
+    border-radius: 16px;
+    box-shadow: var(--shadow);
+    overflow: auto;
+    max-height: calc(100vh - 120px);
+    margin-bottom: 20px;
   }
-  .row-btn:focus-visible { outline: 3px solid var(--focus); outline-offset: -3px; border-radius: 18px; }
-  .row-btn:active { background: var(--ground); }
-  .ico { flex: 0 0 40px; width: 40px; height: 40px; border-radius: 14px; display: inline-flex; align-items: center; justify-content: center; }
-  .ico svg { width: 22px; height: 22px; display: block; }
-  .row.done .ico { background: var(--done-bg); color: var(--done); }
-  .row.pending .ico { background: var(--pending-bg); color: var(--pending); }
-  .row.overdue .ico { background: var(--pending-bg); color: var(--overdue); }
-  .row.upcoming .ico { background: var(--upcoming-bg); color: var(--upcoming); }
-  .row.chased .ico { background: var(--amber-bg); color: var(--amber); }
+  table.mx { border-collapse: separate; border-spacing: 0; width: 100%; min-width: 1000px; font-size: 14px; table-layout: fixed; }
+  .mx th, .mx td { padding: 0; vertical-align: top; border-bottom: 1px solid var(--line-soft); }
+  .mx thead th {
+    position: sticky; top: 0; z-index: 3;
+    background: var(--surface);
+    border-bottom: 2px solid var(--line);
+    text-align: left;
+    font-weight: 600;
+    color: var(--muted);
+    font-size: 13px;
+    letter-spacing: 0.02em;
+  }
+  .mx thead th .hb {
+    all: unset; display: flex; flex-direction: column; gap: 2px; width: 100%; padding: 10px 10px 8px; cursor: pointer; box-sizing: border-box;
+  }
+  .mx thead th .hb:hover { background: var(--ground); }
+  .mx thead th .hb:focus-visible { outline: 3px solid var(--focus); outline-offset: -3px; }
+  .mx thead th .hb .hn { color: var(--ink); font-size: 14px; }
+  .mx thead th .hb .hc { font-size: 12px; font-weight: 500; }
+  .mx thead th .hb .hc b { color: var(--pending); font-weight: 700; }
+  .mx thead th .hb .hc i { color: var(--overdue); font-style: normal; font-weight: 700; }
+  .mx thead th.sorted .hb .hn::after { content: " ▾"; color: var(--muted); }
+  .mx thead th.sorted.asc .hb .hn::after { content: " ▴"; }
+  .mx th.c-outlet, .mx td.c-outlet { position: sticky; left: 0; z-index: 2; background: var(--surface); min-width: 230px; max-width: 260px; }
+  .mx thead th.c-outlet { z-index: 4; }
+  .mx td.c-outlet { border-right: 1px solid var(--line); }
+  .mx tr:hover td { background: #FBFAF7; }
+  .mx tr.sel td { background: #F1EFE8; }
+  .mx td.c-outlet .ob { display: flex; gap: 10px; align-items: center; padding: 8px 10px; }
   .brand-dot {
-    flex: 0 0 auto; width: 40px; height: 40px; border-radius: 14px;
+    flex: 0 0 auto; width: 30px; height: 30px; border-radius: 9px;
     display: inline-flex; align-items: center; justify-content: center;
-    font-family: "Barlow Condensed", "Arial Narrow", sans-serif; font-weight: 700; font-size: 17px; color: #fff;
+    font-family: "Barlow Condensed", "Arial Narrow", sans-serif; font-weight: 700; font-size: 14px; color: #fff;
     background: #4F5761;
   }
   .brand-dot.BF { background: #2E4466; }
   .brand-dot.FE { background: #3D6450; }
-  .row-main { flex: 1 1 auto; min-width: 0; }
-  .row-top { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-  .code { font-weight: 700; font-size: 17px; font-family: "Barlow Condensed", "Arial Narrow", sans-serif; letter-spacing: 0.01em; }
-  .oname { font-size: 14px; color: var(--muted); overflow-wrap: anywhere; }
-  .pic-tag { font-size: 12px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); background: var(--ground); padding: 2px 7px; border-radius: 999px; white-space: nowrap; }
+  .code { font-weight: 700; font-size: 14px; font-family: "Barlow Condensed", "Arial Narrow", sans-serif; letter-spacing: 0.02em; white-space: nowrap; }
+  .oname { font-size: 12.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 190px; }
+  .mx td.c-pic { padding: 12px 10px; color: var(--muted); font-size: 12px; font-weight: 700; letter-spacing: 0.05em; white-space: nowrap; }
+  .mx td.c-cnt { padding: 10px 12px; text-align: center; font-family: "Barlow Condensed", "Arial Narrow", sans-serif; font-weight: 700; font-size: 20px; color: var(--pending); font-variant-numeric: tabular-nums; }
+  .mx td.c-cnt.clear { color: var(--done); }
+  .mx td.c-cnt.over { color: var(--overdue); }
+  .mx td.cell { min-width: 138px; }
+  .cb {
+    all: unset; display: block; width: 100%; box-sizing: border-box; padding: 7px 10px 7px 9px; min-height: 50px; cursor: pointer;
+    border-left: 3px solid transparent;
+  }
+  .cb:hover { background: var(--ground); }
+  .cb:focus-visible { outline: 3px solid var(--focus); outline-offset: -3px; }
+  .cb.sel { background: var(--ground); }
+  .cb.overdue { border-left-color: var(--overdue); }
+  .cb.pending { border-left-color: var(--pending); }
+  .cb.chased { border-left-color: var(--amber); }
+  .cb .st { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; padding: 2px 7px; border-radius: 999px; white-space: nowrap; line-height: 1.3; }
+  .cb .st.done { background: var(--done-bg); color: var(--done); }
+  .cb .st.pending { background: var(--pending-bg); color: var(--pending); }
+  .cb .st.upcoming { background: var(--upcoming-bg); color: var(--upcoming); }
+  .cb .st.overdue { background: var(--overdue); color: #fff; }
+  .cb .st.chased { background: var(--amber-bg); color: var(--amber); }
+  .cb .sm { display: block; margin-top: 3px; font-size: 12.5px; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .cb.done .sm, .cb.upcoming .sm { color: var(--muted); }
+  .cb .dd { display: block; font-size: 11.5px; color: var(--muted); white-space: nowrap; }
+  .cb.overdue .dd { color: var(--overdue); font-weight: 600; }
+  .mx td.cell.na { color: var(--line); text-align: center; padding-top: 16px; font-size: 14px; }
+  .mx td.cell.wide .cb .sm { max-width: none; white-space: normal; }
+  .mx .empty-row td { padding: 22px; color: var(--muted); text-align: center; }
+
+  /* ---------- Detail drawer ---------- */
+  .drawer {
+    position: fixed; top: 0; right: 0; bottom: 0; width: 420px; max-width: 100vw;
+    background: var(--surface); box-shadow: -8px 0 30px rgba(60,50,30,0.16); z-index: 20;
+    transform: translateX(105%); transition: transform 180ms ease;
+    display: flex; flex-direction: column;
+  }
+  .drawer.open { transform: none; }
+  @media (prefers-reduced-motion: reduce) { .drawer { transition: none; } }
+  .drawer .dh { padding: 18px 20px 12px; border-bottom: 1px solid var(--line); display: flex; gap: 12px; align-items: flex-start; }
+  .drawer .dh .dm { flex: 1 1 auto; min-width: 0; }
+  .drawer .dh .code { font-size: 20px; }
+  .drawer .dh .oname { max-width: none; white-space: normal; font-size: 14px; }
+  .drawer .dh .pic-tag { font-size: 12px; font-weight: 700; letter-spacing: 0.05em; color: var(--muted); }
+  .xbtn { all: unset; width: 34px; height: 34px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 20px; cursor: pointer; color: var(--muted); background: var(--ground); flex: 0 0 auto; }
+  .xbtn:hover { color: var(--ink); }
+  .xbtn:focus-visible { outline: 3px solid var(--focus); }
+  .drawer .db { padding: 16px 20px 24px; overflow: auto; flex: 1 1 auto; }
+  .drawer .item-title { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .drawer .item-title .lbl { font-weight: 600; font-size: 18px; }
+  .ico { flex: 0 0 38px; width: 38px; height: 38px; border-radius: 12px; display: inline-flex; align-items: center; justify-content: center; }
+  .ico svg { width: 22px; height: 22px; display: block; }
+  .ico.done { background: var(--done-bg); color: var(--done); }
+  .ico.pending { background: var(--pending-bg); color: var(--pending); }
+  .ico.overdue { background: var(--pending-bg); color: var(--overdue); }
+  .ico.upcoming { background: var(--upcoming-bg); color: var(--upcoming); }
   .pill { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; padding: 3px 8px; border-radius: 999px; white-space: nowrap; line-height: 1.2; }
   .pill.done { background: var(--done-bg); color: var(--done); }
   .pill.pending { background: var(--pending-bg); color: var(--pending); }
   .pill.upcoming { background: var(--upcoming-bg); color: var(--upcoming); }
   .pill.overdue { background: var(--overdue); color: #FFFFFF; }
   .pill.chased { background: var(--amber-bg); color: var(--amber); }
-  .summary { margin-top: 3px; font-size: 15px; color: var(--ink); overflow-wrap: anywhere; display: block; }
-  .row.done .summary, .row.upcoming .summary { color: var(--muted); }
-  .tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 6px; }
-  .tag { font-size: 12px; font-weight: 700; padding: 3px 8px; border-radius: 999px; background: var(--pending-bg); color: var(--pending); white-space: nowrap; }
-  .tag.overdue { background: var(--overdue); color: #fff; }
-  .tag.upcoming { background: var(--upcoming-bg); color: var(--upcoming); }
-  .tag.chased { background: var(--amber-bg); color: var(--amber); }
-  .due { flex: 0 0 auto; text-align: right; font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; line-height: 1.25; }
-  .due strong { display: block; font-weight: 700; color: var(--ink); font-size: 15px; }
-  .row.overdue .due strong { color: var(--overdue); }
-  .cnt { flex: 0 0 auto; font-size: 24px; line-height: 1; color: var(--pending); font-variant-numeric: tabular-nums; }
-  .cnt.clear { color: var(--done); }
-  .chev { flex: 0 0 auto; width: 11px; height: 11px; border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted); transform: rotate(45deg); margin: 0 4px 4px 0; transition: transform 160ms ease; }
-  .row.open .chev { transform: rotate(225deg); margin: 4px 4px 0 0; }
-  .detail { padding: 0 14px 14px 14px; font-size: 15px; }
-  .detail ul { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 5px; }
-  .detail li { padding: 9px 12px; background: var(--ground); border-radius: 12px; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
-  .detail .empty { color: var(--muted); }
-  .detail .sub-row { display: flex; align-items: flex-start; gap: 10px; padding: 8px 0; border-top: 1px solid var(--line); }
-  .detail .sub-row:first-child { border-top: 0; }
-  .detail .sub-row .l { font-weight: 600; flex: 1 1 auto; min-width: 0; }
-  .detail .sub-row .s { color: var(--muted); font-size: 14px; display: block; font-weight: 400; }
-  .detail .sub-row .d { flex: 0 0 auto; font-size: 13px; color: var(--muted); text-align: right; white-space: nowrap; }
-  .detail .sub-row.overdue .d { color: var(--overdue); font-weight: 700; }
-  .actions { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
-  .abtn { all: unset; font: 600 14px "Barlow", sans-serif; padding: 8px 14px; border-radius: 999px; background: var(--ground); border: 1px solid var(--line); cursor: pointer; -webkit-tap-highlight-color: transparent; }
-  .abtn:focus-visible { outline: 3px solid var(--focus); }
-  .abtn.on { background: var(--amber-bg); color: var(--amber); border-color: var(--amber-bg); }
-  .steps { margin: 0 0 8px; padding: 0; list-style: none; }
+  .drawer .summary { margin: 8px 0 4px; font-size: 16px; }
+  .drawer .duetxt { font-size: 14px; color: var(--muted); }
+  .drawer .duetxt.overdue { color: var(--overdue); font-weight: 600; }
+  .detail ul { margin: 12px 0 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 5px; }
+  .detail li { padding: 9px 12px; background: var(--ground); border-radius: 10px; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; font-size: 14px; }
+  .detail .empty { color: var(--muted); margin-top: 12px; }
+  .steps { margin: 12px 0 0; padding: 0; list-style: none; }
   .step { display: flex; align-items: center; gap: 10px; padding: 6px 0; color: var(--muted); font-size: 14px; }
   .step .n { flex: 0 0 24px; width: 24px; height: 24px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12px; border: 2px solid var(--line); }
   .step.done { color: var(--ink); }
   .step.done .n { background: var(--done); border-color: var(--done); color: #fff; }
   .step.current { color: var(--ink); font-weight: 600; }
   .step.current .n { border-color: var(--pending); color: var(--pending); }
+  .actions { display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
+  .abtn { all: unset; font: 600 14px "Barlow", sans-serif; padding: 9px 14px; border-radius: 999px; background: var(--ground); border: 1px solid var(--line); cursor: pointer; }
+  .abtn:hover { border-color: var(--muted); }
+  .abtn:focus-visible { outline: 3px solid var(--focus); }
+  .abtn.on { background: var(--amber-bg); color: var(--amber); border-color: var(--amber-bg); }
+  .others { margin-top: 22px; border-top: 1px solid var(--line); padding-top: 12px; }
+  .others h3 { margin: 0 0 6px; font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+  .others .ob-row { all: unset; display: flex; width: 100%; box-sizing: border-box; align-items: center; gap: 10px; padding: 8px 6px; border-radius: 10px; cursor: pointer; }
+  .others .ob-row:hover { background: var(--ground); }
+  .others .ob-row:focus-visible { outline: 3px solid var(--focus); }
+  .others .ob-row .l { flex: 1 1 auto; min-width: 0; font-weight: 600; font-size: 14px; }
+  .others .ob-row .s { display: block; font-weight: 400; color: var(--muted); font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .others .ob-row .d { flex: 0 0 auto; font-size: 12px; color: var(--muted); white-space: nowrap; }
+  .others .ob-row.overdue .d { color: var(--overdue); font-weight: 700; }
 
-  .foot { margin-top: auto; padding: 0 20px 28px; font-size: 14px; color: var(--muted); text-align: center; }
+  /* ---------- Narrow-screen fallback: card lists ---------- */
+  .list { margin: 0 0 24px; display: flex; flex-direction: column; gap: 8px; }
+  .row { background: var(--surface); border-radius: 16px; box-shadow: var(--shadow); overflow: hidden; }
+  .row-btn { all: unset; display: flex; width: 100%; align-items: center; gap: 10px; padding: 11px 14px 11px 12px; min-height: 60px; cursor: pointer; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  .row-btn:focus-visible { outline: 3px solid var(--focus); outline-offset: -3px; border-radius: 16px; }
+  .row-main { flex: 1 1 auto; min-width: 0; }
+  .row-top { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .row .oname { max-width: none; white-space: normal; }
+  .row .summary { margin-top: 3px; font-size: 14px; display: block; }
+  .row.done .summary, .row.upcoming .summary { color: var(--muted); }
+  .tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 6px; }
+  .tag { font-size: 12px; font-weight: 700; padding: 3px 8px; border-radius: 999px; background: var(--pending-bg); color: var(--pending); white-space: nowrap; }
+  .tag.overdue { background: var(--overdue); color: #fff; }
+  .tag.upcoming { background: var(--upcoming-bg); color: var(--upcoming); }
+  .tag.chased { background: var(--amber-bg); color: var(--amber); }
+  .pic-tag { font-size: 11px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); background: var(--ground); padding: 2px 7px; border-radius: 999px; white-space: nowrap; }
+  .due { flex: 0 0 auto; text-align: right; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; line-height: 1.25; }
+  .due strong { display: block; font-weight: 700; color: var(--ink); font-size: 14px; }
+  .row.overdue .due strong { color: var(--overdue); }
+  .cnt { flex: 0 0 auto; font-size: 22px; line-height: 1; color: var(--pending); font-variant-numeric: tabular-nums; }
+  .cnt.clear { color: var(--done); }
+  .chev { flex: 0 0 auto; width: 11px; height: 11px; border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted); transform: rotate(45deg); margin: 0 4px 4px 0; }
+  .row.open .chev { transform: rotate(225deg); margin: 4px 4px 0 0; }
+  .row .detail { padding: 0 14px 14px; font-size: 14px; }
+  .sub-row { display: flex; align-items: flex-start; gap: 10px; padding: 8px 0; border-top: 1px solid var(--line); }
+  .sub-row:first-child { border-top: 0; }
+  .sub-row .l { font-weight: 600; flex: 1 1 auto; min-width: 0; }
+  .sub-row .s { color: var(--muted); font-size: 13px; display: block; font-weight: 400; }
+  .sub-row .d { flex: 0 0 auto; font-size: 12px; color: var(--muted); text-align: right; white-space: nowrap; }
+  .sub-row.overdue .d { color: var(--overdue); font-weight: 700; }
+
+  .foot { margin-top: auto; padding: 0 0 22px; font-size: 13px; color: var(--muted); text-align: center; }
 
   .sk { background: var(--skeleton); border-radius: 6px; animation: pulse 1.2s ease-in-out infinite; }
   @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.55; } }
-  @media (prefers-reduced-motion: reduce) { .sk { animation: none; } .chev { transition: none; } }
+  @media (prefers-reduced-motion: reduce) { .sk { animation: none; } }
 
   .msg { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 32px 28px; gap: 14px; }
   .msg .icon { width: 64px; height: 64px; border-radius: 50%; background: var(--upcoming-bg); color: var(--muted); display: flex; align-items: center; justify-content: center; font-size: 34px; line-height: 1; }
   .msg h1 { margin: 0; font-size: 30px; line-height: 1.1; text-wrap: balance; }
-  .msg p { margin: 0; font-size: 17px; color: var(--muted); max-width: 30ch; text-wrap: balance; }
+  .msg p { margin: 0; font-size: 17px; color: var(--muted); max-width: 34ch; text-wrap: balance; }
+
+  @media (max-width: 1100px) {
+    .tiles { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  }
+  @media (max-width: 760px) {
+    .app { padding: 0 10px; }
+    .tiles { display: flex; overflow-x: auto; scrollbar-width: none; padding-bottom: 4px; }
+    .tiles::-webkit-scrollbar { display: none; }
+    .tile { flex: 0 0 auto; min-width: 96px; }
+    .bar input[type=search] { width: 100%; flex: 1 1 140px; }
+    .legend { display: none; }
+    .headline .hint { margin-left: 0; flex: 1 0 100%; }
+    .scope { font-size: 26px; }
+  }
 </style>
 
 <div class="app" id="app" aria-live="polite">
   <div class="head">
-    <div class="head-row">
-      <div class="head-main">
-        <div class="sk" style="height:13px;width:40%"></div>
-        <div class="sk" style="height:30px;width:60%;margin-top:8px"></div>
-      </div>
-      <div class="sk" style="height:38px;width:48px"></div>
+    <div class="head-main">
+      <div class="sk" style="height:12px;width:160px"></div>
+      <div class="sk" style="height:30px;width:220px;margin-top:8px"></div>
     </div>
-    <div class="sk" style="height:15px;width:45%;margin-top:16px"></div>
-    <div class="sk" style="height:22px;width:55%;margin-top:10px"></div>
+    <div class="sk" style="height:22px;width:220px"></div>
   </div>
-  <div class="chips">
-    <div class="chip"><div class="sk" style="height:26px;width:40px"></div><div class="sk" style="height:13px;width:60px;margin-top:4px"></div></div>
-    <div class="chip"><div class="sk" style="height:26px;width:40px"></div><div class="sk" style="height:13px;width:60px;margin-top:4px"></div></div>
-    <div class="chip"><div class="sk" style="height:26px;width:40px"></div><div class="sk" style="height:13px;width:60px;margin-top:4px"></div></div>
-    <div class="chip"><div class="sk" style="height:26px;width:40px"></div><div class="sk" style="height:13px;width:60px;margin-top:4px"></div></div>
+  <div class="tiles">
+    <div class="tile"><div class="sk" style="height:30px;width:44px"></div><div class="sk" style="height:13px;width:70%;margin-top:4px"></div></div>
+    <div class="tile"><div class="sk" style="height:30px;width:44px"></div><div class="sk" style="height:13px;width:70%;margin-top:4px"></div></div>
+    <div class="tile"><div class="sk" style="height:30px;width:44px"></div><div class="sk" style="height:13px;width:70%;margin-top:4px"></div></div>
+    <div class="tile"><div class="sk" style="height:30px;width:44px"></div><div class="sk" style="height:13px;width:70%;margin-top:4px"></div></div>
   </div>
-  <div class="list" style="margin-top:14px">
-    <div class="row"><div class="row-btn"><div class="ico sk"></div><div class="row-main"><div class="sk" style="height:17px;width:55%"></div><div class="sk" style="height:14px;width:40%;margin-top:8px"></div></div></div></div>
-    <div class="row"><div class="row-btn"><div class="ico sk"></div><div class="row-main"><div class="sk" style="height:17px;width:65%"></div><div class="sk" style="height:14px;width:35%;margin-top:8px"></div></div></div></div>
-    <div class="row"><div class="row-btn"><div class="ico sk"></div><div class="row-main"><div class="sk" style="height:17px;width:50%"></div><div class="sk" style="height:14px;width:45%;margin-top:8px"></div></div></div></div>
+  <div class="wrap" style="margin-top:14px;padding:18px">
+    <div class="sk" style="height:16px;width:40%"></div>
+    <div class="sk" style="height:16px;width:70%;margin-top:12px"></div>
+    <div class="sk" style="height:16px;width:55%;margin-top:12px"></div>
   </div>
 </div>
+<div class="drawer" id="drawer" aria-hidden="true"></div>
 <div class="toast" id="toast" role="status"></div>
 
 <script>
@@ -309,8 +418,9 @@
   var CHASED_KEY = 'coord.chased';
   var CHASED_TTL_DAYS = 21;
   var NO_PUNCHCARD_CHAINS = { PG: true, SG: true };
+  var NARROW = 760;
 
-  /* The coordinator's weekly list, in chase order. `short` is the chip / tag name. */
+  /* The coordinator's weekly list, in chase order. `short` is the tile / column name. */
   var TASKS = [
     { id: 'it_in',        short: 'IT',            title: 'IT to outlet' },
     { id: 'timetable',    short: 'Timetable',     title: 'Timetable' },
@@ -327,14 +437,18 @@
   var MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
   var app = document.getElementById('app');
+  var drawer = document.getElementById('drawer');
   var toastEl = document.getElementById('toast');
   var rendered = false;
   var lastDoc = null, lastDemo = false;
 
   /* UI state, kept across re-renders and polls */
-  var ui = { view: 'task', task: 'it_in', pic: '', brand: '', q: '', overdueOnly: false, showDone: false };
+  function freshUi() { return { view: 'all', task: null, pic: '', brand: '', q: '', overdueOnly: false, showDone: false, sort: null, asc: false, sel: null, qFocus: false }; }
+  var ui = freshUi();
   var openRows = {};
   var chased = loadChased();
+
+  function isNarrow() { return window.innerWidth < NARROW; }
 
   /* ---------- Helpers ---------- */
   function esc(s) {
@@ -349,6 +463,7 @@
   }
   function iso(d) { return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
   function fmtDay(d) { return DAYS[d.getDay()] + ' ' + d.getDate() + ' ' + MONTHS[d.getMonth()]; }
+  function fmtShort(d) { return d.getDate() + ' ' + MONTHS[d.getMonth()]; }
   function fmtStamp(d) {
     var h = d.getHours(), mi = d.getMinutes();
     var ap = h >= 12 ? 'pm' : 'am';
@@ -367,7 +482,7 @@
     toast.t = setTimeout(function () { toastEl.classList.remove('show'); }, 1800);
   }
 
-  /* ---------- "Chased" ticks: this phone only, never sent anywhere ---------- */
+  /* ---------- "Chased" ticks: this browser only, never sent anywhere ---------- */
   function loadChased() {
     try {
       var raw = localStorage.getItem(CHASED_KEY);
@@ -385,7 +500,7 @@
   function normaliseOutlet(o, today) {
     var chain = String(o.chain || '').toUpperCase();
     var items = Array.isArray(o.items) ? o.items : [];
-    var rows = [];
+    var rows = [], byId = {};
     items.forEach(function (it) {
       if (!it || typeof it !== 'object' || !it.id) return;
       var status = String(it.status || '').toLowerCase();
@@ -406,9 +521,9 @@
         asOf: parseDate(it.asOf)
       };
       row.chasedAt = chased[chaseKey(row)] ? parseDate(chased[chaseKey(row)]) : null;
-      rows.push(row);
+      rows.push(row); byId[row.id] = row;
     });
-    return { outlet: o.outlet, name: o.name || '', brand: String(o.brand || '').toUpperCase(), chain: chain, pic: o.pic || '', region: o.region || '', rows: rows };
+    return { outlet: o.outlet, name: o.name || '', brand: String(o.brand || '').toUpperCase(), chain: chain, pic: o.pic || '', region: o.region || '', rows: rows, byId: byId };
   }
 
   function filteredOutlets(doc) {
@@ -418,7 +533,7 @@
     (Array.isArray(doc.outlets) ? doc.outlets : []).forEach(function (o) {
       if (ui.pic && String(o.pic || '') !== ui.pic) return;
       if (ui.brand && String(o.brand || '').toUpperCase() !== ui.brand) return;
-      if (q && (String(o.outlet || '') + ' ' + String(o.name || '')).toLowerCase().indexOf(q) < 0) return;
+      if (q && (String(o.outlet || '') + ' ' + String(o.name || '') + ' ' + String(o.pic || '')).toLowerCase().indexOf(q) < 0) return;
       out.push(normaliseOutlet(o, today));
     });
     return out;
@@ -439,21 +554,160 @@
   function iconFor(id) { return SVG_OPEN + (ICONS[id] || ICONS._default) + '</svg>'; }
 
   /* ---------- Sorting ---------- */
+  function rank(r) { if (!r) return 5; return r.overdue ? 0 : (r.status === 'pending' ? 1 : (r.status === 'upcoming' ? 2 : 3)); }
   function rowSort(a, b) {
-    var ra = a.overdue ? 0 : (a.status === 'pending' ? 1 : (a.status === 'upcoming' ? 2 : 3));
-    var rb = b.overdue ? 0 : (b.status === 'pending' ? 1 : (b.status === 'upcoming' ? 2 : 3));
+    var ra = rank(a), rb = rank(b);
     if (ra !== rb) return ra - rb;
     var da = a.due ? a.due.getTime() : Infinity, db = b.due ? b.due.getTime() : Infinity;
     if (da !== db) return da - db;
     return a.outlet < b.outlet ? -1 : (a.outlet > b.outlet ? 1 : 0);
   }
+  function outletStats(o) {
+    var pend = 0, over = 0;
+    o.rows.forEach(function (r) { if (r.status === 'pending') { pend++; if (r.overdue) over++; } });
+    return { pend: pend, over: over };
+  }
+  function outletSort(a, b) {
+    var col = ui.sort, dir = ui.asc ? 1 : -1;
+    if (col && TASK_BY_ID[col]) {
+      var ra = rank(a.byId[col]), rb = rank(b.byId[col]);
+      if (ra !== rb) return (ra - rb) * (ui.asc ? -1 : 1);
+      var da = a.byId[col] && a.byId[col].due ? a.byId[col].due.getTime() : Infinity, db = b.byId[col] && b.byId[col].due ? b.byId[col].due.getTime() : Infinity;
+      if (da !== db) return da - db;
+      return a.outlet < b.outlet ? -1 : 1;
+    }
+    if (col === 'outlet') return (a.outlet < b.outlet ? -1 : 1) * dir;
+    if (col === 'pic') { if (a.pic !== b.pic) return (a.pic < b.pic ? -1 : 1) * dir; return a.outlet < b.outlet ? -1 : 1; }
+    var sa = outletStats(a), sb = outletStats(b);
+    if (sa.over !== sb.over) return (sb.over - sa.over) * (ui.asc ? -1 : 1);
+    if (sa.pend !== sb.pend) return (sb.pend - sa.pend) * (ui.asc ? -1 : 1);
+    return a.outlet < b.outlet ? -1 : 1;
+  }
 
-  /* ---------- Render pieces ---------- */
+  /* ---------- Counts, tiles, toolbar ---------- */
+  function counts(outlets) {
+    var c = { all: { pending: 0, overdue: 0, outlets: 0 } };
+    TASKS.forEach(function (t) { c[t.id] = { pending: 0, overdue: 0, done: 0, upcoming: 0 }; });
+    outlets.forEach(function (o) {
+      var any = false;
+      o.rows.forEach(function (r) {
+        var k = c[r.id] || (c[r.id] = { pending: 0, overdue: 0, done: 0, upcoming: 0 });
+        k[r.status]++;
+        if (r.status === 'pending') { any = true; c.all.pending++; if (r.overdue) { k.overdue++; c.all.overdue++; } }
+      });
+      if (any) c.all.outlets++;
+    });
+    return c;
+  }
+  function tilesHtml(c) {
+    var html = '<div class="tiles" role="tablist">';
+    html += '<button class="tile all-tile' + (ui.view === 'all' ? ' on' : '') + '" type="button" data-view="all" role="tab" aria-selected="' + (ui.view === 'all') + '">' +
+      '<span class="n display">' + c.all.outlets + '</span><span class="t">outlets to chase</span><span class="o">' + (c.all.overdue ? c.all.overdue + ' overdue' : '') + '</span></button>';
+    TASKS.forEach(function (t) {
+      var k = c[t.id];
+      var on = ui.view === 'task' && ui.task === t.id;
+      html += '<button class="tile' + (on ? ' on' : '') + (k.pending ? '' : ' clear') + '" type="button" data-task="' + esc(t.id) + '" role="tab" aria-selected="' + on + '" title="' + esc(t.title) + '">' +
+        '<span class="n display">' + k.pending + '</span><span class="t">' + esc(t.short) + '</span><span class="o">' + (k.overdue ? k.overdue + ' overdue' : '') + '</span></button>';
+    });
+    return html + '</div>';
+  }
+  function barHtml(doc) {
+    var pics = {};
+    (doc.outlets || []).forEach(function (o) { if (o.pic) pics[o.pic] = 1; });
+    var picList = Object.keys(pics).sort();
+    var html = '<div class="bar">';
+    if (doc.kind !== 'pic' && picList.length > 1) {
+      html += '<select id="f-pic" aria-label="Supervisor"><option value="">All supervisors</option>' +
+        picList.map(function (p) { return '<option value="' + esc(p) + '"' + (ui.pic === p ? ' selected' : '') + '>' + esc(p) + '</option>'; }).join('') + '</select>';
+    }
+    html += '<select id="f-brand" aria-label="Brand"><option value="">All brands</option>' +
+      ['AD', 'BF', 'FE'].map(function (b) { return '<option value="' + b + '"' + (ui.brand === b ? ' selected' : '') + '>' + b + '</option>'; }).join('') + '</select>';
+    html += '<input id="f-q" type="search" placeholder="Search outlet code, name or supervisor" value="' + esc(ui.q) + '" aria-label="Search outlet">';
+    html += '<button class="tbtn warn' + (ui.overdueOnly ? ' on' : '') + '" type="button" id="f-over">Overdue only</button>';
+    html += '<button class="tbtn' + (ui.showDone ? ' on' : '') + '" type="button" id="f-done">' + (ui.view === 'all' && !isNarrow() ? 'Show all-clear outlets' : 'Show done') + '</button>';
+    html += '<button class="tbtn" type="button" id="f-copy" title="Copy this list as text, ready to paste into WhatsApp or email">⎘ Copy list</button>';
+    html += '<span class="grow"></span>';
+    html += '<span class="legend"><span><span class="sw" style="background:var(--overdue)"></span>Overdue</span><span><span class="sw" style="background:var(--pending)"></span>Pending</span><span><span class="sw" style="background:var(--upcoming)"></span>Upcoming</span><span><span class="sw" style="background:var(--done)"></span>Done</span><span><span class="sw" style="background:var(--amber)"></span>Chased</span></span>';
+    return html + '</div>';
+  }
+
+  /* ---------- Matrix (desktop) ---------- */
+  function cellHtml(o, r, wide) {
+    if (!r) return '<td class="cell na" title="Not applicable">–</td>';
+    var sel = ui.sel && ui.sel.outlet === o.outlet && ui.sel.id === r.id;
+    var cls = 'cb ' + r.status + (r.overdue ? ' overdue' : '') + (r.chasedAt && r.status === 'pending' ? ' chased' : '') + (sel ? ' sel' : '');
+    var st = r.status === 'done' ? '<span class="st done">✓ Done</span>' : r.status === 'upcoming' ? '<span class="st upcoming">Upcoming</span>' : (r.overdue ? '<span class="st overdue">Overdue</span>' : '<span class="st pending">Pending</span>');
+    if (r.chasedAt && r.status === 'pending') st += ' <span class="st chased">Chased ' + esc(fmtShort(r.chasedAt)) + '</span>';
+    var due = r.due && r.status !== 'done' ? '<span class="dd">' + (r.overdue ? 'Was due ' : 'Due ') + esc(fmtShort(r.due)) + '</span>' : '';
+    var title = r.label + (r.summary ? ' — ' + r.summary : '') + (r.due ? ' (' + (r.overdue ? 'was due ' : 'due ') + fmtDay(r.due) + ')' : '');
+    return '<td class="cell' + (wide ? ' wide' : '') + '"><button class="' + cls + '" type="button" data-outlet="' + esc(o.outlet) + '" data-id="' + esc(r.id) + '" title="' + esc(title) + '">' +
+      st + (r.summary ? '<span class="sm">' + esc(r.summary) + '</span>' : '') + due + '</button></td>';
+  }
+  function headCell(key, name, count, sortable) {
+    var sorted = ui.sort === key;
+    var hc = '';
+    if (count) hc = '<span class="hc">' + (count.pending ? '<b>' + count.pending + ' pending</b>' : '<span style="color:var(--done)">all clear</span>') + (count.overdue ? ' · <i>' + count.overdue + ' overdue</i>' : '') + '</span>';
+    return '<th class="' + (key === 'outlet' ? 'c-outlet' : '') + (sorted ? ' sorted' : '') + (sorted && ui.asc ? ' asc' : '') + '" scope="col">' +
+      (sortable ? '<button class="hb" type="button" data-sort="' + esc(key) + '" title="Sort by ' + esc(name) + '">' : '<span class="hb" style="cursor:default">') +
+      '<span class="hn">' + esc(name) + '</span>' + hc + (sortable ? '</button>' : '</span>') + '</th>';
+  }
+  function matrixHtml(outlets, c, taskId) {
+    var cols = taskId ? [TASK_BY_ID[taskId]] : TASKS;
+    var showPic = !ui.pic && lastDoc.kind !== 'pic';
+    var vis = outlets.filter(function (o) {
+      if (taskId) {
+        var r = o.byId[taskId];
+        if (!r) return false;
+        if (ui.overdueOnly) return r.overdue;
+        if (ui.showDone) return true;
+        return r.status === 'pending';
+      }
+      var s = outletStats(o);
+      if (ui.overdueOnly) return s.over > 0;
+      if (ui.showDone) return true;
+      return s.pend > 0;
+    });
+    if (taskId) {
+      vis.sort(function (a, b) {
+        if (ui.sort === 'outlet') return (a.outlet < b.outlet ? -1 : 1) * (ui.asc ? 1 : -1);
+        if (ui.sort === 'pic') { if (a.pic !== b.pic) return (a.pic < b.pic ? -1 : 1) * (ui.asc ? 1 : -1); }
+        return rowSort(a.byId[taskId], b.byId[taskId]);
+      });
+    } else vis.sort(outletSort);
+
+    var html = '<div class="wrap"><table class="mx"><colgroup><col style="width:236px">' + (showPic ? '<col style="width:104px">' : '') +
+      cols.map(function () { return '<col>'; }).join('') + (taskId ? '' : '<col style="width:76px">') + '</colgroup><thead><tr>' +
+      headCell('outlet', 'Outlet', null, true) +
+      (showPic ? headCell('pic', 'Supervisor', null, true) : '');
+    cols.forEach(function (t) {
+      var label = t.title;
+      var lbls = {}; vis.forEach(function (o) { if (o.byId[t.id]) lbls[o.byId[t.id].label] = 1; });
+      var ks = Object.keys(lbls); if (ks.length === 1) label = ks[0];
+      html += headCell(t.id, taskId ? label : t.short, c[t.id], true);
+    });
+    if (!taskId) html += headCell('count', 'Pending', null, true);
+    html += '</tr></thead><tbody>';
+    if (!vis.length) {
+      html += '<tr class="empty-row"><td colspan="' + (cols.length + 2 + (showPic ? 1 : 0)) + '">' + (ui.overdueOnly ? 'Nothing overdue in this view.' : 'Nothing to chase in this view.') + '</td></tr>';
+    }
+    vis.forEach(function (o) {
+      var s = outletStats(o);
+      var selRow = ui.sel && ui.sel.outlet === o.outlet;
+      html += '<tr' + (selRow ? ' class="sel"' : '') + '><td class="c-outlet"><div class="ob"><span class="brand-dot ' + esc(o.brand) + '" aria-hidden="true">' + esc(o.brand) + '</span><span style="min-width:0"><span class="code">' + esc(o.outlet) + '</span><span class="oname" title="' + esc(titleCase(o.name)) + '" style="display:block">' + esc(titleCase(o.name)) + '</span></span></div></td>';
+      if (showPic) html += '<td class="c-pic">' + esc(o.pic) + '</td>';
+      cols.forEach(function (t) { html += cellHtml(o, o.byId[t.id], !!taskId); });
+      if (!taskId) html += '<td class="c-cnt' + (s.pend ? (s.over ? ' over' : '') : ' clear') + '">' + (s.pend ? s.pend : '✓') + '</td>';
+      html += '</tr>';
+    });
+    return html + '</tbody></table></div>';
+  }
+
+  /* ---------- Narrow-screen card lists ---------- */
   function pillFor(row) {
     if (row.status === 'done') return '<span class="pill done">✓ Done</span>';
     if (row.status === 'upcoming') return '<span class="pill upcoming">○ Upcoming</span>';
     return (row.overdue ? '<span class="pill overdue">Overdue</span>' : '<span class="pill pending">! Pending</span>') +
-      (row.chasedAt ? ' <span class="pill chased">Chased ' + esc(fmtDay(row.chasedAt)) + '</span>' : '');
+      (row.chasedAt ? ' <span class="pill chased">Chased ' + esc(fmtShort(row.chasedAt)) + '</span>' : '');
   }
   function dueFor(row) {
     if (!row.due) return '';
@@ -461,6 +715,67 @@
     if (row.status === 'done') return '<div class="due">Was due<strong>' + esc(d) + '</strong></div>';
     return '<div class="due">' + (row.overdue ? 'Was due' : 'Due') + '<strong>' + esc(d) + '</strong></div>';
   }
+  function taskRowHtml(row) {
+    var key = 'T|' + row.outlet + '|' + row.id;
+    var open = !!openRows[key];
+    var cls = 'row ' + row.status + (row.overdue ? ' overdue' : '') + (open ? ' open' : '');
+    return '<div class="' + cls + '" data-key="' + esc(key) + '">' +
+      '<button class="row-btn" type="button" aria-expanded="' + (open ? 'true' : 'false') + '">' +
+        '<span class="brand-dot ' + esc(row.brand) + '" aria-hidden="true">' + esc(row.brand) + '</span>' +
+        '<span class="row-main">' +
+          '<span class="row-top"><span class="code">' + esc(row.outlet) + '</span>' + (row.pic && !ui.pic ? '<span class="pic-tag">' + esc(row.pic) + '</span>' : '') + pillFor(row) + '</span>' +
+          (row.name ? '<span class="oname">' + esc(titleCase(row.name)) + '</span>' : '') +
+          (row.summary ? '<span class="summary">' + esc(row.summary) + '</span>' : '') +
+        '</span>' + dueFor(row) + '<span class="chev" aria-hidden="true"></span>' +
+      '</button>' +
+      (open ? '<div class="detail">' + stepsHtml(row) + detailList(row) + chaseButton(row) + '</div>' : '') +
+    '</div>';
+  }
+  function outletRowHtml(o) {
+    var key = 'O|' + o.outlet;
+    var open = !!openRows[key];
+    var pend = o.rows.filter(function (r) { return r.status === 'pending'; }).sort(rowSort);
+    var upc = o.rows.filter(function (r) { return r.status === 'upcoming'; });
+    var over = pend.filter(function (r) { return r.overdue; }).length;
+    var cls = 'row ' + (pend.length ? (over ? 'overdue' : 'pending') : 'done') + (open ? ' open' : '');
+    var tags = pend.map(function (r) {
+      return '<span class="tag' + (r.overdue ? ' overdue' : (r.chasedAt ? ' chased' : '')) + '">' + esc(TASK_BY_ID[r.id] ? TASK_BY_ID[r.id].short : r.label) + '</span>';
+    }).join('');
+    if (!pend.length && upc.length) tags = upc.map(function (r) { return '<span class="tag upcoming">' + esc(TASK_BY_ID[r.id] ? TASK_BY_ID[r.id].short : r.label) + '</span>'; }).join('');
+    var body = '';
+    if (open) {
+      var list = ui.showDone ? o.rows.slice().sort(rowSort) : pend.concat(upc);
+      body = list.map(function (r) {
+        return '<div class="sub-row ' + r.status + (r.overdue ? ' overdue' : '') + '"><span class="l">' + esc(r.label) +
+          (r.summary ? '<span class="s">' + esc(r.summary) + '</span>' : '') +
+          '</span>' + (r.due ? '<span class="d">' + (r.overdue ? 'Was due ' : (r.status === 'done' ? '' : 'Due ')) + esc(fmtDay(r.due)) + '</span>' : '') + '</div>';
+      }).join('') || '<div class="empty">Nothing pending for this outlet.</div>';
+      body = '<div class="detail">' + body + '</div>';
+    }
+    return '<div class="' + cls + '" data-key="' + esc(key) + '">' +
+      '<button class="row-btn" type="button" aria-expanded="' + (open ? 'true' : 'false') + '">' +
+        '<span class="brand-dot ' + esc(o.brand) + '" aria-hidden="true">' + esc(o.brand) + '</span>' +
+        '<span class="row-main">' +
+          '<span class="row-top"><span class="code">' + esc(o.outlet) + '</span>' + (o.pic && !ui.pic ? '<span class="pic-tag">' + esc(o.pic) + '</span>' : '') + '</span>' +
+          (o.name ? '<span class="oname">' + esc(titleCase(o.name)) + '</span>' : '') +
+          (tags ? '<span class="tags">' + tags + '</span>' : '<span class="summary" style="color:var(--done)">All clear</span>') +
+        '</span>' +
+        '<span class="cnt' + (pend.length ? '' : ' clear') + ' display">' + (pend.length ? pend.length : '✓') + '</span>' +
+        '<span class="chev" aria-hidden="true"></span>' +
+      '</button>' + body + '</div>';
+  }
+  function cardsHtml(outlets, taskId) {
+    if (taskId) {
+      var rows = [];
+      outlets.forEach(function (o) { var r = o.byId[taskId]; if (r && (ui.overdueOnly ? r.overdue : (ui.showDone || r.status === 'pending'))) rows.push(r); });
+      rows.sort(rowSort);
+      return '<div class="list">' + rows.map(taskRowHtml).join('') + '</div>';
+    }
+    var vis = outlets.filter(function (o) { var s = outletStats(o); return ui.overdueOnly ? s.over > 0 : (ui.showDone || s.pend > 0); }).sort(outletSort);
+    return '<div class="list">' + vis.map(outletRowHtml).join('') + '</div>';
+  }
+
+  /* ---------- Detail pieces (drawer + cards) ---------- */
   function stepsHtml(row) {
     var st = row.stocktake;
     if (!st) return '';
@@ -481,159 +796,60 @@
   function chaseButton(row) {
     if (row.status !== 'pending') return '';
     return '<div class="actions"><button class="abtn' + (row.chasedAt ? ' on' : '') + '" type="button" data-chase="' + esc(chaseKey(row)) + '">' +
-      (row.chasedAt ? '✓ Chased ' + esc(fmtDay(row.chasedAt)) + ' · tap to clear' : 'Mark as chased') + '</button></div>';
+      (row.chasedAt ? '✓ Chased ' + esc(fmtDay(row.chasedAt)) + ' · click to clear' : 'Mark as chased') + '</button></div>';
   }
-
-  /* Task view: one row per outlet for the chosen task */
-  function taskRowHtml(row) {
-    var key = 'T|' + row.outlet + '|' + row.id;
-    var open = !!openRows[key];
-    var cls = 'row ' + row.status + (row.overdue ? ' overdue' : '') + (row.chasedAt && row.status === 'pending' ? ' chased' : '') + (open ? ' open' : '');
-    return '<div class="' + cls + '" data-key="' + esc(key) + '">' +
-      '<button class="row-btn" type="button" aria-expanded="' + (open ? 'true' : 'false') + '">' +
-        '<span class="brand-dot ' + esc(row.brand) + '" aria-hidden="true">' + esc(row.brand) + '</span>' +
-        '<span class="row-main">' +
-          '<span class="row-top"><span class="code">' + esc(row.outlet) + '</span>' + (row.pic && !ui.pic ? '<span class="pic-tag">' + esc(row.pic) + '</span>' : '') + pillFor(row) + '</span>' +
-          (row.name ? '<span class="oname">' + esc(titleCase(row.name)) + '</span>' : '') +
-          (row.summary ? '<span class="summary">' + esc(row.summary) + '</span>' : '') +
-        '</span>' +
-        dueFor(row) +
-        '<span class="chev" aria-hidden="true"></span>' +
-      '</button>' +
-      (open ? '<div class="detail">' + stepsHtml(row) + detailList(row) + chaseButton(row) + '</div>' : '') +
-    '</div>';
-  }
-
-  /* Outlet view: one row per outlet, tags for every pending task */
-  function outletRowHtml(o) {
-    var key = 'O|' + o.outlet;
-    var open = !!openRows[key];
-    var pend = o.rows.filter(function (r) { return r.status === 'pending'; }).sort(rowSort);
-    var upc = o.rows.filter(function (r) { return r.status === 'upcoming'; });
-    var over = pend.filter(function (r) { return r.overdue; }).length;
-    var cls = 'row ' + (pend.length ? (over ? 'overdue' : 'pending') : 'done') + (open ? ' open' : '');
-    var tags = pend.map(function (r) {
-      var t = TASK_BY_ID[r.id] ? TASK_BY_ID[r.id].short : r.label;
-      return '<span class="tag' + (r.overdue ? ' overdue' : (r.chasedAt ? ' chased' : '')) + '">' + esc(t) + '</span>';
-    }).join('');
-    if (!pend.length && upc.length) tags = upc.map(function (r) { return '<span class="tag upcoming">' + esc(TASK_BY_ID[r.id] ? TASK_BY_ID[r.id].short : r.label) + '</span>'; }).join('');
-    var body = '';
-    if (open) {
-      var list = ui.showDone ? o.rows.slice().sort(rowSort) : pend.concat(upc);
-      body = list.map(function (r) {
-        return '<div class="sub-row ' + r.status + (r.overdue ? ' overdue' : '') + '"><span class="l">' + esc(r.label) +
-          (r.summary ? '<span class="s">' + esc(r.summary) + '</span>' : '') +
-          (r.chasedAt && r.status === 'pending' ? '<span class="s" style="color:var(--amber)">Chased ' + esc(fmtDay(r.chasedAt)) + '</span>' : '') +
-          '</span>' + (r.due ? '<span class="d">' + (r.overdue ? 'Was due ' : (r.status === 'done' ? '' : 'Due ')) + esc(fmtDay(r.due)) + '</span>' : '') + '</div>';
-      }).join('') || '<div class="empty">Nothing pending for this outlet.</div>';
-      body = '<div class="detail">' + body + '</div>';
+  function renderDrawer(outlets) {
+    if (!ui.sel || isNarrow()) { drawer.className = 'drawer'; drawer.setAttribute('aria-hidden', 'true'); drawer.innerHTML = ''; return; }
+    var o = null;
+    for (var i = 0; i < outlets.length; i++) if (outlets[i].outlet === ui.sel.outlet) { o = outlets[i]; break; }
+    if (!o) {   /* filtered out: look it up in the full document */
+      var today = startOfToday();
+      (lastDoc.outlets || []).forEach(function (x) { if (x.outlet === ui.sel.outlet) o = normaliseOutlet(x, today); });
     }
-    return '<div class="' + cls + '" data-key="' + esc(key) + '">' +
-      '<button class="row-btn" type="button" aria-expanded="' + (open ? 'true' : 'false') + '">' +
-        '<span class="brand-dot ' + esc(o.brand) + '" aria-hidden="true">' + esc(o.brand) + '</span>' +
-        '<span class="row-main">' +
-          '<span class="row-top"><span class="code">' + esc(o.outlet) + '</span>' + (o.pic && !ui.pic ? '<span class="pic-tag">' + esc(o.pic) + '</span>' : '') + '</span>' +
-          (o.name ? '<span class="oname">' + esc(titleCase(o.name)) + '</span>' : '') +
-          (tags ? '<span class="tags">' + tags + '</span>' : '<span class="summary" style="color:var(--done)">All clear</span>') +
-        '</span>' +
-        '<span class="cnt' + (pend.length ? '' : ' clear') + ' display">' + (pend.length ? pend.length : '✓') + '</span>' +
-        '<span class="chev" aria-hidden="true"></span>' +
-      '</button>' + body +
-    '</div>';
+    var r = o && o.byId[ui.sel.id];
+    if (!o || !r) { ui.sel = null; renderDrawer(outlets); return; }
+    var status = r.overdue ? 'overdue' : r.status;
+    var html = '<div class="dh"><span class="brand-dot ' + esc(o.brand) + '" aria-hidden="true">' + esc(o.brand) + '</span><div class="dm">' +
+      '<div class="code">' + esc(o.outlet) + '</div><div class="oname">' + esc(titleCase(o.name)) + '</div>' +
+      (o.pic ? '<div class="pic-tag">Supervisor ' + esc(o.pic) + '</div>' : '') + '</div>' +
+      '<button class="xbtn" type="button" id="d-close" aria-label="Close">×</button></div>';
+    html += '<div class="db"><div class="item-title"><span class="ico ' + status + '">' + iconFor(r.id) + '</span><span class="lbl">' + esc(r.label) + '</span>' + pillFor(r) + '</div>';
+    if (r.summary) html += '<div class="summary">' + esc(r.summary) + '</div>';
+    if (r.due) html += '<div class="duetxt' + (r.overdue ? ' overdue' : '') + '">' + (r.status === 'done' ? 'Was due ' : (r.overdue ? 'Was due ' : 'Due ')) + esc(fmtDay(r.due)) + '</div>';
+    html += '<div class="detail">' + stepsHtml(r) + detailList(r) + '</div>' + chaseButton(r);
+    var others = o.rows.filter(function (x) { return x.id !== r.id && x.status !== 'done'; }).sort(rowSort);
+    if (others.length) {
+      html += '<div class="others"><h3>Also open at this outlet</h3>' + others.map(function (x) {
+        return '<button class="ob-row' + (x.overdue ? ' overdue' : '') + '" type="button" data-outlet="' + esc(o.outlet) + '" data-id="' + esc(x.id) + '"><span class="ico ' + (x.overdue ? 'overdue' : x.status) + '" style="width:30px;height:30px;flex-basis:30px;border-radius:9px">' + iconFor(x.id) + '</span><span class="l">' + esc(x.label) + (x.summary ? '<span class="s">' + esc(x.summary) + '</span>' : '') + '</span>' + (x.due ? '<span class="d">' + (x.overdue ? 'Was due ' : 'Due ') + esc(fmtShort(x.due)) + '</span>' : '') + '</button>';
+      }).join('') + '</div>';
+    } else html += '<div class="others"><h3>Also open at this outlet</h3><div class="empty" style="color:var(--done)">Nothing else. All clear.</div></div>';
+    html += '</div>';
+    drawer.innerHTML = html;
+    drawer.className = 'drawer open';
+    drawer.setAttribute('aria-hidden', 'false');
   }
 
-  function counts(outlets) {
-    var c = { all: { pending: 0, overdue: 0, outlets: 0 } };
-    var seen = {};
-    TASKS.forEach(function (t) { c[t.id] = { pending: 0, overdue: 0, done: 0, upcoming: 0 }; });
-    outlets.forEach(function (o) {
-      var any = false;
-      o.rows.forEach(function (r) {
-        var k = c[r.id] || (c[r.id] = { pending: 0, overdue: 0, done: 0, upcoming: 0 });
-        k[r.status]++;
-        if (r.status === 'pending') { any = true; c.all.pending++; if (r.overdue) { k.overdue++; c.all.overdue++; } }
-      });
-      if (any && !seen[o.outlet]) { seen[o.outlet] = 1; c.all.outlets++; }
-    });
-    return c;
-  }
-
-  function chipsHtml(c) {
-    var html = '<div class="chips" role="tablist">';
-    html += '<button class="chip all-chip' + (ui.view === 'outlet' ? ' on' : '') + '" type="button" data-view="outlet" role="tab" aria-selected="' + (ui.view === 'outlet') + '">' +
-      '<span class="n display">' + c.all.outlets + '</span><span class="t">outlets to chase</span><span class="o">' + (c.all.overdue ? c.all.overdue + ' overdue' : '') + '</span></button>';
-    TASKS.forEach(function (t) {
-      var k = c[t.id];
-      var on = ui.view === 'task' && ui.task === t.id;
-      html += '<button class="chip' + (on ? ' on' : '') + (k.pending ? '' : ' clear') + '" type="button" data-task="' + esc(t.id) + '" role="tab" aria-selected="' + on + '">' +
-        '<span class="n display">' + k.pending + '</span><span class="t">' + esc(t.short) + '</span><span class="o">' + (k.overdue ? k.overdue + ' overdue' : '') + '</span></button>';
-    });
-    return html + '</div>';
-  }
-
-  function barHtml(doc) {
-    var pics = {};
-    (doc.outlets || []).forEach(function (o) { if (o.pic) pics[o.pic] = 1; });
-    var picList = Object.keys(pics).sort();
-    var html = '<div class="bar">';
-    if (doc.kind !== 'pic' && picList.length > 1) {
-      html += '<select id="f-pic" aria-label="Supervisor"><option value="">All supervisors</option>' +
-        picList.map(function (p) { return '<option value="' + esc(p) + '"' + (ui.pic === p ? ' selected' : '') + '>' + esc(p) + '</option>'; }).join('') + '</select>';
-    }
-    html += '<select id="f-brand" aria-label="Brand"><option value="">All brands</option>' +
-      ['AD', 'BF', 'FE'].map(function (b) { return '<option value="' + b + '"' + (ui.brand === b ? ' selected' : '') + '>' + b + '</option>'; }).join('') + '</select>';
-    html += '<input id="f-q" type="search" placeholder="Outlet code or name" value="' + esc(ui.q) + '" aria-label="Search outlet">';
-    html += '<button class="tbtn warn' + (ui.overdueOnly ? ' on' : '') + '" type="button" id="f-over">Overdue only</button>';
-    html += '<button class="tbtn' + (ui.showDone ? ' on' : '') + '" type="button" id="f-done">Show done</button>';
-    html += '<button class="tbtn" type="button" id="f-copy" title="Copy this list as text for WhatsApp">⎘ Copy list</button>';
-    return html + '</div>';
-  }
-
-  function taskViewHtml(outlets, c) {
-    var t = TASK_BY_ID[ui.task] || { id: ui.task, short: ui.task, title: ui.task };
-    var rows = [];
-    outlets.forEach(function (o) { o.rows.forEach(function (r) { if (r.id === t.id) rows.push(r); }); });
-    var label = rows.length ? rows[0].label : t.title;
-    var lbls = {}; rows.forEach(function (r) { lbls[r.label] = 1; });
-    if (Object.keys(lbls).length > 1) label = t.title;
-    var vis = rows.filter(function (r) {
-      if (ui.overdueOnly) return r.overdue;
-      if (ui.showDone) return true;
-      return r.status === 'pending';
-    }).sort(rowSort);
-    var k = c[t.id] || { pending: 0, overdue: 0, done: 0, upcoming: 0 };
-    var head = '<div class="headline ' + (k.pending ? 'is-pending' : 'is-clear') + '">' +
-      '<div class="big display">' + (k.pending ? k.pending + ' pending' : 'All clear') + '</div>' +
-      '<div class="sub">' + esc(label) + (k.overdue ? ' · <span class="overdue-note">' + k.overdue + ' overdue</span>' : '') + (k.upcoming ? ' · ' + k.upcoming + ' upcoming' : '') + (k.done ? ' · ' + k.done + ' done' : '') + '</div>' +
-      '<div class="hint">' + (vis.length ? 'Tap an outlet for details and to mark it chased.' : (ui.overdueOnly ? 'Nothing overdue here.' : 'Nothing to chase for this item.')) + '</div></div>';
-    return head + '<div class="list">' + (vis.map(taskRowHtml).join('') || '') + '</div>';
-  }
-
-  function outletViewHtml(outlets, c) {
-    var vis = outlets.filter(function (o) {
-      var pend = o.rows.filter(function (r) { return r.status === 'pending'; });
-      if (ui.overdueOnly) return pend.some(function (r) { return r.overdue; });
-      if (ui.showDone) return true;
-      return pend.length > 0;
-    }).sort(function (a, b) {
-      var oa = a.rows.filter(function (r) { return r.overdue; }).length, ob = b.rows.filter(function (r) { return r.overdue; }).length;
-      if (oa !== ob) return ob - oa;
-      var pa = a.rows.filter(function (r) { return r.status === 'pending'; }).length, pb = b.rows.filter(function (r) { return r.status === 'pending'; }).length;
-      if (pa !== pb) return pb - pa;
-      return a.outlet < b.outlet ? -1 : 1;
-    });
-    var head = '<div class="headline ' + (c.all.outlets ? 'is-pending' : 'is-clear') + '">' +
-      '<div class="big display">' + (c.all.outlets ? c.all.outlets + ' outlets' : 'All clear') + '</div>' +
-      '<div class="sub">' + (c.all.pending ? c.all.pending + ' items pending' : 'nothing pending') + (c.all.overdue ? ' · <span class="overdue-note">' + c.all.overdue + ' overdue</span>' : '') + ' · ' + outlets.length + ' outlets in view</div>' +
-      '<div class="hint">Tap an outlet to see everything it owes.</div></div>';
-    return head + '<div class="list">' + vis.map(outletRowHtml).join('') + '</div>';
-  }
-
+  /* ---------- Page ---------- */
   function weekLabel(today) {
     var mon = new Date(today.getFullYear(), today.getMonth(), today.getDate() - ((today.getDay() + 6) % 7));
-    return 'Week of ' + fmtDay(mon);
+    return fmtDay(mon);
   }
-
+  function headlineHtml(outlets, c) {
+    var narrow = isNarrow();
+    if (ui.view === 'task') {
+      var t = TASK_BY_ID[ui.task] || { title: ui.task };
+      var k = c[ui.task] || { pending: 0, overdue: 0, done: 0, upcoming: 0 };
+      var label = t.title, lbls = {};
+      outlets.forEach(function (o) { if (o.byId[ui.task]) lbls[o.byId[ui.task].label] = 1; });
+      if (Object.keys(lbls).length === 1) label = Object.keys(lbls)[0];
+      return '<div class="headline ' + (k.pending ? 'is-pending' : 'is-clear') + '"><div class="big display">' + (k.pending ? k.pending + ' pending' : 'All clear') + '</div>' +
+        '<div class="sub">' + esc(label) + (k.overdue ? ' · <span class="overdue-note">' + k.overdue + ' overdue</span>' : '') + (k.upcoming ? ' · ' + k.upcoming + ' upcoming' : '') + (k.done ? ' · ' + k.done + ' done' : '') + '</div>' +
+        '<div class="hint">' + (narrow ? 'Tap an outlet for details.' : 'Click a cell for details and to mark it chased. Click a column heading to sort.') + '</div></div>';
+    }
+    return '<div class="headline ' + (c.all.outlets ? 'is-pending' : 'is-clear') + '"><div class="big display">' + (c.all.outlets ? c.all.outlets + ' outlets to chase' : 'All clear') + '</div>' +
+      '<div class="sub">' + (c.all.pending ? c.all.pending + ' items pending' : 'nothing pending') + (c.all.overdue ? ' · <span class="overdue-note">' + c.all.overdue + ' overdue</span>' : '') + ' · ' + outlets.length + ' outlets in view</div>' +
+      '<div class="hint">' + (narrow ? 'Tap an outlet to see everything it owes.' : 'Click a cell for details and to mark it chased. Click a column heading to sort.') + '</div></div>';
+  }
   function render(doc, demo) {
     if (!doc || typeof doc !== 'object' || !Array.isArray(doc.outlets)) { showInvalid(); return; }
     lastDoc = doc; lastDemo = demo;
@@ -649,51 +865,49 @@
 
     var html = '';
     if (demo) html += '<div class="banner">Demo data<small>Fictional outlets. Open your own coordinator link.</small></div>';
-    html += '<div class="head"><div class="head-row"><div class="head-main">' +
-      '<div class="kicker">Coordinator board</div>' +
-      '<div class="scope display">' + esc(scope === 'ALL' ? 'All outlets' : scope) + '</div>' +
-      '</div><div class="badge">' + doc.outlets.length + '</div></div>' +
+    html += '<div class="head"><div class="head-main"><div class="kicker">Coordinator board · weekly chase list</div>' +
+      '<div class="scope display">' + esc(scope === 'ALL' ? 'All outlets' : titleCase(scope) + '’s outlets') + '</div></div>' +
       '<div class="meta">' +
-        '<span><span class="lbl">Week</span>' + esc(weekLabel(today).replace('Week of ', '')) + '</span>' +
-        (monthLabel ? '<span><span class="lbl">Month</span>' + esc(monthLabel) + '</span>' : '') +
-        (doc.kind === 'pic' ? '<span><span class="lbl">Supervisor</span>' + esc(scope) + '</span>' : '') +
-      '</div>' +
-      (updated ? '<div class="updated' + (stale ? ' stale' : '') + '">Updated ' + esc(fmtStamp(updated)) + (stale ? ' · may be out of date' : '') + '</div>'
-               : '<div class="updated stale">Update time unknown · may be out of date</div>') +
-      '</div>';
-    html += chipsHtml(c);
+        '<span><span class="lbl">Week of</span><strong>' + esc(weekLabel(today)) + '</strong></span>' +
+        (monthLabel ? '<span><span class="lbl">Month</span><strong>' + esc(monthLabel) + '</strong></span>' : '') +
+        '<span><span class="lbl">Outlets</span><strong>' + doc.outlets.length + '</strong></span>' +
+        (updated ? '<span class="updated' + (stale ? ' stale' : '') + '">Updated ' + esc(fmtStamp(updated)) + (stale ? ' · may be out of date' : '') + '</span>'
+                 : '<span class="updated stale">Update time unknown · may be out of date</span>') +
+      '</div></div>';
+    html += tilesHtml(c);
     html += barHtml(doc);
-    html += ui.view === 'outlet' ? outletViewHtml(outlets, c) : taskViewHtml(outlets, c);
-    html += '<div class="foot">Chase in the outlet’s WhatsApp group as usual. “Chased” ticks stay on this phone only. Data refreshes after HQ’s next run.</div>';
+    html += headlineHtml(outlets, c);
+    var taskId = ui.view === 'task' ? ui.task : null;
+    html += isNarrow() ? cardsHtml(outlets, taskId) : matrixHtml(outlets, c, taskId);
+    html += '<div class="foot">Chase in the outlet’s WhatsApp group as usual. “Chased” ticks are saved in this browser only. Data refreshes after HQ’s next run (about every 15 minutes on a source change).</div>';
     app.innerHTML = html;
+    renderDrawer(outlets);
     rendered = true;
     var q = document.getElementById('f-q');
     if (q && ui.qFocus) { q.focus(); try { q.setSelectionRange(q.value.length, q.value.length); } catch (e) {} }
   }
 
-  /* ---------- Copy list (plain text for WhatsApp) ---------- */
+  /* ---------- Copy list (plain text for WhatsApp / email) ---------- */
   function copyText() {
     if (!lastDoc) return '';
     var outlets = filteredOutlets(lastDoc);
     var today = startOfToday();
-    var lines = ['*Coordinator board* – ' + (lastDoc.scope === 'ALL' ? 'All outlets' : lastDoc.scope) + (ui.pic ? ' · ' + ui.pic : '') + (ui.brand ? ' · ' + ui.brand : '') + ' – ' + fmtDay(today)];
-    function line(r) {
-      return '• ' + r.outlet + (r.name ? ' ' + titleCase(r.name) : '') + (r.summary ? ' – ' + r.summary : '') +
-        (r.due ? (r.overdue ? ' (OVERDUE ' : ' (due ') + fmtDay(r.due) + ')' : '') + (r.chasedAt ? ' [chased]' : '');
-    }
+    var scope = lastDoc.scope === 'ALL' ? 'All outlets' : lastDoc.scope;
+    var lines = ['*Coordinator board* – ' + scope + (ui.pic ? ' · ' + ui.pic : '') + (ui.brand ? ' · ' + ui.brand : '') + ' – ' + fmtDay(today)];
+    function tail(r) { return (r.due ? (r.overdue ? ' (OVERDUE ' : ' (due ') + fmtDay(r.due) + ')' : '') + (r.chasedAt ? ' [chased]' : ''); }
     if (ui.view === 'task') {
       var t = TASK_BY_ID[ui.task] || { title: ui.task };
       var rows = [];
-      outlets.forEach(function (o) { o.rows.forEach(function (r) { if (r.id === ui.task && r.status === 'pending' && (!ui.overdueOnly || r.overdue)) rows.push(r); }); });
+      outlets.forEach(function (o) { var r = o.byId[ui.task]; if (r && r.status === 'pending' && (!ui.overdueOnly || r.overdue)) rows.push(r); });
       rows.sort(rowSort);
       lines.push('', '*' + (rows.length ? rows[0].label : t.title).toUpperCase() + '* – ' + rows.length + ' pending');
-      rows.forEach(function (r) { lines.push(line(r)); });
+      rows.forEach(function (r) { lines.push('• ' + r.outlet + (r.name ? ' ' + titleCase(r.name) : '') + (r.summary ? ' – ' + r.summary : '') + tail(r)); });
     } else {
-      outlets.forEach(function (o) {
+      outlets.slice().sort(outletSort).forEach(function (o) {
         var pend = o.rows.filter(function (r) { return r.status === 'pending' && (!ui.overdueOnly || r.overdue); }).sort(rowSort);
         if (!pend.length) return;
-        lines.push('', '*' + o.outlet + '* ' + titleCase(o.name));
-        pend.forEach(function (r) { lines.push('• ' + r.label + (r.summary ? ' – ' + r.summary : '') + (r.due ? (r.overdue ? ' (OVERDUE ' : ' (due ') + fmtDay(r.due) + ')' : '') + (r.chasedAt ? ' [chased]' : '')); });
+        lines.push('', '*' + o.outlet + '* ' + titleCase(o.name) + (o.pic && !ui.pic ? ' (' + o.pic + ')' : ''));
+        pend.forEach(function (r) { lines.push('• ' + r.label + (r.summary ? ' – ' + r.summary : '') + tail(r)); });
       });
     }
     return lines.join('\n');
@@ -709,27 +923,41 @@
       document.body.removeChild(ta);
       toast(ok ? 'Copied' : 'Copy not available');
     }
-    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(function () { toast('Copied – paste into WhatsApp'); }, fallback);
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(function () { toast('Copied – paste into WhatsApp or email'); }, fallback);
     else fallback();
   }
 
   /* ---------- Events ---------- */
+  function rerender() { ui.qFocus = false; render(lastDoc, lastDemo); }
   app.addEventListener('click', function (e) {
     if (!lastDoc) return;
-    var chip = e.target.closest('.chip');
-    if (chip) {
-      if (chip.getAttribute('data-view') === 'outlet') ui.view = 'outlet';
-      else { ui.view = 'task'; ui.task = chip.getAttribute('data-task'); }
-      ui.qFocus = false; render(lastDoc, lastDemo); return;
+    var tile = e.target.closest('.tile');
+    if (tile) {
+      if (tile.getAttribute('data-view') === 'all') { ui.view = 'all'; ui.task = null; }
+      else { ui.view = 'task'; ui.task = tile.getAttribute('data-task'); }
+      ui.sort = null; ui.asc = false;
+      rerender(); return;
+    }
+    var hb = e.target.closest('[data-sort]');
+    if (hb) {
+      var k = hb.getAttribute('data-sort');
+      if (ui.sort === k) ui.asc = !ui.asc; else { ui.sort = k; ui.asc = (k === 'outlet' || k === 'pic'); }
+      rerender(); return;
+    }
+    var cb = e.target.closest('.cb');
+    if (cb) {
+      var o = cb.getAttribute('data-outlet'), id = cb.getAttribute('data-id');
+      ui.sel = (ui.sel && ui.sel.outlet === o && ui.sel.id === id) ? null : { outlet: o, id: id };
+      rerender(); return;
     }
     var chase = e.target.closest('[data-chase]');
     if (chase) {
-      var k = chase.getAttribute('data-chase');
-      if (chased[k]) delete chased[k]; else chased[k] = iso(new Date());
-      saveChased(); ui.qFocus = false; render(lastDoc, lastDemo); return;
+      var ck = chase.getAttribute('data-chase');
+      if (chased[ck]) delete chased[ck]; else chased[ck] = iso(new Date());
+      saveChased(); rerender(); return;
     }
-    if (e.target.id === 'f-over') { ui.overdueOnly = !ui.overdueOnly; ui.qFocus = false; render(lastDoc, lastDemo); return; }
-    if (e.target.id === 'f-done') { ui.showDone = !ui.showDone; ui.qFocus = false; render(lastDoc, lastDemo); return; }
+    if (e.target.id === 'f-over') { ui.overdueOnly = !ui.overdueOnly; rerender(); return; }
+    if (e.target.id === 'f-done') { ui.showDone = !ui.showDone; rerender(); return; }
     if (e.target.id === 'f-copy') { doCopy(); return; }
     var btn = e.target.closest('.row-btn');
     if (btn) {
@@ -737,13 +965,26 @@
       var key = rowEl && rowEl.getAttribute('data-key');
       if (!key) return;
       openRows[key] = !openRows[key];
-      ui.qFocus = false; render(lastDoc, lastDemo);
+      rerender();
     }
   });
+  drawer.addEventListener('click', function (e) {
+    if (!lastDoc) return;
+    if (e.target.closest('#d-close')) { ui.sel = null; rerender(); return; }
+    var ob = e.target.closest('.ob-row');
+    if (ob) { ui.sel = { outlet: ob.getAttribute('data-outlet'), id: ob.getAttribute('data-id') }; rerender(); return; }
+    var chase = e.target.closest('[data-chase]');
+    if (chase) {
+      var ck = chase.getAttribute('data-chase');
+      if (chased[ck]) delete chased[ck]; else chased[ck] = iso(new Date());
+      saveChased(); rerender();
+    }
+  });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && ui.sel) { ui.sel = null; rerender(); } });
   app.addEventListener('change', function (e) {
     if (!lastDoc) return;
-    if (e.target.id === 'f-pic') { ui.pic = e.target.value; ui.qFocus = false; render(lastDoc, lastDemo); }
-    if (e.target.id === 'f-brand') { ui.brand = e.target.value; ui.qFocus = false; render(lastDoc, lastDemo); }
+    if (e.target.id === 'f-pic') { ui.pic = e.target.value; rerender(); }
+    if (e.target.id === 'f-brand') { ui.brand = e.target.value; rerender(); }
   });
   var qTimer = null;
   app.addEventListener('input', function (e) {
@@ -752,9 +993,14 @@
     clearTimeout(qTimer);
     qTimer = setTimeout(function () { ui.qFocus = true; render(lastDoc, lastDemo); }, 180);
   });
+  var wasNarrow = isNarrow(), rsTimer = null;
+  window.addEventListener('resize', function () {
+    clearTimeout(rsTimer);
+    rsTimer = setTimeout(function () { if (isNarrow() !== wasNarrow && lastDoc) { wasNarrow = isNarrow(); rerender(); } }, 150);
+  });
 
   function showInvalid() {
-    rendered = true;
+    rendered = true; drawer.className = 'drawer';
     app.innerHTML = '<div class="msg"><div class="icon" aria-hidden="true">?</div>' +
       '<h1 class="display">This link isn’t a valid coordinator link.</h1>' +
       '<p>Ask HQ for your coordinator link. The part after # must be complete.</p></div>';
@@ -763,7 +1009,7 @@
     rendered = true;
     app.innerHTML = '<div class="msg"><div class="icon" aria-hidden="true">!</div>' +
       '<h1 class="display">Couldn’t load the board.</h1>' +
-      '<p>Check your connection, then pull down to refresh or reopen the link.</p></div>';
+      '<p>Check your connection, then refresh or reopen the link.</p></div>';
   }
 
   /* ---------- Demo ---------- */
@@ -854,11 +1100,7 @@
     if (key === false) { showInvalid(); return; }
     bootStatic(key);
   }
-  window.addEventListener('hashchange', function () {
-    openRows = {};
-    ui = { view: 'task', task: 'it_in', pic: '', brand: '', q: '', overdueOnly: false, showDone: false };
-    boot();
-  });
+  window.addEventListener('hashchange', function () { openRows = {}; ui = freshUi(); boot(); });
   boot();
 })();
 </script>
