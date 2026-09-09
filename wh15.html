@@ -264,14 +264,15 @@ function groundSVG() {
   for (const gx of [X0, X0 + P1, X0 + PW]) s += `<line x1="${gx}" y1="${OY}" x2="${gx}" y2="${OY + PL}" stroke="var(--navy)" stroke-width="20" stroke-dasharray="120 120"/>`;
   for (const gy of [0, 5750, 11500, 17250]) { s += `<line x1="${X0}" y1="${OY + gy}" x2="${X0 + PW}" y2="${OY + gy}" stroke="var(--navy)" stroke-width="20" stroke-dasharray="120 120"/>`;
     for (const gx of [X0, X0 + P1, X0 + PW]) s += `<rect x="${gx - 110}" y="${OY + gy - 110}" width="220" height="220" fill="var(--navy)"/>`; }
-  s += `<text class="lbl-small" x="${X0 + P1 / 2}" y="${OY + 500}" text-anchor="middle">PLATFORM BAY P-1 &middot; 4,945 wide</text>
-        <text class="lbl-note" x="${X0 + P1 / 2}" y="${OY + 850}" text-anchor="middle">deck 2F only above &middot; ground = cross-aisle + conveyors</text>
+  // P-1 on the ground = the reach-truck lane: nothing stored or installed here (Tze 9 Sep)
+  s += `<rect x="${X0 + 150}" y="${OY + 150}" width="${P1 - 300}" height="${PL - 300}" rx="200" fill="var(--panel)" stroke="var(--navy)" stroke-width="20" stroke-dasharray="260 160"/>
+        <line x1="${X0 + P1 / 2}" y1="${-HALL + 900}" x2="${X0 + P1 / 2}" y2="${OY + PL - 600}" stroke="var(--navy)" stroke-width="35" stroke-dasharray="500 300" opacity=".6"/>
+        <text class="lbl-small" x="${X0 + P1 / 2}" y="${OY + 500}" text-anchor="middle">PLATFORM BAY P-1 &middot; 4,945 wide</text>
+        <text class="lbl-note" x="${X0 + P1 / 2}" y="${OY + 850}" text-anchor="middle">deck 2F only above</text>
+        <text class="lbl-bay" x="${X0 + P1 / 2 + 150}" y="${OY + 8600}" text-anchor="middle" transform="rotate(-90 ${X0 + P1 / 2 + 150} ${OY + 8600})" style="fill:var(--navy)">REACH-TRUCK LANE &middot; keep clear</text>
+        <text class="lbl-note" x="${X0 + P1 / 2 + 620}" y="${OY + 8600}" text-anchor="middle" transform="rotate(-90 ${X0 + P1 / 2 + 620} ${OY + 8600})">rack aisles open onto this lane &middot; runs from the front hall to the rear wall</text>
         <text class="lbl-small" x="${X0 + P1 + P2 / 2}" y="${OY + 500}" text-anchor="middle">PLATFORM BAY P-2 &middot; 7,084 wide</text>
-        <text class="lbl-note" x="${X0 + P1 + P2 / 2}" y="${OY + 850}" text-anchor="middle">decks 1F +2,979 &middot; 2F +5,958 &middot; 3F +8,100</text>`;
-  [[2000, "C1"], [8500, "C2"]].forEach(([cy, id]) => { const cx = X0 + 1000, ty = OY + cy;
-    s += `<g class="bay" data-kind="SO" data-id="${id}" tabindex="0"><rect class="body" rx="60" x="${cx}" y="${ty}" width="900" height="3200" fill="var(--panel)" stroke="var(--ink)" stroke-width="25"/>
-      <text class="lbl-small" x="${cx + 450}" y="${ty + 1600}" text-anchor="middle" transform="rotate(-90 ${cx + 450} ${ty + 1600})">CONVEYOR ${id}</text>
-      <polygon points="${cx + 1300},${ty} ${cx + 2300},${ty} ${cx + 1800},${ty + 3200}" fill="var(--panel)" stroke="var(--ink)" stroke-width="25"/></g>`; });
+        <text class="lbl-note" x="${X0 + P1 + P2 / 2}" y="${OY + 850}" text-anchor="middle">decks 1F +2,979 &middot; 2F +5,958 &middot; 3F +8,100 &middot; sorter and stair below</text>`;
   // stair ground -> 1F (MySteel L1 sheet: top-left of P-2)
   const st = [X0 + P1 + 1290, OY + 2815, 850, 2800];
   s += `<rect rx="60" x="${st[0]}" y="${st[1]}" width="${st[2]}" height="${st[3]}" fill="var(--stair)" stroke="var(--navy)" stroke-width="20"/><text class="lbl-small" x="${st[0] + 415}" y="${st[1] + 1400}" text-anchor="middle" transform="rotate(-90 ${st[0] + 415} ${st[1] + 1400})" style="font-size:260px">STAIR up to 1F</text>`;
@@ -415,7 +416,7 @@ function renderPanel() {
       "IN-1": ["Conveyor belt (induction)", "Parcels go on at the front end. The belt carries them under the scanning gantry mid-way, then into the wheel sorter. PP-1 (3-phase 380 V 32 A, 2 x 16 A, LAN) sits 867 mm from the column line beside it."],
       "SC-1": ["Scanning gantry", "Mid-way along the conveyor belt, before the wheel sorter; 2.0 to 2.2 m high. Every parcel is scanned here so the sorter knows which chute to divert it to. Adams asked on 3 Sep to move the emergency light that sits over this line."],
       "REJ": ["Reject chute", "The far end of the wheel sorter. Anything the scanner could not read, or that has no chute assigned, runs off the end here for manual handling."],
-      "C1": ["Conveyor 1", "77 x 85 cm x 2.65 m, under platform bay P-1."], "C2": ["Conveyor 2", "77 x 78 cm x 2.75 m, under platform bay P-1. Conveyor 3 (77 x 68 x 2.6 m) is not placed on the DWG."],
+      "C1": ["Conveyor 1", "77 x 85 cm x 2.65 m. Not on the ground floor: bay P-1 is the reach-truck lane. Level to confirm."], "C2": ["Conveyor 2", "77 x 78 cm x 2.75 m. Not on the ground floor. Conveyor 3 (77 x 68 x 2.6 m) is not placed on any sheet."],
     }[id] || [`Sorter chute ${id}`, `${+id.slice(2) <= 18 ? "Racking" : "Wall"} side, position ${+id.slice(2) <= 18 ? +id.slice(2) : +id.slice(2) - 18} of 18 counted from the scanner. One destination outlet per chute, mapped in the WMS before the 1 to 2 Oct integration test.`];
     el.innerHTML = panelHandle(info[0]) + `<span class="zone so">Sorter &amp; conveyors</span><h2>${info[0]}</h2><p>${info[1]}</p><p class="empty">Chute labels are 100 x 50 mm, CH01 to CH36, printed separately.</p>`; finish();
   }
