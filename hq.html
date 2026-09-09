@@ -118,6 +118,9 @@
   .need .foot { font-size: 12px; color: var(--muted); margin-top: 7px; display: flex; justify-content: space-between; gap: 8px; }
   .need .foot .age { font-weight: 600; }
   .need .foot .age.old { color: var(--overdue); }
+  .openbtn { display: inline-flex; align-items: baseline; gap: 6px; margin-top: 9px; text-decoration: none; font-size: 13px; font-weight: 700; color: #fff; background: var(--chrome); padding: 6px 12px; border-radius: 999px; }
+  .openbtn small { font-weight: 500; opacity: 0.8; font-size: 11px; max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .openbtn.new { background: var(--surface); color: var(--ink); box-shadow: inset 0 0 0 1px var(--line); }
 
   /* ---------- Chase cycles ---------- */
   .cycles { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
@@ -324,6 +327,14 @@
     return html + '</section>';
   }
 
+  /* ---------- Deep link into the desktop app (claude://) ---------- */
+  function openLink(o) {
+    if (!o || !o.url) return '';
+    var cont = o.kind === 'continue';
+    return '<a class="openbtn' + (cont ? '' : ' new') + '" href="' + esc(o.url) + '" title="Opens in the Claude desktop app on the PC">' +
+      (cont ? '&#8599; Open conversation' : '&#43; Start conversation') + (cont && o.label ? '<small>' + esc(o.label) + '</small>' : '') + '</a>';
+  }
+
   /* ---------- Needs me ---------- */
   function renderNeeds(doc) {
     var items = doc.needsMe || [];
@@ -335,7 +346,8 @@
       return '<div class="need' + (n.closed ? ' closed' : '') + '"><div class="kind">' + esc(n.kind || 'decide') + (n.project ? ' · ' + esc(n.project) : '') + '</div>' +
         '<div class="title">' + esc(n.title) + '</div>' + (n.detail ? '<div class="detail">' + esc(n.detail) + '</div>' : '') +
         '<div class="foot"><span>' + (n.closed ? 'closed ' + esc(fmtDay(n.closed)) : 'since ' + esc(fmtDay(n.since))) + '</span>' +
-        (age != null && !n.closed ? '<span class="age' + (age >= 7 ? ' old' : '') + '">' + (age === 0 ? 'today' : age + ' d') + '</span>' : '') + '</div></div>';
+        (age != null && !n.closed ? '<span class="age' + (age >= 7 ? ' old' : '') + '">' + (age === 0 ? 'today' : age + ' d') + '</span>' : '') + '</div>' +
+        openLink(n.open) + '</div>';
     }).join('') + '</div>';
     return html + '</section>';
   }
@@ -443,7 +455,7 @@
     html += '<div class="proj">' + ps.map(function (p) {
       return '<div class="pj"><div class="nm">' + esc(p.name) + '</div><div class="stt">' + esc(p.status || '') + '</div>' +
         (p.next ? '<div class="nx"><b>Next:</b> ' + esc(p.next) + '</div>' : '') +
-        '<div class="last">' + (p.last ? 'last touched ' + esc(fmtDay(p.last)) : '') + (p.folder ? ' · ' + esc(p.folder) : '') + '</div></div>';
+        '<div class="last">' + (p.last ? 'last touched ' + esc(fmtDay(p.last)) : '') + (p.folder ? ' · ' + esc(p.folder) : '') + '</div>' + openLink(p.open) + '</div>';
     }).join('') + '</div>';
     return html + '</section>';
   }
