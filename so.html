@@ -229,14 +229,23 @@
     if (!all.length) return null;
     var sos = all.filter(function (s) { return !s.stale; });
     var stale = all.filter(function (s) { return s.stale; });
-    var vol = 0, pcs = 0, ctn = 0, oldest = null, staleVol = 0, stalePcs = 0, groups = {};
+    var pcs = 0, oldest = null, stalePcs = 0, groups = {};
     sos.forEach(function (s) {
-      vol += s.m3; pcs += s.pcs; ctn += s.cartons;
+      pcs += s.pcs;
       if (s.age != null && (oldest == null || s.age > oldest)) oldest = s.age;
       (s.packing || []).forEach(function (p) { groups[p.group] = (groups[p.group] || 0) + p.pcs; });
     });
-    stale.forEach(function (s) { staleVol += s.m3; stalePcs += s.pcs; });
-    return { st: st, sos: sos, stale: stale, staleM3: staleVol, stalePcs: stalePcs, m3: vol, pcs: pcs, cartons: ctn, oldestAge: oldest, groups: groups, ratio: st.minM3 ? vol / st.minM3 : 0 };
+    stale.forEach(function (s) { stalePcs += s.pcs; });
+    var live = pool(sos), old = pool(stale);
+    return { st: st, sos: sos, stale: stale, staleM3: old.m3, stalePcs: stalePcs, m3: live.m3, pcs: pcs, cartons: live.cartons, oldestAge: oldest, groups: groups, ratio: st.minM3 ? live.m3 / st.minM3 : 0 };
+  }
+  /* One drop is packed together: pool the unrounded cartons of every SO, round up once. */
+  function pool(sos) {
+    var frac = 0, m3f = 0;
+    sos.forEach(function (s) { frac += s.ctnFrac || 0; m3f += s.m3Frac || 0; });
+    if (frac <= 0) return { cartons: 0, m3: 0 };
+    var cartons = Math.max(1, Math.ceil(frac - 1e-9));
+    return { cartons: cartons, m3: cartons * (m3f / frac) };
   }
 
   /* ---------- Render ---------- */
@@ -277,7 +286,7 @@
       '</select></div>' +
       '<div class="seg" role="group" aria-label="Origin warehouse">' + segBtn('ALL', 'All') + segBtn('ADCEWHTR-O', 'AD WH') + segBtn('ADECOMM', 'E-comm WH') + '</div>' +
       '<div class="search"><input type="search" id="q" placeholder="SO or item code" value="' + esc(state.q) + '" aria-label="Search"></div>' +
-      '<div class="scale-note">Bar = this store&rsquo;s pile against its minimum per drop (tick = 0.30 m&sup3; East Malaysia, 0.50 m&sup3; Brunei); a full bar is twice the minimum. Counts SOs from the last ' + DOC.staleDays + ' days &middot; ' + totSO + ' SOs in view' +
+      '<div class="scale-note">Bar = this store&rsquo;s pile against its minimum per drop (tick = 0.30 m&sup3; East Malaysia, 0.50 m&sup3; Brunei); a full bar is twice the minimum. Store cartons and m&sup3; assume its SOs are packed together for one drop. Counts SOs from the last ' + DOC.staleDays + ' days &middot; ' + totSO + ' SOs in view' +
         (staleSos ? ' &middot; ' + staleSos + ' older SO' + (staleSos === 1 ? '' : 's') + ' (' + stalePcs.toLocaleString('en-GB') + ' pcs) parked under their stores for HQ, not counted.' : '.') + '</div>' +
     '</div>';
 
@@ -388,7 +397,7 @@
     h += '<button type="button" class="so-row" data-so="' + esc(s.so) + '" aria-expanded="' + (open ? 'true' : 'false') + '">' +
       '<div class="id display">' + esc(s.so) + '<small class="num">' + esc(fmtDate(s.date)) + (s.age != null ? ' &middot; ' + s.age + ' d' : '') + '</small></div>' +
       '<div class="what"><b>' + esc(s.brand) + '</b> &middot; ' + esc(itemSummary(s)) + '<br>' + esc(packNote(s)) + '</div>' +
-      '<div class="figs num"><b>' + s.pcs + '</b> pcs<br>&asymp; <b>' + s.cartons + '</b> ctn &middot; <span class="v">' + m3(s.m3) + '</span> m&sup3;</div>' +
+      '<div class="figs num"><b>' + s.pcs + '</b> pcs<br>' + (s.ctnFrac != null && s.ctnFrac < 1 ? '<b>' + s.ctnFrac.toFixed(2) + '</b> ctn share' : '&asymp; <b>' + s.cartons + '</b> ctn &middot; <span class="v">' + m3(s.m3) + '</span> m&sup3;') + '</div>' +
       '<div class="so-tags">' +
         '<span class="chip">' + esc(s.counter) + '</span>' +
         (s.origin !== 'ADCEWHTR-O' ? '<span class="chip brand">' + esc(s.originName) + '</span>' : '') +
@@ -407,7 +416,7 @@
     }).join('');
     h += '</tbody></table>';
     if (s.packing && s.packing.length) {
-      h += '<div class="pack num">Packing estimate: ' + s.packing.map(function (p) { return p.pcs + ' ' + esc(p.group.toLowerCase()) + ' = ' + p.ctn + ' ctn of ' + esc(p.dims) + ' cm'; }).join('; ') + ' &rarr; rounded up to ' + s.cartons + ' carton' + (s.cartons === 1 ? '' : 's') + ', ' + m3(s.m3) + ' m&sup3;.' +
+      h += '<div class="pack num">Packing estimate: ' + s.packing.map(function (p) { return p.pcs + ' ' + esc(p.group.toLowerCase()) + ' = ' + p.ctn + ' ctn of ' + esc(p.dims) + ' cm'; }).join('; ') + ' &rarr; ' + s.cartons + ' carton' + (s.cartons === 1 ? '' : 's') + ' (' + m3(s.m3) + ' m&sup3;) if packed on its own; shares a carton with the rest of the store&rsquo;s pile when the drop goes out.' +
         (s.cartonsTyped ? ' iDCP carton field says ' + s.cartonsTyped + ' (not used).' : '') + '</div>';
     }
     h += '</div></div>';
