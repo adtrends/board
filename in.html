@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Incoming Pipeline</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&display=swap">
+<style>
+  :root {
+    color-scheme: light;
+    --ground: #F7F5F0; --surface: #FFFFFF; --ink: #1E2A3A; --muted: #57636F; --line: #E7E2D8; --line-soft: #F0ECE4;
+    --chrome: #3E4E62; --chrome-grad: linear-gradient(135deg, #384759 0%, #4B5B70 100%); --chrome-ink: #FFFFFF; --chrome-soft: rgba(255,255,255,0.18);
+    --flow: #1F6F78; --flow-soft: #D6E8E9;          /* the page's accent: stock moving through the pipe */
+    --ready: #2A7549; --ready-bg: #DBEEE2; --amber: #B8741A; --amber-bg: #F8EBD3; --stuck: #8C2119; --stuck-bg: #F2CFC9;
+    --accent: #2E4466; --accent-bg: #E1E7F0; --chip: #EAECEE; --chip-ink: #3E4E62; --focus: #2E4466;
+    --shadow: 0 1px 2px rgba(60,50,30,0.06), 0 6px 18px rgba(60,50,30,0.08);
+  }
+  * { box-sizing: border-box; } html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; background: var(--ground); color: var(--ink); font-family: "Barlow", -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; font-size: 15px; line-height: 1.35; overflow-x: hidden; -webkit-font-smoothing: antialiased; }
+  .display { font-family: "Barlow Condensed", "Arial Narrow", "Roboto Condensed", Impact, sans-serif; font-weight: 700; letter-spacing: 0.005em; }
+  .num { font-variant-numeric: tabular-nums; }
+  button, input, select { font-family: inherit; font-size: inherit; }
+  button:focus-visible, input:focus-visible, .row:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+  .app { max-width: 960px; margin: 0 auto; min-height: 100vh; display: flex; flex-direction: column; }
+
+  .chrome { background: var(--chrome-grad); color: var(--chrome-ink); padding: 16px 18px 14px; }
+  .chrome .eyebrow { font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.85; }
+  .chrome h1 { margin: 2px 0 0; font-size: 28px; line-height: 1.05; text-wrap: balance; }
+  .chrome .sub { margin: 5px 0 0; font-size: 13px; opacity: 0.85; }
+  .brandtabs { display: flex; gap: 6px; margin-top: 12px; }
+  .brandtabs button { border: 1px solid var(--chrome-soft); background: var(--chrome-soft); color: var(--chrome-ink); border-radius: 8px; padding: 7px 14px; cursor: pointer; font-weight: 600; }
+  .brandtabs button[aria-pressed="true"] { background: var(--chrome-ink); color: var(--chrome); }
+  .stages { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-top: 12px; }
+  .stage { background: var(--chrome-soft); border-radius: 8px; padding: 7px 8px; min-width: 0; }
+  .stage .v { font-size: 22px; line-height: 1; } .stage .l { font-size: 10.5px; letter-spacing: 0.05em; text-transform: uppercase; opacity: 0.85; margin-top: 3px; }
+  .stage .s { font-size: 11px; opacity: 0.8; }
+  .stage.warn .v { color: #FFD79A; }
+  @media (max-width: 640px) { .stages { grid-template-columns: repeat(3, 1fr); } }
+
+  .controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 10px 14px; background: var(--surface); border-bottom: 1px solid var(--line); position: sticky; top: 0; z-index: 5; }
+  .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: var(--ground); flex-wrap: wrap; }
+  .seg button { border: 0; background: transparent; color: var(--muted); padding: 7px 10px; cursor: pointer; font-weight: 500; }
+  .seg button[aria-pressed="true"] { background: var(--chrome); color: var(--chrome-ink); }
+  .search { flex: 1 1 160px; min-width: 140px; } .search input { width: 100%; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--ground); color: var(--ink); }
+  .note { width: 100%; font-size: 12px; color: var(--muted); }
+
+  main { padding: 6px 12px 28px; display: flex; flex-direction: column; gap: 14px; }
+  section h2 { margin: 10px 4px 6px; font-size: 13px; letter-spacing: 0.09em; text-transform: uppercase; color: var(--muted); display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+  section h2 .count { font-weight: 500; letter-spacing: 0; text-transform: none; }
+  .empty { color: var(--muted); font-size: 14px; padding: 4px 8px 0; }
+
+  .ship { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; margin-bottom: 8px; }
+  .ship-head { display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: baseline; padding: 10px 12px 6px; border-bottom: 1px solid var(--line-soft); }
+  .ship-head .d { font-size: 18px; } .ship-head .m { color: var(--muted); font-size: 13px; }
+  .rows { display: flex; flex-direction: column; }
+  .item { border-top: 1px solid var(--line-soft); }
+  .row { display: grid; grid-template-columns: 1fr auto; grid-template-areas: "name stage" "pipe pipe" "meta meta"; gap: 4px 10px; padding: 9px 12px; width: 100%; text-align: left; border: 0; background: transparent; color: inherit; cursor: pointer; }
+  .row .name { grid-area: name; font-size: 17px; line-height: 1.05; }
+  .row .name small { display: block; font-family: "Barlow", sans-serif; font-weight: 500; font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .row .stage-pill { grid-area: stage; align-self: start; }
+  .pipe { grid-area: pipe; display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin-top: 4px; }
+  .cell { background: var(--ground); border: 1px solid var(--line-soft); border-radius: 6px; padding: 4px 6px; min-width: 0; }
+  .cell .v { font-size: 15px; font-weight: 700; line-height: 1.1; } .cell .l { font-size: 10px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); }
+  .cell .s { font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .cell.on .v { color: var(--flow); } .cell.zero .v { color: var(--muted); font-weight: 500; }
+  .meta { grid-area: meta; display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: center; font-size: 12px; color: var(--muted); }
+  .chip { display: inline-block; padding: 1px 7px; border-radius: 999px; background: var(--chip); color: var(--chip-ink); font-size: 12px; font-weight: 600; white-space: nowrap; }
+  .chip.muted { background: var(--chip); color: var(--muted); } .chip.amber { background: var(--amber-bg); color: var(--amber); } .chip.accent { background: var(--accent-bg); color: var(--accent); }
+  .chip.green { background: var(--ready-bg); color: var(--ready); } .chip.red { background: var(--stuck-bg); color: var(--stuck); }
+  .detail { display: none; background: var(--ground); border-top: 1px solid var(--line-soft); padding: 8px 12px 10px; font-size: 13px; }
+  .item.open .detail { display: block; }
+  .detail h4 { margin: 8px 0 4px; font-size: 11px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); }
+  .detail ul { margin: 0; padding-left: 18px; } .detail li { margin: 2px 0; }
+  .why { padding: 6px 8px; border-left: 3px solid var(--flow); background: var(--surface); border-radius: 4px; margin-top: 6px; }
+  details.papers { margin: 6px 0 0; } details.papers > summary { cursor: pointer; color: var(--muted); font-size: 13px; padding: 6px 2px; }
+  details.papers li { font-size: 12px; color: var(--muted); }
+  footer { padding: 8px 16px 40px; font-size: 12px; color: var(--muted); line-height: 1.5; } footer p { margin: 0 0 6px; max-width: 70ch; }
+  .msg { padding: 48px 24px; text-align: center; } .msg .icon { width: 44px; height: 44px; border-radius: 22px; background: var(--chip); color: var(--chip-ink); display: inline-flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 700; margin-bottom: 12px; }
+  .msg h1 { margin: 0 0 6px; font-size: 24px; } .msg p { color: var(--muted); margin: 0; }
+  .skeleton { height: 56px; border-radius: 10px; background: var(--line-soft); margin: 8px 12px; }
+  @media (min-width: 680px) {
+    .row { grid-template-columns: minmax(220px, 1fr) minmax(360px, 1.4fr) auto; grid-template-areas: "name pipe stage" "meta meta meta"; align-items: center; }
+    .pipe { margin-top: 0; }
+  }
+</style>
+</head>
+<body>
+<div class="app" id="app"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div>
+<script>
+(function () {
+  'use strict';
+  var app = document.getElementById('app'), rendered = false, DOC = null;
+  var state = { brand: 'AD', stage: 'ALL', q: '', open: {} };
+  var STAGES = ['ARRIVING', 'AT WH', 'DISPATCHING', 'AT COUNTERS'];
+  var STAGE_LABEL = { 'ARRIVING': 'Arriving', 'AT WH': 'At WH, not allocated', 'DISPATCHING': 'Allocated, dispatching', 'AT COUNTERS': 'At counters' };
+  var PERF = { green: 'green', red: 'red', amber: 'amber', accent: 'accent', muted: 'muted' };
+
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function n(v) { return (v || 0).toLocaleString('en-GB'); }
+  function dmy(iso) { if (!iso) return ''; var d = new Date(iso + 'T00:00:00'); return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }); }
+  function stamp(iso) { if (!iso) return ''; var d = new Date(iso); return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) + ' ' + d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }); }
+  function pct(v) { return Math.round((v || 0) * 100) + '%'; }
+
+  function visible(x) {
+    if (x.brand !== state.brand) return false;
+    if (state.stage !== 'ALL' && x.stage !== state.stage) return false;
+    var q = state.q.trim().toLowerCase();
+    if (q) {
+      var hay = [x.item, x.colour, x.name, x.colourName, x.group, (x.receipts || []).map(function (r) { return r.grn + ' ' + r.po + ' ' + r.vendor; }).join(' ')].join(' ').toLowerCase();
+      if (hay.indexOf(q) < 0) return false;
+    }
+    return true;
+  }
+
+  function cell(v, label, sub, cls) { return '<div class="cell ' + (cls || (v ? 'on' : 'zero')) + '"><div class="v num">' + esc(v == null ? '–' : n(v)) + '</div><div class="l">' + label + '</div>' + (sub ? '<div class="s">' + sub + '</div>' : '') + '</div>'; }
+
+  function itemRow(x) {
+    var open = !!state.open[x.item + '-' + x.colour];
+    var perf = x.perf ? '<span class="chip ' + PERF[x.perf.verdictClass] + '">' + esc(x.perf.verdict) + '</span>' : '';
+    var recv = x.onOrder && !x.receivedQty
+      ? cell(x.onOrder.qty, 'on order', 'ETA ' + (x.onOrder.eta ? dmy(x.onOrder.eta) : '–') + ' · per iDCP PO', 'on')
+      : cell(x.receivedQty, 'received', x.receivedLast ? dmy(x.receivedLast) + (x.receipts.length > 1 ? ' · ' + x.receipts.length + ' GRNs' : '') + (x.olderReceived ? ' · +' + n(x.olderReceived) + ' earlier' : '') : '');
+    var so = cell(x.so.qty, 'allocated', x.so.qty ? x.so.doors + ' doors' + (x.so.outstanding ? ' · ' + n(x.so.outstanding) + ' not sent' : '') : 'no SO yet');
+    var land = cell(x.landed.pcs, 'landed', x.landed.pcs ? x.landed.doors + ' doors · ' + dmy(x.landed.first) : (x.landed.transit ? n(x.landed.transit) + ' in transit' : ''));
+    var free = cell(x.free, 'free at WH', x.sg !== x.free ? n(x.sg) + ' in SG, ' + n(x.sg - x.free) + ' spoken for' : (x.sg ? 'sellable in SG' : ''), x.stage === 'AT WH' && x.free ? 'on' : (x.free ? 'on' : 'zero'));
+    var h = '<div class="item' + (open ? ' open' : '') + '" data-k="' + esc(x.item + '-' + x.colour) + '">';
+    h += '<button type="button" class="row" aria-expanded="' + (open ? 'true' : 'false') + '">' +
+      '<div class="name display">' + esc(x.item) + '-' + esc(x.colour) + '<small>' + esc(x.name) + ' · ' + esc(x.colourName) + (x.price ? ' · RM' + esc(x.price) : '') + '</small></div>' +
+      '<div class="pipe">' + recv + so + land + free + '</div>' +
+      '<div class="stage-pill"><span class="chip ' + x.stageClass + '">' + esc(STAGE_LABEL[x.stage] || x.stage) + '</span></div>' +
+      '<div class="meta">' + perf +
+        (x.perf ? '<span class="num">' + n(x.perf.sold) + ' sold · ' + pct(x.perf.sellThru) + ' in ' + x.perf.days + ' d</span>' : '') +
+        (x.so.emOutstanding ? '<span class="chip amber num">' + n(x.so.emOutstanding) + ' pcs EM/Brunei waiting for m³</span>' : '') +
+        (x.daysSinceReceipt != null && x.stage === 'AT WH' ? '<span class="chip ' + (x.daysSinceReceipt > 21 ? 'red' : x.daysSinceReceipt > 10 ? 'amber' : 'muted') + ' num">' + x.daysSinceReceipt + ' d at WH</span>' : '') +
+        x.projects.map(function (p) { return '<span class="chip ' + (p.status === 'pending' ? 'accent' : 'muted') + '">' + (p.status === 'pending' ? 'allocation in progress' : 'allocation done') + '</span>'; }).slice(0, 1).join('') +
+      '</div></button>';
+    h += '<div class="detail">';
+    if (x.perf) h += '<div class="why"><b>' + esc(x.perf.verdict) + '</b> — ' + esc(x.perf.why) + '</div>';
+    if (x.receipts.length) h += '<h4>Received</h4><ul>' + x.receipts.map(function (r) { return '<li class="num">' + dmy(r.date) + ' · ' + esc(r.grn) + ' · ' + n(r.qty) + ' pcs · ' + esc(r.po) + ' · ' + esc(r.vendor) + '</li>'; }).join('') + '</ul>';
+    if (x.onOrder) h += '<h4>On order (per iDCP PO)</h4><ul><li class="num">' + n(x.onOrder.qty) + ' pcs · ' + esc(x.onOrder.pos.join(', ')) + ' · ' + esc(x.onOrder.vendor) + (x.onOrder.eta ? ' · ETA ' + dmy(x.onOrder.eta) : '') + '</li></ul>';
+    if (x.so.qty) h += '<h4>Allocation</h4><ul><li class="num">' + n(x.so.qty) + ' pcs on SO to ' + x.so.doors + ' doors since ' + dmy(x.so.first) + (x.so.outstanding ? ' · ' + n(x.so.outstanding) + ' pcs to ' + x.so.pendingDoors + ' doors not yet transferred' : ' · all transferred') + '</li></ul>';
+    if (x.landed.pcs || x.landed.transit) h += '<h4>Counters</h4><ul><li class="num">' + n(x.landed.pcs) + ' pcs landed at ' + x.landed.doors + ' doors (' + dmy(x.landed.first) + (x.landed.last !== x.landed.first ? ' → ' + dmy(x.landed.last) : '') + ')' + (x.landed.transit ? ' · ' + n(x.landed.transit) + ' in transit' : '') + '</li></ul>';
+    if (x.projects.length) h += '<h4>Merch folder</h4><ul>' + x.projects.map(function (p) { return '<li>' + esc(p.name) + ' <span class="num">(' + esc(p.mtime) + ')</span></li>'; }).join('') + '</ul>';
+    if (x.papers.length) h += '<h4>Papers on file</h4><ul>' + x.papers.map(function (p) { return '<li>' + esc(p.folder) + ' / ' + esc(p.name) + ' <span class="num">(' + esc(p.date) + ')</span></li>'; }).join('') + '</ul>';
+    h += '</div></div>';
+    return h;
+  }
+
+  function renderAll() {
+    if (!DOC) return;
+    var items = DOC.items.filter(visible);
+    var T = DOC.totals[state.brand] || {};
+    var byKey = {}; items.forEach(function (x) { byKey[x.item + '-' + x.colour] = x; });
+    var ships = DOC.shipments.filter(function (s) { return s.artcols.some(function (k) { return byKey[k]; }); });
+    var arriving = items.filter(function (x) { return x.stage === 'ARRIVING'; });
+    var shown = {}; ships.forEach(function (s) { s.artcols.forEach(function (k) { if (byKey[k]) shown[k] = true; }); });
+    var loose = items.filter(function (x) { return x.stage !== 'ARRIVING' && !shown[x.item + '-' + x.colour]; });
+
+    var html = '<header class="chrome"><div class="eyebrow">Merchandising · incoming pipeline</div>' +
+      '<h1 class="display">Incoming Pipeline — ' + (state.brand === 'AD' ? 'Alain Delon' : 'Byford') + '</h1>' +
+      '<p class="sub">Every article-colour received at the warehouse in the last ' + DOC.windowDays + ' days, followed from receipt to allocation, dispatch, counters and its first weeks of selling. Updated ' + esc(stamp(DOC.updatedAt)) + '.</p>' +
+      '<div class="brandtabs"><button type="button" data-brand="AD" aria-pressed="' + (state.brand === 'AD') + '">Alain Delon</button><button type="button" data-brand="Byford" aria-pressed="' + (state.brand === 'Byford') + '">Byford</button></div>' +
+      '<div class="stages">' +
+        '<div class="stage"><div class="v display num">' + n(T.received30) + '</div><div class="l">received 30 d</div><div class="s num">' + n(T.received90) + ' in 90 d</div></div>' +
+        '<div class="stage' + (T.atWh ? ' warn' : '') + '"><div class="v display num">' + n(T.atWh) + '</div><div class="l">at WH, not allocated</div><div class="s num">' + n(T.atWhRows) + ' art-colours</div></div>' +
+        '<div class="stage"><div class="v display num">' + n(T.dispatching) + '</div><div class="l">allocated, not sent</div><div class="s num">' + n(T.dispatchingRows) + ' art-colours</div></div>' +
+        '<div class="stage"><div class="v display num">' + n(T.landed) + '</div><div class="l">landed at counters</div></div>' +
+        '<div class="stage"><div class="v display num">' + n(T.free) + '</div><div class="l">free at WH</div><div class="s num">' + (T.arriving ? n(T.arriving) + ' on order' : 'nothing on iDCP PO') + '</div></div>' +
+      '</div></header>';
+
+    html += '<div class="controls"><div class="seg" role="group" aria-label="Stage">' + ['ALL'].concat(STAGES).map(function (s) { return '<button type="button" data-stage="' + s + '" aria-pressed="' + (state.stage === s) + '">' + (s === 'ALL' ? 'All' : STAGE_LABEL[s]) + '</button>'; }).join('') + '</div>' +
+      '<div class="search"><input type="search" id="q" placeholder="Article, GRN, PO, vendor" value="' + esc(state.q) + '" aria-label="Search"></div>' +
+      '<div class="note">' + items.length + ' art-colour' + (items.length === 1 ? '' : 's') + ' in view. Each row: received → allocated → landed → free at WH. Tap a row for GRNs, SO, counters and the merch folder.</div></div>';
+
+    html += '<main>';
+    if (arriving.length || (DOC.merch.files || []).length) {
+      html += '<section><h2>Arriving <span class="count num">' + arriving.length + '</span></h2>';
+      if (arriving.length) html += '<div class="ship"><div class="rows">' + arriving.map(itemRow).join('') + '</div></div>';
+      else html += '<div class="empty">Nothing on an open iDCP PO for this brand under 12 months old' + (DOC.oldOpenPos.count ? ' (' + DOC.oldOpenPos.count + ' older open POs, ' + n(DOC.oldOpenPos.qty) + ' pcs, ignored as dead)' : '') + '.</div>';
+      if ((DOC.merch.files || []).length) html += '<details class="papers"><summary>Supplier orders, SRA invoices and forwarder files on the merch drive — last ' + DOC.windowDays + ' days (' + DOC.merch.files.length + ')</summary><ul>' + DOC.merch.files.map(function (f) { return '<li>' + esc(f.date) + ' · ' + esc(f.folder) + ' / ' + esc(f.name) + '</li>'; }).join('') + '</ul></details>';
+      html += '</section>';
+    }
+    html += '<section><h2>Received — by shipment <span class="count num">' + ships.length + '</span></h2>';
+    if (!ships.length && !loose.length) html += '<div class="empty">No receipt in the window matches this view.</div>';
+    ships.forEach(function (s) {
+      var rows = s.artcols.map(function (k) { return byKey[k]; }).filter(Boolean);
+      html += '<div class="ship"><div class="ship-head"><span class="d display num">' + dmy(s.date) + '</span><span class="m num">' + esc(s.grn) + ' · ' + esc(s.po) + ' · ' + esc(s.vendor) + ' · ' + n(s.qty) + ' pcs · ' + rows.length + ' art-colour' + (rows.length === 1 ? '' : 's') + (s.season ? ' · season ' + esc(s.season) : '') + '</span></div><div class="rows">' + rows.map(itemRow).join('') + '</div></div>';
+    });
+    if (loose.length) html += '<div class="ship"><div class="ship-head"><span class="d display">Other</span><span class="m">received outside the shipments above</span></div><div class="rows">' + loose.map(itemRow).join('') + '</div></div>';
+    html += '</section>';
+    var pend = (DOC.merch.projects || []).filter(function (p) { return p.status === 'pending'; });
+    if (pend.length) html += '<section><h2>Allocation in progress on the merch drive <span class="count num">' + pend.length + '</span></h2><div class="ship"><div class="detail" style="display:block"><ul>' + pend.map(function (p) { return '<li>' + esc(p.name.replace(/^_Pending - /, '')) + ' <span class="num">(' + esc(p.mtime) + ')</span></li>'; }).join('') + '</ul></div></div></section>';
+    html += '</main>';
+
+    html += '<footer><p>Received = ' + esc(DOC.sources.grn) + '. Allocated = SOs in iDCP (' + esc(DOC.sources.so || 'not available') + ', refreshed hourly). Landed / in transit = ' + esc(DOC.sources.it) + '. Free at WH = SiteGiant sellable stock minus SO quantity not yet transferred (' + esc(DOC.sources.sg) + ').</p>' +
+      '<p>“On order” comes from iDCP’s PO balance and is only as good as the POs raised there — on 10 Sep it held three open POs, two of them dead 2023/2024 orders and one that had already arrived under a different receipt. Open POs older than ' + DOC.poMaxAgeDays + ' days are ignored. The supplier order sheets on the merch drive (6_FORWARDER) are the truer picture of what is coming; they are listed, not parsed.</p>' +
+      '<p>Selling verdicts come from the daily dashboard’s New Arrivals section (checkpoints at day 14 / 21 / 42; REGULAR or DISCONTINUE at day 90). EM and Brunei pieces “waiting for m³” are the same lines the warehouse Pending SO board tracks.</p></footer>';
+
+    app.innerHTML = html; rendered = true;
+    Array.prototype.forEach.call(app.querySelectorAll('.brandtabs button'), function (b) { b.addEventListener('click', function () { state.brand = b.getAttribute('data-brand'); renderAll(); window.scrollTo(0, 0); }); });
+    Array.prototype.forEach.call(app.querySelectorAll('.seg button'), function (b) { b.addEventListener('click', function () { state.stage = b.getAttribute('data-stage'); renderAll(); }); });
+    var qEl = document.getElementById('q');
+    qEl.addEventListener('input', function () { state.q = qEl.value; var pos = qEl.selectionStart; renderAll(); var nq = document.getElementById('q'); nq.focus(); try { nq.setSelectionRange(pos, pos); } catch (e) {} });
+    Array.prototype.forEach.call(app.querySelectorAll('.item > .row'), function (h) {
+      h.addEventListener('click', function () { var k = h.parentNode.getAttribute('data-k'); state.open[k] = !state.open[k]; h.parentNode.classList.toggle('open', !!state.open[k]); h.setAttribute('aria-expanded', state.open[k] ? 'true' : 'false'); });
+    });
+  }
+
+  function showInvalid() { rendered = true; app.innerHTML = '<div class="msg"><div class="icon" aria-hidden="true">?</div><h1 class="display">This link isn’t valid.</h1><p>Ask HQ for the Incoming Pipeline link — it carries the key after the #.</p></div>'; }
+  function showOffline() { rendered = true; app.innerHTML = '<div class="msg"><div class="icon" aria-hidden="true">!</div><h1 class="display">Couldn’t load the pipeline.</h1><p>Check the connection, then pull down to refresh or reopen the link.</p></div>'; }
+
+  function readKey() { var h = (location.hash || '').replace(/^#/, '').trim(); if (!h) return null; if (/^[0-9a-fA-F]{64}$/.test(h)) return h.toLowerCase(); return false; }
+  function hexToBytes(hex) { var out = new Uint8Array(hex.length / 2); for (var i = 0; i < out.length; i++) out[i] = parseInt(hex.substr(i * 2, 2), 16); return out; }
+  function b64ToBytes(b64) { var bin = atob(String(b64).replace(/-/g, '+').replace(/_/g, '/')); var out = new Uint8Array(bin.length); for (var i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i); return out; }
+  function docIdFor(keyHex) { return crypto.subtle.digest('SHA-256', new TextEncoder().encode(keyHex)).then(function (buf) { var b = new Uint8Array(buf), s = ''; for (var i = 0; i < 8; i++) s += (b[i] < 16 ? '0' : '') + b[i].toString(16); return s; }); }
+  function importKey(keyHex) { return crypto.subtle.importKey('raw', hexToBytes(keyHex), { name: 'AES-GCM' }, false, ['decrypt']); }
+  function decryptDoc(cryptoKey, doc) { if (!doc || typeof doc.iv !== 'string' || typeof doc.ct !== 'string') return Promise.reject(new Error('bad doc')); return crypto.subtle.decrypt({ name: 'AES-GCM', iv: b64ToBytes(doc.iv), tagLength: 128 }, cryptoKey, b64ToBytes(doc.ct)).then(function (buf) { return JSON.parse(new TextDecoder().decode(buf)); }); }
+  var STATIC_DIR = 'i/', POLL_MS = 5 * 60 * 1000;
+  function bootStatic(key) {
+    Promise.all([docIdFor(key), importKey(key)]).then(function (r) {
+      var url = STATIC_DIR + r[0] + '.json', cryptoKey = r[1], lastText = null;
+      function load(isPoll) {
+        return fetch(url, { cache: 'no-store' }).then(function (res) {
+          if (res.status === 404) { if (!isPoll) showInvalid(); return; }
+          if (!res.ok) throw new Error('http ' + res.status);
+          return res.text().then(function (text) {
+            if (isPoll && text === lastText) return; lastText = text;
+            var doc; try { doc = JSON.parse(text); } catch (e) { if (!isPoll) showInvalid(); return; }
+            return decryptDoc(cryptoKey, doc).then(function (d) { DOC = d; renderAll(); }, function () { if (!isPoll) showInvalid(); });
+          });
+        }).catch(function () { if (!isPoll && !rendered) showOffline(); });
+      }
+      load(false); setInterval(function () { if (!document.hidden) load(true); }, POLL_MS);
+    });
+  }
+  (function boot() { if (!window.crypto || !crypto.subtle) { showOffline(); return; } var key = readKey(); if (key === null || key === false) { showInvalid(); return; } bootStatic(key); })();
+  window.addEventListener('hashchange', function () { location.reload(); });
+})();
+</script>
+</body>
+</html>
