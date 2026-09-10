@@ -200,8 +200,8 @@
       '<div class="brandtabs"><button type="button" data-brand="AD" aria-pressed="' + (state.brand === 'AD') + '">Alain Delon</button><button type="button" data-brand="Byford" aria-pressed="' + (state.brand === 'Byford') + '">Byford</button></div>' +
       '<div class="flow">' +
         '<div class="node"><div class="v display num">' + n(B.received) + '</div><div class="l">received</div><div class="s num">' + n(T.received30) + ' in the last 30 d</div></div>' +
-        '<div class="arrow"><b>→</b>' + pct(B.allocated, B.received) + '</div>' +
-        '<div class="node"><div class="v display num">' + n(B.allocated) + '</div><div class="l">allocated</div><div class="s num">' + n(B.waiting + B.transit) + ' still to send</div></div>' +
+        '<div class="arrow"><b>→</b>' + (B.allocated > B.received ? 'all + older stock' : pct(B.allocated, B.received)) + '</div>' +
+        '<div class="node"><div class="v display num">' + n(B.allocated) + '</div><div class="l">allocated</div><div class="s num">' + n(B.waiting + B.transit) + ' still to send' + (B.allocated > B.received ? ' · SOs also draw older stock' : '') + '</div></div>' +
         '<div class="arrow"><b>→</b>' + pct(B.landed, B.allocated) + '</div>' +
         '<div class="node"><div class="v display num">' + n(B.landed) + '</div><div class="l">landed at counters</div><div class="s num">' + n(B.transit) + ' in transit</div></div>' +
         '<div class="arrow"><b>→</b>' + pct(B.sold, B.landed) + '</div>' +
