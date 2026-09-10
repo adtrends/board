@@ -12,8 +12,9 @@
     color-scheme: light;
     --ground: #F7F5F0; --surface: #FFFFFF; --ink: #1E2A3A; --muted: #57636F; --line: #E7E2D8; --line-soft: #F0ECE4;
     --chrome: #3E4E62; --chrome-grad: linear-gradient(135deg, #384759 0%, #4B5B70 100%); --chrome-ink: #FFFFFF; --chrome-soft: rgba(255,255,255,0.18);
-    --flow: #1F6F78; --flow-soft: #D6E8E9;          /* the page's accent: stock moving through the pipe */
-    --ready: #2A7549; --ready-bg: #DBEEE2; --amber: #B8741A; --amber-bg: #F8EBD3; --stuck: #8C2119; --stuck-bg: #F2CFC9;
+    /* the four pipe segments - one colour each, used everywhere the same way */
+    --landed: #2A7549; --transit: #1F6F78; --waiting: #C98A1E; --free: #8A94A6; --sold: #14532D;
+    --ready-bg: #DBEEE2; --amber: #B8741A; --amber-bg: #F8EBD3; --stuck: #8C2119; --stuck-bg: #F2CFC9;
     --accent: #2E4466; --accent-bg: #E1E7F0; --chip: #EAECEE; --chip-ink: #3E4E62; --focus: #2E4466;
     --shadow: 0 1px 2px rgba(60,50,30,0.06), 0 6px 18px rgba(60,50,30,0.08);
   }
@@ -21,7 +22,7 @@
   body { margin: 0; background: var(--ground); color: var(--ink); font-family: "Barlow", -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; font-size: 15px; line-height: 1.35; overflow-x: hidden; -webkit-font-smoothing: antialiased; }
   .display { font-family: "Barlow Condensed", "Arial Narrow", "Roboto Condensed", Impact, sans-serif; font-weight: 700; letter-spacing: 0.005em; }
   .num { font-variant-numeric: tabular-nums; }
-  button, input, select { font-family: inherit; font-size: inherit; }
+  button, input { font-family: inherit; font-size: inherit; }
   button:focus-visible, input:focus-visible, .row:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
   .app { max-width: 960px; margin: 0 auto; min-height: 100vh; display: flex; flex-direction: column; }
 
@@ -32,19 +33,35 @@
   .brandtabs { display: flex; gap: 6px; margin-top: 12px; }
   .brandtabs button { border: 1px solid var(--chrome-soft); background: var(--chrome-soft); color: var(--chrome-ink); border-radius: 8px; padding: 7px 14px; cursor: pointer; font-weight: 600; }
   .brandtabs button[aria-pressed="true"] { background: var(--chrome-ink); color: var(--chrome); }
-  .stages { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-top: 12px; }
-  .stage { background: var(--chrome-soft); border-radius: 8px; padding: 7px 8px; min-width: 0; }
-  .stage .v { font-size: 22px; line-height: 1; } .stage .l { font-size: 10.5px; letter-spacing: 0.05em; text-transform: uppercase; opacity: 0.85; margin-top: 3px; }
-  .stage .s { font-size: 11px; opacity: 0.8; }
-  .stage.warn .v { color: #FFD79A; }
-  @media (max-width: 640px) { .stages { grid-template-columns: repeat(3, 1fr); } }
+
+  /* ---------- the flow: four nodes with arrows ---------- */
+  .flow { display: grid; grid-template-columns: 1fr auto 1fr auto 1fr auto 1fr; gap: 4px; align-items: center; margin-top: 14px; }
+  .node { background: var(--chrome-soft); border-radius: 8px; padding: 8px 8px 7px; min-width: 0; text-align: center; }
+  .node .v { font-size: 24px; line-height: 1; } .node .l { font-size: 10.5px; letter-spacing: 0.05em; text-transform: uppercase; opacity: 0.85; margin-top: 3px; } .node .s { font-size: 11px; opacity: 0.85; margin-top: 2px; }
+  .arrow { text-align: center; font-size: 11px; opacity: 0.9; line-height: 1.1; }
+  .arrow b { display: block; font-size: 14px; }
+  @media (max-width: 560px) { .flow { grid-template-columns: 1fr auto 1fr; } .flow .arrow:nth-of-type(4), .flow .arrow:nth-of-type(6) { display: none; } .node { padding: 7px 4px; } .node .v { font-size: 20px; } }
+
+  /* ---------- the pipe: a stacked bar ---------- */
+  .pipe { position: relative; display: flex; height: 22px; border-radius: 6px; overflow: hidden; background: var(--line-soft); }
+  .pipe i { display: block; height: 100%; min-width: 0; position: relative; }
+  .pipe i.landed { background: var(--landed); } .pipe i.transit { background: var(--transit); } .pipe i.waiting { background: var(--waiting); } .pipe i.free { background: var(--free); }
+  .pipe i.landed::after { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: var(--sold, 0%); background: repeating-linear-gradient(135deg, rgba(255,255,255,0.35) 0 4px, transparent 4px 8px); }
+  .pipe.big { height: 30px; border-radius: 8px; }
+  .pipe.sm { height: 14px; border-radius: 4px; }
+  .pipe-labels { display: flex; flex-wrap: wrap; gap: 4px 12px; margin-top: 5px; font-size: 12px; color: var(--muted); }
+  .pipe-labels span b { color: var(--ink); }
+  .dot { display: inline-block; width: 10px; height: 10px; border-radius: 3px; vertical-align: -1px; margin-right: 4px; }
+  .dot.landed { background: var(--landed); } .dot.transit { background: var(--transit); } .dot.waiting { background: var(--waiting); } .dot.free { background: var(--free); }
+  .dot.sold { background: var(--landed); background-image: repeating-linear-gradient(135deg, rgba(255,255,255,0.45) 0 3px, transparent 3px 6px); }
+  .chrome .pipe-labels { color: var(--chrome-ink); opacity: 0.9; } .chrome .pipe-labels span b { color: var(--chrome-ink); }
+  .legend { font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 4px 14px; }
 
   .controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 10px 14px; background: var(--surface); border-bottom: 1px solid var(--line); position: sticky; top: 0; z-index: 5; }
   .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: var(--ground); flex-wrap: wrap; }
   .seg button { border: 0; background: transparent; color: var(--muted); padding: 7px 10px; cursor: pointer; font-weight: 500; }
   .seg button[aria-pressed="true"] { background: var(--chrome); color: var(--chrome-ink); }
   .search { flex: 1 1 160px; min-width: 140px; } .search input { width: 100%; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--ground); color: var(--ink); }
-  .note { width: 100%; font-size: 12px; color: var(--muted); }
 
   main { padding: 6px 12px 28px; display: flex; flex-direction: column; gap: 14px; }
   section h2 { margin: 10px 4px 6px; font-size: 13px; letter-spacing: 0.09em; text-transform: uppercase; color: var(--muted); display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
@@ -52,38 +69,35 @@
   .empty { color: var(--muted); font-size: 14px; padding: 4px 8px 0; }
 
   .ship { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; margin-bottom: 8px; }
-  .ship-head { display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: baseline; padding: 10px 12px 6px; border-bottom: 1px solid var(--line-soft); }
+  .ship-head { padding: 10px 12px 8px; border-bottom: 1px solid var(--line-soft); }
+  .ship-head .t { display: flex; flex-wrap: wrap; gap: 2px 10px; align-items: baseline; margin-bottom: 6px; }
   .ship-head .d { font-size: 18px; } .ship-head .m { color: var(--muted); font-size: 13px; }
   .rows { display: flex; flex-direction: column; }
   .item { border-top: 1px solid var(--line-soft); }
-  .row { display: grid; grid-template-columns: 1fr auto; grid-template-areas: "name stage" "pipe pipe" "meta meta"; gap: 4px 10px; padding: 9px 12px; width: 100%; text-align: left; border: 0; background: transparent; color: inherit; cursor: pointer; }
-  .row .name { grid-area: name; font-size: 17px; line-height: 1.05; }
-  .row .name small { display: block; font-family: "Barlow", sans-serif; font-weight: 500; font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .row { display: grid; grid-template-columns: 1fr auto; grid-template-areas: "name stage" "bar bar" "meta meta"; gap: 4px 10px; padding: 9px 12px; width: 100%; text-align: left; border: 0; background: transparent; color: inherit; cursor: pointer; }
+  .row .name { grid-area: name; font-size: 17px; line-height: 1.05; min-width: 0; }
+  .row .name small { display: block; font-family: "Barlow", sans-serif; font-weight: 500; font-size: 12px; color: var(--muted); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .row .stage-pill { grid-area: stage; align-self: start; }
-  .pipe { grid-area: pipe; display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin-top: 4px; }
-  .cell { background: var(--ground); border: 1px solid var(--line-soft); border-radius: 6px; padding: 4px 6px; min-width: 0; }
-  .cell .v { font-size: 15px; font-weight: 700; line-height: 1.1; } .cell .l { font-size: 10px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); }
-  .cell .s { font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .cell.on .v { color: var(--flow); } .cell.zero .v { color: var(--muted); font-weight: 500; }
+  .row .bar { grid-area: bar; }
+  .row .bar .pipe-labels { margin-top: 3px; font-size: 11.5px; }
   .meta { grid-area: meta; display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: center; font-size: 12px; color: var(--muted); }
   .chip { display: inline-block; padding: 1px 7px; border-radius: 999px; background: var(--chip); color: var(--chip-ink); font-size: 12px; font-weight: 600; white-space: nowrap; }
-  .chip.muted { background: var(--chip); color: var(--muted); } .chip.amber { background: var(--amber-bg); color: var(--amber); } .chip.accent { background: var(--accent-bg); color: var(--accent); }
-  .chip.green { background: var(--ready-bg); color: var(--ready); } .chip.red { background: var(--stuck-bg); color: var(--stuck); }
+  .chip.muted { color: var(--muted); } .chip.amber { background: var(--amber-bg); color: var(--amber); } .chip.accent { background: var(--accent-bg); color: var(--accent); }
+  .chip.green { background: var(--ready-bg); color: var(--landed); } .chip.red { background: var(--stuck-bg); color: var(--stuck); }
   .detail { display: none; background: var(--ground); border-top: 1px solid var(--line-soft); padding: 8px 12px 10px; font-size: 13px; }
   .item.open .detail { display: block; }
   .detail h4 { margin: 8px 0 4px; font-size: 11px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); }
   .detail ul { margin: 0; padding-left: 18px; } .detail li { margin: 2px 0; }
-  .why { padding: 6px 8px; border-left: 3px solid var(--flow); background: var(--surface); border-radius: 4px; margin-top: 6px; }
-  details.papers { margin: 6px 0 0; } details.papers > summary { cursor: pointer; color: var(--muted); font-size: 13px; padding: 6px 2px; }
-  details.papers li { font-size: 12px; color: var(--muted); }
+  .why { padding: 6px 8px; border-left: 3px solid var(--transit); background: var(--surface); border-radius: 4px; margin-top: 6px; }
+  details.papers { margin: 6px 0 0; } details.papers > summary { cursor: pointer; color: var(--muted); font-size: 13px; padding: 6px 2px; } details.papers li { font-size: 12px; color: var(--muted); }
   footer { padding: 8px 16px 40px; font-size: 12px; color: var(--muted); line-height: 1.5; } footer p { margin: 0 0 6px; max-width: 70ch; }
   .msg { padding: 48px 24px; text-align: center; } .msg .icon { width: 44px; height: 44px; border-radius: 22px; background: var(--chip); color: var(--chip-ink); display: inline-flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 700; margin-bottom: 12px; }
-  .msg h1 { margin: 0 0 6px; font-size: 24px; } .msg p { color: var(--muted); margin: 0; }
+  .msg h1 { margin: 0 0 6px; font-size: 24px; } .msg p { color: var(--muted); margin: 0 0 12px; }
+  .msg form { display: flex; gap: 8px; justify-content: center; } .msg input { font-size: 20px; letter-spacing: 0.2em; width: 9ch; text-align: center; padding: 8px; border: 1px solid var(--line); border-radius: 8px; }
+  .msg button { padding: 8px 14px; border-radius: 8px; border: 0; background: var(--chrome); color: var(--chrome-ink); font-weight: 600; cursor: pointer; }
+  .msg .err { color: var(--stuck); font-size: 13px; margin-top: 8px; min-height: 1.2em; }
   .skeleton { height: 56px; border-radius: 10px; background: var(--line-soft); margin: 8px 12px; }
-  @media (min-width: 680px) {
-    .row { grid-template-columns: minmax(220px, 1fr) minmax(360px, 1.4fr) auto; grid-template-areas: "name pipe stage" "meta meta meta"; align-items: center; }
-    .pipe { margin-top: 0; }
-  }
+  @media (min-width: 680px) { .row { grid-template-columns: minmax(230px, 1fr) minmax(320px, 1.4fr) auto; grid-template-areas: "name bar stage" "meta meta meta"; align-items: center; } }
 </style>
 </head>
 <body>
@@ -101,37 +115,56 @@
   function n(v) { return (v || 0).toLocaleString('en-GB'); }
   function dmy(iso) { if (!iso) return ''; var d = new Date(iso + 'T00:00:00'); return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }); }
   function stamp(iso) { if (!iso) return ''; var d = new Date(iso); return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) + ' ' + d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }); }
-  function pct(v) { return Math.round((v || 0) * 100) + '%'; }
+  function pct(a, b) { return b ? Math.round(a / b * 100) + '%' : '–'; }
+
+  /* ---------- the four segments of the pipe, for one item or a set ---------- */
+  function segs(list) {
+    var s = { received: 0, landed: 0, transit: 0, waiting: 0, free: 0, sold: 0, allocated: 0 };
+    list.forEach(function (x) {
+      s.received += x.receivedQty || 0; s.landed += x.landed.pcs || 0; s.transit += x.landed.transit || 0;
+      s.waiting += Math.max((x.so.outstanding || 0) - (x.landed.transit || 0), 0); s.free += x.free || 0;
+      s.allocated += x.so.qty || 0; s.sold += x.perf ? (x.perf.sold || 0) : 0;
+    });
+    return s;
+  }
+  function pipe(s, cls) {
+    var total = Math.max(s.landed + s.transit + s.waiting + s.free, 1);
+    var w = function (v) { return (v / total * 100).toFixed(2) + '%'; };
+    var soldPct = s.landed ? Math.min(100, s.sold / s.landed * 100).toFixed(1) + '%' : '0%';
+    return '<div class="pipe ' + (cls || '') + '" role="img" aria-label="landed ' + s.landed + ', in transit ' + s.transit + ', waiting ' + s.waiting + ', free ' + s.free + '">' +
+      '<i class="landed" style="width:' + w(s.landed) + ';--sold:' + soldPct + '"></i><i class="transit" style="width:' + w(s.transit) + '"></i><i class="waiting" style="width:' + w(s.waiting) + '"></i><i class="free" style="width:' + w(s.free) + '"></i></div>';
+  }
+  function labels(s, short) {
+    var parts = [];
+    if (s.landed) parts.push('<span><i class="dot landed"></i><b class="num">' + n(s.landed) + '</b> landed' + (s.sold ? ' <span class="num">(' + n(s.sold) + ' sold)</span>' : '') + '</span>');
+    if (s.transit) parts.push('<span><i class="dot transit"></i><b class="num">' + n(s.transit) + '</b> in transit</span>');
+    if (s.waiting) parts.push('<span><i class="dot waiting"></i><b class="num">' + n(s.waiting) + '</b> allocated, not sent</span>');
+    if (s.free) parts.push('<span><i class="dot free"></i><b class="num">' + n(s.free) + '</b> free at WH</span>');
+    if (!parts.length) parts.push('<span>nothing in the pipe yet</span>');
+    return '<div class="pipe-labels">' + parts.join('') + '</div>';
+  }
 
   function visible(x) {
     if (x.brand !== state.brand) return false;
     if (state.stage !== 'ALL' && x.stage !== state.stage) return false;
     var q = state.q.trim().toLowerCase();
-    if (q) {
-      var hay = [x.item, x.colour, x.name, x.colourName, x.group, (x.receipts || []).map(function (r) { return r.grn + ' ' + r.po + ' ' + r.vendor; }).join(' ')].join(' ').toLowerCase();
-      if (hay.indexOf(q) < 0) return false;
-    }
+    if (q) { var hay = [x.item, x.colour, x.name, x.colourName, x.group, (x.receipts || []).map(function (r) { return r.grn + ' ' + r.po + ' ' + r.vendor; }).join(' ')].join(' ').toLowerCase(); if (hay.indexOf(q) < 0) return false; }
     return true;
   }
 
-  function cell(v, label, sub, cls) { return '<div class="cell ' + (cls || (v ? 'on' : 'zero')) + '"><div class="v num">' + esc(v == null ? '–' : n(v)) + '</div><div class="l">' + label + '</div>' + (sub ? '<div class="s">' + sub + '</div>' : '') + '</div>'; }
-
   function itemRow(x) {
     var open = !!state.open[x.item + '-' + x.colour];
+    var s = segs([x]);
     var perf = x.perf ? '<span class="chip ' + PERF[x.perf.verdictClass] + '">' + esc(x.perf.verdict) + '</span>' : '';
-    var recv = x.onOrder && !x.receivedQty
-      ? cell(x.onOrder.qty, 'on order', 'ETA ' + (x.onOrder.eta ? dmy(x.onOrder.eta) : '–') + ' · per iDCP PO', 'on')
-      : cell(x.receivedQty, 'received', x.receivedLast ? dmy(x.receivedLast) + (x.receipts.length > 1 ? ' · ' + x.receipts.length + ' GRNs' : '') + (x.olderReceived ? ' · +' + n(x.olderReceived) + ' earlier' : '') : '');
-    var so = cell(x.so.qty, 'allocated', x.so.qty ? x.so.doors + ' doors' + (x.so.outstanding ? ' · ' + n(x.so.outstanding) + ' not sent' : '') : 'no SO yet');
-    var land = cell(x.landed.pcs, 'landed', x.landed.pcs ? x.landed.doors + ' doors · ' + dmy(x.landed.first) : (x.landed.transit ? n(x.landed.transit) + ' in transit' : ''));
-    var free = cell(x.free, 'free at WH', x.sg !== x.free ? n(x.sg) + ' in SG, ' + n(x.sg - x.free) + ' spoken for' : (x.sg ? 'sellable in SG' : ''), x.stage === 'AT WH' && x.free ? 'on' : (x.free ? 'on' : 'zero'));
+    var recvLabel = x.onOrder && !x.receivedQty ? n(x.onOrder.qty) + ' on order' + (x.onOrder.eta ? ' · ETA ' + dmy(x.onOrder.eta) : '') + ' · per iDCP PO'
+      : n(x.receivedQty) + ' received ' + dmy(x.receivedLast) + (x.receipts.length > 1 ? ' · ' + x.receipts.length + ' GRNs' : '') + (x.olderReceived ? ' · +' + n(x.olderReceived) + ' earlier' : '') + (x.so.qty ? ' · ' + n(x.so.qty) + ' allocated to ' + x.so.doors + ' doors' : ' · no SO yet');
     var h = '<div class="item' + (open ? ' open' : '') + '" data-k="' + esc(x.item + '-' + x.colour) + '">';
     h += '<button type="button" class="row" aria-expanded="' + (open ? 'true' : 'false') + '">' +
       '<div class="name display">' + esc(x.item) + '-' + esc(x.colour) + '<small>' + esc(x.name) + ' · ' + esc(x.colourName) + (x.price ? ' · RM' + esc(x.price) : '') + '</small></div>' +
-      '<div class="pipe">' + recv + so + land + free + '</div>' +
+      '<div class="bar">' + pipe(s, 'sm') + labels(s, true) + '</div>' +
       '<div class="stage-pill"><span class="chip ' + x.stageClass + '">' + esc(STAGE_LABEL[x.stage] || x.stage) + '</span></div>' +
-      '<div class="meta">' + perf +
-        (x.perf ? '<span class="num">' + n(x.perf.sold) + ' sold · ' + pct(x.perf.sellThru) + ' in ' + x.perf.days + ' d</span>' : '') +
+      '<div class="meta"><span class="num">' + recvLabel + '</span>' + perf +
+        (x.perf ? '<span class="num">' + pct(x.perf.sold, x.landed.pcs) + ' of landed sold in ' + x.perf.days + ' d</span>' : '') +
         (x.so.emOutstanding ? '<span class="chip amber num">' + n(x.so.emOutstanding) + ' pcs EM/Brunei waiting for m³</span>' : '') +
         (x.daysSinceReceipt != null && x.stage === 'AT WH' ? '<span class="chip ' + (x.daysSinceReceipt > 21 ? 'red' : x.daysSinceReceipt > 10 ? 'amber' : 'muted') + ' num">' + x.daysSinceReceipt + ' d at WH</span>' : '') +
         x.projects.map(function (p) { return '<span class="chip ' + (p.status === 'pending' ? 'accent' : 'muted') + '">' + (p.status === 'pending' ? 'allocation in progress' : 'allocation done') + '</span>'; }).slice(0, 1).join('') +
@@ -141,7 +174,8 @@
     if (x.receipts.length) h += '<h4>Received</h4><ul>' + x.receipts.map(function (r) { return '<li class="num">' + dmy(r.date) + ' · ' + esc(r.grn) + ' · ' + n(r.qty) + ' pcs · ' + esc(r.po) + ' · ' + esc(r.vendor) + '</li>'; }).join('') + '</ul>';
     if (x.onOrder) h += '<h4>On order (per iDCP PO)</h4><ul><li class="num">' + n(x.onOrder.qty) + ' pcs · ' + esc(x.onOrder.pos.join(', ')) + ' · ' + esc(x.onOrder.vendor) + (x.onOrder.eta ? ' · ETA ' + dmy(x.onOrder.eta) : '') + '</li></ul>';
     if (x.so.qty) h += '<h4>Allocation</h4><ul><li class="num">' + n(x.so.qty) + ' pcs on SO to ' + x.so.doors + ' doors since ' + dmy(x.so.first) + (x.so.outstanding ? ' · ' + n(x.so.outstanding) + ' pcs to ' + x.so.pendingDoors + ' doors not yet transferred' : ' · all transferred') + '</li></ul>';
-    if (x.landed.pcs || x.landed.transit) h += '<h4>Counters</h4><ul><li class="num">' + n(x.landed.pcs) + ' pcs landed at ' + x.landed.doors + ' doors (' + dmy(x.landed.first) + (x.landed.last !== x.landed.first ? ' → ' + dmy(x.landed.last) : '') + ')' + (x.landed.transit ? ' · ' + n(x.landed.transit) + ' in transit' : '') + '</li></ul>';
+    if (x.landed.pcs || x.landed.transit) h += '<h4>Counters</h4><ul><li class="num">' + n(x.landed.pcs) + ' pcs landed at ' + x.landed.doors + ' doors (' + dmy(x.landed.first) + (x.landed.last !== x.landed.first ? ' → ' + dmy(x.landed.last) : '') + ')' + (x.landed.direct ? ' · ' + n(x.landed.direct) + ' of them direct from China' : '') + (x.landed.transit ? ' · ' + n(x.landed.transit) + ' in transit' : '') + '</li></ul>';
+    if (x.sg) h += '<h4>Warehouse</h4><ul><li class="num">' + n(x.sg) + ' sellable in SG' + (x.sg !== x.free ? ' · ' + n(x.sg - x.free) + ' spoken for by SOs · ' + n(x.free) + ' free' : ' · all free') + '</li></ul>';
     if (x.projects.length) h += '<h4>Merch folder</h4><ul>' + x.projects.map(function (p) { return '<li>' + esc(p.name) + ' <span class="num">(' + esc(p.mtime) + ')</span></li>'; }).join('') + '</ul>';
     if (x.papers.length) h += '<h4>Papers on file</h4><ul>' + x.papers.map(function (p) { return '<li>' + esc(p.folder) + ' / ' + esc(p.name) + ' <span class="num">(' + esc(p.date) + ')</span></li>'; }).join('') + '</ul>';
     h += '</div></div>';
@@ -150,29 +184,35 @@
 
   function renderAll() {
     if (!DOC) return;
-    var items = DOC.items.filter(visible);
-    var T = DOC.totals[state.brand] || {};
+    var brandItems = DOC.items.filter(function (x) { return x.brand === state.brand; });
+    var items = brandItems.filter(visible);
+    var B = segs(brandItems);
     var byKey = {}; items.forEach(function (x) { byKey[x.item + '-' + x.colour] = x; });
     var ships = DOC.shipments.filter(function (s) { return s.artcols.some(function (k) { return byKey[k]; }); });
     var arriving = items.filter(function (x) { return x.stage === 'ARRIVING'; });
     var shown = {}; ships.forEach(function (s) { s.artcols.forEach(function (k) { if (byKey[k]) shown[k] = true; }); });
     var loose = items.filter(function (x) { return x.stage !== 'ARRIVING' && !shown[x.item + '-' + x.colour]; });
+    var T = DOC.totals[state.brand] || {};
 
     var html = '<header class="chrome"><div class="eyebrow">Merchandising · incoming pipeline</div>' +
       '<h1 class="display">Incoming Pipeline — ' + (state.brand === 'AD' ? 'Alain Delon' : 'Byford') + '</h1>' +
-      '<p class="sub">Every article-colour received at the warehouse in the last ' + DOC.windowDays + ' days, followed from receipt to allocation, dispatch, counters and its first weeks of selling. Updated ' + esc(stamp(DOC.updatedAt)) + '.</p>' +
+      '<p class="sub">Everything received in the last ' + DOC.windowDays + ' days and where it is now. Updated ' + esc(stamp(DOC.updatedAt)) + '.</p>' +
       '<div class="brandtabs"><button type="button" data-brand="AD" aria-pressed="' + (state.brand === 'AD') + '">Alain Delon</button><button type="button" data-brand="Byford" aria-pressed="' + (state.brand === 'Byford') + '">Byford</button></div>' +
-      '<div class="stages">' +
-        '<div class="stage"><div class="v display num">' + n(T.received30) + '</div><div class="l">received 30 d</div><div class="s num">' + n(T.received90) + ' in 90 d</div></div>' +
-        '<div class="stage' + (T.atWh ? ' warn' : '') + '"><div class="v display num">' + n(T.atWh) + '</div><div class="l">at WH, not allocated</div><div class="s num">' + n(T.atWhRows) + ' art-colours</div></div>' +
-        '<div class="stage"><div class="v display num">' + n(T.dispatching) + '</div><div class="l">allocated, not sent</div><div class="s num">' + n(T.dispatchingRows) + ' art-colours</div></div>' +
-        '<div class="stage"><div class="v display num">' + n(T.landed) + '</div><div class="l">landed at counters</div></div>' +
-        '<div class="stage"><div class="v display num">' + n(T.free) + '</div><div class="l">free at WH</div><div class="s num">' + (T.arriving ? n(T.arriving) + ' on order' : 'nothing on iDCP PO') + '</div></div>' +
-      '</div></header>';
+      '<div class="flow">' +
+        '<div class="node"><div class="v display num">' + n(B.received) + '</div><div class="l">received</div><div class="s num">' + n(T.received30) + ' in the last 30 d</div></div>' +
+        '<div class="arrow"><b>→</b>' + pct(B.allocated, B.received) + '</div>' +
+        '<div class="node"><div class="v display num">' + n(B.allocated) + '</div><div class="l">allocated</div><div class="s num">' + n(B.waiting + B.transit) + ' still to send</div></div>' +
+        '<div class="arrow"><b>→</b>' + pct(B.landed, B.allocated) + '</div>' +
+        '<div class="node"><div class="v display num">' + n(B.landed) + '</div><div class="l">landed at counters</div><div class="s num">' + n(B.transit) + ' in transit</div></div>' +
+        '<div class="arrow"><b>→</b>' + pct(B.sold, B.landed) + '</div>' +
+        '<div class="node"><div class="v display num">' + n(B.sold) + '</div><div class="l">sold so far</div><div class="s">lines with a verdict</div></div>' +
+      '</div>' +
+      '<div style="margin-top:12px">' + pipe(B, 'big') + labels(B) + '</div>' +
+    '</header>';
 
     html += '<div class="controls"><div class="seg" role="group" aria-label="Stage">' + ['ALL'].concat(STAGES).map(function (s) { return '<button type="button" data-stage="' + s + '" aria-pressed="' + (state.stage === s) + '">' + (s === 'ALL' ? 'All' : STAGE_LABEL[s]) + '</button>'; }).join('') + '</div>' +
       '<div class="search"><input type="search" id="q" placeholder="Article, GRN, PO, vendor" value="' + esc(state.q) + '" aria-label="Search"></div>' +
-      '<div class="note">' + items.length + ' art-colour' + (items.length === 1 ? '' : 's') + ' in view. Each row: received → allocated → landed → free at WH. Tap a row for GRNs, SO, counters and the merch folder.</div></div>';
+      '<div class="legend"><span><i class="dot landed"></i>landed at counters</span><span><i class="dot sold"></i>of which sold</span><span><i class="dot transit"></i>in transit</span><span><i class="dot waiting"></i>allocated, not sent</span><span><i class="dot free"></i>free at WH</span><span>· ' + items.length + ' art-colour' + (items.length === 1 ? '' : 's') + ' in view, tap one for the detail</span></div></div>';
 
     html += '<main>';
     if (arriving.length || (DOC.merch.files || []).length) {
@@ -186,17 +226,18 @@
     if (!ships.length && !loose.length) html += '<div class="empty">No receipt in the window matches this view.</div>';
     ships.forEach(function (s) {
       var rows = s.artcols.map(function (k) { return byKey[k]; }).filter(Boolean);
-      html += '<div class="ship"><div class="ship-head"><span class="d display num">' + dmy(s.date) + '</span><span class="m num">' + esc(s.grn) + ' · ' + esc(s.po) + ' · ' + esc(s.vendor) + ' · ' + n(s.qty) + ' pcs · ' + rows.length + ' art-colour' + (rows.length === 1 ? '' : 's') + (s.season ? ' · season ' + esc(s.season) : '') + '</span></div><div class="rows">' + rows.map(itemRow).join('') + '</div></div>';
+      var S = segs(rows);
+      html += '<div class="ship"><div class="ship-head"><div class="t"><span class="d display num">' + dmy(s.date) + '</span><span class="m num">' + esc(s.grn) + ' · ' + esc(s.po) + ' · ' + esc(s.vendor) + ' · ' + n(s.qty) + ' pcs · ' + rows.length + ' art-colour' + (rows.length === 1 ? '' : 's') + (s.season ? ' · season ' + esc(s.season) : '') + '</span></div>' + pipe(S) + labels(S) + '</div><div class="rows">' + rows.map(itemRow).join('') + '</div></div>';
     });
-    if (loose.length) html += '<div class="ship"><div class="ship-head"><span class="d display">Other</span><span class="m">received outside the shipments above</span></div><div class="rows">' + loose.map(itemRow).join('') + '</div></div>';
+    if (loose.length) { var LS = segs(loose); html += '<div class="ship"><div class="ship-head"><div class="t"><span class="d display">Other</span><span class="m">received outside the shipments above</span></div>' + pipe(LS) + labels(LS) + '</div><div class="rows">' + loose.map(itemRow).join('') + '</div></div>'; }
     html += '</section>';
     var pend = (DOC.merch.projects || []).filter(function (p) { return p.status === 'pending'; });
     if (pend.length) html += '<section><h2>Allocation in progress on the merch drive <span class="count num">' + pend.length + '</span></h2><div class="ship"><div class="detail" style="display:block"><ul>' + pend.map(function (p) { return '<li>' + esc(p.name.replace(/^_Pending - /, '')) + ' <span class="num">(' + esc(p.mtime) + ')</span></li>'; }).join('') + '</ul></div></div></section>';
     html += '</main>';
 
-    html += '<footer><p>Received = ' + esc(DOC.sources.grn) + '. Allocated = SOs in iDCP (' + esc(DOC.sources.so || 'not available') + ', refreshed hourly). Landed / in transit = ' + esc(DOC.sources.it) + '. Free at WH = SiteGiant sellable stock minus SO quantity not yet transferred (' + esc(DOC.sources.sg) + ').</p>' +
-      '<p>“On order” comes from iDCP’s PO balance and is only as good as the POs raised there — on 10 Sep it held three open POs, two of them dead 2023/2024 orders and one that had already arrived under a different receipt. Open POs older than ' + DOC.poMaxAgeDays + ' days are ignored. The supplier order sheets on the merch drive (6_FORWARDER) are the truer picture of what is coming; they are listed, not parsed.</p>' +
-      '<p>Selling verdicts come from the daily dashboard’s New Arrivals section (checkpoints at day 14 / 21 / 42; REGULAR or DISCONTINUE at day 90). EM and Brunei pieces “waiting for m³” are the same lines the warehouse Pending SO board tracks.</p></footer>';
+    html += '<footer><p>Each bar is one pipe: green = landed at counters (striped = already sold), teal = in transit, amber = allocated but not yet sent, grey = free at the warehouse. Received = ' + esc(DOC.sources.grn) + ' (plus direct China→outlet legs, which never get a warehouse receipt). Allocated = SOs in iDCP, refreshed hourly. Landed / in transit = ' + esc(DOC.sources.it) + '. Free at WH = SiteGiant sellable stock minus SO quantity not yet transferred.</p>' +
+      '<p>“On order” comes from iDCP’s PO balance and is only as good as the POs raised there; open POs older than ' + DOC.poMaxAgeDays + ' days are ignored, and a PO drops out once its goods are anywhere in the system. The supplier order sheets on the merch drive (6_FORWARDER) are the truer picture of what is coming; they are listed, not parsed.</p>' +
+      '<p>Selling verdicts come from the daily dashboard’s New Arrivals section. EM and Brunei pieces “waiting for m³” are the same lines the warehouse Pending SO board tracks. This page is locked with a PIN on top of the link — the PIN is remembered on this phone only.</p></footer>';
 
     app.innerHTML = html; rendered = true;
     Array.prototype.forEach.call(app.querySelectorAll('.brandtabs button'), function (b) { b.addEventListener('click', function () { state.brand = b.getAttribute('data-brand'); renderAll(); window.scrollTo(0, 0); }); });
@@ -208,27 +249,45 @@
     });
   }
 
+  /* ---------- messages + PIN ---------- */
   function showInvalid() { rendered = true; app.innerHTML = '<div class="msg"><div class="icon" aria-hidden="true">?</div><h1 class="display">This link isn’t valid.</h1><p>Ask HQ for the Incoming Pipeline link — it carries the key after the #.</p></div>'; }
   function showOffline() { rendered = true; app.innerHTML = '<div class="msg"><div class="icon" aria-hidden="true">!</div><h1 class="display">Couldn’t load the pipeline.</h1><p>Check the connection, then pull down to refresh or reopen the link.</p></div>'; }
+  function askPin(err, cb) {
+    rendered = true;
+    app.innerHTML = '<div class="msg"><div class="icon" aria-hidden="true">🔒</div><h1 class="display">Incoming Pipeline</h1><p>Enter the PIN to open it. It is remembered on this phone.</p>' +
+      '<form id="pinf"><input id="pin" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]*" maxlength="8" aria-label="PIN" autofocus><button type="submit">Open</button></form><div class="err">' + (err || '') + '</div></div>';
+    document.getElementById('pinf').addEventListener('submit', function (e) { e.preventDefault(); cb(document.getElementById('pin').value.trim()); });
+  }
 
+  /* ---------- crypto: same contract as push_board.py, key = SHA-256(linkKey + ":" + PIN) ---------- */
   function readKey() { var h = (location.hash || '').replace(/^#/, '').trim(); if (!h) return null; if (/^[0-9a-fA-F]{64}$/.test(h)) return h.toLowerCase(); return false; }
   function hexToBytes(hex) { var out = new Uint8Array(hex.length / 2); for (var i = 0; i < out.length; i++) out[i] = parseInt(hex.substr(i * 2, 2), 16); return out; }
   function b64ToBytes(b64) { var bin = atob(String(b64).replace(/-/g, '+').replace(/_/g, '/')); var out = new Uint8Array(bin.length); for (var i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i); return out; }
-  function docIdFor(keyHex) { return crypto.subtle.digest('SHA-256', new TextEncoder().encode(keyHex)).then(function (buf) { var b = new Uint8Array(buf), s = ''; for (var i = 0; i < 8; i++) s += (b[i] < 16 ? '0' : '') + b[i].toString(16); return s; }); }
-  function importKey(keyHex) { return crypto.subtle.importKey('raw', hexToBytes(keyHex), { name: 'AES-GCM' }, false, ['decrypt']); }
+  function sha256hex(str) { return crypto.subtle.digest('SHA-256', new TextEncoder().encode(str)).then(function (buf) { var b = new Uint8Array(buf), s = ''; for (var i = 0; i < b.length; i++) s += (b[i] < 16 ? '0' : '') + b[i].toString(16); return s; }); }
+  function docIdFor(keyHex) { return sha256hex(keyHex).then(function (h) { return h.slice(0, 16); }); }
+  function deriveKey(linkKey, pin) { return sha256hex(linkKey + ':' + pin).then(function (h) { return crypto.subtle.importKey('raw', hexToBytes(h), { name: 'AES-GCM' }, false, ['decrypt']); }); }
   function decryptDoc(cryptoKey, doc) { if (!doc || typeof doc.iv !== 'string' || typeof doc.ct !== 'string') return Promise.reject(new Error('bad doc')); return crypto.subtle.decrypt({ name: 'AES-GCM', iv: b64ToBytes(doc.iv), tagLength: 128 }, cryptoKey, b64ToBytes(doc.ct)).then(function (buf) { return JSON.parse(new TextDecoder().decode(buf)); }); }
-  var STATIC_DIR = 'i/', POLL_MS = 5 * 60 * 1000;
-  function bootStatic(key) {
-    Promise.all([docIdFor(key), importKey(key)]).then(function (r) {
-      var url = STATIC_DIR + r[0] + '.json', cryptoKey = r[1], lastText = null;
+  var STATIC_DIR = 'i/', POLL_MS = 5 * 60 * 1000, PIN_STORE = 'in_pin';
+  function getPin() { try { return localStorage.getItem(PIN_STORE) || ''; } catch (e) { return ''; } }
+  function setPin(p) { try { if (p) localStorage.setItem(PIN_STORE, p); else localStorage.removeItem(PIN_STORE); } catch (e) {} }
+
+  function bootStatic(linkKey) {
+    docIdFor(linkKey).then(function (id) {
+      var url = STATIC_DIR + id + '.json', lastText = null, encDoc = null;
+      function tryOpen(pin, isPoll) {
+        return deriveKey(linkKey, pin).then(function (ck) { return decryptDoc(ck, encDoc); }).then(function (d) { setPin(pin); DOC = d; renderAll(); return true; }, function () { return false; });
+      }
+      function prompt(err) { askPin(err, function (pin) { tryOpen(pin).then(function (ok) { if (!ok) { setPin(''); prompt('That PIN did not open it. Try again.'); } }); }); }
       function load(isPoll) {
         return fetch(url, { cache: 'no-store' }).then(function (res) {
           if (res.status === 404) { if (!isPoll) showInvalid(); return; }
           if (!res.ok) throw new Error('http ' + res.status);
           return res.text().then(function (text) {
             if (isPoll && text === lastText) return; lastText = text;
-            var doc; try { doc = JSON.parse(text); } catch (e) { if (!isPoll) showInvalid(); return; }
-            return decryptDoc(cryptoKey, doc).then(function (d) { DOC = d; renderAll(); }, function () { if (!isPoll) showInvalid(); });
+            try { encDoc = JSON.parse(text); } catch (e) { if (!isPoll) showInvalid(); return; }
+            var pin = getPin();
+            if (!pin) { if (!isPoll) prompt(''); return; }
+            return tryOpen(pin, isPoll).then(function (ok) { if (!ok && !isPoll) { setPin(''); prompt('The saved PIN no longer opens it — enter the new one.'); } });
           });
         }).catch(function () { if (!isPoll && !rendered) showOffline(); });
       }
