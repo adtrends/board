@@ -15,22 +15,17 @@
     --ink: #1E2A3A;
     --muted: #57636F;
     --line: #E7E2D8;
-    --line-soft: #F0ECE4;
     --chrome-grad: linear-gradient(135deg, #384759 0%, #4B5B70 100%);
     --chrome-ink: #FFFFFF;
     --chrome-soft: rgba(255,255,255,0.18);
-    --wh21: #1F6F78;
-    --wh21-bg: #D9EBEC;
-    --ecom: #6A4A86;
-    --ecom-bg: #E7DFF0;
-    --fresh: #2A7549;      --fresh-bg: #DBEEE2;
-    --watch: #8A6100;      --watch-bg: #F7EDD4;
-    --late: #B8741A;       --late-bg: #F8E3CB;
-    --overdue: #8C2119;    --overdue-bg: #F2CFC9;
-    --chip: #EAECEE;
-    --chip-ink: #3E4E62;
+    --wh21: #1F6F78;  --wh21-bg: #D9EBEC;
+    --ecom: #6A4A86;  --ecom-bg: #E7DFF0;
+    --fresh: #2A7549; --fresh-bg: #DBEEE2;
+    --watch: #8A6100; --watch-bg: #F7EDD4;
+    --late: #B8741A;  --late-bg: #F8E3CB;
+    --overdue: #8C2119; --overdue-bg: #F2CFC9;
+    --track: #D6E8E9;
     --focus: #2E4466;
-    --shadow: 0 1px 2px rgba(60,50,30,0.06), 0 6px 18px rgba(60,50,30,0.08);
   }
   /* Light-only, same decision as the outlet, coordinator and pending-SO boards. */
 
@@ -44,72 +39,101 @@
   .display { font-family: "Barlow Condensed", "Arial Narrow", Impact, sans-serif; font-weight: 700; }
   .num { font-variant-numeric: tabular-nums; }
   button, input, select { font-family: inherit; font-size: inherit; color: inherit; }
-  button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+  button { cursor: pointer; }
+  :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
   .app { max-width: 1000px; margin: 0 auto; min-height: 100vh; }
 
   /* ---------- Chrome ---------- */
-  .chrome { background: var(--chrome-grad); color: var(--chrome-ink); padding: 16px 18px 14px; }
+  .chrome { background: var(--chrome-grad); color: var(--chrome-ink); padding: 15px 16px 13px; }
   .chrome .eyebrow { font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.85; }
-  .chrome h1 { margin: 2px 0 0; font-size: 28px; line-height: 1.05; }
-  .chrome .sub { margin: 5px 0 0; font-size: 13px; opacity: 0.85; }
-  .totals { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 12px; }
+  .chrome h1 { margin: 2px 0 0; font-size: 27px; line-height: 1.05; }
+  .chrome .sub { margin: 5px 0 0; font-size: 12.5px; opacity: 0.85; }
+  .totals { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 11px; }
   .tot { background: var(--chrome-soft); border-radius: 8px; padding: 7px 10px; }
-  .tot .v { font-size: 22px; line-height: 1; }
+  .tot .v { font-size: 21px; line-height: 1; }
   .tot .l { font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; opacity: 0.85; margin-top: 3px; }
   .tot.bad .v { color: #F4C7C0; }
-  @media (max-width: 560px) {
-    .totals { grid-template-columns: repeat(2, 1fr); }
-    .chrome h1 { font-size: 25px; }
-  }
+  @media (max-width: 560px) { .totals { grid-template-columns: repeat(2, 1fr); } .chrome h1 { font-size: 24px; } }
 
-  /* ---------- Controls ---------- */
-  .controls {
-    display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
-    padding: 10px 14px; background: var(--surface); border-bottom: 1px solid var(--line);
-    position: sticky; top: 0; z-index: 5;
+  /* ---------- Region chips: the primary cut, always visible, never wraps out of sight ---------- */
+  .regionbar {
+    display: flex; gap: 6px; overflow-x: auto; padding: 10px 14px 9px;
+    background: var(--surface); border-bottom: 1px solid var(--line);
+    -webkit-overflow-scrolling: touch; scrollbar-width: none;
   }
-  .controls label { font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); display: block; margin-bottom: 3px; }
-  .fld { flex: 1 1 220px; min-width: 0; }
-  .fld.sm { flex: 0 1 150px; }
+  .regionbar::-webkit-scrollbar { display: none; }
+  .rchip {
+    flex: 0 0 auto; border: 1px solid var(--line); background: var(--surface);
+    border-radius: 999px; padding: 6px 13px; font-size: 13.5px; font-weight: 500; white-space: nowrap;
+  }
+  .rchip[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: #fff; font-weight: 600; }
+  .rsep { flex: 0 0 auto; width: 1px; background: var(--line); margin: 4px 3px; }
+
+  /* ---------- Secondary controls ---------- */
+  .controls {
+    display: flex; flex-wrap: wrap; gap: 8px 10px; align-items: end;
+    padding: 10px 14px; background: var(--surface); border-bottom: 1px solid var(--line);
+  }
+  .controls label { font-size: 10.5px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); display: block; margin-bottom: 3px; }
+  .fld { flex: 1 1 130px; min-width: 0; }
+  .fld.wide { flex: 2 1 200px; }
   select, input[type=search] {
-    width: 100%; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px;
+    width: 100%; padding: 7px 10px; border: 1px solid var(--line); border-radius: 8px;
     background: var(--surface); appearance: none;
   }
-  select { background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8'><path d='M1 1l5 5 5-5' fill='none' stroke='%2357636F' stroke-width='2'/></svg>"); background-repeat: no-repeat; background-position: right 10px center; padding-right: 28px; }
+  select { background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8'><path d='M1 1l5 5 5-5' fill='none' stroke='%2357636F' stroke-width='2'/></svg>"); background-repeat: no-repeat; background-position: right 9px center; padding-right: 26px; }
 
-  .wrap { padding: 12px 14px 40px; }
-
-  /* ---------- Outlet list ---------- */
-  .olist { display: grid; gap: 7px; }
-  .orow {
-    display: grid; grid-template-columns: 1fr auto; gap: 4px 10px; align-items: center;
-    background: var(--surface); border: 1px solid var(--line); border-left-width: 4px;
-    border-radius: 10px; padding: 9px 12px; cursor: pointer; text-align: left; width: 100%;
+  .bar {
+    display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap;
+    padding: 9px 14px 0; color: var(--muted); font-size: 12.5px;
   }
-  .orow:hover { box-shadow: var(--shadow); }
-  .orow .nm { font-weight: 600; }
-  .orow .cd { font-size: 12px; color: var(--muted); }
-  .orow .rt { text-align: right; white-space: nowrap; }
-  .orow .big { font-size: 19px; line-height: 1; }
-  .orow .lbl { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+  .bar .acts { display: flex; gap: 6px; }
+  .bar button { border: 1px solid var(--line); background: var(--surface); border-radius: 7px; padding: 4px 10px; font-size: 12.5px; color: var(--muted); }
 
-  /* ---------- Detail ---------- */
-  .back { background: none; border: 0; color: var(--muted); padding: 4px 0 10px; cursor: pointer; font-size: 13px; }
-  .head { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 13px 15px; margin-bottom: 12px; }
-  .head h2 { margin: 0; font-size: 22px; }
-  .head .meta { color: var(--muted); font-size: 13px; margin-top: 3px; }
-  .head .split { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+  .wrap { padding: 8px 14px 40px; }
 
-  .card { background: var(--surface); border: 1px solid var(--line); border-left-width: 4px; border-radius: 10px; padding: 10px 12px; margin-bottom: 7px; }
-  .card .top { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; flex-wrap: wrap; }
-  .card .so { font-weight: 600; font-size: 16px; letter-spacing: 0.01em; }
-  .card .when { font-size: 13px; color: var(--muted); }
-  .card .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(88px, 1fr)); gap: 6px 12px; margin-top: 8px; }
-  .card .k { font-size: 10.5px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
-  .card .v { font-size: 15px; }
-  .card .items { margin-top: 8px; font-size: 13px; color: var(--muted); }
+  /* ---------- Accordion ---------- */
+  .olist { display: grid; gap: 7px; }
+  .item { background: var(--surface); border: 1px solid var(--line); border-left-width: 4px; border-radius: 10px; overflow: hidden; }
+  .ohead {
+    display: grid; grid-template-columns: 18px 1fr auto; gap: 3px 10px; align-items: center;
+    width: 100%; border: 0; background: none; text-align: left; padding: 9px 12px;
+  }
+  .ohead:hover { background: #FBFAF7; }
+  .caret { transition: transform 0.15s ease; color: var(--muted); font-size: 12px; line-height: 1; }
+  .item.open .caret { transform: rotate(90deg); }
+  .ohead .nm { font-weight: 600; }
+  .ohead .cd { font-size: 12px; color: var(--muted); }
+  .ohead .rt { text-align: right; white-space: nowrap; }
+  .ohead .big { font-size: 19px; line-height: 1; }
+  .ohead .lbl { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+  .ohead .m3wrap { grid-column: 2 / -1; }
+  .panel { display: none; padding: 2px 12px 12px; border-top: 1px solid #F0ECE4; }
+  .item.open .panel { display: block; }
 
-  .chip { display: inline-block; font-size: 11.5px; font-weight: 600; padding: 2px 8px; border-radius: 999px; letter-spacing: 0.02em; }
+  /* ---------- m3 vs the SASA drop minimum (East Malaysia + Brunei only) ---------- */
+  .m3 { display: flex; align-items: center; gap: 7px; margin-top: 5px; }
+  .m3 .track { position: relative; flex: 1 1 auto; height: 7px; background: var(--track); border-radius: 999px; min-width: 55px; }
+  .m3 .fill { position: absolute; inset: 0 auto 0 0; background: var(--wh21); border-radius: 999px; }
+  .m3 .fill.ready { background: var(--fresh); }
+  .m3 .tick { position: absolute; top: -3px; bottom: -3px; width: 2px; background: var(--ink); opacity: 0.6; }
+  .m3 .lab { font-size: 11.5px; color: var(--muted); white-space: nowrap; }
+  .shipbox { background: #F3F7F7; border: 1px solid #DCE9EA; border-radius: 9px; padding: 9px 11px; margin: 10px 0; }
+  .shipbox .hdr { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; font-size: 12.5px; }
+  .shipbox .t { font-weight: 600; font-size: 14px; }
+  .shipbox .note { font-size: 12px; color: var(--muted); margin-top: 6px; line-height: 1.45; }
+
+  /* ---------- SO cards ---------- */
+  .card { border: 1px solid var(--line); border-left-width: 3px; border-radius: 9px; padding: 9px 11px; margin-top: 7px; }
+  .card .top { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+  .card .so { font-weight: 600; font-size: 15.5px; }
+  .card .when { font-size: 12.5px; color: var(--muted); margin-top: 1px; }
+  .card .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(84px, 1fr)); gap: 5px 12px; margin-top: 7px; }
+  .card .k { font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+  .card .v { font-size: 14.5px; }
+  .card .items { margin-top: 7px; font-size: 12.5px; color: var(--muted); }
+
+  .chip { display: inline-block; font-size: 11.5px; font-weight: 600; padding: 2px 8px; border-radius: 999px; }
   .chip.wh21 { background: var(--wh21-bg); color: var(--wh21); }
   .chip.ecom { background: var(--ecom-bg); color: var(--ecom); }
   .chip.fresh { background: var(--fresh-bg); color: var(--fresh); }
@@ -117,15 +141,14 @@
   .chip.late { background: var(--late-bg); color: var(--late); }
   .chip.overdue { background: var(--overdue-bg); color: var(--overdue); }
   .chip.no { background: var(--overdue-bg); color: var(--overdue); }
-  .chip.yes { background: var(--fresh-bg); color: var(--fresh); }
 
   .b-fresh { border-left-color: #7FBF9B; }
   .b-watch { border-left-color: #DCC076; }
   .b-late  { border-left-color: #E0A362; }
   .b-overdue { border-left-color: #C4726A; }
 
-  .empty { text-align: center; color: var(--muted); padding: 40px 20px; }
-  .foot { color: var(--muted); font-size: 12px; padding: 14px 2px 0; line-height: 1.5; }
+  .empty { text-align: center; color: var(--muted); padding: 36px 20px; }
+  .foot { color: var(--muted); font-size: 12px; padding: 16px 2px 0; line-height: 1.5; }
   .msg { text-align: center; padding: 60px 24px; }
   .msg .icon { font-size: 34px; }
   .msg h1 { font-size: 26px; margin: 8px 0 6px; }
@@ -137,11 +160,14 @@
 <script>
 (function () {
   var DOC = null, rendered = false, app = document.getElementById('app');
-  var state = { outlet: '', wh: '', status: '', age: '', q: '' };
+  var state = { region: '', wh: '', status: '', age: '', ship: '', q: '' };
+  var openSet = {};                       // outlet code -> expanded?
 
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]; }); }
   function n(v) { return Number(v || 0).toLocaleString('en-MY'); }
-  function ago(d) { var t = new Date(d + 'T00:00:00+08:00'); return t.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' }); }
+  function ago(d) { return new Date(d + 'T00:00:00+08:00').toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' }); }
+
+  var EMBR = { 'East Malaysia': 1, 'Brunei': 1 };
 
   /* ---------- Filtering ---------- */
   function soPasses(s) {
@@ -151,28 +177,39 @@
     if (state.age && s.age < Number(state.age)) return false;
     return true;
   }
-  function outletRows() {
+  function regionPasses(o) {
+    if (!state.region) return true;
+    if (state.region === '__WM') return !EMBR[o.region];
+    if (state.region === '__EMBR') return !!EMBR[o.region];
+    return o.region === state.region;
+  }
+  function shipPasses(o) {
+    if (!state.ship) return true;
+    if (!o.ship) return false;              // only EM/Brunei carry a drop figure
+    return state.ship === 'ready' ? o.ship.ready : !o.ship.ready;
+  }
+  function rows() {
     var q = state.q.trim().toLowerCase();
     return DOC.outlets.map(function (o) {
+      if (!regionPasses(o) || !shipPasses(o)) return null;
+      if (q && (o.code + ' ' + o.name + ' ' + o.region).toLowerCase().indexOf(q) < 0) return null;
       var sos = o.sos.filter(soPasses);
       if (!sos.length) return null;
-      if (q && (o.code + ' ' + o.name + ' ' + o.region).toLowerCase().indexOf(q) < 0) return null;
       var open = 0, noIt = 0, oldest = 0;
       sos.forEach(function (s) { open += s.open; if (!s.it) noIt++; if (s.age > oldest) oldest = s.age; });
       return { o: o, sos: sos, open: open, noIt: noIt, oldest: oldest, band: bandOf(oldest) };
-    }).filter(Boolean);
+    }).filter(Boolean).sort(function (a, b) { return b.oldest - a.oldest || b.open - a.open; });
   }
   function bandOf(age) {
     var bs = DOC.bands;
-    for (var i = 0; i < bs.length; i++) { if (age >= bs[i].from && (bs[i].to === null || age < bs[i].to)) return bs[i].name; }
+    for (var i = 0; i < bs.length; i++) if (age >= bs[i].from && (bs[i].to === null || age < bs[i].to)) return bs[i].name;
     return 'overdue';
   }
 
-  /* ---------- Render ---------- */
+  /* ---------- Chrome + controls ---------- */
   function renderAll() {
     rendered = true;
-    var t = DOC.totals;
-    var h = [];
+    var t = DOC.totals, h = [];
     h.push('<div class="chrome">');
     h.push('<div class="eyebrow">A.D. Trends &middot; warehouse</div>');
     h.push('<h1 class="display">Open sales orders</h1>');
@@ -184,118 +221,170 @@
     h.push('<div class="tot bad"><div class="v num display">' + n(t.oldest) + 'd</div><div class="l">oldest</div></div>');
     h.push('</div></div>');
 
+    h.push('<div class="regionbar" id="regionbar">' + regionChips() + '</div>');
+
     h.push('<div class="controls">');
-    h.push('<div class="fld"><label for="f-outlet">Outlet</label><select id="f-outlet"><option value="">All outlets &mdash; ' + DOC.outlets.length + '</option>' + outletOptions() + '</select></div>');
-    h.push('<div class="fld sm"><label for="f-wh">Warehouse</label><select id="f-wh"><option value="">Both</option><option value="WH21">WH21</option><option value="E-comm">E-comm</option></select></div>');
-    h.push('<div class="fld sm"><label for="f-status">Transfer</label><select id="f-status"><option value="">Any</option><option value="noit">Not raised yet</option><option value="it">Raised</option></select></div>');
-    h.push('<div class="fld sm"><label for="f-age">Pending at least</label><select id="f-age"><option value="">Any age</option><option value="7">7 days</option><option value="14">14 days</option><option value="30">30 days</option><option value="60">60 days</option><option value="90">90 days</option></select></div>');
+    h.push('<div class="fld wide"><label for="f-q">Find outlet</label><input id="f-q" type="search" placeholder="name or code" autocomplete="off"></div>');
+    h.push('<div class="fld"><label for="f-wh">Warehouse</label><select id="f-wh"><option value="">Both</option><option value="WH21">WH21</option><option value="E-comm">E-comm</option></select></div>');
+    h.push('<div class="fld"><label for="f-status">Transfer</label><select id="f-status"><option value="">Any</option><option value="noit">Not raised</option><option value="it">Raised</option></select></div>');
+    h.push('<div class="fld"><label for="f-age">Pending</label><select id="f-age"><option value="">Any age</option><option value="7">7 days +</option><option value="14">14 days +</option><option value="30">30 days +</option><option value="60">60 days +</option><option value="90">90 days +</option></select></div>');
+    h.push('<div class="fld"><label for="f-ship">Drop m&#179;</label><select id="f-ship"><option value="">Any</option><option value="ready">Enough to ship</option><option value="under">Under minimum</option></select></div>');
     h.push('</div>');
 
+    h.push('<div class="bar"><span id="summary"></span><span class="acts">'
+      + '<button id="expand">Expand all</button><button id="collapse">Collapse all</button></span></div>');
     h.push('<div class="wrap" id="wrap"></div>');
     app.innerHTML = h.join('');
 
-    bind('f-outlet', 'outlet'); bind('f-wh', 'wh'); bind('f-status', 'status'); bind('f-age', 'age');
-    document.getElementById('f-outlet').value = state.outlet;
-    document.getElementById('f-wh').value = state.wh;
-    document.getElementById('f-status').value = state.status;
-    document.getElementById('f-age').value = state.age;
-    renderBody();
+    bindChips();
+    bind('f-wh', 'wh'); bind('f-status', 'status'); bind('f-age', 'age'); bind('f-ship', 'ship');
+    var q = document.getElementById('f-q');
+    q.value = state.q;
+    q.addEventListener('input', function () { state.q = q.value; renderList(); });
+    document.getElementById('expand').addEventListener('click', function () {
+      rows().forEach(function (r) { openSet[r.o.code] = true; }); renderList();
+    });
+    document.getElementById('collapse').addEventListener('click', function () { openSet = {}; renderList(); });
+    ['f-wh', 'f-status', 'f-age', 'f-ship'].forEach(function (id, i) {
+      document.getElementById(id).value = [state.wh, state.status, state.age, state.ship][i];
+    });
+    renderList();
   }
   function bind(id, key) {
     var el = document.getElementById(id);
-    if (el) el.addEventListener('change', function () { state[key] = el.value; renderBody(); });
-  }
-  function outletOptions() {
-    return DOC.outlets.slice().sort(function (a, b) {
-      return a.region === b.region ? a.name.localeCompare(b.name) : a.region.localeCompare(b.region);
-    }).map(function (o) {
-      return '<option value="' + esc(o.code) + '">' + esc(o.region + ' — ' + o.name + ' (' + o.code + ')') + '</option>';
-    }).join('');
+    el.addEventListener('change', function () { state[key] = el.value; renderList(); });
   }
 
-  function renderBody() {
-    var wrap = document.getElementById('wrap');
-    if (state.outlet) { wrap.innerHTML = detailHtml(state.outlet); wireBack(); return; }
-    var rows = outletRows();
-    if (!rows.length) { wrap.innerHTML = '<div class="empty">Nothing matches those filters.</div>'; return; }
-    var tot = rows.reduce(function (a, r) { return a + r.open; }, 0);
-    var h = ['<div class="foot" style="padding-top:0;padding-bottom:8px">' + rows.length + ' outlet' + (rows.length === 1 ? '' : 's') + ' &middot; ' + n(tot) + ' pieces &middot; sorted by the oldest order waiting</div>'];
-    h.push('<div class="olist">');
-    rows.sort(function (a, b) { return b.oldest - a.oldest || b.open - a.open; }).forEach(function (r) {
-      h.push('<button class="orow b-' + r.band + '" data-code="' + esc(r.o.code) + '">');
-      h.push('<span><span class="nm">' + esc(r.o.name) + '</span><br><span class="cd">' + esc(r.o.code) + ' &middot; ' + esc(r.o.region) + ' &middot; ' + r.sos.length + ' order' + (r.sos.length === 1 ? '' : 's') + (r.noIt ? ' &middot; <b>' + r.noIt + ' with no transfer</b>' : '') + '</span></span>');
-      h.push('<span class="rt"><span class="big num display">' + n(r.open) + '</span><br><span class="lbl">pcs &middot; ' + r.oldest + 'd</span></span>');
-      h.push('</button>');
-    });
-    h.push('</div>');
-    h.push(footHtml());
-    wrap.innerHTML = h.join('');
-    Array.prototype.forEach.call(wrap.querySelectorAll('.orow'), function (b) {
+  function regionChips() {
+    var seen = {}, regions = [];
+    DOC.outlets.forEach(function (o) { if (!seen[o.region]) { seen[o.region] = 1; regions.push(o.region); } });
+    var wm = regions.filter(function (r) { return !EMBR[r]; }).sort();
+    var em = regions.filter(function (r) { return !!EMBR[r]; }).sort();
+    var out = [chip('', 'All'), chip('__WM', 'West Malaysia'), chip('__EMBR', 'East M&rsquo;sia &amp; Brunei')];
+    out.push('<span class="rsep"></span>');
+    em.concat(wm).forEach(function (r) { out.push(chip(r, r)); });
+    return out.join('');
+  }
+  function chip(val, label) {
+    return '<button class="rchip" data-region="' + esc(val) + '" aria-pressed="' + (state.region === val) + '">' + label + '</button>';
+  }
+  function bindChips() {
+    Array.prototype.forEach.call(document.querySelectorAll('.rchip'), function (b) {
       b.addEventListener('click', function () {
-        state.outlet = b.getAttribute('data-code');
-        document.getElementById('f-outlet').value = state.outlet;
-        renderBody(); window.scrollTo(0, 0);
+        state.region = b.getAttribute('data-region');
+        Array.prototype.forEach.call(document.querySelectorAll('.rchip'), function (x) {
+          x.setAttribute('aria-pressed', x.getAttribute('data-region') === state.region);
+        });
+        renderList();
       });
     });
   }
 
-  function detailHtml(code) {
-    var o = null;
-    for (var i = 0; i < DOC.outlets.length; i++) { if (DOC.outlets[i].code === code) { o = DOC.outlets[i]; break; } }
-    if (!o) return '<div class="empty">Outlet not found.</div>';
-    var sos = o.sos.filter(soPasses);
-    var open = 0, noIt = 0, wh21 = 0, ecom = 0;
-    sos.forEach(function (s) { open += s.open; if (!s.it) noIt++; if (s.origin === 'WH21') wh21 += s.open; else ecom += s.open; });
+  /* ---------- m3 ---------- */
+  function m3Html(sh, wide) {
+    if (!sh) return '';
+    var pct = Math.max(0, Math.min(100, (sh.ratio || 0) * 100));
+    var over = (sh.ratio || 0) > 1;
+    return '<div class="m3"><span class="track">'
+      + '<span class="fill' + (sh.ready ? ' ready' : '') + '" style="width:' + (over ? 100 : pct).toFixed(1) + '%"></span>'
+      + '<span class="tick" style="left:' + (over ? (100 / (sh.ratio || 1)) : 100).toFixed(1) + '%"></span></span>'
+      + '<span class="lab">' + sh.m3.toFixed(2) + ' / ' + sh.min.toFixed(2) + ' m&#179;'
+      + (sh.ready ? ' &middot; <b>enough to ship</b>' : ' &middot; ' + Math.round(pct) + '% of minimum')
+      + (wide ? ' &middot; ' + sh.cartons + ' ctn' : '') + '</span></div>';
+  }
+  function shipHtml(o) {
+    var sh = o.ship;
+    if (!sh) return '';
+    var others = sh.counters.filter(function (c) { return c !== o.code; });
+    var h = ['<div class="shipbox">'];
+    h.push('<div class="hdr"><span class="t">' + esc(sh.store) + ' &mdash; one SASA drop</span><span>'
+      + sh.sos + ' live order' + (sh.sos === 1 ? '' : 's') + ' &middot; ' + n(sh.pcs) + ' pcs &middot; ' + sh.cartons + ' ctn est</span></div>');
+    h.push(m3Html(sh, true));
+    var note = others.length
+      ? 'Pooled with ' + others.map(esc).join(', ') + ' &mdash; counters at this address ship together, so the m&#179; is the whole store&rsquo;s.'
+      : 'Only counter at this address.';
+    if (sh.staleSos) note += ' ' + sh.staleSos + ' order' + (sh.staleSos === 1 ? '' : 's') + ' over ' + DOC.staleDays + ' days (' + n(sh.stalePcs) + ' pcs) are NOT counted here &mdash; confirm those with HQ.';
+    h.push('<div class="note">' + note + '</div></div>');
+    return h.join('');
+  }
 
-    var h = ['<button class="back" id="back">&larr; All outlets</button>'];
-    h.push('<div class="head">');
-    h.push('<h2 class="display">' + esc(o.name) + '</h2>');
-    h.push('<div class="meta">' + esc(o.code) + ' &middot; ' + esc(o.brand) + ' &middot; ' + esc(o.region) + '</div>');
-    h.push('<div class="split">');
-    h.push('<span class="chip wh21">WH21 &middot; ' + n(wh21) + ' pcs</span>');
-    h.push('<span class="chip ecom">E-comm &middot; ' + n(ecom) + ' pcs</span>');
-    h.push('<span class="chip ' + (noIt ? 'no' : 'yes') + '">' + (noIt ? noIt + ' with no transfer' : 'all transfers raised') + '</span>');
-    h.push('</div></div>');
+  /* ---------- List (accordion) ---------- */
+  function renderList() {
+    var rs = rows(), wrap = document.getElementById('wrap');
+    var pcs = rs.reduce(function (a, r) { return a + r.open; }, 0);
+    var sos = rs.reduce(function (a, r) { return a + r.sos.length; }, 0);
+    var noIt = rs.reduce(function (a, r) { return a + r.noIt; }, 0);
+    document.getElementById('summary').innerHTML =
+      rs.length ? '<b>' + rs.length + '</b> outlet' + (rs.length === 1 ? '' : 's') + ' &middot; ' + n(sos) + ' orders &middot; ' + n(pcs) + ' pcs &middot; ' + n(noIt) + ' with no transfer' : '';
 
-    if (!sos.length) { h.push('<div class="empty">No orders match those filters for this outlet.</div>'); return h.join(''); }
-    h.push('<div class="foot" style="padding-top:0;padding-bottom:8px">' + sos.length + ' order' + (sos.length === 1 ? '' : 's') + ' &middot; ' + n(open) + ' pieces open &middot; newest first by age</div>');
+    if (!rs.length) { wrap.innerHTML = '<div class="empty">Nothing matches those filters.</div>'; return; }
 
-    sos.forEach(function (s) {
+    var h = ['<div class="olist">'];
+    rs.forEach(function (r) {
+      var isOpen = !!openSet[r.o.code];
+      h.push('<div class="item b-' + r.band + (isOpen ? ' open' : '') + '" data-code="' + esc(r.o.code) + '">');
+      h.push('<button class="ohead" aria-expanded="' + isOpen + '">');
+      h.push('<span class="caret">&#9654;</span>');
+      h.push('<span><span class="nm">' + esc(r.o.name) + '</span><br><span class="cd">' + esc(r.o.code) + ' &middot; ' + esc(r.o.region)
+        + ' &middot; ' + r.sos.length + ' order' + (r.sos.length === 1 ? '' : 's')
+        + (r.noIt ? ' &middot; <b>' + r.noIt + ' no transfer</b>' : '') + '</span></span>');
+      h.push('<span class="rt"><span class="big num display">' + n(r.open) + '</span><br><span class="lbl">pcs &middot; ' + r.oldest + 'd</span></span>');
+      if (r.o.ship) h.push('<span class="m3wrap">' + m3Html(r.o.ship, false) + '</span>');
+      h.push('</button>');
+      h.push('<div class="panel">' + (isOpen ? panelHtml(r) : '') + '</div>');
+      h.push('</div>');
+    });
+    h.push('</div>');
+    h.push(footHtml());
+    wrap.innerHTML = h.join('');
+
+    Array.prototype.forEach.call(wrap.querySelectorAll('.ohead'), function (b) {
+      b.addEventListener('click', function () {
+        var item = b.parentNode, code = item.getAttribute('data-code');
+        openSet[code] = !openSet[code];
+        item.classList.toggle('open', openSet[code]);
+        b.setAttribute('aria-expanded', String(!!openSet[code]));
+        var panel = item.querySelector('.panel');
+        if (openSet[code] && !panel.innerHTML) {
+          var r = rows().filter(function (x) { return x.o.code === code; })[0];
+          if (r) panel.innerHTML = panelHtml(r);
+        }
+      });
+    });
+  }
+
+  function panelHtml(r) {
+    var h = [shipHtml(r.o)];
+    r.sos.forEach(function (s) {
       h.push('<div class="card b-' + s.band + '">');
-      h.push('<div class="top"><span class="so num">' + esc(s.so) + '</span>');
-      h.push('<span><span class="chip ' + (s.origin === 'WH21' ? 'wh21' : 'ecom') + '">' + esc(s.origin) + '</span> <span class="chip ' + s.band + '">' + s.age + ' days</span></span></div>');
-      h.push('<div class="when">Raised ' + ago(s.date) + (s.by ? ' by ' + esc(s.by) : '') + '</div>');
+      h.push('<div class="top"><span><span class="so num">' + esc(s.so) + '</span>'
+        + '<div class="when">Raised ' + ago(s.date) + (s.by ? ' by ' + esc(s.by) : '') + '</div></span>');
+      h.push('<span><span class="chip ' + (s.origin === 'WH21' ? 'wh21' : 'ecom') + '">' + esc(s.origin) + '</span> '
+        + '<span class="chip ' + s.band + '">' + s.age + ' days</span></span></div>');
       h.push('<div class="grid">');
       h.push('<div><div class="k">Ordered</div><div class="v num">' + n(s.ordered) + '</div></div>');
       h.push('<div><div class="k">Still open</div><div class="v num"><b>' + n(s.open) + '</b></div></div>');
-      h.push('<div><div class="k">Transfer</div><div class="v">' + (s.it ? '<span class="num">' + esc(s.it) + '</span>' + (s.nIt > 1 ? ' <span class="cd">+' + (s.nIt - 1) + '</span>' : '') : '<span class="chip no">not raised</span>') + '</div></div>');
+      h.push('<div><div class="k">Cartons</div><div class="v num">' + s.cartons + ' &middot; ' + s.m3.toFixed(2) + ' m&#179;</div></div>');
+      h.push('<div><div class="k">Transfer</div><div class="v">' + (s.it ? '<span class="num">' + esc(s.it) + '</span>' + (s.nIt > 1 ? ' +' + (s.nIt - 1) : '') : '<span class="chip no">not raised</span>') + '</div></div>');
       h.push('</div>');
-      if (s.groups && s.groups.length) {
-        h.push('<div class="items">' + s.groups.map(function (g) { return esc(g.g) + ' <b class="num">' + n(g.q) + '</b>'; }).join(' &nbsp;&middot;&nbsp; ') + '</div>');
-      }
+      if (s.groups && s.groups.length) h.push('<div class="items">' + s.groups.map(function (g) { return esc(g.g) + ' <b class="num">' + n(g.q) + '</b>'; }).join(' &nbsp;&middot;&nbsp; ') + '</div>');
       if (s.remark) h.push('<div class="items">Remark: ' + esc(s.remark) + '</div>');
       h.push('</div>');
     });
-    h.push(footHtml());
     return h.join('');
   }
-  function wireBack() {
-    var b = document.getElementById('back');
-    if (b) b.addEventListener('click', function () {
-      state.outlet = ''; document.getElementById('f-outlet').value = '';
-      renderBody(); window.scrollTo(0, 0);
-    });
-  }
+
   function footHtml() {
-    return '<div class="foot">An order is listed while it still has outstanding quantity. '
-      + '&ldquo;No transfer&rdquo; means no inter-transfer has been raised against it at all. '
-      + 'Source: ' + esc(DOC.source.report) + ', pulled ' + esc(DOC.source.pulledAt.slice(0, 16).replace('T', ' ')) + '. '
-      + 'SRA and Brisklink orders ship China-direct to the door and are excluded by design.</div>';
+    return '<div class="foot">An order is listed while it still has outstanding quantity. &ldquo;No transfer&rdquo; means no '
+      + 'inter-transfer has been raised against it at all. Source: ' + esc(DOC.source.report) + ', pulled '
+      + esc(DOC.source.pulledAt.slice(0, 16).replace('T', ' ')) + '. SRA and Brisklink ship China-direct to the door and are '
+      + 'excluded by design. East Malaysia and Brunei also carry the drop m&#179; against the SASA minimum '
+      + '(0.30 m&#179; EM, 0.50 Brunei). ' + esc(DOC.m3Basis || '') + '</div>';
   }
 
   /* ---------- Messages ---------- */
-  function showInvalid() { rendered = true; app.innerHTML = '<div class="msg"><div class="icon">?</div><h1 class="display">This link isn’t valid.</h1><p>Ask HQ for the warehouse SO link &mdash; it carries the key after the #.</p></div>'; }
-  function showOffline() { rendered = true; app.innerHTML = '<div class="msg"><div class="icon">!</div><h1 class="display">Couldn’t load the board.</h1><p>Check the connection, then reopen the link.</p></div>'; }
+  function showInvalid() { rendered = true; app.innerHTML = '<div class="msg"><div class="icon">?</div><h1 class="display">This link isn&rsquo;t valid.</h1><p>Ask HQ for the warehouse SO link &mdash; it carries the key after the #.</p></div>'; }
+  function showOffline() { rendered = true; app.innerHTML = '<div class="msg"><div class="icon">!</div><h1 class="display">Couldn&rsquo;t load the board.</h1><p>Check the connection, then reopen the link.</p></div>'; }
 
   /* ---------- Crypto (same contract as push_board.py) ---------- */
   function readKey() { var h = (location.hash || '').replace(/^#/, '').trim(); if (!h) return null; if (/^[0-9a-fA-F]{64}$/.test(h)) return h.toLowerCase(); return false; }
@@ -313,8 +402,7 @@
   }
 
   /* ---------- Boot ---------- */
-  var STATIC_DIR = 'w/';
-  var POLL_MS = 5 * 60 * 1000;
+  var STATIC_DIR = 'w/', POLL_MS = 5 * 60 * 1000;
   function boot() {
     if (!window.crypto || !crypto.subtle) { showOffline(); return; }
     var key = readKey();
