@@ -57,6 +57,10 @@
   .tot .v { font-size: 22px; line-height: 1; }
   .tot .l { font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; opacity: 0.85; margin-top: 3px; }
   .tot.bad .v { color: #F4C7C0; }
+  @media (max-width: 560px) {
+    .totals { grid-template-columns: repeat(2, 1fr); }
+    .chrome h1 { font-size: 25px; }
+  }
 
   /* ---------- Controls ---------- */
   .controls {
@@ -176,7 +180,7 @@
     h.push('<div class="totals">');
     h.push('<div class="tot"><div class="v num display">' + n(t.sos) + '</div><div class="l">orders open</div></div>');
     h.push('<div class="tot"><div class="v num display">' + n(t.open) + '</div><div class="l">pieces</div></div>');
-    h.push('<div class="tot bad"><div class="v num display">' + n(t.noIt) + '</div><div class="l">no transfer yet</div></div>');
+    h.push('<div class="tot bad"><div class="v num display">' + n(t.noIt) + '</div><div class="l">no transfer</div></div>');
     h.push('<div class="tot bad"><div class="v num display">' + n(t.oldest) + 'd</div><div class="l">oldest</div></div>');
     h.push('</div></div>');
 
