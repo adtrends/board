@@ -969,7 +969,7 @@
     var daily = Array.isArray(sl.daily) ? sl.daily : [];
     var mx = daily.reduce(function (a, d) { return Math.max(a, +d[1] || 0); }, 0) || 1;
     var special = (sl.special && typeof sl.special === 'object') ? sl.special : {};
-    var nosale = (sl.nosale && typeof sl.nosale === 'object') ? sl.nosale : {};
+    var nosale = {};   /* 0-sales-day bars + promoter names REMOVED 2026-09-11 (Tze) - never render sl.nosale */
     var hasHol = false;
     var bars = daily.map(function (d, i) {
       var v = d[1]; var dt = parseDate(d[0]); var day = dt ? dt.getDate() : (i + 1);
