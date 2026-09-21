@@ -118,10 +118,24 @@ td.left.zero{color:var(--bad);font-weight:700}
 .empty{color:var(--muted);padding:14px}
 .status{font-size:12px;color:var(--muted)}
 .olist h2{font-size:18px;margin:18px 0 2px}
+table.grid th,table.grid td{padding:4px 5px;font-size:11.5px;text-align:center}
+table.grid th{font-size:9px;line-height:1.2;text-transform:none;letter-spacing:0}
+table.grid td.l,table.grid th.l{text-align:left}
+table.grid tr.sub td{background:var(--soft);font-weight:600}
+table.grid tr.gt td{border-top:2px solid var(--ink);font-weight:700}
+table.grid .tk{width:22px}
+.ao{font-size:9px;font-weight:700;color:var(--bad)}
+details.recvd{margin-top:10px}
+details.recvd summary{cursor:pointer;font-weight:600;font-size:13px;margin-bottom:6px}
 .olist h3{font-size:14px;margin:14px 0 6px}
 .olist h3.recv{margin-top:20px;border-top:1px solid var(--line);padding-top:12px}
 .olist h4{font-size:13px;margin:10px 0 6px}
 .sumt tr.ohead td{background:var(--soft);font-size:13px}
+.sumt .up{color:var(--good);font-size:10px}
+.sumt .down{color:var(--bad);font-size:10px}
+.swatch{padding:0 5px;border-radius:4px}
+.swatch.bad{background:color-mix(in srgb,var(--bad) 40%,transparent)}
+.swatch.acc{background:color-mix(in srgb,var(--accent) 40%,transparent)}
 @media print{
   body{background:#fff;color:#000}
   .noprint,.dock,.facts,.legend,.sub,h1,#winNote,.bar,.tabs,#choose,#desk,#summary{display:none!important}
@@ -131,6 +145,12 @@ td.left.zero{color:var(--bad);font-weight:700}
   .olist:last-child{break-after:auto}
   th{position:static}
   td,th{font-size:11px;padding:4px 6px}
+  @page{size:A4 portrait;margin:10mm}
+  table.grid th,table.grid td{font-size:8.5px;padding:2px 3px;border-bottom:1px solid #999}
+  table.grid th{font-size:7.5px}
+  details.recvd{display:none}
+  .olist h2{font-size:14px;margin:0 0 2px}
+  .olist .note{font-size:9px;margin:0 0 4px}
 }
 .msg{max-width:520px;margin:18vh auto;text-align:center;padding:0 16px}
 @media (max-width:760px){
@@ -427,28 +447,49 @@ function renderDesk(){
 var LIST_OUTLET="", PICKED={};
 function artOf(code){return D.arts.find(function(a){return a.a===code;});}
 function pickKey(m){return [m.from,m.to,m.a,m.c,m.z].join("|");}
-function listTable(ms,withTick){
-  ms=ms.slice().sort(function(x,y){return x.a<y.a?-1:x.a>y.a?1:(x.c<y.c?-1:x.c>y.c?1:sizeCmp(x.z,y.z));});
-  return '<table><thead><tr>'+(withTick?'<th class="l">✓</th>':'')+'<th class="l">Article</th><th class="l">Description</th><th class="l">Colour</th><th class="l">Size</th><th>Qty</th></tr></thead><tbody>'+
-    ms.map(function(m){var a=artOf(m.a),k=pickKey(m);
-      return '<tr>'+(withTick?'<td class="l"><input type="checkbox" class="tick" data-pick="'+esc(k)+'"'+(PICKED[k]?" checked":"")+' aria-label="Picked"></td>':'')+
-        '<td class="l mono">'+esc(m.a)+'</td><td class="l" style="white-space:normal">'+esc(a?a.n:"")+'</td><td class="l mono">'+esc(m.c)+
-        '</td><td class="l mono">'+esc(m.z)+"</td><td><b>"+m.q+"</b></td></tr>";}).join("")+
-    '<tr><td colspan="'+(withTick?5:4)+'" class="l"><b>Total</b></td><td><b>'+ms.reduce(function(n,m){return n+m.q;},0)+"</b></td></tr></tbody></table>";
+/* Compact grid, same layout as the 2023 Kuching conso list (Tze's 20230516 - Kuching Conso List.pdf):
+   one row per art-colour per destination, every size in a shared column, so an outlet fits on a page
+   or two instead of one table per destination. */
+var SLOTS=[["29","XXS","48","Y3-4"],["30","XS","50","Y5-6"],["31","S","52","Y7-8"],["32","54","Y9-10"],["33","M","56","14.5","Y11-12"],
+  ["34","L","15","Y13-14"],["35","XL","15.5"],["36","XXL","2XL","16"],["38","XXXL","3XL","16.5"],["40","17","5.5"],["42","17.5","6.5"],["44","18"]];
+var SLOT_HEAD=["29<br>XXS","30<br>XS","31<br>S","32","33<br>M","34<br>L/15","35<br>XL/15.5","36<br>XXL/16","38<br>3XL/16.5","40<br>17/5.5","42<br>17.5/6.5","44<br>18"];
+function slotOf(z){z=String(z).toUpperCase();for(var i=0;i<SLOTS.length;i++)if(SLOTS[i].indexOf(z)>=0)return i;return -1;}
+function gridRows(ms,other,allOutOf){
+  // ms: moves from one outlet; other: "to" or "from" - the column that varies
+  var by={};ms.forEach(function(m){var k=m[other]+"|"+m.a+"|"+m.c;(by[k]=by[k]||[]).push(m);});
+  var keys=Object.keys(by).sort(), last="", tot=new Array(SLOTS.length+2).fill(0), sub=null, html="";
+  function subRow(){if(!sub)return "";return '<tr class="sub"><td class="l" colspan="4">'+esc(sub.o)+" total</td>"+
+      sub.v.slice(0,SLOTS.length).map(function(n){return "<td>"+(n||"")+"</td>";}).join("")+"<td></td><td><b>"+sub.v[SLOTS.length+1]+"</b></td><td class=\"tk\"></td></tr>";}
+  keys.forEach(function(k){
+    var p=k.split("|"), ms2=by[k], a=artOf(p[1]), row=new Array(SLOTS.length).fill(0), odd=[], n=0;
+    ms2.forEach(function(m){var i=slotOf(m.z);if(i<0)odd.push(m.z+"×"+m.q);else row[i]+=m.q;n+=m.q;});
+    if(p[0]!==last){html+=subRow();sub={o:p[0],v:new Array(SLOTS.length+2).fill(0)};last=p[0];}
+    row.forEach(function(v,i){sub.v[i]+=v;tot[i]+=v;});sub.v[SLOTS.length+1]+=n;tot[SLOTS.length+1]+=n;
+    var price=a?(a.nett&&a.nett<a.p?a.nett:a.p):0, ao=allOutOf&&allOutOf(p[1],p[2]);
+    html+='<tr><td class="l mono">'+esc(p[0])+'</td><td class="l mono">'+esc(p[1])+'</td><td class="l mono">'+esc(p[2])+"</td><td>"+(price?Math.round(price):"")+"</td>"+
+      row.map(function(v){return "<td>"+(v||"")+"</td>";}).join("")+'<td class="l">'+esc(odd.join(" "))+(ao?' <span class="ao">ALL OUT</span>':"")+"</td><td><b>"+n+'</b></td><td class="tk">☐</td></tr>';
+  });
+  html+=subRow();
+  return {html:html,tot:tot};
+}
+function gridTable(ms,other,label,allOutOf){
+  var g=gridRows(ms,other,allOutOf);
+  return '<table class="grid"><thead><tr><th class="l">'+label+'</th><th class="l">Art no</th><th class="l">Col</th><th>RM</th>'+
+    SLOT_HEAD.map(function(h){return "<th>"+h+"</th>";}).join("")+'<th class="l">Other / note</th><th>Total</th><th class="tk">✓</th></tr></thead><tbody>'+g.html+
+    '<tr class="gt"><td class="l" colspan="4">Grand total</td>'+g.tot.slice(0,SLOTS.length).map(function(n){return "<td>"+(n||"")+"</td>";}).join("")+
+    "<td></td><td><b>"+g.tot[SLOTS.length+1]+'</b></td><td class="tk"></td></tr></tbody></table>';
 }
 function outletList(o,moves){
   var out=moves.filter(function(m){return m.from===o;}), inn=moves.filter(function(m){return m.to===o;});
-  var byTo={},byFrom={};
-  out.forEach(function(m){(byTo[m.to]=byTo[m.to]||[]).push(m);});
-  inn.forEach(function(m){(byFrom[m.from]=byFrom[m.from]||[]).push(m);});
   var sum=function(ms){return ms.reduce(function(n,m){return n+m.q;},0);};
+  var dests=[...new Set(out.map(function(m){return m.to;}))], srcs=[...new Set(inn.map(function(m){return m.from;}))];
+  function allOutOf(art,col){var a=artOf(art),c=a&&a.cols.find(function(x){return x.c===col;}),r=c&&c.rows.find(function(x){return x.o===o;});
+    return r&&leftAfter(r,c,moves.filter(function(m){return m.a===art;}))===0;}
   return '<section class="olist"><h2>'+esc(o)+' <span class="muted">'+esc(outletName(o))+'</span></h2>'+
-    '<p class="note">'+esc(D.title)+" conso · plan from "+fmtDate(D.built)+" stock · send "+sum(out)+" pcs in "+Object.keys(byTo).length+
-    " transfer"+(Object.keys(byTo).length===1?"":"s")+" · receive "+sum(inn)+" pcs</p>"+
-    (out.length?Object.keys(byTo).sort().map(function(t){return '<h3>SEND to '+esc(t)+' <span class="muted">'+esc(outletName(t))+" · one IT · "+sum(byTo[t])+" pcs</span></h3>"+
-      '<div class="scroll">'+listTable(byTo[t],true)+"</div>";}).join(""):'<p class="empty">Nothing to send.</p>')+
-    (inn.length?'<h3 class="recv">WILL RECEIVE</h3>'+Object.keys(byFrom).sort().map(function(f){return '<h4>From '+esc(f)+' <span class="muted">'+esc(outletName(f))+" · "+sum(byFrom[f])+" pcs</span></h4>"+
-      '<div class="scroll">'+listTable(byFrom[f],false)+"</div>";}).join(""):"")+"</section>";
+    '<p class="note">'+esc(D.title)+" conso · system stock "+fmtDate(D.built)+" · <b>send "+sum(out)+" pcs</b> in "+dests.length+" IT"+(dests.length===1?"":"s")+
+    " ("+dests.map(esc).join(", ")+")"+(inn.length?" · will receive "+sum(inn)+" pcs from "+srcs.map(esc).join(", "):"")+"</p>"+
+    (out.length?'<div class="scroll">'+gridTable(out,"to","To",allOutOf)+"</div>":'<p class="empty">Nothing to send.</p>')+
+    (inn.length?'<details class="recvd"'+(out.length?"":" open")+'><summary>Incoming: '+sum(inn)+' pcs (for checking the IT when it arrives)</summary><div class="scroll">'+gridTable(inn,"from","From")+"</div></details>":"")+"</section>";
 }
 function renderLists(){
   var moves=allMoves();
@@ -464,7 +505,7 @@ function renderLists(){
       return [o,o+" · send "+out+" · receive "+inn];})),LIST_OUTLET)+'</select>'+
     '<button class="act" id="printList">Print / save PDF</button><button class="ghost" id="copyList">Copy for WhatsApp</button>'+
     '<button class="ghost" id="csvList">Download CSV (all outlets)</button><span class="status" id="listStatus"></span></div>'+
-    '<p class="note noprint">Promoters pick from the SEND list and raise one IT per destination. Tick each line as it is picked (the ticks stay on this phone only). Check the shelf first: stock is the system balance on '+fmtDate(D.built)+'.</p>'+
+    '<p class="note noprint">Promoters pick from the list and raise one IT per destination (the "To" column). ALL OUT = send every piece of that colour. Sizes sit in shared columns (a shirt 15.5 and an XL fall under 35). Check the shelf first: stock is the system balance on '+fmtDate(D.built)+'.</p>'+
     show.map(function(o){return outletList(o,moves);}).join("");
 }
 function listText(o,moves){
@@ -482,37 +523,62 @@ function listText(o,moves){
   return lines.join("\n");
 }
 
-/* ---------- outlet summary: product-group mix before and after, against what sells ---------- */
+/* ---------- outlet summary: product-type mix before and after, against what sells ---------- */
+/* Rows follow the article code (11 slack, 12 cotton, 14 short sleeve ...). Seasonal lines (Baju Melayu
+   and the 01_ collections: BM, Samfu) can be switched off, and every share is then recomputed without them. */
+var CATN={"0":"Tie & accessories","1":"Slacks","2":"Cotton pant","3":"Other","4":"Short sleeve","5":"Long sleeve",
+  "6":"Knit","7":"Blazer","8":"Other","9":"Baju Melayu","P":"Premium","X":"Other"};
+var CAT_ORDER="1245679P0X38";
+var HIDE_SEA=true;
+function catLabel(brand,k){return (k==="X"?"":(brand==="BF"?"3":"1")+k+" - ")+(CATN[k]||"Other");}
+function shareMap(obj){var t=0,m={};for(var k in obj)t+=obj[k];for(var k2 in obj)m[k2]=t?obj[k2]/t*100:0;return m;}
+function gapStyle(g){
+  var a=Math.min(Math.abs(g),20)/20*55+8;               // 8%..63% tint by size of the gap
+  if(Math.abs(g)<2)return "";
+  return ' style="background:color-mix(in srgb,var('+(g>0?"--bad":"--accent")+') '+Math.round(a)+'%,transparent)"';
+}
 function renderSummary(){
-  var moves=allMoves(), T={}, groups=new Set();
-  function cell(o,g){T[o]=T[o]||{};return T[o][g]=T[o][g]||{h:0,out:0,inn:0,s:0};}
-  D.arts.forEach(function(a){var g=a.g||"Other";groups.add(g);a.cols.forEach(function(c){c.rows.forEach(function(r){
-    var x=cell(r.o,g);x.h+=rowHeld(r);x.s+=rowSold(r);});});});
-  moves.forEach(function(m){var g=(artOf(m.a)||{}).g||"Other";cell(m.from,g).out+=m.q;cell(m.to,g).inn+=m.q;});
-  var wk=+W*4.35;
-  function cov(pcs,sold){return sold?Math.round(pcs/(sold/wk)):null;}
+  var moves=allMoves(), T={}, AREA={AD:{},BF:{}}, wk=+W*4.35;
+  function cell(o,k){T[o]=T[o]||{};return T[o][k]=T[o][k]||{h:0,out:0,inn:0,s:0};}
+  var art={};D.arts.forEach(function(a){art[a.a]=a;});
+  D.arts.forEach(function(a){if(HIDE_SEA&&a.sea)return;a.cols.forEach(function(c){c.rows.forEach(function(r){
+    var x=cell(r.o,a.k);x.h+=rowHeld(r);x.s+=rowSold(r);
+    var b=r.o.slice(0,2);if(AREA[b])AREA[b][a.k]=(AREA[b][a.k]||0)+rowSold(r);});});});
+  moves.forEach(function(m){var a=art[m.a];if(!a||(HIDE_SEA&&a.sea))return;cell(m.from,a.k).out+=m.q;cell(m.to,a.k).inn+=m.q;});
+  var areaSh={AD:shareMap(AREA.AD),BF:shareMap(AREA.BF)}, natSh={AD:null,BF:null};
+  if(D.nat)["AD","BF"].forEach(function(b){var src=(D.nat[b]||{})[W]||{},o={};
+    for(var k in src){var v=src[k][0]+(HIDE_SEA?0:src[k][1]);if(v)o[k]=v;}natSh[b]=shareMap(o);});
+  function cov(p,sold){return sold?Math.round(p/(sold/wk)):null;}
+  function pct(v){return v==null?"–":(v<1&&v>0?"<1":Math.round(v))+"%";}
+  function vsNat(mine,nat){if(nat==null)return "";var d=mine-nat;if(Math.abs(d)<3)return "";
+    return ' <span class="'+(d>0?"up":"down")+'">'+(d>0?"▲":"▼")+"</span>";}
   var rows=D.outlets.map(function(x){return x.o;}).filter(function(o){return T[o];}).map(function(o){
-    var gs=Object.keys(T[o]).filter(function(g){var v=T[o][g];return v.h||v.inn||v.s;});
-    var tot=gs.reduce(function(t,g){var v=T[o][g];t.h+=v.h;t.out+=v.out;t.inn+=v.inn;t.s+=v.s;return t;},{h:0,out:0,inn:0,s:0});
+    var b=o.slice(0,2), ks=Object.keys(T[o]).filter(function(k){var v=T[o][k];return v.h||v.inn||v.s;});
+    var tot=ks.reduce(function(t,k){var v=T[o][k];t.h+=v.h;t.out+=v.out;t.inn+=v.inn;t.s+=v.s;return t;},{h:0,out:0,inn:0,s:0});
     tot.after=tot.h-tot.out+tot.inn;
-    var body=gs.sort(function(x,y){return T[o][y].s-T[o][x].s||T[o][y].h-T[o][x].h;}).map(function(g){
-      var v=T[o][g], after=v.h-v.out+v.inn, stockSh=tot.after?after/tot.after*100:0, saleSh=tot.s?v.s/tot.s*100:0,
-          ca=cov(after,v.s), gap=stockSh-saleSh, flag="";
+    var body=ks.sort(function(x,y){return CAT_ORDER.indexOf(x)-CAT_ORDER.indexOf(y);}).map(function(k){
+      var v=T[o][k], after=v.h-v.out+v.inn, stockSh=tot.after?after/tot.after*100:0, saleSh=tot.s?v.s/tot.s*100:0,
+          gap=stockSh-saleSh, ar=(areaSh[b]||{})[k]||0, na=natSh[b]?(natSh[b][k]||0):null, flag="";
       if(after&&!v.s)flag='<span class="kind k-clear">No sales</span>';
       else if(gap>=5)flag='<span class="kind k-conc">Too much</span>';
       else if(gap<=-5)flag='<span class="kind k-move">Too little</span>';
-      return '<tr><td class="l">'+esc(g)+"</td><td>"+v.h+"</td><td>"+(v.out?"−"+v.out:"–")+"</td><td>"+(v.inn?"+"+v.inn:"–")+
-        '</td><td class="left'+(after!==v.h?" chg":"")+'">'+after+"</td><td>"+v.s+"</td><td>"+Math.round(stockSh)+"%</td><td>"+Math.round(saleSh)+
-        "%</td><td>"+(cov(v.h,v.s)==null?"–":cov(v.h,v.s)+"w")+"</td><td>"+(ca==null?"–":ca+"w")+'</td><td class="l">'+flag+"</td></tr>";
+      return '<tr><td class="l"><b>'+esc(catLabel(b,k))+"</b></td><td>"+v.h+"</td><td>"+(v.out?"−"+v.out:"–")+"</td><td>"+(v.inn?"+"+v.inn:"–")+
+        '</td><td class="left'+(after!==v.h?" chg":"")+'">'+after+"</td><td>"+v.s+"</td><td>"+pct(stockSh)+"</td><td>"+pct(saleSh)+vsNat(saleSh,na)+
+        "</td><td"+gapStyle(gap)+"><b>"+(gap>0?"+":"")+Math.round(gap)+"</b></td><td>"+pct(ar)+"</td><td>"+pct(na)+"</td><td>"+
+        (cov(v.h,v.s)==null?"–":cov(v.h,v.s)+"w")+"</td><td>"+(cov(after,v.s)==null?"–":cov(after,v.s)+"w")+'</td><td class="l">'+flag+"</td></tr>";
     }).join("");
-    return '<tbody><tr class="ohead"><td class="l" colspan="11"><b class="mono">'+esc(o)+"</b> "+esc(outletName(o))+
+    return '<tbody><tr class="ohead"><td class="l" colspan="14"><b class="mono">'+esc(o)+"</b> "+esc(outletName(o))+
       ' <span class="muted">· now '+tot.h+" pcs · after "+tot.after+" · sold "+tot.s+" in "+W+"m</span></td></tr>"+body+"</tbody>";
   }).join("");
-  $("#summary").innerHTML='<p class="note">Every article at each outlet (ticked or not), by product group. <b>Sends / Gets</b> come from the current plan. '+
-    '<b>Stock share</b> is the group\'s share of the outlet\'s pieces after the plan; <b>Sales share</b> is its share of the outlet\'s sales in the last '+W+' months. '+
-    'A group whose share of the stock is 5 points or more above its share of the sales is <b>Too much</b> for that outlet; 5 points or more below is <b>Too little</b>, so it is a candidate to GET more. Cover (weeks of stock at the outlet’s own rate) is shown for reference. Sorted by what sells best at that outlet.</p>'+
-    '<div class="scroll"><table class="sumt"><thead><tr><th class="l">Product group</th><th>Now</th><th>Sends</th><th>Gets</th><th>After</th><th>Sold '+W+'m</th>'+
-    '<th>Stock share</th><th>Sales share</th><th>Cover now</th><th>Cover after</th><th class="l">Mix</th></tr></thead>'+rows+"</table></div>";
+  $("#summary").innerHTML='<div class="bar"><label class="chk"><input type="checkbox" id="hideSea"'+(HIDE_SEA?" checked":"")+
+    '> Leave out seasonal lines (Baju Melayu, BM accessories, Samfu)</label></div>'+
+    '<p class="note">Every article at each outlet (ticked or not), by product type in article-code order. <b>Sends / Gets</b> come from the current plan. '+
+    '<b>Stock %</b> = the type\u2019s share of the outlet\u2019s pieces after the plan. <b>Sold %</b> = its share of the outlet\u2019s sales in the last '+W+' months '+
+    '(▲ / ▼ = 3 points or more above / below national). <b>Gap</b> = Stock % minus Sold %: <span class="swatch bad">red</span> = holding more of it than it sells (too much), '+
+    '<span class="swatch acc">blue</span> = holding less than it sells (too little); the darker, the bigger the gap. <b>'+esc(D.title)+' %</b> and <b>National %</b> = the same type\u2019s share of sales '+
+    'across all '+esc(D.title)+' outlets and across every counter in Malaysia (same brand)'+(D.nat?"":" \u2014 national figures not loaded")+'.</p>'+
+    '<div class="scroll"><table class="sumt"><thead><tr><th class="l">Product type</th><th>Now</th><th>Sends</th><th>Gets</th><th>After</th><th>Sold '+W+'m</th>'+
+    '<th>Stock %</th><th>Sold %</th><th>Gap</th><th>'+esc(D.title)+' %</th><th>National %</th><th>Cover now</th><th>Cover after</th><th class="l">Mix</th></tr></thead>'+rows+"</table></div>";
 }
 
 /* ---------- shell ---------- */
@@ -605,6 +671,7 @@ function wire(){
   document.addEventListener("toggle",function(e){var d=e.target;if(d.dataset&&d.dataset.art){if(d.open)OPEN.add(d.dataset.art);else OPEN.delete(d.dataset.art);}},true);
   document.addEventListener("change",function(e){
     if(e.target.id==="listSel"){LIST_OUTLET=e.target.value;renderLists();}
+    if(e.target.id==="hideSea"){HIDE_SEA=e.target.checked;renderSummary();}
     if(e.target.dataset&&e.target.dataset.pick!==undefined){PICKED[e.target.dataset.pick]=e.target.checked;try{localStorage.setItem(STORE+":picked",JSON.stringify(PICKED));}catch(x){}}
   });
   document.addEventListener("input",function(e){if(e.target.closest("#choose .filters")){LIMIT=150;renderChoose();}});
