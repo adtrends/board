@@ -193,7 +193,13 @@ function rm(v){return v?"RM"+(Math.round(v*100)/100).toLocaleString("en-MY"):"�
 function rowSold(r){return (r.s&&r.s[W])||0;}
 function rowHeld(r){var n=0;for(var k in r.q)n+=r.q[k];return n;}
 function priceNow(a){return a.nett&&a.nett<a.p?a.nett:a.p;}
-var CACHE={};
+var CACHE={}, SGART=null;
+function sgArt(code){
+  if(!SGART){SGART={};var ss=(D.sg&&D.sg.s)||{};for(var k in ss){var a=k.split("|")[0],v=ss[k];
+    var x=SGART[a]=SGART[a]||[0,0];x[0]+=v[0];x[1]+=v[1];}}
+  return SGART[code]||[0,0];
+}
+function sgCol(a,c){return ((D.sg&&D.sg.s)||{})[a+"|"+c]||null;}
 function stats(a){
   var ck=a.a+"|"+W; if(CACHE[ck])return CACHE[ck];
   var held=0,sold=0,stuck=0,room=0,doors=new Set(),sell=new Set(),dead=new Set();
@@ -209,7 +215,7 @@ function stats(a){
   else if(sold>=8&&per<4)kind="conc";
   else if(sold<Math.max(3,doors.size*0.5))kind="clear";
   else kind=rehome>=4?"move":"conc";
-  return CACHE[ck]={held:held,sold:sold,stuck:stuck,room:room,rehome:rehome,doors:doors.size,sell:sell.size,
+  return CACHE[ck]={sg:sgArt(a.a)[0],held:held,sold:sold,stuck:stuck,room:room,rehome:rehome,doors:doors.size,sell:sell.size,
     dead:dead.size,age:age,kind:kind,price:priceNow(a)};
 }
 var KIND={move:["可调货","k-move","同区有分店在卖而且还有空间，调货可以解决。"],
@@ -306,7 +312,7 @@ function allMoves(){var m=[];D.arts.forEach(function(a){if(TICK.has(a.a))m=m.con
 function filtered(){
   var q=($("#q")||{}).value||"", br=($("#fb")||{}).value||"", g=($("#fg")||{}).value||"", pb=($("#fp")||{}).value||"",
       k=($("#fk")||{}).value||"", d=($("#fd")||{}).value||"", from=($("#ff")||{}).value||"", to=($("#ft")||{}).value||"",
-      stk=($("#fs")||{}).checked, tk=($("#ftk")||{}).checked;
+      stk=($("#fs")||{}).checked, tk=($("#ftk")||{}).checked, sgf=($("#fsg")||{}).value||"";
   q=q.trim().toUpperCase();
   var lo=0,hi=1e9;if(pb){var p=pb.split("-");lo=+p[0];hi=+p[1];}
   return D.arts.filter(function(a){
@@ -318,6 +324,7 @@ function filtered(){
     if(from&&(!a.start||a.start.slice(0,7)<from))return false;
     if(to&&(!a.start||a.start.slice(0,7)>to))return false;
     if(stk&&!s.stuck)return false; if(tk&&!TICK.has(a.a))return false;
+    if(sgf==="has"&&!s.sg)return false; if(sgf==="none"&&s.sg)return false;
     return true;
   }).sort(function(x,y){
     var sx=stats(x),sy=stats(y),k=SORT.k,vx,vy;
@@ -340,6 +347,7 @@ function chooseShell(){
    '<label><span class="lbl">上市日期（首次到货），从 – 到</span><span class="row2"><input type="month" id="ff"><input type="month" id="ft"></span></label>'+
    '<label><span class="lbl">建议</span><select id="fk">'+opts([["","所有建议"],["move","可调货"],["conc","集中"],["clear","清货"],["new","太新"],["ok","正常"]],"")+'</select></label>'+
    '<label><span class="lbl">当前折扣码</span><select id="fd">'+opts([["","所有折扣码"]].concat(discs.map(function(d){return [d,d];})),"")+'</select></label>'+
+   (D.sg?'<label><span class="lbl">SG 网店库存</span><select id="fsg">'+opts([["","全部"],["has","网店有货"],["none","网店没货"]],"")+'</select></label>':'')+
    (brands.length>1?'<label><span class="lbl">品牌</span><select id="fb">'+opts([["","AD 和 BF"]].concat(brands.map(function(b){return [b,b==="BF"?"Byford":"Alain Delon"];})),"")+'</select></label>':'')+
    '<label class="chk"><input type="checkbox" id="fs"> 只看有滞销库存的</label>'+
    '<label class="chk"><input type="checkbox" id="ftk"> 只看已勾选</label>'+
@@ -348,7 +356,7 @@ function chooseShell(){
    '<div class="scroll"><table><thead id="th"></thead><tbody id="tb"></tbody></table></div><div class="more" id="more"></div>';
 }
 var COLS=[["","",""],["a","货号","l"],["g","类别","l"],["price","现价",""],["start","上市日期",""],
-  ["held","库存",""],["doors","分店",""],["sold","已售",""],["sell","有卖的分店",""],["stuck","滞销件数",""],
+  ["held","库存",""],["sg","SG 网店库存",""],["doors","分店",""],["sold","已售",""],["sell","有卖的分店",""],["stuck","滞销件数",""],
   ["stuckrm","滞销金额",""],["kind","建议","l"]];
 function renderChoose(){
   $("#th").innerHTML="<tr>"+COLS.map(function(c){if(!c[0])return "<th></th>";
@@ -364,15 +372,18 @@ function renderChoose(){
       '<td class="l" data-h="类别">'+esc(a.g)+(a.cat&&a.cat!==a.g?'<br><span class="muted">'+esc(a.cat)+"</span>":"")+"</td>"+
       '<td data-h="现价">'+price+"</td>"+
       '<td data-h="上市日期" title="首次到货 '+esc(fmtDate(a.start))+(a.lastIn?"，最后到货 "+esc(fmtDate(a.lastIn)):"")+'">'+monYr(a.start)+'<br><span class="muted">'+ageTxt(s.age)+(a.lastIn&&a.lastIn!==a.start?" · 最后到货 "+monYr(a.lastIn):"")+"</span></td>"+
-      '<td data-h="库存">'+s.held+'</td><td data-h="分店">'+s.doors+'</td><td data-h="已售 '+W+'个月">'+s.sold+"</td>"+
+      '<td data-h="库存">'+s.held+'</td><td data-h="SG 网店库存" title="'+esc(sgTip(a))+'">'+(s.sg||"–")+(sgArt(a.a)[1]?'<br><span class="muted">'+sgArt(a.a)[1]+"/月</span>":"")+'</td><td data-h="分店">'+s.doors+'</td><td data-h="已售 '+W+'个月">'+s.sold+"</td>"+
       '<td data-h="有卖的分店">'+s.sell+'</td><td data-h="滞销件数">'+(s.stuck||"–")+'</td><td data-h="滞销金额">'+(s.stuck?rm(s.stuck*s.price):"–")+"</td>"+
       '<td class="l" data-h="建议"><span class="kind '+K[1]+'" title="'+esc(K[2])+'">'+K[0]+"</span></td></tr>";
-  }).join("")||'<tr><td colspan="12" class="empty l">没有符合条件的货品。</td></tr>';
+  }).join("")||'<tr><td colspan="13" class="empty l">没有符合条件的货品。</td></tr>';
   $("#cnt").textContent=list.length+" / "+D.arts.length+" 个货号"+(list.length>LIMIT?" · 显示 "+LIMIT:"");
   $("#more").innerHTML=list.length>LIMIT?'<button class="ghost" id="moreBtn">再显示 '+Math.min(150,list.length-LIMIT)+" 个</button>":"";
   CUR_LIST=list;
 }
 var CUR_LIST=[];
+function sgTip(a){if(!D.sg)return "";var ss=D.sg.s,out=[];for(var k in ss){if(k.split("|")[0]!==a.a)continue;
+  out.push("颜色 "+k.split("|")[1]+"："+ss[k][0]+" 件，网店每月卖 "+ss[k][1]+" 件");}
+  return out.length?"SiteGiant "+D.sg.asof+" \n"+out.join("\n"):"SiteGiant 没有库存 ("+D.sg.asof+")";}
 
 /* ---------- render: desk ---------- */
 function outletName(o){var x=D.outlets.find(function(y){return y.o===o;});return x&&x.name?x.name:"";}
@@ -396,8 +407,9 @@ function colourTable(a,c,moves){
       '<td><div class="pick">'+(sameBrand(a,r)?'<button data-role="r"'+data+' aria-pressed="'+(role==="r")+'">收货</button>':'<span class="muted" style="font-size:11px">其他品牌</span>')+'<button data-role="g"'+data+' aria-pressed="'+(role==="g")+'">调出</button><button data-role="x"'+data+' aria-pressed="'+(role==="x")+'" title="这个颜色全部调出">全部调出</button></div></td></tr>';
   }).join("");
   var pcs=c.rows.reduce(function(n,r){return n+rowHeld(r);},0), sold=c.rows.reduce(function(n,r){return n+rowSold(r);},0);
-  var un=UNPLACED[a.a+"|"+c.c];
-  return '<div class="colhead">颜色 '+esc(c.c)+' <span>· '+pcs+" 件库存 · "+W+" 个月已售 "+sold+" 件</span></div>"+
+  var un=UNPLACED[a.a+"|"+c.c], sgc=sgCol(a.a,c.c);
+  return '<div class="colhead">颜色 '+esc(c.c)+' <span>· '+pcs+" 件库存 · "+W+" 个月已售 "+sold+" 件"+
+      (sgc?' · <b title="'+esc(Object.keys(sgc[2]).sort(sizeCmp).map(function(z){return z+":"+sgc[2][z];}).join(" "))+'">SG 网店 '+sgc[0]+" 件</b>（每月卖 "+sgc[1]+"）":(D.sg?" · SG 网店 0":""))+"</span></div>"+
     (un?'<div class="warn">'+un+" 件（全部调出）没有去处。请为这个颜色至少设定一间分店收货。</div>":"")+
     '<div class="scroll"><table><thead>'+head+"</thead><tbody>"+body+"</tbody></table></div>";
 }
@@ -610,7 +622,7 @@ function boot(){
     '2) <b>调出与收货</b>：每个颜色都有预设建议。<b>收货</b> = 有在卖的分店；<b>调出</b> = 有货但这段期间没卖的分店，只调出收货分店需要的件数；<b>全部调出</b> = 这间分店这个颜色全部调走，一件不留。'+
     '点一下就可以更改。每间收货分店每个尺码最多补到 <b>'+CAP+' 件</b>，卖得最好的分店优先。'+
     '3) 按 <b>复制到 WhatsApp</b> 或 <b>分享我的选择</b>，对方就能打开同一份计划。4) <b>调货单</b>：每间分店一张拣货单，可打印或发送。5) <b>分店总结</b>：调货后每间分店各类别的库存搭配，对比它的销售。'+
-    '<span class="muted">勾选只保存在这个浏览器，分享后对方才看得到。</span></div>'+
+    '<span class="muted">勾选只保存在这个浏览器，分享后对方才看得到。'+(D.sg?" SG 网店库存 = SiteGiant（网店）"+esc(D.sg.asof)+" 的可用库存；/月 = 网店平均每月销量。":"")+'</span></div>'+
     '<div class="tabs noprint" role="tablist"><button id="tab_choose" data-view="choose" role="tab">1 选货</button><button id="tab_desk" data-view="desk" role="tab">2 调出与收货 <span class="n">0</span></button>'+
     '<button id="tab_lists" data-view="lists" role="tab">3 调货单</button><button id="tab_summary" data-view="summary" role="tab">4 分店总结</button></div>'+
     '<div id="choose">'+chooseShell()+'</div><div id="desk" hidden></div><div id="lists" hidden></div><div id="summary" hidden></div>'+
