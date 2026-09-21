@@ -336,7 +336,7 @@ function chooseShell(){
   return '<div class="filters">'+
    '<label><span class="lbl">Search</span><input type="search" id="q" placeholder="Article, name, collection…"></label>'+
    '<label><span class="lbl">Category</span><select id="fg">'+opts([["","All categories"]].concat(groups.map(function(g){return [g,g];})),"")+'</select></label>'+
-   '<label><span class="lbl">Price now (EM)</span><select id="fp">'+opts(BANDS,"")+'</select></label>'+
+   '<label><span class="lbl">Price now ('+(D.region==="EAST"?"EM":"WM")+')</span><select id="fp">'+opts(BANDS,"")+'</select></label>'+
    '<label><span class="lbl">Sale start (first in), from – to</span><span class="row2"><input type="month" id="ff"><input type="month" id="ft"></span></label>'+
    '<label><span class="lbl">Verdict</span><select id="fk">'+opts([["","All verdicts"],["move","Move"],["conc","Concentrate"],["clear","Clear"],["new","Too new"],["ok","OK"]],"")+'</select></label>'+
    '<label><span class="lbl">Discount code now</span><select id="fd">'+opts([["","All codes"]].concat(discs.map(function(d){return [d,d];})),"")+'</select></label>'+
