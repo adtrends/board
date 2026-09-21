@@ -109,10 +109,29 @@ tr.give{background:var(--warn-s)}
  font-weight:700;padding:4px 8px;border-radius:7px;cursor:pointer}
 .pick button[data-role="r"][aria-pressed="true"]{background:var(--good);border-color:var(--good);color:#fff}
 .pick button[data-role="g"][aria-pressed="true"]{background:var(--warn);border-color:var(--warn);color:#fff}
+.pick button[data-role="x"][aria-pressed="true"]{background:var(--bad);border-color:var(--bad);color:#fff}
+td.left.chg{font-weight:700}
+td.left.zero{color:var(--bad);font-weight:700}
+.warn{background:var(--bad-s);color:var(--bad);border-radius:8px;padding:6px 10px;font-size:12px;margin:0 0 6px}
 .plan{margin-top:10px}
 .plan h4{margin:6px 0;font-size:13px}
 .empty{color:var(--muted);padding:14px}
 .status{font-size:12px;color:var(--muted)}
+.olist h2{font-size:18px;margin:18px 0 2px}
+.olist h3{font-size:14px;margin:14px 0 6px}
+.olist h3.recv{margin-top:20px;border-top:1px solid var(--line);padding-top:12px}
+.olist h4{font-size:13px;margin:10px 0 6px}
+.sumt tr.ohead td{background:var(--soft);font-size:13px}
+@media print{
+  body{background:#fff;color:#000}
+  .noprint,.dock,.facts,.legend,.sub,h1,#winNote,.bar,.tabs,#choose,#desk,#summary{display:none!important}
+  .wrap{padding:0;max-width:none}
+  .scroll{overflow:visible;border:0}
+  .olist{break-after:page}
+  .olist:last-child{break-after:auto}
+  th{position:static}
+  td,th{font-size:11px;padding:4px 6px}
+}
 .msg{max-width:520px;margin:18vh auto;text-align:center;padding:0 16px}
 @media (max-width:760px){
   .wrap{padding:14px 12px 150px}
@@ -210,31 +229,57 @@ function suggest(a,c,r){
 }
 function sameBrand(a,r){return r.o.slice(0,2)===a.b;}
 function roleOf(a,c,r){var k=rk(a.a,c.c,r.o),v=ROLES[k]!==undefined?ROLES[k]:suggest(a,c,r);return v==="r"&&!sameBrand(a,r)?"":v;}
+/* Roles: r = GET, g = GIVE (only what receivers need, up to CAP a size), x = ALL OUT (the door
+   sends every piece of the art-colour - promoters often want nothing left behind). */
+var UNPLACED={};                                 // "art|col" -> pcs an ALL OUT door could not place
 function allocate(a){
   var moves=[];
+  function add(from,to,c,z){var m=moves.find(function(x){return x.from===from&&x.to===to&&x.c===c&&x.z===z;});
+    if(m)m.q++;else moves.push({a:a.a,c:c,from:from,to:to,z:z,q:1});}
   a.cols.forEach(function(c){
-    var give=c.rows.filter(function(r){return roleOf(a,c,r)==="g";});
-    var get=c.rows.filter(function(r){return roleOf(a,c,r)==="r";}).sort(function(x,y){return rowSold(y)-rowSold(x);});
-    if(!give.length||!get.length)return;
+    var role={};c.rows.forEach(function(r){role[r.o]=roleOf(a,c,r);});
+    var give=c.rows.filter(function(r){return role[r.o]==="g"||role[r.o]==="x";});
+    var allOut=c.rows.filter(function(r){return role[r.o]==="x";});
+    var get=c.rows.filter(function(r){return role[r.o]==="r";}).sort(function(x,y){return rowSold(y)-rowSold(x);});
+    var key=a.a+"|"+c.c; delete UNPLACED[key];
+    if(!give.length)return;
+    if(!get.length){var left=allOut.reduce(function(n,r){return n+rowHeld(r);},0);if(left)UNPLACED[key]=left;return;}
     var pool={};give.forEach(function(g){pool[g.o]=Object.assign({},g.q);});
+    var got={};                                  // size -> outlet -> pcs received
+    function have(r,z){return (r.q[z]||0)+((got[z]||{})[r.o]||0);}
+    function take(from,r,z){pool[from][z]--;got[z]=got[z]||{};got[z][r.o]=(got[z][r.o]||0)+1;add(from,r.o,c.c,z);}
+    // pass 1: fill each receiver up to CAP per selling size; ALL OUT doors are emptied first
     liveSizes(a,c).forEach(function(z){
-      var got={};
-      for(var guard=0;guard<50;guard++){
+      for(var guard=0;guard<60;guard++){
         var moved=false;
         for(var i=0;i<get.length;i++){
-          var r=get[i]; if((r.q[z]||0)+(got[r.o]||0)>=CAP)continue;
-          var best=null;give.forEach(function(g){if(g.o!==r.o&&(pool[g.o][z]||0)>0&&(!best||pool[g.o][z]>pool[best][z]))best=g.o;});
+          var r=get[i]; if(have(r,z)>=CAP)continue;
+          var best=null;give.forEach(function(g){var n=pool[g.o][z]||0;if(g.o===r.o||!n)return;
+            var pri=role[g.o]==="x"?1:0;if(!best||pri>best.pri||(pri===best.pri&&n>best.n))best={o:g.o,pri:pri,n:n};});
           if(!best)return;
-          pool[best][z]--;got[r.o]=(got[r.o]||0)+1;moved=true;
-          var m=moves.find(function(x){return x.from===best&&x.to===r.o&&x.c===c.c&&x.z===z;});
-          if(m)m.q++;else moves.push({a:a.a,c:c.c,from:best,to:r.o,z:z,q:1});
+          take(best.o,r,z);moved=true;
         }
         if(!moved)break;
       }
     });
+    // pass 2: whatever an ALL OUT door still holds goes out too, every size, to the receiver
+    // holding the least of that size (best seller first on a tie) - the cap no longer applies
+    var unplaced=0;
+    allOut.forEach(function(g){Object.keys(pool[g.o]).forEach(function(z){
+      var tg=get.filter(function(r){return r.o!==g.o;});
+      while((pool[g.o][z]||0)>0){
+        if(!tg.length){unplaced+=pool[g.o][z];break;}
+        var r=tg.slice().sort(function(x,y){return have(x,z)-have(y,z)||rowSold(y)-rowSold(x);})[0];
+        take(g.o,r,z);
+      }
+    });});
+    if(unplaced)UNPLACED[key]=unplaced;
   });
   return moves;
 }
+/* pieces an outlet ends with, per art-colour, after the plan */
+function leftAfter(r,c,moves){
+  var n=rowHeld(r);moves.forEach(function(m){if(m.c!==c.c)return;if(m.from===r.o)n-=m.q;if(m.to===r.o)n+=m.q;});return n;}
 function allMoves(){var m=[];D.arts.forEach(function(a){if(TICK.has(a.a))m=m.concat(allocate(a));});return m;}
 
 /* ---------- render: choose ---------- */
@@ -313,10 +358,10 @@ var CUR_LIST=[];
 function outletName(o){var x=D.outlets.find(function(y){return y.o===o;});return x&&x.name?x.name:"";}
 function colourTable(a,c,moves){
   var sizes=sizesOf(a,c), live=liveSizes(a,c), ss=D.ss[a.a+"|"+c.c]||{};
-  var head='<tr><th class="l">Outlet</th><th>Held</th><th>Sold</th><th>Cover</th>'+sizes.map(function(z){
+  var head='<tr><th class="l">Outlet</th><th>Held</th><th title="What the outlet holds of this colour after the plan">Left after</th><th>Sold</th><th>Cover</th>'+sizes.map(function(z){
     return '<th class="sz'+(live.indexOf(z)<0?" dead":"")+'" title="'+((ss[z]&&ss[z][W])||0)+' sold in the cluster">'+esc(z)+"</th>";}).join("")+'<th class="l">Pick</th></tr>';
   var body=c.rows.slice().sort(function(x,y){return rowSold(y)-rowSold(x)||rowHeld(y)-rowHeld(x);}).map(function(r){
-    var role=roleOf(a,c,r), cv=cover(r);
+    var role=roleOf(a,c,r), cv=cover(r), lf=leftAfter(r,c,moves);
     var cells=sizes.map(function(z){
       var inn=moves.filter(function(m){return m.c===c.c&&m.to===r.o&&m.z===z;}).reduce(function(n,m){return n+m.q;},0);
       var out=moves.filter(function(m){return m.c===c.c&&m.from===r.o&&m.z===z;}).reduce(function(n,m){return n+m.q;},0);
@@ -326,12 +371,14 @@ function colourTable(a,c,moves){
       return '<td class="sz'+(q?"":" gap")+'">'+(q||"·")+"</td>";
     }).join("");
     var data=' data-a="'+esc(a.a)+'" data-c="'+esc(c.c)+'" data-o="'+esc(r.o)+'"';
-    return '<tr class="'+(role==="r"?"get":role==="g"?"give":"")+'"><td class="o l"><b>'+esc(r.o)+"</b><span>"+esc(outletName(r.o))+"</span></td>"+
-      "<td>"+rowHeld(r)+"</td><td>"+rowSold(r)+"</td><td>"+(cv==null?"–":cv+"w")+"</td>"+cells+
-      '<td><div class="pick">'+(sameBrand(a,r)?'<button data-role="r"'+data+' aria-pressed="'+(role==="r")+'">GET</button>':'<span class="muted" style="font-size:11px">other brand</span>')+'<button data-role="g"'+data+' aria-pressed="'+(role==="g")+'">GIVE</button></div></td></tr>';
+    return '<tr class="'+(role==="r"?"get":role==="g"||role==="x"?"give":"")+'"><td class="o l"><b>'+esc(r.o)+"</b><span>"+esc(outletName(r.o))+"</span></td>"+
+      "<td>"+rowHeld(r)+'</td><td class="left'+(lf===0&&rowHeld(r)?" zero":lf!==rowHeld(r)?" chg":"")+'">'+(lf===0&&rowHeld(r)?"0 ✓":lf)+"</td><td>"+rowSold(r)+"</td><td>"+(cv==null?"–":cv+"w")+"</td>"+cells+
+      '<td><div class="pick">'+(sameBrand(a,r)?'<button data-role="r"'+data+' aria-pressed="'+(role==="r")+'">GET</button>':'<span class="muted" style="font-size:11px">other brand</span>')+'<button data-role="g"'+data+' aria-pressed="'+(role==="g")+'">GIVE</button><button data-role="x"'+data+' aria-pressed="'+(role==="x")+'" title="Send every piece of this colour out">ALL OUT</button></div></td></tr>';
   }).join("");
   var pcs=c.rows.reduce(function(n,r){return n+rowHeld(r);},0), sold=c.rows.reduce(function(n,r){return n+rowSold(r);},0);
+  var un=UNPLACED[a.a+"|"+c.c];
   return '<div class="colhead">Colour '+esc(c.c)+' <span>· '+pcs+" pcs held · "+sold+" sold in "+W+"m</span></div>"+
+    (un?'<div class="warn">'+un+" pcs from an ALL OUT outlet have nowhere to go. Mark at least one outlet as GET for this colour.</div>":"")+
     '<div class="scroll"><table><thead>'+head+"</thead><tbody>"+body+"</tbody></table></div>";
 }
 function planTable(moves){
@@ -344,6 +391,15 @@ function planTable(moves){
       return '<tr><td class="l mono">'+esc(p[0])+'</td><td class="l mono">'+esc(p[1])+'</td><td class="l" style="white-space:normal">'+det+"</td><td>"+ms.reduce(function(n,m){return n+m.q;},0)+"</td></tr>";
     }).join("")+"</tbody></table></div>";
 }
+function outletSummary(a,moves){
+  var by={};a.cols.forEach(function(c){c.rows.forEach(function(r){var o=by[r.o]=by[r.o]||{h:0,out:0,inn:0};o.h+=rowHeld(r);});});
+  moves.forEach(function(m){if(by[m.from])by[m.from].out+=m.q;(by[m.to]=by[m.to]||{h:0,out:0,inn:0}).inn+=m.q;});
+  var rows=Object.keys(by).filter(function(o){return by[o].h||by[o].inn;}).sort(function(x,y){return by[y].h-by[x].h;}).map(function(o){
+    var v=by[o],l=v.h-v.out+v.inn;
+    return '<tr><td class="o l"><b>'+esc(o)+"</b><span>"+esc(outletName(o))+"</span></td><td>"+v.h+"</td><td>"+(v.out?"−"+v.out:"–")+"</td><td>"+(v.inn?"+"+v.inn:"–")+
+      '</td><td class="left'+(l===0&&v.h?" zero":l!==v.h?" chg":"")+'">'+(l===0&&v.h?"0 ✓":l)+"</td></tr>";}).join("");
+  return '<div class="plan"><h4>Each outlet, all colours of '+esc(a.a)+'</h4><div class="scroll"><table><thead><tr><th class="l">Outlet</th><th>Holds now</th><th>Sends</th><th>Gets</th><th>Left after</th></tr></thead><tbody>'+rows+"</tbody></table></div></div>";
+}
 var OPEN=new Set();
 function renderDesk(){
   var arts=D.arts.filter(function(a){return TICK.has(a.a);});
@@ -351,6 +407,7 @@ function renderDesk(){
   $("#desk").innerHTML='<div class="bar"><span class="lbl">Up to</span><div class="seg" id="caps">'+[1,2,3,4,5,6].map(function(n){
       return '<button data-cap="'+n+'" aria-pressed="'+(n===CAP)+'">'+n+"</button>";}).join("")+
     '</div><span class="lbl">pcs per size, per colour, per receiving door</span><span style="flex:1"></span>'+
+    '<button class="ghost" id="allOut" title="Every outlet marked GIVE sends out every piece of that colour">Every GIVE → ALL OUT</button>'+
     '<button class="ghost" id="resetRoles">Back to suggestions</button></div>'+
     arts.map(function(a){
       var moves=allocate(a), s=stats(a), n=moves.reduce(function(t,m){return t+m.q;},0), K=KIND[s.kind];
@@ -358,7 +415,7 @@ function renderDesk(){
         '<span class="kind '+K[1]+'">'+K[0]+'</span><div class="nm">'+esc(a.n)+" · "+esc(a.g)+" · "+rm(s.price)+(a.disc?" ("+esc(a.disc)+")":"")+" · sale start "+monYr(a.start)+"</div></div>"+
         '<div><span class="tag">'+s.held+" held</span><span class=\"tag\">"+s.sold+" sold "+W+"m</span>"+(n?'<span class="tag rec">'+n+" pcs to move</span>":"")+"</div></summary>"+
         '<div class="panel">'+a.cols.map(function(c){return colourTable(a,c,moves);}).join("")+
-        '<div class="plan"><h4>Moves for '+esc(a.a)+"</h4>"+planTable(moves)+"</div></div></details>";
+        outletSummary(a,moves)+'<div class="plan"><h4>Moves for '+esc(a.a)+"</h4>"+planTable(moves)+"</div></div></details>";
     }).join("")+
     '<div class="legend" style="margin-top:14px"><b>All moves</b> — one transfer (IT) per From → To.<div id="allplan" style="margin-top:8px"></div>'+
     '<div class="bar" style="margin-top:10px"><button class="act" id="copyWa">Copy for WhatsApp</button><button class="ghost" id="csv">Download CSV</button>'+
@@ -366,19 +423,110 @@ function renderDesk(){
   $("#allplan").innerHTML=planTable(allMoves());
 }
 
+/* ---------- transfer lists: what each promoter picks and sends, and what arrives ---------- */
+var LIST_OUTLET="", PICKED={};
+function artOf(code){return D.arts.find(function(a){return a.a===code;});}
+function pickKey(m){return [m.from,m.to,m.a,m.c,m.z].join("|");}
+function listTable(ms,withTick){
+  ms=ms.slice().sort(function(x,y){return x.a<y.a?-1:x.a>y.a?1:(x.c<y.c?-1:x.c>y.c?1:sizeCmp(x.z,y.z));});
+  return '<table><thead><tr>'+(withTick?'<th class="l">✓</th>':'')+'<th class="l">Article</th><th class="l">Description</th><th class="l">Colour</th><th class="l">Size</th><th>Qty</th></tr></thead><tbody>'+
+    ms.map(function(m){var a=artOf(m.a),k=pickKey(m);
+      return '<tr>'+(withTick?'<td class="l"><input type="checkbox" class="tick" data-pick="'+esc(k)+'"'+(PICKED[k]?" checked":"")+' aria-label="Picked"></td>':'')+
+        '<td class="l mono">'+esc(m.a)+'</td><td class="l" style="white-space:normal">'+esc(a?a.n:"")+'</td><td class="l mono">'+esc(m.c)+
+        '</td><td class="l mono">'+esc(m.z)+"</td><td><b>"+m.q+"</b></td></tr>";}).join("")+
+    '<tr><td colspan="'+(withTick?5:4)+'" class="l"><b>Total</b></td><td><b>'+ms.reduce(function(n,m){return n+m.q;},0)+"</b></td></tr></tbody></table>";
+}
+function outletList(o,moves){
+  var out=moves.filter(function(m){return m.from===o;}), inn=moves.filter(function(m){return m.to===o;});
+  var byTo={},byFrom={};
+  out.forEach(function(m){(byTo[m.to]=byTo[m.to]||[]).push(m);});
+  inn.forEach(function(m){(byFrom[m.from]=byFrom[m.from]||[]).push(m);});
+  var sum=function(ms){return ms.reduce(function(n,m){return n+m.q;},0);};
+  return '<section class="olist"><h2>'+esc(o)+' <span class="muted">'+esc(outletName(o))+'</span></h2>'+
+    '<p class="note">'+esc(D.title)+" conso · plan from "+fmtDate(D.built)+" stock · send "+sum(out)+" pcs in "+Object.keys(byTo).length+
+    " transfer"+(Object.keys(byTo).length===1?"":"s")+" · receive "+sum(inn)+" pcs</p>"+
+    (out.length?Object.keys(byTo).sort().map(function(t){return '<h3>SEND to '+esc(t)+' <span class="muted">'+esc(outletName(t))+" · one IT · "+sum(byTo[t])+" pcs</span></h3>"+
+      '<div class="scroll">'+listTable(byTo[t],true)+"</div>";}).join(""):'<p class="empty">Nothing to send.</p>')+
+    (inn.length?'<h3 class="recv">WILL RECEIVE</h3>'+Object.keys(byFrom).sort().map(function(f){return '<h4>From '+esc(f)+' <span class="muted">'+esc(outletName(f))+" · "+sum(byFrom[f])+" pcs</span></h4>"+
+      '<div class="scroll">'+listTable(byFrom[f],false)+"</div>";}).join(""):"")+"</section>";
+}
+function renderLists(){
+  var moves=allMoves();
+  if(!moves.length){$("#lists").innerHTML='<p class="empty">No moves planned yet. Tick articles and set GET / GIVE / ALL OUT first.</p>';return;}
+  var involved=D.outlets.map(function(x){return x.o;}).filter(function(o){return moves.some(function(m){return m.from===o||m.to===o;});});
+  if(LIST_OUTLET&&LIST_OUTLET!=="ALL"&&involved.indexOf(LIST_OUTLET)<0)LIST_OUTLET="";
+  if(!LIST_OUTLET)LIST_OUTLET=involved[0];
+  var show=LIST_OUTLET==="ALL"?involved:[LIST_OUTLET];
+  $("#lists").innerHTML='<div class="bar noprint"><span class="lbl">Outlet</span><select id="listSel">'+
+    opts([["ALL","All outlets (one page each when printed)"]].concat(involved.map(function(o){
+      var out=moves.filter(function(m){return m.from===o;}).reduce(function(n,m){return n+m.q;},0),
+          inn=moves.filter(function(m){return m.to===o;}).reduce(function(n,m){return n+m.q;},0);
+      return [o,o+" · send "+out+" · receive "+inn];})),LIST_OUTLET)+'</select>'+
+    '<button class="act" id="printList">Print / save PDF</button><button class="ghost" id="copyList">Copy for WhatsApp</button>'+
+    '<button class="ghost" id="csvList">Download CSV (all outlets)</button><span class="status" id="listStatus"></span></div>'+
+    '<p class="note noprint">Promoters pick from the SEND list and raise one IT per destination. Tick each line as it is picked (the ticks stay on this phone only). Check the shelf first: stock is the system balance on '+fmtDate(D.built)+'.</p>'+
+    show.map(function(o){return outletList(o,moves);}).join("");
+}
+function listText(o,moves){
+  var out=moves.filter(function(m){return m.from===o;}), inn=moves.filter(function(m){return m.to===o;}), by={}, lines=[];
+  out.forEach(function(m){(by[m.to]=by[m.to]||[]).push(m);});
+  lines.push("*"+o+" "+outletName(o)+"* - conso transfer list ("+fmtDate(D.built)+")","");
+  Object.keys(by).sort().forEach(function(t){
+    var ms=by[t].sort(function(x,y){return x.a<y.a?-1:x.a>y.a?1:(x.c<y.c?-1:x.c>y.c?1:sizeCmp(x.z,y.z));});
+    lines.push("*SEND to "+t+"* ("+ms.reduce(function(n,m){return n+m.q;},0)+" pcs, one IT)");
+    var g={};ms.forEach(function(m){var k=m.a+" col "+m.c;(g[k]=g[k]||[]).push(m.z+"×"+m.q);});
+    Object.keys(g).forEach(function(k){lines.push("  "+k+": "+g[k].join(", "));});
+    lines.push("");
+  });
+  if(inn.length)lines.push("Will receive "+inn.reduce(function(n,m){return n+m.q;},0)+" pcs from "+[...new Set(inn.map(function(m){return m.from;}))].join(", ")+".");
+  return lines.join("\n");
+}
+
+/* ---------- outlet summary: product-group mix before and after, against what sells ---------- */
+function renderSummary(){
+  var moves=allMoves(), T={}, groups=new Set();
+  function cell(o,g){T[o]=T[o]||{};return T[o][g]=T[o][g]||{h:0,out:0,inn:0,s:0};}
+  D.arts.forEach(function(a){var g=a.g||"Other";groups.add(g);a.cols.forEach(function(c){c.rows.forEach(function(r){
+    var x=cell(r.o,g);x.h+=rowHeld(r);x.s+=rowSold(r);});});});
+  moves.forEach(function(m){var g=(artOf(m.a)||{}).g||"Other";cell(m.from,g).out+=m.q;cell(m.to,g).inn+=m.q;});
+  var wk=+W*4.35;
+  function cov(pcs,sold){return sold?Math.round(pcs/(sold/wk)):null;}
+  var rows=D.outlets.map(function(x){return x.o;}).filter(function(o){return T[o];}).map(function(o){
+    var gs=Object.keys(T[o]).filter(function(g){var v=T[o][g];return v.h||v.inn||v.s;});
+    var tot=gs.reduce(function(t,g){var v=T[o][g];t.h+=v.h;t.out+=v.out;t.inn+=v.inn;t.s+=v.s;return t;},{h:0,out:0,inn:0,s:0});
+    tot.after=tot.h-tot.out+tot.inn;
+    var body=gs.sort(function(x,y){return T[o][y].s-T[o][x].s||T[o][y].h-T[o][x].h;}).map(function(g){
+      var v=T[o][g], after=v.h-v.out+v.inn, stockSh=tot.after?after/tot.after*100:0, saleSh=tot.s?v.s/tot.s*100:0,
+          ca=cov(after,v.s), gap=stockSh-saleSh, flag="";
+      if(after&&!v.s)flag='<span class="kind k-clear">No sales</span>';
+      else if(gap>=5)flag='<span class="kind k-conc">Too much</span>';
+      else if(gap<=-5)flag='<span class="kind k-move">Too little</span>';
+      return '<tr><td class="l">'+esc(g)+"</td><td>"+v.h+"</td><td>"+(v.out?"−"+v.out:"–")+"</td><td>"+(v.inn?"+"+v.inn:"–")+
+        '</td><td class="left'+(after!==v.h?" chg":"")+'">'+after+"</td><td>"+v.s+"</td><td>"+Math.round(stockSh)+"%</td><td>"+Math.round(saleSh)+
+        "%</td><td>"+(cov(v.h,v.s)==null?"–":cov(v.h,v.s)+"w")+"</td><td>"+(ca==null?"–":ca+"w")+'</td><td class="l">'+flag+"</td></tr>";
+    }).join("");
+    return '<tbody><tr class="ohead"><td class="l" colspan="11"><b class="mono">'+esc(o)+"</b> "+esc(outletName(o))+
+      ' <span class="muted">· now '+tot.h+" pcs · after "+tot.after+" · sold "+tot.s+" in "+W+"m</span></td></tr>"+body+"</tbody>";
+  }).join("");
+  $("#summary").innerHTML='<p class="note">Every article at each outlet (ticked or not), by product group. <b>Sends / Gets</b> come from the current plan. '+
+    '<b>Stock share</b> is the group\'s share of the outlet\'s pieces after the plan; <b>Sales share</b> is its share of the outlet\'s sales in the last '+W+' months. '+
+    'A group whose share of the stock is 5 points or more above its share of the sales is <b>Too much</b> for that outlet; 5 points or more below is <b>Too little</b>, so it is a candidate to GET more. Cover (weeks of stock at the outlet’s own rate) is shown for reference. Sorted by what sells best at that outlet.</p>'+
+    '<div class="scroll"><table class="sumt"><thead><tr><th class="l">Product group</th><th>Now</th><th>Sends</th><th>Gets</th><th>After</th><th>Sold '+W+'m</th>'+
+    '<th>Stock share</th><th>Sales share</th><th>Cover now</th><th>Cover after</th><th class="l">Mix</th></tr></thead>'+rows+"</table></div>";
+}
+
 /* ---------- shell ---------- */
 function render(){
-  var moves=VIEW==="desk"||TICK.size?allMoves():[], pcs=moves.reduce(function(n,m){return n+m.q;},0);
+  var moves=TICK.size?allMoves():[], pcs=moves.reduce(function(n,m){return n+m.q;},0);
   var tot=D.arts.reduce(function(o,a){var s=stats(a);o.h+=s.held;o.s+=s.stuck;o.rm+=s.stuck*s.price;return o;},{h:0,s:0,rm:0});
   $("#facts").innerHTML=[[D.arts.length,"Articles"],[tot.h.toLocaleString(),"Pieces held"],[tot.s.toLocaleString(),"Not selling ("+W+"m)"],
     [rm(Math.round(tot.rm)),"Not selling, at price now"],[TICK.size,"Ticked"],[pcs,"Pieces planned"]].map(function(f){
     return '<div class="fact"><b>'+f[0]+"</b><span>"+f[1]+"</span></div>";}).join("");
   $("#wins").innerHTML=D.windows.map(function(w){return '<button data-win="'+w+'" aria-pressed="'+(w===W)+'">'+w+" mth</button>";}).join("");
   $("#winNote").textContent="Sales from "+fmtDate(D.ranges[W])+" to "+fmtDate(D.built)+".";
-  $("#tabChoose").setAttribute("aria-selected",VIEW==="choose");$("#tabDesk").setAttribute("aria-selected",VIEW==="desk");
-  $("#tabDesk .n").textContent=TICK.size;
-  $("#choose").hidden=VIEW!=="choose";$("#desk").hidden=VIEW!=="desk";
-  if(VIEW==="choose")renderChoose();else renderDesk();
+  ["choose","desk","lists","summary"].forEach(function(v){$("#tab_"+v).setAttribute("aria-selected",VIEW===v);$("#"+v).hidden=VIEW!==v;});
+  $("#tab_desk .n").textContent=TICK.size;
+  if(VIEW==="choose")renderChoose();else if(VIEW==="desk")renderDesk();else if(VIEW==="lists")renderLists();else renderSummary();
   $("#dockTxt").innerHTML="<b>"+TICK.size+"</b> articles ticked · <b>"+pcs+"</b> pcs planned · up to <b>"+CAP+"</b> per size per door";
   $("#goDesk").textContent=VIEW==="desk"?"Back to Choose":"Open Give & get";
 }
@@ -386,18 +534,20 @@ function boot(){
   document.title=D.title+" Conso";
   STORE="conso:"+D.scope;
   loadState();
+  try{PICKED=JSON.parse(localStorage.getItem(STORE+":picked")||"{}");}catch(e){PICKED={};}
   $("#app").innerHTML='<h1>'+esc(D.title)+' conso</h1><p class="sub">Every article held or sold in '+esc(D.title)+" ("+D.outlets.length+
     " doors: "+D.outlets.map(function(o){return esc(o.o);}).join(", ")+"). Stock as of "+fmtDate(D.built)+
     ". Stock never leaves the cluster, and AD only moves to AD counters, BF to BF.</p>"+
     '<div class="facts" id="facts"></div>'+
     '<div class="bar"><span class="lbl">Sales window</span><div class="seg" id="wins"></div><span class="status" id="winNote"></span></div>'+
     '<div class="legend"><b>How to use.</b> 1) <b>Choose</b>: filter by category, price, sale start or verdict and tick the articles worth moving. '+
-    '2) <b>Give &amp; get</b>: each colour starts with a suggestion. <b>GET</b> = a door that sells it; <b>GIVE</b> = a door holding it with no sales in the window. '+
+    '2) <b>Give &amp; get</b>: each colour starts with a suggestion. <b>GET</b> = a door that sells it; <b>GIVE</b> = a door holding it with no sales in the window, sending only what the GET doors need; <b>ALL OUT</b> = the door sends every piece of that colour so nothing is left. '+
     'Tap to change. Each receiving door is filled up to <b>'+CAP+' pcs per size</b>, best-selling door first. '+
-    '3) <b>Copy for WhatsApp</b> or <b>Share my picks</b> so the other person opens the same plan. '+
+    '3) <b>Copy for WhatsApp</b> or <b>Share my picks</b> so the other person opens the same plan. 4) <b>Transfer lists</b>: one pick list per outlet to print or send. 5) <b>Outlet summary</b>: each outlet&rsquo;s product-group mix after the plan, against what it sells. '+
     '<span class="muted">Ticks are saved in this browser only, until you share them.</span></div>'+
-    '<div class="tabs" role="tablist"><button id="tabChoose" role="tab">Choose</button><button id="tabDesk" role="tab">Give &amp; get <span class="n">0</span></button></div>'+
-    '<div id="choose">'+chooseShell()+'</div><div id="desk" hidden></div>'+
+    '<div class="tabs noprint" role="tablist"><button id="tab_choose" data-view="choose" role="tab">1 Choose</button><button id="tab_desk" data-view="desk" role="tab">2 Give &amp; get <span class="n">0</span></button>'+
+    '<button id="tab_lists" data-view="lists" role="tab">3 Transfer lists</button><button id="tab_summary" data-view="summary" role="tab">4 Outlet summary</button></div>'+
+    '<div id="choose">'+chooseShell()+'</div><div id="desk" hidden></div><div id="lists" hidden></div><div id="summary" hidden></div>'+
     '<div class="dock"><span id="dockTxt"></span><span class="bar" style="margin:0"><button class="ghost" id="share">Share my picks</button><button class="act" id="goDesk"></button></span></div>';
   wire(); render();
 }
@@ -412,13 +562,16 @@ function waText(){
   var out=["*"+D.title+" conso plan* ("+W+"-month sales, up to "+CAP+" pcs per size)",""];
   Object.keys(pairs).sort().forEach(function(k){var ms=pairs[k];out.push("*"+k+"* : "+ms.reduce(function(n,x){return n+x.q;},0)+" pcs");
     var by={};ms.forEach(function(x){var kk=x.a+" col "+x.c;(by[kk]=by[kk]||[]).push(x);});
-    Object.keys(by).forEach(function(kk){out.push("  "+kk+": "+by[kk].sort(function(a,b){return sizeCmp(a.z,b.z);}).map(function(x){return x.z+"×"+x.q;}).join(", "));});
+    Object.keys(by).forEach(function(kk){var x0=by[kk][0],a=D.arts.find(function(y){return y.a===x0.a;}),c=a.cols.find(function(y){return y.c===x0.c;}),
+        r=c.rows.find(function(y){return y.o===x0.from;}),cleared=r&&leftAfter(r,c,m.filter(function(y){return y.a===x0.a;}))===0;
+      out.push("  "+kk+": "+by[kk].sort(function(a,b){return sizeCmp(a.z,b.z);}).map(function(x){return x.z+"×"+x.q;}).join(", ")+(cleared?"  _(all out, 0 left)_":""));});
     out.push("");});
   return out.join("\n");
 }
 function wire(){
   document.addEventListener("click",function(e){
     var t=e.target.closest("button,th[data-sort],input[data-tick]");if(!t)return;
+    if(t.dataset.view){VIEW=t.dataset.view;render();window.scrollTo(0,0);return;}
     if(t.dataset.win){W=t.dataset.win;saveState();render();return;}
     if(t.dataset.sort){var k=t.dataset.sort;SORT=SORT.k===k?{k:k,d:-SORT.d}:{k:k,d:(k==="a"||k==="g"||k==="kind")?1:-1};renderChoose();return;}
     if(t.dataset.tick!==undefined){if(t.checked)TICK.add(t.dataset.tick);else TICK.delete(t.dataset.tick);
@@ -428,12 +581,19 @@ function wire(){
       var a=D.arts.find(function(x){return x.a===t.dataset.a;}),c=a.cols.find(function(x){return x.c===t.dataset.c;}),r=c.rows.find(function(x){return x.o===t.dataset.o;});
       ROLES[k2]=roleOf(a,c,r)===t.dataset.role?"":t.dataset.role;OPEN.add(a.a);saveState();render();return;}
     switch(t.id){
-      case "tabChoose":VIEW="choose";render();break;
-      case "tabDesk":VIEW="desk";render();break;
+      case "printList":window.print();break;
+      case "copyList":var mv=allMoves(),os=LIST_OUTLET==="ALL"?D.outlets.map(function(x){return x.o;}).filter(function(o){return mv.some(function(m){return m.from===o;});}):[LIST_OUTLET];
+        copy(os.map(function(o){return listText(o,mv);}).join("\n\n"),"#listStatus");break;
+      case "csvList":var rows2=[["From","FromName","To","ToName","Article","Description","Colour","Size","Qty"]].concat(allMoves().map(function(m){
+          return [m.from,outletName(m.from),m.to,outletName(m.to),m.a,(artOf(m.a)||{}).n||"",m.c,m.z,m.q];}));
+        var blob2=new Blob([rows2.map(function(r){return r.map(function(v){v=String(v);return /[",]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;}).join(",");}).join("\n")],{type:"text/csv"});
+        var a2=document.createElement("a");a2.href=URL.createObjectURL(blob2);a2.download=D.title.replace(/\W+/g,"_")+"_transfer_lists_"+D.built+".csv";a2.click();break;
       case "goDesk":VIEW=VIEW==="desk"?"choose":"desk";render();window.scrollTo(0,0);break;
       case "moreBtn":LIMIT+=150;renderChoose();break;
       case "tickAll":CUR_LIST.slice(0,LIMIT).forEach(function(a){TICK.add(a.a);});saveState();render();break;
       case "untick":TICK.clear();saveState();render();break;
+      case "allOut":D.arts.forEach(function(a){if(!TICK.has(a.a))return;a.cols.forEach(function(c){c.rows.forEach(function(r){
+          if(roleOf(a,c,r)==="g")ROLES[rk(a.a,c.c,r.o)]="x";});});});saveState();render();break;
       case "resetRoles":if(confirm("Drop your GET/GIVE changes and go back to the suggestions?")){ROLES={};saveState();render();}break;
       case "copyWa":copy(waText(),"#copyStatus");break;
       case "share":copy(shareLink(),"#dockTxt");break;
@@ -443,6 +603,10 @@ function wire(){
     }
   });
   document.addEventListener("toggle",function(e){var d=e.target;if(d.dataset&&d.dataset.art){if(d.open)OPEN.add(d.dataset.art);else OPEN.delete(d.dataset.art);}},true);
+  document.addEventListener("change",function(e){
+    if(e.target.id==="listSel"){LIST_OUTLET=e.target.value;renderLists();}
+    if(e.target.dataset&&e.target.dataset.pick!==undefined){PICKED[e.target.dataset.pick]=e.target.checked;try{localStorage.setItem(STORE+":picked",JSON.stringify(PICKED));}catch(x){}}
+  });
   document.addEventListener("input",function(e){if(e.target.closest("#choose .filters")){LIMIT=150;renderChoose();}});
 }
 
