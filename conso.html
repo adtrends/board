@@ -193,7 +193,13 @@ function rm(v){return v?"RM"+(Math.round(v*100)/100).toLocaleString("en-MY"):"�
 function rowSold(r){return (r.s&&r.s[W])||0;}
 function rowHeld(r){var n=0;for(var k in r.q)n+=r.q[k];return n;}
 function priceNow(a){return a.nett&&a.nett<a.p?a.nett:a.p;}
-var CACHE={};
+var CACHE={}, SGART=null;
+function sgArt(code){
+  if(!SGART){SGART={};var ss=(D.sg&&D.sg.s)||{};for(var k in ss){var a=k.split("|")[0],v=ss[k];
+    var x=SGART[a]=SGART[a]||[0,0];x[0]+=v[0];x[1]+=v[1];}}
+  return SGART[code]||[0,0];
+}
+function sgCol(a,c){return ((D.sg&&D.sg.s)||{})[a+"|"+c]||null;}
 function stats(a){
   var ck=a.a+"|"+W; if(CACHE[ck])return CACHE[ck];
   var held=0,sold=0,stuck=0,room=0,doors=new Set(),sell=new Set(),dead=new Set();
@@ -209,7 +215,7 @@ function stats(a){
   else if(sold>=8&&per<4)kind="conc";
   else if(sold<Math.max(3,doors.size*0.5))kind="clear";
   else kind=rehome>=4?"move":"conc";
-  return CACHE[ck]={held:held,sold:sold,stuck:stuck,room:room,rehome:rehome,doors:doors.size,sell:sell.size,
+  return CACHE[ck]={sg:sgArt(a.a)[0],held:held,sold:sold,stuck:stuck,room:room,rehome:rehome,doors:doors.size,sell:sell.size,
     dead:dead.size,age:age,kind:kind,price:priceNow(a)};
 }
 var KIND={move:["Move","k-move","Doors in the cluster sell it and have room — transfers fix this."],
@@ -306,7 +312,7 @@ function allMoves(){var m=[];D.arts.forEach(function(a){if(TICK.has(a.a))m=m.con
 function filtered(){
   var q=($("#q")||{}).value||"", br=($("#fb")||{}).value||"", g=($("#fg")||{}).value||"", pb=($("#fp")||{}).value||"",
       k=($("#fk")||{}).value||"", d=($("#fd")||{}).value||"", from=($("#ff")||{}).value||"", to=($("#ft")||{}).value||"",
-      stk=($("#fs")||{}).checked, tk=($("#ftk")||{}).checked;
+      stk=($("#fs")||{}).checked, tk=($("#ftk")||{}).checked, sgf=($("#fsg")||{}).value||"";
   q=q.trim().toUpperCase();
   var lo=0,hi=1e9;if(pb){var p=pb.split("-");lo=+p[0];hi=+p[1];}
   return D.arts.filter(function(a){
@@ -318,6 +324,7 @@ function filtered(){
     if(from&&(!a.start||a.start.slice(0,7)<from))return false;
     if(to&&(!a.start||a.start.slice(0,7)>to))return false;
     if(stk&&!s.stuck)return false; if(tk&&!TICK.has(a.a))return false;
+    if(sgf==="has"&&!s.sg)return false; if(sgf==="none"&&s.sg)return false;
     return true;
   }).sort(function(x,y){
     var sx=stats(x),sy=stats(y),k=SORT.k,vx,vy;
@@ -340,6 +347,7 @@ function chooseShell(){
    '<label><span class="lbl">Sale start (first in), from – to</span><span class="row2"><input type="month" id="ff"><input type="month" id="ft"></span></label>'+
    '<label><span class="lbl">Verdict</span><select id="fk">'+opts([["","All verdicts"],["move","Move"],["conc","Concentrate"],["clear","Clear"],["new","Too new"],["ok","OK"]],"")+'</select></label>'+
    '<label><span class="lbl">Discount code now</span><select id="fd">'+opts([["","All codes"]].concat(discs.map(function(d){return [d,d];})),"")+'</select></label>'+
+   (D.sg?'<label><span class="lbl">SG stock (online)</span><select id="fsg">'+opts([["","All"],["has","Has SG stock"],["none","No SG stock"]],"")+'</select></label>':'')+
    (brands.length>1?'<label><span class="lbl">Brand</span><select id="fb">'+opts([["","AD and BF"]].concat(brands.map(function(b){return [b,b==="BF"?"Byford":"Alain Delon"];})),"")+'</select></label>':'')+
    '<label class="chk"><input type="checkbox" id="fs"> Only with stock not selling</label>'+
    '<label class="chk"><input type="checkbox" id="ftk"> Only ticked</label>'+
@@ -348,7 +356,7 @@ function chooseShell(){
    '<div class="scroll"><table><thead id="th"></thead><tbody id="tb"></tbody></table></div><div class="more" id="more"></div>';
 }
 var COLS=[["","",""],["a","Article","l"],["g","Category","l"],["price","Price now",""],["start","Sale start",""],
-  ["held","Held",""],["doors","Doors",""],["sold","Sold",""],["sell","Selling doors",""],["stuck","Not selling",""],
+  ["held","Held",""],["sg","SG stock",""],["doors","Doors",""],["sold","Sold",""],["sell","Selling doors",""],["stuck","Not selling",""],
   ["stuckrm","Not selling RM",""],["kind","Verdict","l"]];
 function renderChoose(){
   $("#th").innerHTML="<tr>"+COLS.map(function(c){if(!c[0])return "<th></th>";
@@ -364,15 +372,18 @@ function renderChoose(){
       '<td class="l" data-h="Category">'+esc(a.g)+(a.cat&&a.cat!==a.g?'<br><span class="muted">'+esc(a.cat)+"</span>":"")+"</td>"+
       '<td data-h="Price now">'+price+"</td>"+
       '<td data-h="Sale start" title="First received '+esc(fmtDate(a.start))+(a.lastIn?", last received "+esc(fmtDate(a.lastIn)):"")+'">'+monYr(a.start)+'<br><span class="muted">'+ageTxt(s.age)+(a.lastIn&&a.lastIn!==a.start?" · last in "+monYr(a.lastIn):"")+"</span></td>"+
-      '<td data-h="Held">'+s.held+'</td><td data-h="Doors">'+s.doors+'</td><td data-h="Sold '+W+'m">'+s.sold+"</td>"+
+      '<td data-h="Held">'+s.held+'</td><td data-h="SG stock" title="'+esc(sgTip(a))+'">'+(s.sg||"–")+(sgArt(a.a)[1]?'<br><span class="muted">'+sgArt(a.a)[1]+"/mth</span>":"")+'</td><td data-h="Doors">'+s.doors+'</td><td data-h="Sold '+W+'m">'+s.sold+"</td>"+
       '<td data-h="Selling doors">'+s.sell+'</td><td data-h="Not selling">'+(s.stuck||"–")+'</td><td data-h="Not selling RM">'+(s.stuck?rm(s.stuck*s.price):"–")+"</td>"+
       '<td class="l" data-h="Verdict"><span class="kind '+K[1]+'" title="'+esc(K[2])+'">'+K[0]+"</span></td></tr>";
-  }).join("")||'<tr><td colspan="12" class="empty l">Nothing matches these filters.</td></tr>';
+  }).join("")||'<tr><td colspan="13" class="empty l">Nothing matches these filters.</td></tr>';
   $("#cnt").textContent=list.length+" of "+D.arts.length+" articles"+(list.length>LIMIT?" · showing "+LIMIT:"");
   $("#more").innerHTML=list.length>LIMIT?'<button class="ghost" id="moreBtn">Show '+Math.min(150,list.length-LIMIT)+" more</button>":"";
   CUR_LIST=list;
 }
 var CUR_LIST=[];
+function sgTip(a){if(!D.sg)return "";var ss=D.sg.s,out=[];for(var k in ss){if(k.split("|")[0]!==a.a)continue;
+  out.push("col "+k.split("|")[1]+": "+ss[k][0]+" pcs, sells "+ss[k][1]+"/mth online");}
+  return out.length?"SiteGiant "+D.sg.asof+" \n"+out.join("\n"):"No SiteGiant stock ("+D.sg.asof+")";}
 
 /* ---------- render: desk ---------- */
 function outletName(o){var x=D.outlets.find(function(y){return y.o===o;});return x&&x.name?x.name:"";}
@@ -396,8 +407,9 @@ function colourTable(a,c,moves){
       '<td><div class="pick">'+(sameBrand(a,r)?'<button data-role="r"'+data+' aria-pressed="'+(role==="r")+'">GET</button>':'<span class="muted" style="font-size:11px">other brand</span>')+'<button data-role="g"'+data+' aria-pressed="'+(role==="g")+'">GIVE</button><button data-role="x"'+data+' aria-pressed="'+(role==="x")+'" title="Send every piece of this colour out">ALL OUT</button></div></td></tr>';
   }).join("");
   var pcs=c.rows.reduce(function(n,r){return n+rowHeld(r);},0), sold=c.rows.reduce(function(n,r){return n+rowSold(r);},0);
-  var un=UNPLACED[a.a+"|"+c.c];
-  return '<div class="colhead">Colour '+esc(c.c)+' <span>· '+pcs+" pcs held · "+sold+" sold in "+W+"m</span></div>"+
+  var un=UNPLACED[a.a+"|"+c.c], sgc=sgCol(a.a,c.c);
+  return '<div class="colhead">Colour '+esc(c.c)+' <span>· '+pcs+" pcs held · "+sold+" sold in "+W+"m"+
+      (sgc?' · <b title="'+esc(Object.keys(sgc[2]).sort(sizeCmp).map(function(z){return z+":"+sgc[2][z];}).join(" "))+'">SG online '+sgc[0]+" pcs</b> ("+sgc[1]+"/mth)":(D.sg?" · SG online 0":""))+"</span></div>"+
     (un?'<div class="warn">'+un+" pcs from an ALL OUT outlet have nowhere to go. Mark at least one outlet as GET for this colour.</div>":"")+
     '<div class="scroll"><table><thead>'+head+"</thead><tbody>"+body+"</tbody></table></div>";
 }
@@ -610,7 +622,7 @@ function boot(){
     '2) <b>Give &amp; get</b>: each colour starts with a suggestion. <b>GET</b> = a door that sells it; <b>GIVE</b> = a door holding it with no sales in the window, sending only what the GET doors need; <b>ALL OUT</b> = the door sends every piece of that colour so nothing is left. '+
     'Tap to change. Each receiving door is filled up to <b>'+CAP+' pcs per size</b>, best-selling door first. '+
     '3) <b>Copy for WhatsApp</b> or <b>Share my picks</b> so the other person opens the same plan. 4) <b>Transfer lists</b>: one pick list per outlet to print or send. 5) <b>Outlet summary</b>: each outlet&rsquo;s product-group mix after the plan, against what it sells. '+
-    '<span class="muted">Ticks are saved in this browser only, until you share them.</span></div>'+
+    '<span class="muted">Ticks are saved in this browser only, until you share them.'+(D.sg?" SG stock = SiteGiant (online) available stock on "+esc(D.sg.asof)+"; /mth = average online sales a month.":"")+'</span></div>'+
     '<div class="tabs noprint" role="tablist"><button id="tab_choose" data-view="choose" role="tab">1 Choose</button><button id="tab_desk" data-view="desk" role="tab">2 Give &amp; get <span class="n">0</span></button>'+
     '<button id="tab_lists" data-view="lists" role="tab">3 Transfer lists</button><button id="tab_summary" data-view="summary" role="tab">4 Outlet summary</button></div>'+
     '<div id="choose">'+chooseShell()+'</div><div id="desk" hidden></div><div id="lists" hidden></div><div id="summary" hidden></div>'+
