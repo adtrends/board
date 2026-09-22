@@ -134,6 +134,7 @@ details.recvd summary{cursor:pointer;font-weight:600;font-size:13px;margin-botto
 .olist h3{font-size:14px;margin:14px 0 6px}
 .olist h3.recv{margin-top:20px;border-top:1px solid var(--line);padding-top:12px}
 .olist h4{font-size:13px;margin:10px 0 6px}
+.olist h4.sgrp{margin:14px 0 4px;font-size:13px}
 .sumt tr.ohead td{background:var(--soft);font-size:13px}
 .sumt .up{color:var(--good);font-size:10px}
 .sumt .down{color:var(--bad);font-size:10px}
@@ -155,6 +156,8 @@ details.recvd summary{cursor:pointer;font-weight:600;font-size:13px;margin-botto
   details.recvd{display:none}
   .olist h2{font-size:14px;margin:0 0 2px}
   .olist .note{font-size:9px;margin:0 0 4px}
+  .olist h4.sgrp{font-size:10px;margin:6px 0 2px;break-after:avoid}
+  table.grid{break-inside:auto}
 }
 .msg{max-width:520px;margin:18vh auto;text-align:center;padding:0 16px}
 @media (max-width:760px){
@@ -476,12 +479,27 @@ var LIST_OUTLET="", PICKED={};
 function artOf(code){return D.arts.find(function(a){return a.a===code;});}
 function pickKey(m){return [m.from,m.to,m.a,m.c,m.z].join("|");}
 /* Compact grid, same layout as the 2023 Kuching conso list (Tze's 20230516 - Kuching Conso List.pdf):
-   one row per art-colour per destination, every size in a shared column, so an outlet fits on a page
-   or two instead of one table per destination. */
-var SLOTS=[["29","XXS","48","Y3-4"],["30","XS","50","Y5-6"],["31","S","52","Y7-8"],["32","54","Y9-10"],["33","M","56","14.5","Y11-12"],
-  ["34","L","15","Y13-14"],["35","XL","15.5"],["36","XXL","2XL","16"],["38","XXXL","3XL","16.5"],["40","17","5.5"],["42","17.5","6.5"],["44","18"]];
-var SLOT_HEAD=["29<br>XXS","30<br>XS","31<br>S","32","33<br>M","34<br>L/15","35<br>XL/15.5","36<br>XXL/16","38<br>3XL/16.5","40<br>17/5.5","42<br>17.5/6.5","44<br>18"];
-function slotOf(z){z=String(z).toUpperCase();for(var i=0;i<SLOTS.length;i++)if(SLOTS[i].indexOf(z)>=0)return i;return -1;}
+   one row per art-colour per destination, so an outlet fits on a page or two.
+   22 Sep 2026 (Tze): the old version forced every size into 12 shared columns ("34 / L / 15"), which
+   read as confusing. Rows are now GROUPED BY SIZE SYSTEM - shirts (collar), tops (S-XXXL), pants
+   (waist), suits, kids, other - and each group is its own table with only its own sizes as columns. */
+var SIZE_GROUPS=[["collar","Shirts - collar size"],["tops","Tops - S to XXXL"],["waist","Pants - waist size"],
+  ["suit","Suits / blazers"],["kids","Kids"],["other","Other sizes"]];
+function sizeGroup(z){z=String(z).trim().toUpperCase();var n=parseFloat(z),num=/^\d+(\.\d+)?$/.test(z);
+  if(/^Y\d/.test(z))return "kids";
+  if(/^(\d?X*S|M|L|X*L|\dXL|XXXL)$/.test(z))return "tops";
+  if(num&&n>=13.5&&n<=19)return "collar";
+  if(num&&n===Math.floor(n)&&n>=24&&n<=46)return "waist";
+  if(num&&n===Math.floor(n)&&n>=47&&n<=60)return "suit";
+  return "other";}
+var TOP_ORDER=["XXS","XS","S","M","L","XL","XXL","2XL","XXXL","3XL","4XL"];
+function groupSizeCmp(a,b){var ia=TOP_ORDER.indexOf(String(a).toUpperCase()),ib=TOP_ORDER.indexOf(String(b).toUpperCase());
+  return (ia>=0&&ib>=0)?ia-ib:sizeCmp(a,b);}
+function colourGroup(ms){ // one group per art-colour, by the majority of its sizes
+  var c={};ms.forEach(function(m){var g=sizeGroup(m.z);c[g]=(c[g]||0)+m.q;});
+  return Object.keys(c).sort(function(x,y){return c[y]-c[x];})[0];}
+var SLOTS=[];   // set per group by gridTable
+function slotOf(z){return SLOTS.indexOf(String(z));}
 function gridRows(ms,other,allOutOf){
   // ms: moves from one outlet; other: "to" or "from" - the column that varies
   var by={};ms.forEach(function(m){var k=m[other]+"|"+m.a+"|"+m.c;(by[k]=by[k]||[]).push(m);});
@@ -501,11 +519,20 @@ function gridRows(ms,other,allOutOf){
   return {html:html,tot:tot};
 }
 function gridTable(ms,other,label,allOutOf){
-  var g=gridRows(ms,other,allOutOf);
-  return '<table class="grid"><thead><tr><th class="l">'+label+'</th><th class="l">Art no</th><th class="l">Col</th><th>RM</th>'+
-    SLOT_HEAD.map(function(h){return "<th>"+h+"</th>";}).join("")+'<th class="l">Other / note</th><th>Total</th><th class="tk">✓</th></tr></thead><tbody>'+g.html+
-    '<tr class="gt"><td class="l" colspan="4">Grand total</td>'+g.tot.slice(0,SLOTS.length).map(function(n){return "<td>"+(n||"")+"</td>";}).join("")+
-    "<td></td><td><b>"+g.tot[SLOTS.length+1]+'</b></td><td class="tk"></td></tr></tbody></table>';
+  // split the art-colours into size groups; each group gets its own table and its own size columns
+  var byCol={};ms.forEach(function(m){var k=m.a+"|"+m.c;(byCol[k]=byCol[k]||[]).push(m);});
+  var inGroup={};Object.keys(byCol).forEach(function(k){var g=colourGroup(byCol[k]);inGroup[g]=(inGroup[g]||[]).concat(byCol[k]);});
+  var used=SIZE_GROUPS.filter(function(g){return inGroup[g[0]];});
+  return used.map(function(g){
+    var gm=inGroup[g[0]], set={};gm.forEach(function(m){set[String(m.z)]=1;});
+    SLOTS=Object.keys(set).sort(groupSizeCmp);
+    var r=gridRows(gm,other,allOutOf), pcs=r.tot[SLOTS.length+1];
+    return '<h4 class="sgrp">'+esc(g[1])+' <span class="muted">· '+pcs+' pcs</span></h4>'+
+      '<table class="grid"><thead><tr><th class="l">'+label+'</th><th class="l">Art no</th><th class="l">Col</th><th>RM</th>'+
+      SLOTS.map(function(h){return "<th>"+esc(h)+"</th>";}).join("")+'<th class="l">Other / note</th><th>Total</th><th class="tk">✓</th></tr></thead><tbody>'+r.html+
+      '<tr class="gt"><td class="l" colspan="4">Group total</td>'+r.tot.slice(0,SLOTS.length).map(function(n){return "<td>"+(n||"")+"</td>";}).join("")+
+      "<td></td><td><b>"+pcs+'</b></td><td class="tk"></td></tr></tbody></table>';
+  }).join("");
 }
 function outletList(o,moves){
   var out=moves.filter(function(m){return m.from===o;}), inn=moves.filter(function(m){return m.to===o;});
@@ -533,7 +560,7 @@ function renderLists(){
       return [o,o+" · send "+out+" · receive "+inn];})),LIST_OUTLET)+'</select>'+
     '<button class="act" id="printList">Print / save PDF</button><button class="ghost" id="copyList">Copy for WhatsApp</button>'+
     '<button class="ghost" id="csvList">Download CSV (all outlets)</button><span class="status" id="listStatus"></span></div>'+
-    '<p class="note noprint">Promoters pick from the list and raise one IT per destination (the "To" column). ALL OUT = send every piece of that colour. Sizes sit in shared columns (a shirt 15.5 and an XL fall under 35). Check the shelf first: stock is the system balance on '+fmtDate(D.built)+'.</p>'+
+    '<p class="note noprint">Promoters pick from the list and raise one IT per destination (the "To" column). ALL OUT = send every piece of that colour. Rows are grouped by size type (shirts, tops, pants, suits, kids), each with its own size columns. Check the shelf first: stock is the system balance on '+fmtDate(D.built)+'.</p>'+
     show.map(function(o){return outletList(o,moves);}).join("");
 }
 function listText(o,moves){
