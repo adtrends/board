@@ -114,6 +114,9 @@ td.left.chg{font-weight:700}
 td.left.zero{color:var(--bad);font-weight:700}
 .warn{background:var(--bad-s);color:var(--bad);border-radius:8px;padding:6px 10px;font-size:12px;margin:0 0 6px}
 .plan{margin-top:10px}
+.capsel{font-weight:400;font-size:12px;color:var(--muted);margin:0 6px}
+.capsel select{padding:2px 6px;font-size:12px;border-radius:7px}
+.capsel.own select{border-color:var(--accent);color:var(--accent);font-weight:700}
 .plan h4{margin:6px 0;font-size:13px}
 .empty{color:var(--muted);padding:14px}
 .status{font-size:12px;color:var(--muted)}
@@ -175,7 +178,11 @@ details.recvd summary{cursor:pointer;font-weight:600;font-size:13px;margin-botto
 (function(){
 "use strict";
 var D=null, W="6", CAP=3, VIEW="choose", SORT={k:"stuck",d:-1}, LIMIT=150;
-var TICK=new Set(), ROLES={}, KEYHEX=null, STORE=null;
+var TICK=new Set(), ROLES={}, CAPS={}, KEYHEX=null, STORE=null;
+/* Tze, 2026-09-22: "can you do it for every article color and also a global switch ... a default switch
+   so they can ... adjust individually for every article color, because the demand changes for every color".
+   CAP is the page default; CAPS["art|col"] overrides it for one colour. */
+function capOf(a,c){var v=CAPS[a+"|"+c];return v?v:CAP;}
 var TARGET_WK=12, MAX_COVER=26, TOO_NEW=120;
 var $=function(s,r){return (r||document).querySelector(s)};
 var esc=function(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})};
@@ -226,15 +233,15 @@ var KIND={move:["Move","k-move","Doors in the cluster sell it and have room — 
 var BANDS=[["","All prices"],["0-99","Below RM100"],["100-149","RM100–149"],["150-199","RM150–199"],["200-299","RM200–299"],["300-99999","RM300 and up"]];
 
 /* ---------- state: this browser + shareable in the link ---------- */
-function saveState(){try{localStorage.setItem(STORE,JSON.stringify({t:[...TICK],r:ROLES,cap:CAP,w:W}));}catch(e){}}
+function saveState(){try{localStorage.setItem(STORE,JSON.stringify({t:[...TICK],r:ROLES,cap:CAP,caps:CAPS,w:W}));}catch(e){}}
 function loadState(){
   var s=null; var m=(location.hash||"").match(/[&]s=([A-Za-z0-9_\-]+)/);
   if(m){try{s=JSON.parse(decodeURIComponent(escape(atob(m[1].replace(/-/g,"+").replace(/_/g,"/")))));}catch(e){}}
   if(!s){try{s=JSON.parse(localStorage.getItem(STORE)||"null");}catch(e){}}
-  if(s){TICK=new Set(s.t||[]);ROLES=s.r||{};CAP=s.cap||3;if(s.w&&D.windows.indexOf(s.w)>=0)W=s.w;}
+  if(s){TICK=new Set(s.t||[]);ROLES=s.r||{};CAP=s.cap||3;CAPS=s.caps||{};if(s.w&&D.windows.indexOf(s.w)>=0)W=s.w;}
 }
 function shareLink(){
-  var raw=JSON.stringify({t:[...TICK],r:ROLES,cap:CAP,w:W});
+  var raw=JSON.stringify({t:[...TICK],r:ROLES,cap:CAP,caps:CAPS,w:W});
   var b=btoa(unescape(encodeURIComponent(raw))).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
   return location.origin+location.pathname+"#"+KEYHEX+"&s="+b;
 }
@@ -249,7 +256,7 @@ function cover(r){var s=rowSold(r);if(!s)return null;return Math.round(rowHeld(r
 function suggest(a,c,r){
   var st=stats(a), s=rowSold(r), h=rowHeld(r);
   if(!s&&h&&st.kind!=="new")return "g";
-  if(s&&sameBrand(a,r)){var cv=cover(r);var short=liveSizes(a,c).some(function(z){return (r.q[z]||0)<CAP;});
+  if(s&&sameBrand(a,r)){var cv=cover(r);var short=liveSizes(a,c).some(function(z){return (r.q[z]||0)<capOf(a.a,c.c);});
     if(short&&(cv===null||cv<=MAX_COVER))return "r";}
   return "";
 }
@@ -267,7 +274,7 @@ function allocate(a){
     var give=c.rows.filter(function(r){return role[r.o]==="g"||role[r.o]==="x";});
     var allOut=c.rows.filter(function(r){return role[r.o]==="x";});
     var get=c.rows.filter(function(r){return role[r.o]==="r";}).sort(function(x,y){return rowSold(y)-rowSold(x);});
-    var key=a.a+"|"+c.c; delete UNPLACED[key];
+    var key=a.a+"|"+c.c, cap=capOf(a.a,c.c); delete UNPLACED[key];
     if(!give.length)return;
     if(!get.length){var left=allOut.reduce(function(n,r){return n+rowHeld(r);},0);if(left)UNPLACED[key]=left;return;}
     var pool={};give.forEach(function(g){pool[g.o]=Object.assign({},g.q);});
@@ -279,7 +286,7 @@ function allocate(a){
       for(var guard=0;guard<60;guard++){
         var moved=false;
         for(var i=0;i<get.length;i++){
-          var r=get[i]; if(have(r,z)>=CAP)continue;
+          var r=get[i]; if(have(r,z)>=cap)continue;
           var best=null;give.forEach(function(g){var n=pool[g.o][z]||0;if(g.o===r.o||!n)return;
             var pri=role[g.o]==="x"?1:0;if(!best||pri>best.pri||(pri===best.pri&&n>best.n))best={o:g.o,pri:pri,n:n};});
           if(!best)return;
@@ -408,7 +415,11 @@ function colourTable(a,c,moves){
   }).join("");
   var pcs=c.rows.reduce(function(n,r){return n+rowHeld(r);},0), sold=c.rows.reduce(function(n,r){return n+rowSold(r);},0);
   var un=UNPLACED[a.a+"|"+c.c], sgc=sgCol(a.a,c.c);
-  return '<div class="colhead">Colour '+esc(c.c)+' <span>· '+pcs+" pcs held · "+sold+" sold in "+W+"m"+
+  var own=CAPS[a.a+"|"+c.c]||0;
+  var capSel='<label class="capsel'+(own?" own":"")+'">Up to <select data-capa="'+esc(a.a)+'" data-capc="'+esc(c.c)+'">'+
+    '<option value="">'+"Default ("+CAP+")"+'</option>'+[1,2,3,4,5,6,8,10].map(function(n){return '<option value="'+n+'"'+(own===n?" selected":"")+'>'+n+'</option>';}).join("")+
+    '</select> pcs per size</label>';
+  return '<div class="colhead">Colour '+esc(c.c)+' '+capSel+' <span>· '+pcs+" pcs held · "+sold+" sold in "+W+"m"+
       (sgc?' · <b title="'+esc(Object.keys(sgc[2]).sort(sizeCmp).map(function(z){return z+":"+sgc[2][z];}).join(" "))+'">SG online '+sgc[0]+" pcs</b> ("+sgc[1]+"/mth)":(D.sg?" · SG online 0":""))+"</span></div>"+
     (un?'<div class="warn">'+un+" pcs from an ALL OUT outlet have nowhere to go. Mark at least one outlet as GET for this colour.</div>":"")+
     '<div class="scroll"><table><thead>'+head+"</thead><tbody>"+body+"</tbody></table></div>";
@@ -436,9 +447,12 @@ var OPEN=new Set();
 function renderDesk(){
   var arts=D.arts.filter(function(a){return TICK.has(a.a);});
   if(!arts.length){$("#desk").innerHTML='<p class="empty">Tick articles on the <b>Choose</b> tab first, then come back here.</p>';return;}
-  $("#desk").innerHTML='<div class="bar"><span class="lbl">Up to</span><div class="seg" id="caps">'+[1,2,3,4,5,6].map(function(n){
+  var nOver=Object.keys(CAPS).length;
+  $("#desk").innerHTML='<div class="bar"><span class="lbl">Default: up to</span><div class="seg" id="caps">'+[1,2,3,4,5,6].map(function(n){
       return '<button data-cap="'+n+'" aria-pressed="'+(n===CAP)+'">'+n+"</button>";}).join("")+
-    '</div><span class="lbl">pcs per size, per colour, per receiving door</span><span style="flex:1"></span>'+
+    '</div><span class="lbl">pcs per size, per receiving door</span>'+
+    (nOver?'<button class="ghost" id="resetCaps">'+nOver+' colour'+(nOver>1?"s":"")+' set by hand \u2192 back to default</button>':'')+
+    '<span style="flex:1"></span>'+
     '<button class="ghost" id="allOut" title="Every outlet marked GIVE sends out every piece of that colour">Every GIVE → ALL OUT</button>'+
     '<button class="ghost" id="resetRoles">Back to suggestions</button></div>'+
     arts.map(function(a){
@@ -605,7 +619,7 @@ function render(){
   ["choose","desk","lists","summary"].forEach(function(v){$("#tab_"+v).setAttribute("aria-selected",VIEW===v);$("#"+v).hidden=VIEW!==v;});
   $("#tab_desk .n").textContent=TICK.size;
   if(VIEW==="choose")renderChoose();else if(VIEW==="desk")renderDesk();else if(VIEW==="lists")renderLists();else renderSummary();
-  $("#dockTxt").innerHTML="<b>"+TICK.size+"</b> articles ticked · <b>"+pcs+"</b> pcs planned · up to <b>"+CAP+"</b> per size per door";
+  $("#dockTxt").innerHTML="<b>"+TICK.size+"</b> articles ticked · <b>"+pcs+"</b> pcs planned · default up to <b>"+CAP+"</b> per size per door";
   $("#goDesk").textContent=VIEW==="desk"?"Back to Choose":"Open Give & get";
 }
 function boot(){
@@ -620,7 +634,7 @@ function boot(){
     '<div class="bar"><span class="lbl">Sales window</span><div class="seg" id="wins"></div><span class="status" id="winNote"></span></div>'+
     '<div class="legend"><b>How to use.</b> 1) <b>Choose</b>: filter by category, price, sale start or verdict and tick the articles worth moving. '+
     '2) <b>Give &amp; get</b>: each colour starts with a suggestion. <b>GET</b> = a door that sells it; <b>GIVE</b> = a door holding it with no sales in the window, sending only what the GET doors need; <b>ALL OUT</b> = the door sends every piece of that colour so nothing is left. '+
-    'Tap to change. Each receiving door is filled up to <b>'+CAP+' pcs per size</b>, best-selling door first. '+
+    'Tap to change. Each receiving door is filled up to <b>'+CAP+' pcs per size</b> by default, best-selling door first; change it for any colour with the <b>Up to</b> box beside the colour. '+
     '3) <b>Copy for WhatsApp</b> or <b>Share my picks</b> so the other person opens the same plan. 4) <b>Transfer lists</b>: one pick list per outlet to print or send. 5) <b>Outlet summary</b>: each outlet&rsquo;s product-group mix after the plan, against what it sells. '+
     '<span class="muted">Ticks are saved in this browser only, until you share them.'+(D.sg?" SG stock = SiteGiant (online) available stock on "+esc(D.sg.asof)+"; /mth = average online sales a month.":"")+'</span></div>'+
     '<div class="tabs noprint" role="tablist"><button id="tab_choose" data-view="choose" role="tab">1 Choose</button><button id="tab_desk" data-view="desk" role="tab">2 Give &amp; get <span class="n">0</span></button>'+
@@ -637,7 +651,7 @@ function copy(text,where){
 function waText(){
   var m=allMoves();if(!m.length)return "No moves planned.";
   var pairs={};m.forEach(function(x){var k=x.from+" → "+x.to;(pairs[k]=pairs[k]||[]).push(x);});
-  var out=["*"+D.title+" conso plan* ("+W+"-month sales, up to "+CAP+" pcs per size)",""];
+  var out=["*"+D.title+" conso plan* ("+W+"-month sales, default up to "+CAP+" pcs per size)",""];
   Object.keys(pairs).sort().forEach(function(k){var ms=pairs[k];out.push("*"+k+"* : "+ms.reduce(function(n,x){return n+x.q;},0)+" pcs");
     var by={};ms.forEach(function(x){var kk=x.a+" col "+x.c;(by[kk]=by[kk]||[]).push(x);});
     Object.keys(by).forEach(function(kk){var x0=by[kk][0],a=D.arts.find(function(y){return y.a===x0.a;}),c=a.cols.find(function(y){return y.c===x0.c;}),
@@ -672,6 +686,7 @@ function wire(){
       case "untick":TICK.clear();saveState();render();break;
       case "allOut":D.arts.forEach(function(a){if(!TICK.has(a.a))return;a.cols.forEach(function(c){c.rows.forEach(function(r){
           if(roleOf(a,c,r)==="g")ROLES[rk(a.a,c.c,r.o)]="x";});});});saveState();render();break;
+      case "resetCaps":CAPS={};saveState();render();break;
       case "resetRoles":if(confirm("Drop your GET/GIVE changes and go back to the suggestions?")){ROLES={};saveState();render();}break;
       case "copyWa":copy(waText(),"#copyStatus");break;
       case "share":copy(shareLink(),"#dockTxt");break;
@@ -684,6 +699,8 @@ function wire(){
   document.addEventListener("change",function(e){
     if(e.target.id==="listSel"){LIST_OUTLET=e.target.value;renderLists();}
     if(e.target.id==="hideSea"){HIDE_SEA=e.target.checked;renderSummary();}
+    if(e.target.dataset&&e.target.dataset.capa){var ck=e.target.dataset.capa+"|"+e.target.dataset.capc;
+      if(e.target.value)CAPS[ck]=+e.target.value;else delete CAPS[ck];OPEN.add(e.target.dataset.capa);saveState();render();}
     if(e.target.dataset&&e.target.dataset.pick!==undefined){PICKED[e.target.dataset.pick]=e.target.checked;try{localStorage.setItem(STORE+":picked",JSON.stringify(PICKED));}catch(x){}}
   });
   document.addEventListener("input",function(e){if(e.target.closest("#choose .filters")){LIMIT=150;renderChoose();}});
