@@ -114,9 +114,8 @@ td.left.chg{font-weight:700}
 td.left.zero{color:var(--bad);font-weight:700}
 .warn{background:var(--bad-s);color:var(--bad);border-radius:8px;padding:6px 10px;font-size:12px;margin:0 0 6px}
 .plan{margin-top:10px}
-.capsel{font-weight:400;font-size:12px;color:var(--muted);margin:0 6px}
-.capsel select{padding:2px 6px;font-size:12px;border-radius:7px}
-.capsel.own select{border-color:var(--accent);color:var(--accent);font-weight:700}
+.colcap{margin:4px 0 8px}
+.colcap .seg button{min-width:38px}
 .plan h4{margin:6px 0;font-size:13px}
 .empty{color:var(--muted);padding:14px}
 .status{font-size:12px;color:var(--muted)}
@@ -416,12 +415,13 @@ function colourTable(a,c,moves){
   var pcs=c.rows.reduce(function(n,r){return n+rowHeld(r);},0), sold=c.rows.reduce(function(n,r){return n+rowSold(r);},0);
   var un=UNPLACED[a.a+"|"+c.c], sgc=sgCol(a.a,c.c);
   var own=CAPS[a.a+"|"+c.c]||0;
-  var capSel='<label class="capsel'+(own?" own":"")+'">每个尺码最多 <select data-capa="'+esc(a.a)+'" data-capc="'+esc(c.c)+'">'+
-    '<option value="">'+"预设 ("+CAP+")"+'</option>'+[1,2,3,4,5,6,8,10].map(function(n){return '<option value="'+n+'"'+(own===n?" selected":"")+'>'+n+'</option>';}).join("")+
-    '</select> 件</label>';
-  return '<div class="colhead">颜色 '+esc(c.c)+' '+capSel+' <span>· '+pcs+" 件库存 · "+W+" 个月已售 "+sold+" 件"+
+  var cd=' data-ca="'+esc(a.a)+'" data-cc="'+esc(c.c)+'"';
+  var capSel='<div class="bar colcap"><span class="lbl">每个尺码调几件</span><div class="seg">'+
+    '<button'+cd+' data-cn="0" aria-pressed="'+(!own)+'">预设 ('+CAP+')</button>'+
+    [1,2,3,4,5,6].map(function(n){return '<button'+cd+' data-cn="'+n+'" aria-pressed="'+(own===n)+'">'+n+'</button>';}).join("")+'</div></div>';
+  return '<div class="colhead">颜色 '+esc(c.c)+' <span>· '+pcs+" 件库存 · "+W+" 个月已售 "+sold+" 件"+
       (sgc?' · <b title="'+esc(Object.keys(sgc[2]).sort(sizeCmp).map(function(z){return z+":"+sgc[2][z];}).join(" "))+'">SG 网店 '+sgc[0]+" 件</b>（每月卖 "+sgc[1]+"）":(D.sg?" · SG 网店 0":""))+"</span></div>"+
-    (un?'<div class="warn">'+un+" 件（全部调出）没有去处。请为这个颜色至少设定一间分店收货。</div>":"")+
+    capSel+(un?'<div class="warn">'+un+" 件（全部调出）没有去处。请为这个颜色至少设定一间分店收货。</div>":"")+
     '<div class="scroll"><table><thead>'+head+"</thead><tbody>"+body+"</tbody></table></div>";
 }
 function planTable(moves){
@@ -634,7 +634,7 @@ function boot(){
     '<div class="bar"><span class="lbl">销售期间</span><div class="seg" id="wins"></div><span class="status" id="winNote"></span></div>'+
     '<div class="legend"><b>使用方法：</b>1) <b>选货</b>：按类别、价格、上市日期或建议筛选，勾选值得调动的货号。'+
     '2) <b>调出与收货</b>：每个颜色都有预设建议。<b>收货</b> = 有在卖的分店；<b>调出</b> = 有货但这段期间没卖的分店，只调出收货分店需要的件数；<b>全部调出</b> = 这间分店这个颜色全部调走，一件不留。'+
-    '点一下就可以更改。每间收货分店每个尺码预设最多补到 <b>'+CAP+' 件</b>，卖得最好的分店优先；每个颜色旁边的<b>每个尺码最多</b>可以单独更改。'+
+    '点一下就可以更改。每间收货分店每个尺码预设最多补到 <b>'+CAP+' 件</b>，卖得最好的分店优先；每个颜色下面的<b>每个尺码调几件</b>按钮可以单独更改。'+
     '3) 按 <b>复制到 WhatsApp</b> 或 <b>分享我的选择</b>，对方就能打开同一份计划。4) <b>调货单</b>：每间分店一张拣货单，可打印或发送。5) <b>分店总结</b>：调货后每间分店各类别的库存搭配，对比它的销售。'+
     '<span class="muted">勾选只保存在这个浏览器，分享后对方才看得到。'+(D.sg?" SG 网店库存 = SiteGiant（网店）"+esc(D.sg.asof)+" 的可用库存；/月 = 网店平均每月销量。":"")+'</span></div>'+
     '<div class="tabs noprint" role="tablist"><button id="tab_choose" data-view="choose" role="tab">1 选货</button><button id="tab_desk" data-view="desk" role="tab">2 调出与收货 <span class="n">0</span></button>'+
@@ -669,6 +669,8 @@ function wire(){
     if(t.dataset.tick!==undefined){if(t.checked)TICK.add(t.dataset.tick);else TICK.delete(t.dataset.tick);
       t.closest("tr").className=t.checked?"on":"";saveState();render();return;}
     if(t.dataset.cap){CAP=+t.dataset.cap;saveState();render();return;}
+    if(t.dataset.cn!==undefined){var ck=t.dataset.ca+"|"+t.dataset.cc;if(+t.dataset.cn)CAPS[ck]=+t.dataset.cn;else delete CAPS[ck];
+      OPEN.add(t.dataset.ca);saveState();render();return;}
     if(t.dataset.role){var k2=rk(t.dataset.a,t.dataset.c,t.dataset.o);
       var a=D.arts.find(function(x){return x.a===t.dataset.a;}),c=a.cols.find(function(x){return x.c===t.dataset.c;}),r=c.rows.find(function(x){return x.o===t.dataset.o;});
       ROLES[k2]=roleOf(a,c,r)===t.dataset.role?"":t.dataset.role;OPEN.add(a.a);saveState();render();return;}
@@ -699,8 +701,7 @@ function wire(){
   document.addEventListener("change",function(e){
     if(e.target.id==="listSel"){LIST_OUTLET=e.target.value;renderLists();}
     if(e.target.id==="hideSea"){HIDE_SEA=e.target.checked;renderSummary();}
-    if(e.target.dataset&&e.target.dataset.capa){var ck=e.target.dataset.capa+"|"+e.target.dataset.capc;
-      if(e.target.value)CAPS[ck]=+e.target.value;else delete CAPS[ck];OPEN.add(e.target.dataset.capa);saveState();render();}
+
     if(e.target.dataset&&e.target.dataset.pick!==undefined){PICKED[e.target.dataset.pick]=e.target.checked;try{localStorage.setItem(STORE+":picked",JSON.stringify(PICKED));}catch(x){}}
   });
   document.addEventListener("input",function(e){if(e.target.closest("#choose .filters")){LIMIT=150;renderChoose();}});
