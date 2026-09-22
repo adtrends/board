@@ -114,6 +114,8 @@ td.left.chg{font-weight:700}
 td.left.zero{color:var(--bad);font-weight:700}
 .warn{background:var(--bad-s);color:var(--bad);border-radius:8px;padding:6px 10px;font-size:12px;margin:0 0 6px}
 .plan{margin-top:10px}
+.fresh{font-size:12px;color:var(--muted);margin:-8px 0 12px}
+.fresh.warn{margin-top:-6px}
 .colcap{margin:4px 0 8px}
 .colcap .seg button{min-width:38px}
 .plan h4{margin:6px 0;font-size:13px}
@@ -622,6 +624,14 @@ function render(){
   $("#dockTxt").innerHTML="已勾选 <b>"+TICK.size+"</b> 个货号 · 计划调货 <b>"+pcs+"</b> 件 · 预设每个尺码最多 <b>"+CAP+"</b> 件";
   $("#goDesk").textContent=VIEW==="desk"?"返回选货":"打开调出与收货";
 }
+/* How old each source is (Tze, 2026-09-22: "let me know how fresh are the data") */
+function freshHTML(){
+  var f=D.fresh;if(!f)return "";
+  var st=(f.stale||[]).map(function(x){return esc(x.o)+" ("+(x.last?fmtDate(x.last):"12 个月内没有")+")";}).join(", ");
+  return '<p class="fresh"><b>数据：</b>分店库存提取于 '+esc(f.stock)+' · 销售数据到 '+fmtDate(f.sales)+
+    ' · 全国数据到 '+fmtDate(f.nat[1])+(f.sg?' · SG 网店 '+esc(f.sg):'')+'</p>'+
+    (st?'<p class="fresh warn">过去 7 天没有开单：'+st+'。可能销售还没输入。</p>':'');
+}
 function boot(){
   document.title=D.title+" 调货";
   STORE="conso:"+D.scope;
@@ -630,6 +640,7 @@ function boot(){
   $("#app").innerHTML='<h1>'+esc(D.title)+' 调货</h1><p class="sub">'+esc(D.title)+" 所有有库存或有销售的货品（"+D.outlets.length+
     " 间分店："+D.outlets.map(function(o){return esc(o.o);}).join("、")+"）。库存日期 "+fmtDate(D.built)+
     "。货只在本区内调动，AD 只调去 AD 专柜，BF 只调去 BF。</p>"+
+    freshHTML()+
     '<div class="facts" id="facts"></div>'+
     '<div class="bar"><span class="lbl">销售期间</span><div class="seg" id="wins"></div><span class="status" id="winNote"></span></div>'+
     '<div class="legend"><b>使用方法：</b>1) <b>选货</b>：按类别、价格、上市日期或建议筛选，勾选值得调动的货号。'+
