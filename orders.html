@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Supplier Orders</title>
+<meta name="robots" content="noindex">
+<style>
+:root{--ink:#1f2328;--mute:#5b636b;--line:#d9dee3;--band:#f2f4f6;--bg:#ffffff;--acc:#1f4e79;--late:#b42318;--soon:#b54708;--ok:#067647;--over:#7a271a;--card:#fff}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--ink:#e6e8ea;--mute:#a1a7ad;--line:#343a40;--band:#1c2126;--bg:#0f1317;--acc:#8ab4e8;--card:#161b20}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.4 -apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+.wrap{max-width:980px;margin:0 auto;padding:14px 16px 60px}
+h1{font-size:22px;margin:6px 0 2px}.sub{color:var(--mute);font-size:13px;margin-bottom:12px}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0}.tab{border:1px solid var(--line);border-radius:20px;padding:6px 12px;font-size:13px;cursor:pointer;background:var(--card)}.tab.on{background:var(--acc);color:#fff;border-color:var(--acc)}
+.filters{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 12px}.filters button{border:1px solid var(--line);background:var(--card);border-radius:8px;padding:5px 10px;font-size:13px;cursor:pointer;color:var(--ink)}.filters button.on{background:var(--ink);color:var(--bg)}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin:8px 0 14px}.kpi{background:var(--band);border-radius:10px;padding:10px 12px}.kpi b{display:block;font-size:22px}.kpi span{font-size:12px;color:var(--mute)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin:8px 0}
+.row{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;cursor:pointer}
+.ttl{font-weight:600}.meta{color:var(--mute);font-size:13px;margin-top:2px}
+.pill{display:inline-block;border-radius:6px;padding:2px 8px;font-size:12px;font-weight:600;color:#fff;white-space:nowrap}
+.LATE{background:var(--late)}.DUESOON{background:var(--soon)}.ONORDER{background:var(--acc)}.PARTIAL{background:#6941c6}.RECEIVED{background:var(--ok)}
+.flag{display:inline-block;border-radius:6px;padding:2px 8px;font-size:12px;font-weight:600;margin-left:6px}
+.fOVER{background:#fee4e2;color:var(--over)}.fSHORT{background:#fef0c7;color:#93370d}.fOK{background:#dcfae6;color:#067647}.fNEW{background:#e0eaff;color:#3538cd}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .fOVER{background:#4a1d17;color:#fecdca}:root:not([data-theme="light"]) .fSHORT{background:#4e2a08;color:#fedf89}:root:not([data-theme="light"]) .fOK{background:#0f3d24;color:#abefc6}:root:not([data-theme="light"]) .fNEW{background:#1c2a5e;color:#c7d7fe}}
+.bar{height:6px;background:var(--band);border-radius:3px;margin-top:8px;overflow:hidden}.bar i{display:block;height:100%;background:var(--ok)}
+.det{display:none;margin-top:10px;border-top:1px dashed var(--line);padding-top:10px;font-size:13px}.card.open .det{display:block}
+table{border-collapse:collapse;width:100%;font-size:13px;margin:6px 0}th,td{text-align:left;padding:4px 6px;border-bottom:1px solid var(--line)}td.n,th.n{text-align:right}
+.path{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;word-break:break-all;color:var(--mute)}
+.foot{color:var(--mute);font-size:12px;margin-top:20px}
+.center{max-width:420px;margin:60px auto;text-align:center}.center input{font-size:22px;letter-spacing:6px;text-align:center;width:180px;padding:8px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink)}.center button{margin-left:8px;padding:9px 14px;border-radius:8px;border:0;background:var(--acc);color:#fff;font-size:15px}.err{color:var(--late);margin-top:8px;min-height:1.2em}
+.empty{color:var(--mute);padding:20px 0}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"><div class="center"><h1>Supplier Orders</h1><div class="sub">Loading…</div></div></div>
+<script>/*INLINE_DOC*/</script>
+<script>
+(function () {
+  'use strict';
+  var DOC = null, rendered = false, state = { tab: 'ALL', brand: 'ALL', open: {} };
+  var app = document.getElementById('app');
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function fmt(n) { return n == null ? '–' : Number(n).toLocaleString('en-MY'); }
+  function dmy(s) { if (!s) return '–'; var p = s.split('-'); return p.length === 3 ? p[2] + '/' + p[1] + '/' + p[0].slice(2) : s; }
+  function cls(st) { return st.replace(/\s+/g, ''); }
+  function renderAll() {
+    rendered = true;
+    var d = DOC, os = d.orders.filter(function (o) { return state.brand === 'ALL' || o.brand === state.brand; });
+    var tabs = ['ALL', 'LATE', 'DUE SOON', 'ON ORDER', 'PARTIAL', 'RECEIVED', 'OVER-ORDERED'];
+    var shown = os.filter(function (o) { return state.tab === 'ALL' ? o.status !== 'RECEIVED' : state.tab === 'OVER-ORDERED' ? o.flag === 'OVER' : o.status === state.tab; });
+    var c = {}; os.forEach(function (o) { c[o.status] = (c[o.status] || 0) + 1; if (o.flag === 'OVER') c.OVER = (c.OVER || 0) + 1; });
+    var h = '<h1>Supplier Orders</h1><div class="sub">Built ' + esc(d.built) + ' · ' + os.length + ' order sheets since Jan 2026 · tap a row for colours, receipts and the file</div>';
+    h += '<div class="kpis"><div class="kpi"><b>' + (c['LATE'] || 0) + '</b><span>late</span></div><div class="kpi"><b>' + (c['DUE SOON'] || 0) + '</b><span>due in ' + d.rules.due_soon_days + ' days</span></div><div class="kpi"><b>' + ((c['ON ORDER'] || 0) + (c['PARTIAL'] || 0)) + '</b><span>on order</span></div><div class="kpi"><b>' + (c.OVER || 0) + '</b><span>over-ordered</span></div></div>';
+    h += '<div class="filters">' + ['ALL', 'AD', 'BF', 'FE'].map(function (b) { return '<button data-b="' + b + '" class="' + (state.brand === b ? 'on' : '') + '">' + (b === 'ALL' ? 'All brands' : b) + '</button>'; }).join('') + '</div>';
+    h += '<div class="tabs">' + tabs.map(function (t) { return '<span class="tab ' + (state.tab === t ? 'on' : '') + '" data-t="' + t + '">' + t + (t === 'ALL' ? '' : ' ' + (t === 'OVER-ORDERED' ? (c.OVER || 0) : (c[t] || 0))) + '</span>'; }).join('') + '</div>';
+    if (!shown.length) h += '<div class="empty">Nothing here.</div>';
+    shown.forEach(function (o) {
+      var when = o.status === 'LATE' ? 'ETD ' + dmy(o.etd) + ' · ' + o.days_late + ' days late' : o.etd ? 'ETD ' + dmy(o.etd) + (o.eta ? ' · ETA ' + dmy(o.eta) : '') : (o.etd_stale ? 'ETD on OS ' + dmy(o.etd_stale) + ' is older than the order – ask' : 'ETD not on the OS');
+      h += '<div class="card ' + (state.open[o.id] ? 'open' : '') + '" data-id="' + o.id + '"><div class="row"><div><div class="ttl">' + esc(o.brand) + ' ' + esc(o.arts.join(', ')) + ' <span class="meta">' + esc(o.desc) + (o.design ? ' · ' + esc(o.design) : '') + '</span></div>' +
+        '<div class="meta">' + esc(o.factory) + ' · ordered ' + dmy(o.order_date) + ' · ' + when + '</div></div>' +
+        '<div style="text-align:right;white-space:nowrap"><span class="pill ' + cls(o.status) + '">' + o.status + '</span><span class="flag f' + o.flag + '">' + (o.flag === 'OVER' ? 'over-ordered' : o.flag === 'SHORT' ? 'short' : o.flag === 'NEW' ? 'new, no history' : 'cover ok') + '</span><div class="meta">' + fmt(o.received) + ' / ' + fmt(o.ordered) + ' pcs' + (o.value != null ? ' · ' + esc(o.cost_ccy) + ' ' + fmt(o.value) : '') + '</div></div></div>' +
+        '<div class="bar"><i style="width:' + Math.min(100, o.pct) + '%"></i></div>';
+      h += '<div class="det">';
+      h += '<table><tr><th>Art-col</th><th class="n">Ordered</th><th class="n">Received</th></tr>' + o.colours.map(function (x) { return '<tr><td>' + esc((x.art || '') + '-' + x.col) + ' ' + esc(x.name) + '</td><td class="n">' + fmt(x.qty) + '</td><td class="n">' + fmt(x.received) + '</td></tr>'; }).join('') + '</table>';
+      h += '<table><tr><th>Article</th><th class="n">Sells/mth</th><th class="n">At WH</th><th class="n">At counters</th><th class="n">Still coming</th><th class="n">Months cover</th></tr>' + Object.keys(o.cover).map(function (a) { var v = o.cover[a]; return '<tr><td>' + esc(a) + ' <span class="flag f' + v.flag + '">' + v.flag + '</span></td><td class="n">' + fmt(v.rate) + '</td><td class="n">' + fmt(v.wh) + '</td><td class="n">' + fmt(v.counters) + '</td><td class="n">' + fmt(v.on_order) + '</td><td class="n">' + (v.months == null ? '–' : v.months) + '</td></tr>'; }).join('') + '</table>';
+      h += '<div class="meta">' + (o.last_receipt ? 'Last receipt ' + dmy(o.last_receipt) + (o.grns.length ? ' · GRN ' + esc(o.grns.join(', ')) : '') : 'No receipt yet') + (o.cost ? ' · cost ' + esc(o.cost) : '') + (o.retail ? ' · retail RM' + esc(o.retail) : '') + '</div>';
+      h += '<div class="path">' + esc(o.file) + ' (file ' + dmy(o.file_date) + ')</div></div></div>';
+    });
+    h += '<div class="foot">Rules: late = ETD passed by more than ' + d.rules.late_grace_days + ' days with under 90% received. Over-ordered = more than ' + d.rules.over_months + ' months of cover; short = under ' + d.rules.short_months + '. Cover = ' + esc(d.rules.cover) + '. Received = warehouse goods receipts plus China-direct landings. Sources: ' + esc(Object.keys(d.sources).map(function (k) { return d.sources[k]; }).join(' · ')) + '</div>';
+    app.innerHTML = h;
+    app.querySelectorAll('.tab').forEach(function (el) { el.addEventListener('click', function () { state.tab = el.getAttribute('data-t'); renderAll(); }); });
+    app.querySelectorAll('.filters button').forEach(function (el) { el.addEventListener('click', function () { state.brand = el.getAttribute('data-b'); renderAll(); }); });
+    app.querySelectorAll('.card .row').forEach(function (el) { el.addEventListener('click', function () { var id = el.parentNode.getAttribute('data-id'); state.open[id] = !state.open[id]; el.parentNode.classList.toggle('open'); }); });
+  }
+  function showInvalid() { app.innerHTML = '<div class="center"><h1>This link isn’t valid.</h1><div class="sub">Ask HQ for the current link.</div></div>'; }
+  function showOffline() { app.innerHTML = '<div class="center"><h1>Couldn’t load the board.</h1><div class="sub">Check the connection and reload.</div></div>'; }
+  function askPin(err, cb) {
+    app.innerHTML = '<div class="center"><h1>Supplier Orders</h1><div class="sub">Enter the merch PIN</div><form id="pinf"><input id="pin" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]*" maxlength="8" aria-label="PIN" autofocus><button type="submit">Open</button></form><div class="err">' + (err || '') + '</div></div>';
+    document.getElementById('pinf').addEventListener('submit', function (e) { e.preventDefault(); cb(document.getElementById('pin').value.trim()); });
+  }
+  function hexToBytes(h) { var out = new Uint8Array(h.length / 2); for (var i = 0; i < out.length; i++) out[i] = parseInt(h.substr(i * 2, 2), 16); return out; }
+  function b64ToBytes(b64) { var bin = atob(String(b64).replace(/-/g, '+').replace(/_/g, '/')); var out = new Uint8Array(bin.length); for (var i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i); return out; }
+  function sha256hex(str) { return crypto.subtle.digest('SHA-256', new TextEncoder().encode(str)).then(function (buf) { var b = new Uint8Array(buf), s = ''; for (var i = 0; i < b.length; i++) s += (b[i] < 16 ? '0' : '') + b[i].toString(16); return s; }); }
+  function docIdFor(keyHex) { return sha256hex(keyHex).then(function (h) { return h.slice(0, 16); }); }
+  function readKey() { var h = (location.hash || '').replace(/^#/, '').trim(); if (!h) return null; if (/^[0-9a-fA-F]{64}$/.test(h)) return h.toLowerCase(); return false; }
+  function deriveKey(linkKey, pin) { return sha256hex(linkKey + ':' + pin).then(function (h) { return crypto.subtle.importKey('raw', hexToBytes(h), { name: 'AES-GCM' }, false, ['decrypt']); }); }
+  function decryptDoc(ck, doc) { if (!doc || typeof doc.iv !== 'string' || typeof doc.ct !== 'string') return Promise.reject(new Error('bad doc')); return crypto.subtle.decrypt({ name: 'AES-GCM', iv: b64ToBytes(doc.iv), tagLength: 128 }, ck, b64ToBytes(doc.ct)).then(function (buf) { return JSON.parse(new TextDecoder().decode(buf)); }); }
+  var STATIC_DIR = 'o/', POLL_MS = 10 * 60 * 1000, PIN_STORE = 'in_pin';
+  function getPin() { try { return localStorage.getItem(PIN_STORE) || ''; } catch (e) { return ''; } }
+  function setPin(p) { try { if (p) localStorage.setItem(PIN_STORE, p); else localStorage.removeItem(PIN_STORE); } catch (e) {} }
+  function bootStatic(linkKey) {
+    docIdFor(linkKey).then(function (id) {
+      var url = STATIC_DIR + id + '.json', lastText = null, encDoc = null;
+      function tryOpen(pin) { return deriveKey(linkKey, pin).then(function (ck) { return decryptDoc(ck, encDoc); }).then(function (d) { setPin(pin); DOC = d; renderAll(); return true; }, function () { return false; }); }
+      function prompt(err) { askPin(err, function (pin) { tryOpen(pin).then(function (ok) { if (!ok) { setPin(''); prompt('That PIN did not open it. Try again.'); } }); }); }
+      function load(isPoll) {
+        return fetch(url, { cache: 'no-store' }).then(function (res) {
+          if (res.status === 404) { if (!isPoll) showInvalid(); return; }
+          if (!res.ok) throw new Error('http ' + res.status);
+          return res.text().then(function (text) {
+            if (isPoll && text === lastText) return; lastText = text;
+            try { encDoc = JSON.parse(text); } catch (e) { if (!isPoll) showInvalid(); return; }
+            var pin = getPin();
+            if (!pin) { if (!isPoll) prompt(''); return; }
+            return tryOpen(pin).then(function (ok) { if (!ok && !isPoll) { setPin(''); prompt('The saved PIN no longer opens it — enter the new one.'); } });
+          });
+        }).catch(function () { if (!isPoll && !rendered) showOffline(); });
+      }
+      load(false); setInterval(function () { if (!document.hidden) load(true); }, POLL_MS);
+    });
+  }
+  (function boot() {
+    if (window.INLINE_DOC) { DOC = window.INLINE_DOC; renderAll(); return; }
+    if (!window.crypto || !crypto.subtle) { showOffline(); return; }
+    var key = readKey(); if (key === null || key === false) { showInvalid(); return; } bootStatic(key);
+  })();
+  window.addEventListener('hashchange', function () { location.reload(); });
+})();
+</script>
+</body>
+</html>
