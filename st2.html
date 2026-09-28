@@ -9,18 +9,20 @@
 <style>[hidden]{display:none!important} img{max-width:100%}</style>
 </head>
 <body>
-<title>ST2 Semak Semula</title>
+<title>ST2 Semak IT</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<!-- IT CARDS ONLY (Tze 28 Sep 2026: "The link is meant for IT related issue only" / "I only want to
+     show the IT cards"). The full recount checklist that used to live here is in
+     st2_page.html.bak-20260928-fullchecklist; the recount itself is on the ST2 PDF. -->
 <style>
 :root {
   --ground: #eef3f1; --card: #ffffff; --ink: #16211e; --muted: #56655f; --line: #d5dfdb;
   --brand: #0e4f55; --brand-2: #17656b; --on-brand: #ffffff; --brand-soft: #e1eeee;
-  --done: #1c7a45; --done-bg: #ddf2e4; --none: #8c5a00; --none-bg: #fff1cf;
-  --todo-bg: #f5f8f7; --todo-line: #9fb2ab; --warn: #a3321f; --warn-bg: #fde9e4;
-  --shadow: 0 1px 2px rgba(14, 40, 36, .06);
-  --r: 14px;
+  --done: #1c7a45; --done-bg: #ddf2e4; --warn: #a3321f; --warn-bg: #fde9e4;
+  --early: #6a3fb0; --early-bg: #efe7fb; --todo-bg: #f5f8f7;
+  --shadow: 0 1px 2px rgba(14, 40, 36, .06); --r: 14px;
   --font: 'Atkinson Hyperlegible', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
 }
 @media (prefers-color-scheme: dark) {
@@ -28,148 +30,75 @@
     color-scheme: dark;
     --ground: #0e1715; --card: #16211e; --ink: #e6eeeb; --muted: #9aaba5; --line: #273532;
     --brand: #103f43; --brand-2: #16555a; --on-brand: #eaf6f5; --brand-soft: #173235;
-    --done: #6fd39a; --done-bg: #173a27; --none: #f0b64a; --none-bg: #3a2d10;
-    --todo-bg: #1b2724; --todo-line: #4d615b; --warn: #ff9b85; --warn-bg: #3d1d16;
-    --shadow: none;
+    --done: #6fd39a; --done-bg: #173a27; --warn: #ff9b85; --warn-bg: #3d1d16;
+    --early: #c6a8ff; --early-bg: #2a2140; --todo-bg: #1b2724; --shadow: none;
   }
 }
 :root[data-theme="dark"] {
   color-scheme: dark;
   --ground: #0e1715; --card: #16211e; --ink: #e6eeeb; --muted: #9aaba5; --line: #273532;
   --brand: #103f43; --brand-2: #16555a; --on-brand: #eaf6f5; --brand-soft: #173235;
-  --done: #6fd39a; --done-bg: #173a27; --none: #f0b64a; --none-bg: #3a2d10;
-  --todo-bg: #1b2724; --todo-line: #4d615b; --warn: #ff9b85; --warn-bg: #3d1d16;
-  --shadow: none;
+  --done: #6fd39a; --done-bg: #173a27; --warn: #ff9b85; --warn-bg: #3d1d16;
+  --early: #c6a8ff; --early-bg: #2a2140; --todo-bg: #1b2724; --shadow: none;
 }
 * { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; }
 body { margin: 0; background: var(--ground); color: var(--ink); font: 17px/1.45 var(--font); padding-bottom: calc(92px + env(safe-area-inset-bottom, 0px)); }
-button, input { font: inherit; color: inherit; }
+button { font: inherit; color: inherit; }
 :focus-visible { outline: 3px solid var(--brand-2); outline-offset: 2px; }
 .wrap { max-width: 640px; margin: 0 auto; padding-inline: 16px; }
-
-/* top */
 .top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--brand); color: var(--on-brand); box-shadow: 0 2px 8px rgba(0,0,0,.12); }
-.top .wrap { padding-block: 12px 12px; display: grid; gap: 8px; }
-.row1 { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+.top .wrap { padding-block: 12px; display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
 .eyebrow { font-size: 13px; letter-spacing: .07em; text-transform: uppercase; opacity: .85; }
-.outlet { font-size: 21px; font-weight: 700; letter-spacing: .01em; }
+.outlet { font-size: 21px; font-weight: 700; }
 .count { text-align: right; font-variant-numeric: tabular-nums; }
 .count b { font-size: 26px; }
 .count span { font-size: 14px; opacity: .85; }
-.bar { height: 10px; background: rgba(255,255,255,.2); border-radius: 999px; overflow: hidden; }
-.bar i { display: block; height: 100%; width: 0; background: #7fe0a8; border-radius: 999px; transition: width .35s ease; }
-@media (prefers-reduced-motion: reduce) { .bar i { transition: none; } }
-
-.preview { background: var(--none-bg); color: var(--none); font-size: 14px; padding: 8px 12px; border-radius: 10px; margin-top: 12px; }
-
-/* calm card */
-.calm { background: var(--card); border: 1px solid var(--line); border-radius: var(--r); margin-top: 14px; box-shadow: var(--shadow); }
-.calm summary { list-style: none; cursor: pointer; padding: 14px 16px; font-weight: 700; font-size: 18px; display: flex; justify-content: space-between; align-items: center; gap: 8px; min-height: 52px; }
-.calm summary::-webkit-details-marker { display: none; }
-.calm summary .chev { font-size: 14px; color: var(--muted); font-weight: 400; }
-.calm[open] summary .chev::after { content: 'tutup'; }
-.calm:not([open]) summary .chev::after { content: 'buka'; }
-.calm .in { padding: 0 16px 16px; display: grid; gap: 12px; }
-.calm p { margin: 0; }
-.steps { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; counter-reset: s; }
-.steps li { display: grid; grid-template-columns: 30px 1fr; gap: 10px; align-items: start; }
-.steps li::before { counter-increment: s; content: counter(s); width: 30px; height: 30px; border-radius: 50%; background: var(--brand-soft); color: var(--brand-2); font-weight: 700; display: grid; place-items: center; font-size: 15px; }
-:root[data-theme="dark"] .steps li::before { color: var(--on-brand); }
-.demo { display: inline-flex; align-items: center; min-height: 30px; padding: 0 10px; border-radius: 9px; font-weight: 700; font-size: 15px; vertical-align: middle; border: 1.5px solid var(--todo-line); background: var(--todo-bg); }
-.demo.s { background: var(--done-bg); color: var(--done); border-color: var(--done); }
-.demo.n { background: var(--none-bg); color: var(--none); border-color: var(--none); }
-.promise { background: var(--brand-soft); border-radius: 10px; padding: 10px 12px; font-size: 15px; }
-
-/* cc */
-.cc { background: var(--card); border: 1px solid var(--line); border-radius: var(--r); padding: 12px 16px; margin-top: 12px; display: grid; gap: 6px; box-shadow: var(--shadow); }
-.cc label { font-weight: 700; font-size: 15px; }
-.cc .f { display: flex; align-items: center; gap: 0; border: 1.5px solid var(--todo-line); border-radius: 12px; overflow: hidden; background: var(--todo-bg); }
-.cc .f span { padding: 0 10px; font-weight: 700; color: var(--muted); }
-.cc input { flex: 1; min-width: 0; min-height: 48px; border: 0; background: transparent; font-size: 20px; font-variant-numeric: tabular-nums; letter-spacing: .04em; padding-right: 12px; }
-.cc input:focus { outline: none; }
-.cc .f:focus-within { border-color: var(--brand-2); }
-.cc small { color: var(--muted); font-size: 14px; }
-
-/* tools */
-.tools { display: grid; gap: 8px; margin: 14px 0 4px; }
-.seg { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
-.seg button { min-height: 46px; border: 1px solid var(--line); background: var(--card); border-radius: 12px; font-weight: 700; font-size: 15px; cursor: pointer; }
-.seg button[aria-pressed="true"] { background: var(--brand); color: var(--on-brand); border-color: var(--brand); }
-.seg button b { font-variant-numeric: tabular-nums; font-weight: 400; opacity: .8; }
-.search { min-height: 48px; border: 1px solid var(--line); border-radius: 12px; padding: 0 14px; font-size: 17px; background: var(--card); width: 100%; }
-
-/* groups & cards */
-.grp { margin: 20px 2px 8px; display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
-.grp h2 { margin: 0; font-size: 14px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); text-wrap: balance; }
-.grp span { font-size: 14px; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
-.grp.full span { color: var(--done); font-weight: 700; }
-.art { background: var(--card); border: 1px solid var(--line); border-radius: var(--r); padding: 12px 14px 14px; margin-bottom: 8px; display: grid; gap: 10px; box-shadow: var(--shadow); }
-.art.done { background: var(--done-bg); border-color: transparent; box-shadow: none; }
-.ah { display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; }
-.code { font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: .02em; line-height: 1.15; }
-.code .col { color: var(--brand-2); }
-:root[data-theme="dark"] .code .col { color: var(--done); }
-.meta { font-size: 14px; color: var(--muted); margin-top: 2px; }
-.state { font-size: 13px; font-weight: 700; padding: 3px 9px; border-radius: 999px; white-space: nowrap; background: var(--todo-bg); color: var(--muted); border: 1px solid var(--line); }
-.art.done .state { background: var(--card); color: var(--done); border-color: transparent; }
-.chips { display: flex; flex-wrap: wrap; gap: 8px; }
-.chip { min-width: 64px; min-height: 48px; padding: 4px 12px; border-radius: 12px; border: 1.5px solid var(--todo-line); background: var(--todo-bg); cursor: pointer; display: grid; place-items: center; line-height: 1.1; font-variant-numeric: tabular-nums; -webkit-tap-highlight-color: transparent; }
-.chip .z { font-size: 19px; font-weight: 700; }
-.chip .t { font-size: 12px; color: var(--muted); }
-.chip.s { background: var(--done); border-color: var(--done); color: #fff; }
-.chip.s .t { color: rgba(255,255,255,.9); }
-:root[data-theme="dark"] .chip.s { color: #0e1715; }
-:root[data-theme="dark"] .chip.s .t { color: rgba(14,23,21,.8); }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .chip.s { color: #0e1715; } :root:not([data-theme="light"]) .chip.s .t { color: rgba(14,23,21,.8); } :root:not([data-theme="light"]) .code .col { color: var(--done); } :root:not([data-theme="light"]) .steps li::before { color: var(--on-brand); } }
-.chip.n { background: var(--none-bg); border-color: var(--none); color: var(--none); }
-.chip.n .t { color: var(--none); }
-.all { justify-self: start; min-height: 40px; padding: 0 12px; border-radius: 10px; border: 1px solid var(--line); background: transparent; font-size: 14px; font-weight: 700; color: var(--brand-2); cursor: pointer; }
-:root[data-theme="dark"] .all { color: var(--done); }
-.empty { text-align: center; color: var(--muted); padding: 28px 12px; }
-.empty b { display: block; color: var(--done); font-size: 20px; margin-bottom: 4px; }
-
-.foot { margin: 28px 0 8px; display: grid; gap: 8px; justify-items: center; color: var(--muted); font-size: 13px; text-align: center; }
-.linkbtn { background: none; border: 0; color: var(--warn); font-size: 14px; text-decoration: underline; cursor: pointer; min-height: 40px; }
-
-/* bottom bar */
-.bottom { position: fixed; left: 0; right: 0; bottom: 0; z-index: 6; background: var(--card); border-top: 1px solid var(--line); padding: 10px 0 calc(10px + env(safe-area-inset-bottom, 0px)); }
-.bottom .wrap { display: flex; gap: 10px; align-items: center; }
-.bottom .sum { flex: 1; font-size: 14px; color: var(--muted); line-height: 1.3; }
-.bottom .sum b { color: var(--ink); font-variant-numeric: tabular-nums; }
-.primary { min-height: 52px; padding: 0 18px; border-radius: 14px; border: 0; background: var(--brand); color: var(--on-brand); font-weight: 700; font-size: 17px; cursor: pointer; white-space: nowrap; }
-.secondary { min-height: 52px; padding: 0 18px; border-radius: 14px; border: 1.5px solid var(--line); background: var(--card); font-weight: 700; font-size: 16px; cursor: pointer; }
-
-/* sheet */
-.sheet { position: fixed; inset: 0; z-index: 10; background: rgba(8, 20, 18, .5); display: flex; align-items: flex-end; justify-content: center; }
-.panel { background: var(--card); width: 100%; max-width: 640px; border-radius: 20px 20px 0 0; padding: 18px 16px calc(16px + env(safe-area-inset-bottom, 0px)); display: grid; gap: 12px; max-height: 88%; overflow: auto; }
-.panel h3 { margin: 0; font-size: 20px; }
-.panel p { margin: 0; color: var(--muted); font-size: 15px; }
-.report { white-space: pre-wrap; background: var(--todo-bg); border: 1px solid var(--line); border-radius: 12px; padding: 12px; font-size: 15px; font-variant-numeric: tabular-nums; max-height: 40vh; overflow: auto; user-select: all; -webkit-user-select: all; }
-.acts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.acts a.primary { display: grid; place-items: center; text-decoration: none; }
-.acts .wide { grid-column: 1 / -1; }
-.alert { background: var(--warn-bg); color: var(--warn); border-radius: 10px; padding: 10px 12px; font-size: 15px; }
-
-/* IT received but not counted (Tze 28/9) */
-.itsec { margin-top: 14px; display: grid; gap: 8px; }
-.itsec h2 { margin: 6px 2px 0; font-size: 14px; letter-spacing: .06em; text-transform: uppercase; color: var(--warn); }
-.itsec > p { margin: 0 2px; font-size: 15px; color: var(--muted); }
-.itc { background: var(--warn-bg); border: 1.5px solid var(--warn); border-radius: var(--r); padding: 12px 14px; display: grid; gap: 10px; }
+.preview { background: #fff1cf; color: #8c5a00; font-size: 14px; padding: 8px 12px; border-radius: 10px; margin-top: 12px; }
+.intro { background: var(--card); border: 1px solid var(--line); border-radius: var(--r); padding: 14px 16px; margin-top: 14px; display: grid; gap: 8px; box-shadow: var(--shadow); }
+.intro p { margin: 0; }
+.intro .small { font-size: 15px; color: var(--muted); }
+h2 { margin: 20px 2px 8px; font-size: 14px; letter-spacing: .06em; text-transform: uppercase; }
+h2.u { color: var(--warn); }
+h2.e { color: var(--early); }
+.sub { margin: -4px 2px 10px; font-size: 15px; color: var(--muted); }
+.itc { border-radius: var(--r); padding: 12px 14px; display: grid; gap: 10px; margin-bottom: 10px; border: 1.5px solid; }
+.itc.u { background: var(--warn-bg); border-color: var(--warn); }
+.itc.e { background: var(--early-bg); border-color: var(--early); }
 .itc.y { background: var(--done-bg); border-color: var(--done); }
 .itc.n { background: var(--card); border-color: var(--line); }
 .itc .h { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; }
 .itc .no { font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums; }
-.itc .pcs { font-weight: 700; white-space: nowrap; }
+.itc .pcs { font-weight: 700; white-space: nowrap; font-variant-numeric: tabular-nums; }
 .itc .m { font-size: 14px; color: var(--muted); }
-.itc details summary { cursor: pointer; font-size: 14px; color: var(--brand-2); font-weight: 700; min-height: 32px; }
-.itc ul { margin: 6px 0 0; padding-left: 18px; font-size: 14px; font-variant-numeric: tabular-nums; columns: 2; }
+.itc details summary { cursor: pointer; font-size: 15px; color: var(--brand-2); font-weight: 700; min-height: 36px; display: flex; align-items: center; }
+:root[data-theme="dark"] .itc details summary { color: var(--done); }
+.itc table { width: 100%; border-collapse: collapse; font-size: 14px; font-variant-numeric: tabular-nums; margin-top: 4px; }
+.itc td { padding: 4px 4px; border-top: 1px solid var(--line); }
+.itc td.r { text-align: right; font-weight: 700; }
 .itc .ch { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.itc .ch button { min-height: 50px; border-radius: 12px; border: 1.5px solid var(--line); background: var(--card); font-weight: 700; font-size: 15px; cursor: pointer; }
+.itc .ch button { min-height: 54px; border-radius: 12px; border: 1.5px solid var(--line); background: var(--card); font-weight: 700; font-size: 15px; cursor: pointer; line-height: 1.2; padding: 6px 8px; }
 .itc .ch button[aria-pressed="true"].y { background: var(--done); border-color: var(--done); color: #fff; }
 .itc .ch button[aria-pressed="true"].n { background: var(--brand); border-color: var(--brand); color: var(--on-brand); }
-.chip.i { background: var(--done-bg); border-color: var(--done); color: var(--done); }
-.chip.i .t { color: var(--done); }
+.none { text-align: center; color: var(--muted); padding: 40px 12px; }
+.none b { display: block; color: var(--done); font-size: 20px; margin-bottom: 6px; }
+.foot { margin: 24px 0 8px; display: grid; gap: 8px; justify-items: center; color: var(--muted); font-size: 13px; text-align: center; }
+.linkbtn { background: none; border: 0; color: var(--warn); font-size: 14px; text-decoration: underline; cursor: pointer; min-height: 40px; }
+.bottom { position: fixed; left: 0; right: 0; bottom: 0; z-index: 6; background: var(--card); border-top: 1px solid var(--line); padding: 10px 0 calc(10px + env(safe-area-inset-bottom, 0px)); }
+.bottom .wrap { display: flex; gap: 10px; align-items: center; }
+.bottom .sum { flex: 1; font-size: 14px; color: var(--muted); line-height: 1.3; }
+.bottom .sum b { color: var(--ink); }
+.primary { min-height: 52px; padding: 0 18px; border-radius: 14px; border: 0; background: var(--brand); color: var(--on-brand); font-weight: 700; font-size: 17px; cursor: pointer; white-space: nowrap; }
+.secondary { min-height: 52px; padding: 0 18px; border-radius: 14px; border: 1.5px solid var(--line); background: var(--card); font-weight: 700; font-size: 16px; cursor: pointer; }
+.sheet { position: fixed; inset: 0; z-index: 10; background: rgba(8, 20, 18, .5); display: flex; align-items: flex-end; justify-content: center; }
+.panel { background: var(--card); width: 100%; max-width: 640px; border-radius: 20px 20px 0 0; padding: 18px 16px calc(16px + env(safe-area-inset-bottom, 0px)); display: grid; gap: 12px; max-height: 88%; overflow: auto; }
+.panel h3 { margin: 0; font-size: 20px; }
+.panel p { margin: 0; color: var(--muted); font-size: 15px; }
+.report { white-space: pre-wrap; background: var(--todo-bg); border: 1px solid var(--line); border-radius: 12px; padding: 12px; font-size: 15px; max-height: 40vh; overflow: auto; user-select: all; -webkit-user-select: all; }
+.acts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.acts a.primary { display: grid; place-items: center; text-decoration: none; }
+.acts .wide { grid-column: 1 / -1; }
+.alert { background: var(--warn-bg); color: var(--warn); border-radius: 10px; padding: 10px 12px; font-size: 15px; }
 .toast { position: fixed; left: 50%; bottom: calc(96px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--ink); color: var(--card); padding: 10px 16px; border-radius: 12px; font-size: 15px; z-index: 20; max-width: calc(100% - 32px); text-align: center; }
 .msg { padding: 60px 16px; text-align: center; }
 .msg h1 { font-size: 22px; }
@@ -183,296 +112,137 @@ button, input { font: inherit; color: inherit; }
 <script>
 (function () {
   'use strict';
-  var DOC = null, KEY = '', ST = { m: {}, cc: {}, it: {}, ccNow: '', calmClosed: false, view: 'todo' }, Q = '';
+  var DOC = null, KEY = '', ST = { it: {} };
   var app = document.getElementById('app');
-
-  /* ---------- storage (phone only; the page works without it) ---------- */
-  function load() { try { var s = localStorage.getItem(KEY); if (s) { var o = JSON.parse(s); ST.m = o.m || {}; ST.cc = o.cc || {}; ST.it = o.it || {}; ST.ccNow = o.ccNow || ''; ST.calmClosed = !!o.calmClosed; ST.view = o.view || 'todo'; } } catch (e) {} }
+  function load() { try { var s = localStorage.getItem(KEY); if (s) { var o = JSON.parse(s); ST.it = o.it || {}; } } catch (e) {} }
   function save() { try { localStorage.setItem(KEY, JSON.stringify(ST)); } catch (e) {} }
-
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
-  function sk(it, z) { return it.art + '|' + it.col + '|' + z; }
-  function viaIT(it, z) { var d = it.via && it.via[z]; return d && ST.it[d] === 'y' ? d : ''; }
-  function szState(it, z) { return viaIT(it, z) ? 'i' : ST.m[sk(it, z)]; }
-  function itemDone(it) { for (var i = 0; i < it.sizes.length; i++) if (!szState(it, it.sizes[i])) return false; return true; }
-  function itemTouched(it) { for (var i = 0; i < it.sizes.length; i++) if (szState(it, it.sizes[i])) return true; return false; }
-  function allItems() { var a = []; DOC.groups.forEach(function (g, gi) { g.items.forEach(function (it, ii) { it._id = gi + '-' + ii; a.push(it); }); }); return a; }
-  var ITEMS = [];
-
-  function totals() {
-    var d = 0, sz = 0, sc = 0, nn = 0, noCC = 0;
-    ITEMS.forEach(function (it) {
-      if (itemDone(it)) d++;
-      it.sizes.forEach(function (z) { var v = szState(it, z); if (v) sz++; if (v === 's') { sc++; if (!ST.cc[sk(it, z)]) noCC++; } if (v === 'n') nn++; });
-    });
-    return { done: d, sizes: sz, scanned: sc, none: nn, noCC: noCC };
-  }
-
-  function matches(it) {
-    if (!Q) return true;
-    var q = Q.toLowerCase().replace(/\s+/g, '');
-    return (it.art + it.col).toLowerCase().indexOf(q) >= 0 || (it.art + '-' + it.col).toLowerCase().indexOf(q) >= 0 || (it.desc || '').toLowerCase().replace(/\s+/g, '').indexOf(q) >= 0;
-  }
-  function visible(it) {
-    if (!matches(it)) return false;
-    if (ST.view === 'todo') return !itemDone(it) || it._keep;
-    if (ST.view === 'done') return itemDone(it);
-    return true;
-  }
-
-  /* ---------- render ---------- */
-  function renderAll() {
-    ITEMS = allItems();
-    var t = totals();
-    var h = '';
-    h += '<header class="top"><div class="wrap">'
-      + '<div class="row1"><div><div class="eyebrow">ST2 · semak semula · ' + esc(DOC.monthLabel) + '</div><div class="outlet">' + esc(DOC.outlet) + '</div></div>'
-      + '<div class="count"><b id="nDone">' + t.done + '</b><span> / ' + DOC.nArt + ' art-col</span></div></div>'
-      + '<div class="bar" role="progressbar" aria-label="Kemajuan" aria-valuemin="0" aria-valuemax="' + DOC.nArt + '" aria-valuenow="' + t.done + '"><i id="barFill" style="width:' + (100 * t.done / DOC.nArt).toFixed(1) + '%"></i></div>'
-      + '</div></header>';
-    h += '<main class="wrap">';
-    if (window.__ST2_PREVIEW) h += '<div class="preview"><b>Pratonton untuk HQ.</b> Tanda di sini hanya disimpan dalam telefon ini.</div>';
-    h += '<details class="calm" id="calm"' + (ST.calmClosed ? '' : ' open') + '><summary>Jangan risau, ini mudah <span class="chev"></span></summary><div class="in">'
-      + '<p>Senarai ni cuma barang yang kami nak <b>kira kali kedua</b>. Bukan salah sesiapa. Tiada jawapan betul atau salah, kami cuma nak kiraan yang kedua.</p>'
-      + '<ol class="steps">'
-      + '<li><div>Buka <b>Mobile Stock Take</b>, pilih bin <b>ST ADJ</b>, dan tulis <b>No. CC</b> di kotak bawah.</div></li>'
-      + '<li><div>Cari barang ikut kod. Scan <b>saiz yang tertera sahaja</b>, bukan semua saiz.</div></li>'
-      + '<li><div>Lepas scan, tekan saiz tu sekali: <span class="demo s">✓ 32</span></div></li>'
-      + '<li><div>Dah cari tapi <b>tiada langsung</b>? Tekan sekali lagi: <span class="demo n">32 tiada</span>. Tekan kali ketiga untuk padam.</div></li>'
-      + '<li><div>Tekan <b>Hantar laporan</b> di bawah bila dah siap, atau bila nak berhenti. Separuh pun boleh hantar.</div></li>'
-      + '</ol>'
-      + '<div class="promise">Barang yang tak sempat scan, kami guna kiraan pertama. <b>Jangan key ikut nombor.</b> Kira betul-betul di rak, itu sahaja.</div>'
-      + '</div></details>';
-    h += '<div class="cc"><label for="ccNow">No. CC yang sedang dibuka</label><div class="f"><span>CC-</span><input id="ccNow" inputmode="numeric" autocomplete="off" placeholder="26090123" value="' + esc(ST.ccNow) + '"></div><small>Setiap saiz yang ditanda ✓ akan ingat No. CC ni.</small></div>';
-    h += itSection();
-    h += '<div class="tools"><div class="seg" role="group" aria-label="Tapis">'
-      + segBtn('todo', 'Belum', DOC.nArt - t.done) + segBtn('all', 'Semua', DOC.nArt) + segBtn('done', 'Siap', t.done)
-      + '</div><input id="q" class="search" type="search" inputmode="search" placeholder="Cari kod, cth 11025003" value="' + esc(Q) + '" aria-label="Cari kod barang"></div>';
-    h += '<div id="list"></div>';
-    h += '<div class="foot"><div>Senarai dikemas kini ' + esc(fmtTime(DOC.updatedAt)) + ' · ' + DOC.nSize + ' saiz</div><button class="linkbtn" data-act="reset">Padam semua tanda</button></div>';
-    h += '</main>';
-    h += '<div class="bottom"><div class="wrap"><div class="sum" id="sum"></div><button class="primary" data-act="report">Hantar laporan</button></div></div>';
-    app.innerHTML = h;
-    renderList();
-    renderSum();
-  }
   function fmtD(s) { var m = /^(\d{4})-(\d\d)-(\d\d)/.exec(s || ''); return m ? (+m[3]) + '/' + (+m[2]) : ''; }
-  function itCard(d) {
-    var v = ST.it[d.doc] || '';
-    var h = '<div class="itc' + (v ? ' ' + v : '') + '" data-doc="' + esc(d.doc) + '"><div class="h"><div><div class="no">' + esc(d.doc) + '</div>'
-      + '<div class="m">dari ' + esc(d.frm) + ' · diterima ' + esc(fmtD(d.recv)) + '</div></div><div class="pcs">' + d.pcs + ' pcs</div></div>'
-      + '<details><summary>Lihat barang dalam IT (' + d.lines.length + ')</summary><ul>';
-    d.lines.forEach(function (l) { h += '<li>' + esc(l.art) + '-' + esc(l.col) + ' saiz ' + esc(l.size) + ' × ' + l.n + '</li>'; });
-    h += '</ul></details><div class="ch">'
-      + '<button class="y" data-itc="y" aria-pressed="' + (v === 'y') + '">✓ Ya, barang ada. Guna IT sebagai kiraan</button>'
-      + '<button class="n" data-itc="n" aria-pressed="' + (v === 'n') + '">Tidak, saya scan sendiri</button></div></div>';
+  function fmtTime(s) { var m = /^(\d{4})-(\d\d)-(\d\d)T(\d\d):(\d\d)/.exec(s || ''); return m ? (+m[3]) + '/' + (+m[2]) + ' ' + m[4] + ':' + m[5] : ''; }
+  var TXT = {
+    u: { y: '✓ Barang ada. Guna IT sebagai kiraan', n: 'Tidak, saya scan sendiri' },
+    e: { y: '✓ Ya, barang IT ni dah dikira', n: 'Tidak / tak pasti' }
+  };
+  function k(d) { return d.kind === 'early' ? 'e' : 'u'; }
+  function answered() { return DOC.its.filter(function (d) { return ST.it[d.doc]; }).length; }
+
+  function card(d) {
+    var t = k(d), v = ST.it[d.doc] || '';
+    var when = t === 'u'
+      ? 'dari ' + esc(d.frm) + ' · diterima dalam sistem ' + esc(fmtD(d.recv))
+      : 'dari ' + esc(d.frm) + ' · hantar ' + esc(fmtD(d.sent)) + ' · ' + (d.status === 'Pending' ? '<b>belum scan terima</b>' : 'diterima dalam sistem ' + esc(fmtD(d.recv)));
+    var h = '<div class="itc ' + (v ? v : t) + '" data-doc="' + esc(d.doc) + '"><div class="h"><div><div class="no">' + esc(d.doc) + '</div>'
+      + '<div class="m">' + when + '</div></div><div class="pcs">' + d.pcs + ' pcs</div></div>'
+      + '<details><summary>Lihat barang (' + d.lines.length + ' baris)</summary><table>';
+    d.lines.forEach(function (l) { h += '<tr><td>' + esc(l.art) + '-' + esc(l.col) + (l.desc ? ' <span class="m">' + esc(l.desc) + '</span>' : '') + '</td><td>saiz ' + esc(l.size) + '</td><td class="r">' + l.n + '</td></tr>'; });
+    h += '</table></details><div class="ch">'
+      + '<button class="y" data-itc="y" aria-pressed="' + (v === 'y') + '">' + TXT[t].y + '</button>'
+      + '<button class="n" data-itc="n" aria-pressed="' + (v === 'n') + '">' + TXT[t].n + '</button></div></div>';
     return h;
   }
-  function itSection() {
-    if (!DOC.its || !DOC.its.length) return '';
-    var h = '<section class="itsec" id="itsec"><h2>⚠ IT dah diterima, tapi tiada dalam kiraan</h2>'
-      + '<p>IT ni dah scan terima dalam sistem sebelum/pada hari kiraan (' + esc(fmtD(DOC.countDay)) + '), tapi barangnya tak ada dalam stock take. '
-      + 'Kalau barang tu memang ada di kaunter (contoh masih dalam kotak), pilih <b>Ya</b>. HQ akan masukkan kiraan ikut IT, tak perlu scan satu-satu.</p>';
-    DOC.its.forEach(function (d) { h += itCard(d); });
-    return h + '</section>';
-  }
-  function segBtn(v, label, n) { return '<button data-view="' + v + '" aria-pressed="' + (ST.view === v) + '">' + label + ' <b data-n="' + v + '">' + n + '</b></button>'; }
-  function fmtTime(s) { var m = /^(\d{4})-(\d\d)-(\d\d)T(\d\d):(\d\d)/.exec(s || ''); return m ? (+m[3]) + '/' + (+m[2]) + ' ' + m[4] + ':' + m[5] : ''; }
 
-  function cardHtml(it) {
-    var done = itemDone(it), touched = itemTouched(it);
-    var h = '<article class="art' + (done ? ' done' : '') + '" data-id="' + it._id + '">'
-      + '<div class="ah"><div><div class="code">' + esc(it.art) + ' <span class="col">· ' + esc(it.col) + '</span></div>'
-      + '<div class="meta">' + esc(it.desc || it.brand || '') + (it.price ? ' · RM' + (+it.price).toFixed(it.price % 1 ? 2 : 0) : '') + '</div></div>'
-      + '<span class="state">' + (done ? '✓ siap' : (touched ? 'sedang' : it.sizes.length + ' saiz')) + '</span></div>'
-      + '<div class="chips">';
-    it.sizes.forEach(function (z) {
-      var v = szState(it, z);
-      var cls = v === 's' ? ' s' : (v === 'n' ? ' n' : (v === 'i' ? ' i' : ''));
-      var sub = v === 's' ? '✓ dah scan' : (v === 'n' ? 'tiada' : (v === 'i' ? '✓ dari IT' : 'saiz'));
-      var lab = 'Saiz ' + z + (v === 's' ? ', dah scan' : (v === 'n' ? ', tiada' : (v === 'i' ? ', dari IT' : ', belum')));
-      h += '<button class="chip' + cls + '"' + (v === 'i' ? ' disabled' : '') + ' data-z="' + esc(z) + '" aria-label="' + esc(lab) + '"><span class="z">' + esc(z) + '</span><span class="t">' + sub + '</span></button>';
-    });
-    h += '</div>';
-    if (it.sizes.length > 1 && !done) h += '<button class="all" data-act="all">✓ Semua saiz dah scan</button>';
-    return h + '</article>';
-  }
-
-  function renderList() {
-    var list = document.getElementById('list');
-    var h = '', shown = 0;
-    DOC.groups.forEach(function (g, gi) {
-      var vis = g.items.filter(visible);
-      if (!vis.length) return;
-      var gd = g.items.filter(itemDone).length;
-      h += '<div class="grp' + (gd === g.items.length ? ' full' : '') + '" data-g="' + gi + '"><h2>' + esc(g.name) + '</h2><span>' + gd + ' / ' + g.items.length + '</span></div>';
-      vis.forEach(function (it) { h += cardHtml(it); shown++; });
-    });
-    if (!shown) {
-      if (Q) h = '<div class="empty">Tiada kod yang sepadan dengan “' + esc(Q) + '”.</div>';
-      else if (ST.view === 'todo') h = '<div class="empty"><b>Semua dah siap. Terima kasih!</b>Tekan <b>Hantar laporan</b> di bawah.</div>';
-      else h = '<div class="empty">Belum ada yang siap. Mula dengan tab <b>Belum</b>.</div>';
+  function renderAll() {
+    var U = DOC.its.filter(function (d) { return k(d) === 'u'; }), E = DOC.its.filter(function (d) { return k(d) === 'e'; });
+    var h = '<header class="top"><div class="wrap"><div><div class="eyebrow">ST2 · semak IT · ' + esc(DOC.monthLabel) + '</div><div class="outlet">' + esc(DOC.outlet) + '</div></div>'
+      + '<div class="count"><b id="nDone">' + answered() + '</b><span> / ' + DOC.its.length + ' IT</span></div></div></header><main class="wrap">';
+    if (window.__ST2_PREVIEW) h += '<div class="preview"><b>Pratonton untuk HQ.</b> Pilihan di sini hanya disimpan dalam telefon ini.</div>';
+    if (!DOC.its.length) {
+      h += '<div class="none"><b>Tiada isu IT untuk ' + esc(DOC.outlet) + '.</b>Ikut senarai ST2 (PDF) dalam group macam biasa.</div>';
+    } else {
+      h += '<div class="intro"><p>Kiraan pertama (' + esc(fmtD(DOC.countDay)) + ') dan rekod IT tak sama untuk IT di bawah. Pilih satu jawapan untuk setiap IT, kemudian tekan <b>Hantar laporan</b>.</p>'
+        + '<p class="small">Scan semula yang lain ikut senarai ST2 (PDF) macam biasa.</p></div>';
+      if (U.length) {
+        h += '<h2 class="u">⚠ Dah terima, tapi tak ada dalam kiraan</h2><p class="sub">IT ni dah scan terima dalam sistem, tapi barangnya tak ada dalam stock take. Kalau barang memang ada di kaunter (contoh masih dalam kotak), pilih <b>Guna IT sebagai kiraan</b> &mdash; HQ masukkan kiraan ikut IT, tak perlu scan satu-satu.</p>';
+        U.forEach(function (d) { h += card(d); });
+      }
+      if (E.length) {
+        h += '<h2 class="e">Dah dikira, tapi IT masuk sistem lepas hari kira</h2><p class="sub">Barang IT ni nampaknya dah ada di kaunter dan dah dikira, sebelum IT diterima dalam sistem. Kalau betul, pilih <b>Ya</b> &mdash; HQ tak akan kira IT ni dua kali.</p>';
+        E.forEach(function (d) { h += card(d); });
+      }
     }
-    list.innerHTML = h;
-  }
-
-  function renderSum() {
-    var t = totals();
-    document.getElementById('nDone').textContent = t.done;
-    var bf = document.getElementById('barFill'); bf.style.width = (100 * t.done / DOC.nArt).toFixed(1) + '%';
-    bf.parentNode.setAttribute('aria-valuenow', t.done);
-    var s = '<b>' + t.done + '</b> siap · <b>' + (DOC.nArt - t.done) + '</b> belum';
-    if (t.none) s += '<br>' + t.none + ' saiz tiada';
-    document.getElementById('sum').innerHTML = s;
-    var nb = document.querySelector('[data-n="todo"]'); if (nb) nb.textContent = DOC.nArt - t.done;
-    nb = document.querySelector('[data-n="done"]'); if (nb) nb.textContent = t.done;
-  }
-
-  function rerenderCard(it) {
-    var el = document.querySelector('.art[data-id="' + it._id + '"]');
-    if (el) el.outerHTML = cardHtml(it);
-    var gi = +it._id.split('-')[0], g = DOC.groups[gi], gh = document.querySelector('.grp[data-g="' + gi + '"]');
-    if (gh) { var gd = g.items.filter(itemDone).length; gh.querySelector('span').textContent = gd + ' / ' + g.items.length; gh.classList.toggle('full', gd === g.items.length); }
+    h += '<div class="foot"><div>Dikemas kini ' + esc(fmtTime(DOC.updatedAt)) + '</div>' + (DOC.its.length ? '<button class="linkbtn" data-act="reset">Padam semua pilihan</button>' : '') + '</div></main>';
+    if (DOC.its.length) h += '<div class="bottom"><div class="wrap"><div class="sum" id="sum"></div><button class="primary" data-act="report">Hantar laporan</button></div></div>';
+    app.innerHTML = h;
     renderSum();
   }
-
-  function findItem(id) { for (var i = 0; i < ITEMS.length; i++) if (ITEMS[i]._id === id) return ITEMS[i]; return null; }
-
-  function mark(it, z, v) {
-    var k = sk(it, z);
-    if (v) ST.m[k] = v; else delete ST.m[k];
-    if (v === 's') { if (ST.ccNow) ST.cc[k] = ST.ccNow; } else delete ST.cc[k];
+  function renderSum() {
+    var el = document.getElementById('sum'); if (!el) return;
+    var a = answered(); el.innerHTML = '<b>' + a + '</b> dijawab · <b>' + (DOC.its.length - a) + '</b> belum';
+    var nd = document.getElementById('nDone'); if (nd) nd.textContent = a;
   }
 
-  /* ---------- report ---------- */
   function report() {
-    var t = totals();
-    var ccs = {}; Object.keys(ST.cc).forEach(function (k) { if (ST.m[k] === 's') ccs[ST.cc[k]] = 1; });
-    var ccList = Object.keys(ccs).sort().map(function (c) { return 'CC-' + c; });
-    var none = [], partial = 0;
-    ITEMS.forEach(function (it) {
-      var zs = it.sizes.filter(function (z) { return ST.m[sk(it, z)] === 'n'; });
-      if (zs.length) none.push('• ' + it.art + '-' + it.col + ' saiz ' + zs.join(', '));
-      if (itemTouched(it) && !itemDone(it)) partial++;
-    });
-    var L = [];
-    L.push('*ST2 ' + DOC.outlet + '* · ' + DOC.monthLabel);
-    L.push(t.done === DOC.nArt ? '✅ Semua siap: ' + t.done + '/' + DOC.nArt + ' art-col' : 'Dah semak: ' + t.done + '/' + DOC.nArt + ' art-col');
-    L.push('No. CC: ' + (ccList.length ? ccList.join(', ') : '(belum isi)'));
-    if (DOC.its && DOC.its.length) {
-      var yes = DOC.its.filter(function (d) { return ST.it[d.doc] === 'y'; });
-      var no = DOC.its.filter(function (d) { return ST.it[d.doc] === 'n'; });
-      var open = DOC.its.filter(function (d) { return !ST.it[d.doc]; });
-      if (yes.length) { L.push('Guna IT sebagai kiraan (barang ada):'); yes.forEach(function (d) { L.push('• ' + d.doc + ' (' + d.pcs + ' pcs)'); }); }
-      if (no.length) { L.push('IT scan sendiri:'); no.forEach(function (d) { L.push('• ' + d.doc); }); }
-      if (open.length) L.push('IT belum pilih: ' + open.map(function (d) { return d.doc; }).join(', '));
-    }
-    if (none.length) { L.push('Tiada stok (dah cari, tak jumpa):'); L = L.concat(none); }
-    if (t.done < DOC.nArt) L.push('Belum semak: ' + (DOC.nArt - t.done) + ' art-col' + (partial ? ' (' + partial + ' separuh)' : ''));
-    return { text: L.join('\n'), t: t };
+    var L = ['*ST2 IT ' + DOC.outlet + '* · ' + DOC.monthLabel];
+    var pick = function (t, v) { return DOC.its.filter(function (d) { return k(d) === t && ST.it[d.doc] === v; }); };
+    var line = function (d) { return '• ' + d.doc + ' (' + d.pcs + ' pcs)'; };
+    var uy = pick('u', 'y'), un = pick('u', 'n'), ey = pick('e', 'y'), en = pick('e', 'n');
+    if (uy.length) { L.push('Guna IT sebagai kiraan (barang ada):'); L = L.concat(uy.map(line)); }
+    if (un.length) { L.push('IT scan sendiri:'); L = L.concat(un.map(line)); }
+    if (ey.length) { L.push('IT dah dikira dalam stock take:'); L = L.concat(ey.map(line)); }
+    if (en.length) { L.push('IT tak pasti / belum dikira:'); L = L.concat(en.map(line)); }
+    var open = DOC.its.filter(function (d) { return !ST.it[d.doc]; });
+    if (open.length) L.push('IT belum dijawab: ' + open.map(function (d) { return d.doc; }).join(', '));
+    return L.join('\n');
   }
-
   function openReport() {
-    var r = report();
-    var warn = '';
-    if (r.t.sizes === 0) warn = '<div class="alert">Belum ada saiz yang ditanda. Boleh hantar juga kalau nak beritahu HQ anda dah mula.</div>';
-    else if (r.t.noCC) warn = '<div class="alert">' + r.t.noCC + ' saiz ditanda ✓ tanpa No. CC. Tulis No. CC dalam mesej sebelum hantar.</div>';
-    var wa = 'https://wa.me/?text=' + encodeURIComponent(r.text);
-    var h = '<div class="panel" role="dialog" aria-modal="true" aria-labelledby="rh"><h3 id="rh">Laporan ST2</h3>'
-      + '<p>Hantar ke group WhatsApp kaunter anda. Nombor stok tidak perlu, cukup ini.</p>' + warn
-      + '<div class="report" id="rtext">' + esc(r.text) + '</div>'
-      + '<div class="acts"><a class="primary wide" href="' + wa + '" target="_blank" rel="noopener">Buka WhatsApp</a>'
-      + '<button class="secondary" data-act="copy">Salin</button><button class="secondary" data-act="close">Tutup</button></div></div>';
-    showSheet(h);
+    var txt = report(), a = answered();
+    var warn = a < DOC.its.length ? '<div class="alert">' + (DOC.its.length - a) + ' IT belum dijawab. Boleh hantar dulu, dan hantar lagi bila dah semak.</div>' : '';
+    showSheet('<div class="panel" role="dialog" aria-modal="true" aria-labelledby="rh"><h3 id="rh">Laporan IT</h3>'
+      + '<p>Hantar ke group WhatsApp kaunter anda.</p>' + warn
+      + '<div class="report" id="rtext">' + esc(txt) + '</div>'
+      + '<div class="acts"><a class="primary wide" href="https://wa.me/?text=' + encodeURIComponent(txt) + '" target="_blank" rel="noopener">Buka WhatsApp</a>'
+      + '<button class="secondary" data-act="copy">Salin</button><button class="secondary" data-act="close">Tutup</button></div></div>');
   }
-
-  function confirmReset() {
-    showSheet('<div class="panel" role="dialog" aria-modal="true" aria-labelledby="xh"><h3 id="xh">Padam semua tanda?</h3>'
-      + '<p>Semua ✓ dan “tiada” dalam telefon ini akan hilang. Scan dalam iDCP tidak terjejas.</p>'
-      + '<div class="acts"><button class="secondary" data-act="close">Batal</button><button class="primary" data-act="doreset" style="background:var(--warn)">Padam</button></div></div>');
-  }
-
   function showSheet(h) { var s = document.getElementById('sheet'); s.innerHTML = h; s.hidden = false; var f = s.querySelector('a,button'); if (f) f.focus(); }
   function closeSheet() { var s = document.getElementById('sheet'); s.hidden = true; s.innerHTML = ''; }
   var tt;
   function toast(m) { var el = document.getElementById('toast'); el.textContent = m; el.hidden = false; clearTimeout(tt); tt = setTimeout(function () { el.hidden = true; }, 2200); }
 
-  /* ---------- events ---------- */
-  var warnedCC = false;
   document.addEventListener('click', function (e) {
-    var b = e.target.closest('button, a');
     if (e.target.id === 'sheet') { closeSheet(); return; }
-    if (!b) return;
-    if (b.dataset.view) {
-      ST.view = b.dataset.view; save();
-      ITEMS.forEach(function (it) { delete it._keep; });
-      document.querySelectorAll('.seg button').forEach(function (x) { x.setAttribute('aria-pressed', x.dataset.view === ST.view); });
-      renderList(); return;
+    var b = e.target.closest('button, a'); if (!b) return;
+    if (b.dataset.itc) {
+      var doc = b.closest('.itc').dataset.doc;
+      if (ST.it[doc] === b.dataset.itc) delete ST.it[doc]; else ST.it[doc] = b.dataset.itc;
+      save(); var y = window.scrollY; renderAll(); window.scrollTo(0, y);
+      toast(ST.it[doc] ? doc + ' dijawab' : doc + ': pilihan dipadam');
+      return;
     }
     var act = b.dataset.act;
-    if (act === 'report') { openReport(); return; }
-    if (act === 'close') { closeSheet(); return; }
-    if (act === 'reset') { confirmReset(); return; }
-    if (act === 'doreset') { ST.m = {}; ST.cc = {}; ST.it = {}; save(); closeSheet(); renderAll(); toast('Semua tanda dipadam'); return; }
-    if (act === 'copy') {
-      var txt = report().text;
+    if (act === 'report') openReport();
+    else if (act === 'close') closeSheet();
+    else if (act === 'reset') showSheet('<div class="panel" role="dialog" aria-modal="true"><h3>Padam semua pilihan?</h3><p>Pilihan dalam telefon ini akan hilang.</p><div class="acts"><button class="secondary" data-act="close">Batal</button><button class="primary" data-act="doreset" style="background:var(--warn)">Padam</button></div></div>');
+    else if (act === 'doreset') { ST.it = {}; save(); closeSheet(); renderAll(); toast('Semua pilihan dipadam'); }
+    else if (act === 'copy') {
+      var txt = report();
       var ok = function () { toast('Disalin. Tampal dalam WhatsApp.'); };
       var fb = function () { var r = document.createRange(), el = document.getElementById('rtext'); r.selectNodeContents(el); var s = getSelection(); s.removeAllRanges(); s.addRange(r); toast('Teks dipilih. Tekan Salin/Copy.'); };
       try { navigator.clipboard.writeText(txt).then(ok, fb); } catch (x) { fb(); }
-      return;
     }
-    if (b.dataset.itc) {
-      var box = b.closest('.itc'), doc = box.dataset.doc;
-      ST.it[doc] = ST.it[doc] === b.dataset.itc ? '' : b.dataset.itc; if (!ST.it[doc]) delete ST.it[doc];
-      save(); var y = window.scrollY; renderAll(); window.scrollTo(0, y);
-      toast(ST.it[doc] === 'y' ? doc + ': kiraan ikut IT' : (ST.it[doc] === 'n' ? doc + ': scan sendiri' : doc + ': pilihan dipadam'));
-      return;
-    }
-    var card = b.closest('.art'); if (!card) return;
-    var it = findItem(card.dataset.id); if (!it) return;
-    if (b.classList.contains('chip')) {
-      var z = b.dataset.z, cur = ST.m[sk(it, z)];
-      var nxt = !cur ? 's' : (cur === 's' ? 'n' : '');
-      mark(it, z, nxt);
-      if (nxt === 's' && !ST.ccNow && !warnedCC) { warnedCC = true; toast('Isi No. CC di atas supaya HQ tahu CC mana'); }
-    } else if (act === 'all') {
-      it.sizes.forEach(function (z) { if (!ST.m[sk(it, z)]) mark(it, z, 's'); });
-      if (!ST.ccNow && !warnedCC) { warnedCC = true; toast('Isi No. CC di atas supaya HQ tahu CC mana'); }
-    } else return;
-    it._keep = true;                 /* stays on screen until the filter is changed */
-    save(); rerenderCard(it);
-    if (itemDone(it)) toast(it.art + '-' + it.col + ' siap ✓');
   });
-  document.addEventListener('input', function (e) {
-    if (e.target.id === 'q') { Q = e.target.value.trim(); renderList(); }
-    if (e.target.id === 'ccNow') { ST.ccNow = e.target.value.replace(/\D/g, ''); if (e.target.value !== ST.ccNow) e.target.value = ST.ccNow; save(); }
-  });
-  document.addEventListener('toggle', function (e) { if (e.target.id === 'calm') { ST.calmClosed = !e.target.open; save(); } }, true);
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeSheet(); });
 
-  /* ---------- boot ---------- */
   var rendered = false;
-  function start(d) { DOC = d; KEY = 'st2field:' + d.outlet + ':' + d.cycle; load(); rendered = true; renderAll(); }
+  function start(d) { DOC = d; DOC.its = DOC.its || []; KEY = 'st2it:' + d.outlet + ':' + d.cycle; load(); rendered = true; renderAll(); }
   function showInvalid() { rendered = true; app.innerHTML = '<div class="msg"><h1>Link tidak sah.</h1><p>Minta link baru dari HQ dalam group.</p></div>'; }
   function showOffline() { rendered = true; app.innerHTML = '<div class="msg"><h1>Tak dapat buka.</h1><p>Semak internet, kemudian buka semula link.</p></div>'; }
-
   /* crypto: same contract as push_board.py / topup.html */
   function readKey() { var h = (location.hash || '').replace(/^#/, '').trim(); if (!h) return null; if (/^[0-9a-fA-F]{64}$/.test(h)) return h.toLowerCase(); return false; }
   function hexToBytes(hex) { var out = new Uint8Array(hex.length / 2); for (var i = 0; i < out.length; i++) out[i] = parseInt(hex.substr(i * 2, 2), 16); return out; }
   function b64ToBytes(b64) { var bin = atob(String(b64).replace(/-/g, '+').replace(/_/g, '/')); var out = new Uint8Array(bin.length); for (var i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i); return out; }
   function docIdFor(keyHex) { return crypto.subtle.digest('SHA-256', new TextEncoder().encode(keyHex)).then(function (buf) { var b = new Uint8Array(buf), s = ''; for (var i = 0; i < 8; i++) s += (b[i] < 16 ? '0' : '') + b[i].toString(16); return s; }); }
   function importKey(keyHex) { return crypto.subtle.importKey('raw', hexToBytes(keyHex), { name: 'AES-GCM' }, false, ['decrypt']); }
-  function decryptDoc(k, doc) {
+  function decryptDoc(kk, doc) {
     if (!doc || typeof doc.iv !== 'string' || typeof doc.ct !== 'string') return Promise.reject(new Error('bad doc'));
-    return crypto.subtle.decrypt({ name: 'AES-GCM', iv: b64ToBytes(doc.iv), tagLength: 128 }, k, b64ToBytes(doc.ct)).then(function (buf) { return JSON.parse(new TextDecoder().decode(buf)); });
+    return crypto.subtle.decrypt({ name: 'AES-GCM', iv: b64ToBytes(doc.iv), tagLength: 128 }, kk, b64ToBytes(doc.ct)).then(function (buf) { return JSON.parse(new TextDecoder().decode(buf)); });
   }
   function boot() {
     if (window.__ST2_DOC) { start(window.__ST2_DOC); return; }
     if (!window.crypto || !crypto.subtle) { showOffline(); return; }
-    var k = readKey();
-    if (k === null || k === false) { showInvalid(); return; }
-    var cacheKey = 'st2doc:' + k.slice(0, 16);
-    Promise.all([docIdFor(k), importKey(k)]).then(function (r) {
+    var kx = readKey();
+    if (kx === null || kx === false) { showInvalid(); return; }
+    var cacheKey = 'st2doc:' + kx.slice(0, 16);
+    Promise.all([docIdFor(kx), importKey(kx)]).then(function (r) {
       return fetch('r/' + r[0] + '.json', { cache: 'no-store' }).then(function (res) {
         if (res.status === 404) { showInvalid(); return; }
         if (!res.ok) throw new Error('http ' + res.status);
@@ -481,7 +251,6 @@ button, input { font: inherit; color: inherit; }
         });
       });
     }).catch(function () {
-      /* weak signal in the stockroom: reopen from the copy this phone already decrypted */
       var c = null; try { c = JSON.parse(localStorage.getItem(cacheKey) || 'null'); } catch (e) {}
       if (c) { start(c); toast('Tiada internet: guna senarai tersimpan'); } else if (!rendered) showOffline();
     });
