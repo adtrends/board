@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>促销员考勤报告</title>
+<style>
+:root{--bg:#f4f6f9;--card:#fff;--ink:#1d2433;--mute:#667085;--line:#e3e7ee;--acc:#1f5fbf;--bad:#c0392b;--warn:#b7791f;--good:#2f855a;--head:#eef2f8}
+@media (prefers-color-scheme: dark){:root{--bg:#12151b;--card:#1b2029;--ink:#e6e9ef;--mute:#9aa4b5;--line:#2c3340;--acc:#6ea8ff;--bad:#ff7b6b;--warn:#f0b65a;--good:#5fd09a;--head:#232a36}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 -apple-system,"PingFang SC","Microsoft YaHei",Segoe UI,Roboto,sans-serif}
+.wrap{max-width:980px;margin:0 auto;padding:16px}
+h1{font-size:20px;margin:4px 0 2px}
+h2{font-size:17px;margin:22px 0 8px}
+h3{font-size:15px;margin:14px 0 6px}
+.mute{color:var(--mute);font-size:13px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px;margin:10px 0}
+#gate{max-width:380px;margin:12vh auto 0}
+#gate input[type=password]{width:100%;font-size:18px;padding:12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)}
+button{font-size:16px;padding:11px 16px;border:0;border-radius:8px;background:var(--acc);color:#fff;width:100%;margin-top:10px}
+.err{color:var(--bad);min-height:1.4em;margin-top:8px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
+.kpi b{display:block;font-size:22px}
+.notes{white-space:pre-wrap;font-size:14.5px}
+.tw{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{border-collapse:collapse;width:100%;font-size:13.5px}
+th,td{border-bottom:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top;white-space:nowrap}
+th{background:var(--head);font-weight:600}
+td.wrapc{white-space:normal;min-width:160px}
+.bad{color:var(--bad);font-weight:600}.warn{color:var(--warn);font-weight:600}.good{color:var(--good)}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin:14px 0 4px}
+.tabs button{width:auto;margin:0;background:var(--card);color:var(--ink);border:1px solid var(--line);font-size:14px;padding:8px 12px}
+.tabs button.on{background:var(--acc);color:#fff;border-color:var(--acc)}
+details{margin:6px 0}summary{cursor:pointer;font-weight:600;padding:6px 0}
+label.rm{display:flex;gap:8px;align-items:center;margin-top:10px;font-size:14px;color:var(--mute)}
+.top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.top button{width:auto;margin:0;font-size:13px;padding:6px 10px;background:transparent;color:var(--mute);border:1px solid var(--line)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div id="gate" class="card">
+    <h1>促销员考勤报告</h1>
+    <p class="mute">Promoter compliance report · 请输入密码 / enter password</p>
+    <form id="f" autocomplete="off">
+      <input id="pw" type="password" placeholder="密码 password" autocomplete="current-password" autofocus>
+      <label class="rm"><input type="checkbox" id="rem"> 在这台手机记住密码 / remember on this phone</label>
+      <button type="submit" id="go">打开 Open</button>
+      <div class="err" id="err"></div>
+    </form>
+  </div>
+  <div id="app" hidden></div>
+</div>
+<script>
+const DATA = "cp/compliance.json";
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const b64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+const store = { get(){ try { return localStorage.getItem("cp_pw"); } catch(e){ return null; } },
+  set(v){ try { localStorage.setItem("cp_pw", v); } catch(e){} }, del(){ try { localStorage.removeItem("cp_pw"); } catch(e){} } };
+
+async function unlock(pw){
+  const env = await (await fetch(DATA + "?t=" + Date.now(), {cache:"no-store"})).json();
+  const base = await crypto.subtle.importKey("raw", new TextEncoder().encode(pw), "PBKDF2", false, ["deriveKey"]);
+  const key = await crypto.subtle.deriveKey({name:"PBKDF2", salt:b64(env.salt), iterations:env.iter, hash:"SHA-256"},
+    base, {name:"AES-GCM", length:256}, false, ["decrypt"]);
+  const pt = await crypto.subtle.decrypt({name:"AES-GCM", iv:b64(env.iv)}, key, b64(env.ct));
+  return JSON.parse(new TextDecoder().decode(pt));
+}
+
+function pct(v){ if (v === "" || v == null || isNaN(v)) return ""; const p = Math.round(v*100);
+  return `<span class="${p < 60 ? "bad" : p < 80 ? "warn" : "good"}">${p}%</span>`; }
+
+function table(head, rows){
+  if (!head) return rows.map(r => `<p class="mute">${esc(r.join(" "))}</p>`).join("");
+  const isPct = head.map(h => /%/.test(String(h)));
+  return `<div class="tw"><table><thead><tr>${head.map(h=>`<th>${esc(h)}</th>`).join("")}</tr></thead><tbody>${
+    rows.map(r => r.length === 1 && head.length > 1
+      ? `<tr><td colspan="${head.length}" class="mute">${esc(r[0])}</td></tr>`
+      : `<tr>${head.map((h,i)=> isPct[i] && typeof r[i]==="number" ? `<td>${pct(r[i])}</td>`
+          : `<td class="${String(r[i]??"").length>40?"wrapc":""}">${esc(r[i])}</td>`).join("")}</tr>`).join("")
+  }</tbody></table></div>`;
+}
+
+function render(d){
+  const k = d.kpi || {};
+  const sec = d.sections.map((s, i) => `<button data-t="s${i}">${esc(s.zh)}</button>`).join("");
+  let html = `<div class="top"><div><h1>${esc(d.title)}</h1>
+    <div class="mute">更新 Updated ${esc(d.built)} · ${esc(d.source)}</div>
+    <div class="mute">${esc(k.period || "")}</div></div><button id="lock">锁定 Lock</button></div>
+    <div class="kpis">
+      <div class="card kpi"><span class="mute">促销员 Promoters</span><b>${d.summary.promoters}</b></div>
+      <div class="card kpi"><span class="mute">出勤率 Adherence</span><b>${pct(k.adherence)}</b></div>
+      <div class="card kpi"><span class="mute">准时率 On-time</span><b>${pct(k.ontime)}</b></div>
+      <div class="card kpi"><span class="mute">排班天数 Rostered days</span><b>${k.sched_days ?? ""}</b></div>
+    </div>
+    <div class="tabs"><button data-t="n" class="on">说明 Notes</button>${sec}<button data-t="p">各主管名单 By supervisor</button></div>
+    <div id="n" class="tab card"><div class="notes">${esc(d.notes || "（本周没有说明）")}</div></div>`;
+  d.sections.forEach((s, i) => {
+    html += `<div id="s${i}" class="tab" hidden>` + s.blocks.map(b => b.kind === "group"
+      ? `<div class="card"><h3>主管 ${esc(b.title)}</h3><div class="mute">${esc(b.sub)}</div>${table(b.head, b.rows)}</div>`
+      : `<div class="card"><h3>${esc(b.title)}</h3>${b.note?`<div class="mute">${esc(b.note)}</div>`:""}${table(b.head, b.rows)}</div>`
+    ).join("") + `</div>`;
+  });
+  html += `<div id="p" class="tab" hidden>` + Object.entries(d.summary.by_sup).map(([sup, rows]) =>
+    `<details class="card"><summary>${esc(sup)} · ${rows.length} 人</summary>${table(d.summary.cols, rows)}</details>`).join("") + `</div>`;
+  const app = $("#app"); app.innerHTML = html; app.hidden = false; $("#gate").hidden = true;
+  app.querySelectorAll(".tabs button").forEach(b => b.onclick = () => {
+    app.querySelectorAll(".tabs button").forEach(x => x.classList.toggle("on", x === b));
+    app.querySelectorAll(".tab").forEach(t => t.hidden = t.id !== b.dataset.t);
+  });
+  $("#lock").onclick = () => { store.del(); location.reload(); };
+}
+
+async function tryOpen(pw, remember){
+  $("#err").textContent = ""; $("#go").disabled = true; $("#go").textContent = "打开中… Opening…";
+  try { const d = await unlock(pw); if (remember) store.set(pw); render(d); }
+  catch(e){ store.del(); $("#err").textContent = "密码不对，请再试 / Wrong password, try again"; }
+  finally { $("#go").disabled = false; $("#go").textContent = "打开 Open"; }
+}
+$("#f").onsubmit = e => { e.preventDefault(); const pw = $("#pw").value.trim(); if (pw) tryOpen(pw, $("#rem").checked); };
+const saved = store.get(); if (saved) tryOpen(saved, true);
+</script>
+</body>
+</html>
