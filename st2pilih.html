@@ -101,25 +101,47 @@ h2.e { color: var(--early); }
 .msg h1 { font-size: 22px; }
 </style>
 <style>
-.ac { background: var(--card); border: 1px solid var(--line); border-radius: var(--r); padding: 10px 12px; margin-bottom: 10px; box-shadow: var(--shadow); }
-.ac .t { font-weight: 700; font-size: 17px; }
-.ac .ds { font-size: 13px; color: var(--muted); margin-bottom: 4px; }
-.ln { display: grid; grid-template-columns: 54px 52px 1fr 1fr; gap: 6px; align-items: center; padding: 8px 0; border-top: 1px solid var(--line); }
+.chips { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 12px; }
+.chip { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 6px 4px; text-align: center; line-height: 1.15; }
+.chip b { display: block; font-size: 20px; font-variant-numeric: tabular-nums; }
+.chip span { font-size: 12px; color: var(--muted); }
+.chip.k { border-color: var(--done); background: var(--done-bg); }
+.howto { font-size: 14px; color: var(--muted); margin: 10px 2px 0; }
+.howto b { color: var(--ink); }
+details.how { margin: 4px 2px 0; font-size: 14px; color: var(--muted); }
+details.how summary { cursor: pointer; min-height: 36px; display: flex; align-items: center; color: var(--brand-2); font-weight: 700; }
+:root[data-theme="dark"] details.how summary { color: var(--done); }
+.dl { background: var(--warn-bg); color: var(--warn); border-radius: 10px; padding: 7px 10px; font-size: 14px; font-weight: 700; margin-top: 8px; }
+.tbl { background: var(--card); border: 1px solid var(--line); border-radius: var(--r); margin-top: 8px; box-shadow: var(--shadow); }
+.th, .ln, .nsr { display: grid; grid-template-columns: 1fr 52px 64px 64px; gap: 6px; align-items: center; }
+.th { position: sticky; top: var(--toph, 88px); z-index: 4; background: var(--brand-soft); font-size: 12px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); min-height: 30px; padding: 0 10px 0 14px; border-radius: var(--r) var(--r) 0 0; }
+.th span:not(:first-child), .nsr span:not(:first-child) { text-align: center; }
+.gh { padding: 7px 10px 3px 14px; font-size: 13px; color: var(--muted); border-top: 1px solid var(--line); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.gh b { color: var(--ink); font-size: 14px; }
+.ln { min-height: 48px; cursor: pointer; border-left: 4px solid transparent; padding: 0 10px; }
+.ln.ch { border-left-color: var(--early); background: var(--early-bg); }
 .ln .z { font-weight: 700; font-size: 16px; }
-.ln button { min-height: 52px; border-radius: 12px; border: 1.5px solid var(--line); background: var(--card); cursor: pointer; line-height: 1.15; padding: 4px 6px; display: grid; justify-items: center; }
-.ln button .q { font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums; }
-.ln button .l { font-size: 12px; color: var(--muted); }
-.ln button[aria-pressed="true"] { background: var(--done-bg); border-color: var(--done); box-shadow: inset 0 0 0 1.5px var(--done); }
-.ln button[aria-pressed="true"] .l { color: var(--done); font-weight: 700; }
-.ln .sy { text-align: center; line-height: 1.1; } .ln .sy .q { font-size: 18px; font-weight: 700; font-variant-numeric: tabular-nums; } .ln .sy .l, .ln button .r { font-size: 11px; color: var(--muted); }
-.ln .hq { grid-column: 3 / -1; font-size: 12px; color: var(--muted); margin-top: -2px; }
-.ln .hq.ch { color: var(--early); font-weight: 700; }
-.nsr { display: flex; justify-content: space-between; gap: 8px; padding: 6px 2px; border-top: 1px solid var(--line); font-size: 15px; font-variant-numeric: tabular-nums; }
-.nsr .m { color: var(--muted); font-size: 13px; }
-details.box { background: var(--card); border: 1px solid var(--line); border-radius: var(--r); padding: 6px 12px; }
-details.box summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; font-weight: 700; color: var(--brand-2); }
-:root[data-theme="dark"] details.box summary { color: var(--done); }
-.dl { background: var(--warn-bg); color: var(--warn); border-radius: 10px; padding: 8px 12px; font-size: 15px; font-weight: 700; }
+.ln .z::after { content: ' \25BE'; font-size: 11px; color: var(--muted); }
+.ln.open .z::after { content: ' \25B4'; }
+.ln.own button[aria-pressed] { opacity: .55; }
+.dx { padding: 6px 12px 10px 14px; font-size: 14px; background: var(--todo-bg); border-top: 1px dashed var(--line); display: grid; gap: 6px; }
+.dx .w { line-height: 1.35; }
+.dx .w b { color: var(--ink); }
+.dx .m { color: var(--muted); font-size: 12px; }
+.dx .own { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; padding-top: 4px; border-top: 1px solid var(--line); }
+.dx .own input { width: 84px; min-height: 42px; font: inherit; font-size: 18px; font-weight: 700; text-align: center; border-radius: 10px; border: 1.5px solid var(--early); background: var(--card); color: var(--ink); }
+.dx .own .ok { color: var(--early); font-weight: 700; }
+.dx .own button { min-height: 40px; border-radius: 10px; border: 1.5px solid var(--line); background: var(--card); font-weight: 700; padding: 0 12px; cursor: pointer; }
+.ln .sy { text-align: center; font-size: 16px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.ln button { position: relative; height: 40px; border-radius: 10px; border: 1.5px solid var(--line); background: var(--card); cursor: pointer; font-size: 18px; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--muted); }
+.ln button[aria-pressed="true"] { background: var(--done); border-color: var(--done); color: var(--card); }
+.ln.ch button[aria-pressed="true"] { background: var(--early); border-color: var(--early); }
+.ln button i { position: absolute; top: -7px; right: -5px; font-style: normal; font-size: 9px; font-weight: 700; letter-spacing: .04em; background: var(--ink); color: var(--card); border-radius: 6px; padding: 1px 4px; line-height: 1.3; }
+.nsr { padding: 5px 10px 5px 14px; font-size: 15px; font-variant-numeric: tabular-nums; }
+.nsr .m { color: var(--muted); }
+details.box { margin-top: 10px; }
+details.box > summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; font-weight: 700; color: var(--brand-2); padding: 0 2px; }
+:root[data-theme="dark"] details.box > summary { color: var(--done); }
 </style>
 
 <div id="app"><div class="msg"><p>Membuka semakan…</p></div></div>
@@ -130,50 +152,73 @@ details.box summary { cursor: pointer; min-height: 44px; display: flex; align-it
 <script>
 (function () {
   'use strict';
-  var DOC = null, KEY = '', ST = { p: {} };
+  var DOC = null, KEY = '', ST = { p: {}, v: {}, vd: {} };
   var app = document.getElementById('app');
-  function load() { try { var s = localStorage.getItem(KEY); if (s) { var o = JSON.parse(s); ST.p = o.p || {}; } } catch (e) {} }
+  function load() { try { var s = localStorage.getItem(KEY); if (s) { var o = JSON.parse(s); ST.p = o.p || {}; ST.v = o.v || {}; ST.vd = o.vd || {}; } } catch (e) {} }
   function save() { try { localStorage.setItem(KEY, JSON.stringify(ST)); } catch (e) {} }
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
   function fmtD(s) { var m = /^(\d{4})-(\d\d)-(\d\d)/.exec(s || ''); return m ? (+m[3]) + '/' + (+m[2]) : ''; }
   function fmtTime(s) { var m = /^(\d{4})-(\d\d)-(\d\d)T(\d\d):(\d\d)/.exec(s || ''); return m ? (+m[3]) + '/' + (+m[2]) + ' ' + m[4] + ':' + m[5] : ''; }
   function id(l) { return l.a + '-' + l.c + '|' + l.z; }
   function cur(l) { return ST.p[id(l)] || l.hq; }
-  function changed() { return DOC.pick.filter(function (l) { return cur(l) !== l.hq; }); }
+  function changed() { return DOC.pick.filter(function (l) { return ST.v[id(l)] != null || cur(l) !== l.hq; }); }
   function groups(list) { var g = [], m = {}; list.forEach(function (l) { var k = l.a + '-' + l.c; if (!m[k]) { m[k] = { k: k, ds: l.ds, L: [] }; g.push(m[k]); } m[k].L.push(l); }); return g; }
 
+  var OPEN = {};
+  function sgn(n) { return n > 0 ? '+' + n : (n < 0 ? '−' + (-n) : '0'); }
+  function wline(lbl, raw, d, w, at30, oct) {
+    if (!d && !raw && !w.j && !w.i) return '<div class="w"><b>' + lbl + '</b>: tiada dalam kiraan pertama &rarr; <b>0</b></div>';
+    var s = '<div class="w"><b>' + lbl + '</b>: scan <b>' + raw + '</b> pada ' + esc(fmtD(d) || '-');
+    if (w.j) s += ' · jualan ' + (oct ? 'Okt dibawa balik ' : 'lepas kira ') + '<b>' + sgn(w.j) + '</b>' + (w.x ? ' <span class="m">(' + esc(w.x) + ')</span>' : '');
+    if (w.i) s += ' · IT <b>' + sgn(w.i) + '</b>';
+    if (!w.j && !w.i) s += ' · tiada jualan/IT selepas itu';
+    return s + ' &rarr; <b>' + at30 + '</b> pada 30/9</div>';
+  }
+  function detail(l) {
+    var k = id(l), v = ST.v[k];
+    var h = '<div class="dx" data-id="' + esc(k) + '"><div class="w">Sistem pada 30/9: <b>' + l.sy + '</b></div>'
+      + wline('ST1', l.s1, l.d1, l.w1, l.t1, false)
+      + wline('ST2', l.s2, l.d2, l.w2, l.t2, l.d2 > DOC.cycleEnd)
+      + '<div class="own"><span>Dua-dua salah? Stok <b>hari ini</b>:</span><input type="number" inputmode="numeric" min="0" step="1" data-own="' + esc(k) + '" value="' + (v != null ? v : '') + '" placeholder="pcs">'
+      + (v != null ? '<span class="ok">guna ' + v + ' (' + esc(fmtD(ST.vd[k])) + ')</span><button data-clear="' + esc(k) + '">Batal</button>' : '')
+      + '</div><div class="m">Kira fizikal sekarang. HQ akan bawa balik ke 30/9 ikut jualan dan IT bulan Oktober.</div></div>';
+    return h;
+  }
+  function row(l) {
+    var k = id(l), own = ST.v[k] != null, c = own ? 'x' : cur(l), isCh = own || c !== l.hq;
+    var btn = function (v, n) { return '<button data-pick="' + v + '" aria-pressed="' + (c === v) + '" aria-label="ST' + v + ' ' + n + '">' + n + (l.hq === v ? '<i>HQ</i>' : '') + '</button>'; };
+    return '<div class="ln' + (isCh ? ' ch' : '') + (own ? ' own' : '') + (OPEN[k] ? ' open' : '') + '" data-id="' + esc(k) + '"><span class="z">' + esc(l.z) + '</span><span class="sy">' + l.sy + '</span>' + btn('1', l.t1) + btn('2', l.t2) + '</div>'
+      + (OPEN[k] ? detail(l) : '');
+  }
   function renderAll() {
     var P = DOC.pick, ch = changed().length;
     var h = '<header class="top"><div class="wrap"><div><div class="eyebrow">Semakan ST2 · ' + esc(DOC.monthLabel) + '</div><div class="outlet">' + esc(DOC.outlet) + '</div></div>'
-      + '<div class="count"><b>' + P.length + '</b><span> saiz pilih</span></div></div></header><main class="wrap">';
-    if (window.__PREVIEW) h += '<div class="preview"><b>Pratonton untuk HQ.</b> Pilihan di sini hanya disimpan dalam telefon ini.</div>';
-    h += '<div class="intro"><p>Terima kasih, ST2 dah siap. HQ akan tutup stock take September pada <b>30/9</b>. Ini keputusan kami untuk <b>' + (DOC.agree + DOC.pick.length + DOC.ns.length) + ' saiz</b> dalam ST2:</p>'
-      + '<p>• <b>' + DOC.agree + '</b> saiz: ST1 dan ST2 sama pada 30/9, tiada masalah.<br>• <b>' + P.length + '</b> saiz: ST1 dan ST2 berbeza. HQ dah pilih satu (kotak hijau). <b>Kalau anda yakin kiraan yang satu lagi betul, tekan untuk tukar.</b><br>• <b>' + DOC.ns.length + '</b> saiz: tak di-scan semula, jadi HQ guna ST1.</p>'
-      + '<p class="small">ST1 dan ST2 di bawah dah dibawa ke 30/9: jualan selepas hari kira ditolak, IT selepas hari kira ditambah/ditolak. Anda tak perlu kira apa-apa.</p>'
-      + (DOC.deadline ? '<div class="dl">Hantar laporan sebelum ' + esc(DOC.deadline) + '. Lepas tu HQ tutup ikut pilihan yang ditanda.</div>' : '') + '</div>';
+      + '<div class="count"><b>' + (ch ? ch : '✓') + '</b><span> ' + (ch ? 'ditukar' : 'ikut HQ') + '</span></div></div></header><main class="wrap">';
+    if (window.__PREVIEW) h += '<div class="preview"><b>Pratonton untuk HQ.</b> Pilihan hanya disimpan dalam telefon ini.</div>';
+    h += '<div class="chips"><div class="chip k"><b>' + P.length + '</b><span>pilih ST1 / ST2</span></div><div class="chip"><b>' + DOC.agree + '</b><span>sama, OK</span></div><div class="chip"><b>' + DOC.ns.length + '</b><span>tak scan &rarr; ST1</span></div></div>'
+      + '<p class="howto">HQ tutup stock take pada <b>30/9</b>. Kotak hijau = pilihan HQ. <b>Tekan nombor</b> untuk pilih ST1 atau ST2. <b>Tekan saiz</b> untuk lihat jualan/IT dan isi kiraan sendiri kalau dua-dua salah. Kalau setuju semua, terus tekan <b>Hantar laporan</b>.</p>'
+      + (DOC.deadline ? '<div class="dl">Hantar sebelum ' + esc(DOC.deadline) + '</div>' : '')
+      + '<details class="how"><summary>Cara baca nombor</summary>Semua nombor ialah stok pada 30/9. ST1 dan ST2 = kiraan anda, selepas jualan dan IT lepas hari kira diambil kira (tekan saiz untuk lihat kiraannya, termasuk no. resit jualan). Sistem = stok dalam sistem pada 30/9. Saiz yang tak di-scan semula guna ST1.</details>';
     if (P.length) {
-      h += '<h2>1 · Pilih ST1 atau ST2 (' + P.length + ' saiz)</h2><p class="sub">Semua nombor besar ialah stok pada <b>30/9</b>: sistem, dan kiraan anda selepas jualan/IT lepas hari kira diambil kira ("kira" = jumlah yang anda scan). Tekan kotak kiraan yang betul.</p>';
+      h += '<div class="tbl"><div class="th"><span>Saiz</span><span>Sistem</span><span>ST1</span><span>ST2</span></div>';
       groups(P).forEach(function (g) {
-        h += '<div class="ac"><div class="t">' + esc(g.k) + '</div>' + (g.ds ? '<div class="ds">' + esc(g.ds) + '</div>' : '');
-        g.L.forEach(function (l) {
-          var c = cur(l), isCh = c !== l.hq;
-          h += '<div class="ln" data-id="' + esc(id(l)) + '"><div class="z">' + esc(l.z) + '</div>'
-            + '<div class="sy"><div class="q">' + l.sy + '</div><div class="l">sistem</div></div>'
-            + '<button data-pick="1" aria-pressed="' + (c === '1') + '"><span class="q">' + l.t1 + '</span><span class="l">ST1' + (c === '1' ? ' ✓' : '') + '</span><span class="r">kira ' + l.s1 + ' · ' + esc(fmtD(l.d1) || '-') + '</span></button>'
-            + '<button data-pick="2" aria-pressed="' + (c === '2') + '"><span class="q">' + l.t2 + '</span><span class="l">ST2' + (c === '2' ? ' ✓' : '') + '</span><span class="r">kira ' + l.s2 + ' · ' + esc(fmtD(l.d2)) + '</span></button>'
-            + '<div class="hq' + (isCh ? ' ch' : '') + '">' + (isCh ? 'Anda tukar (HQ pilih ST' + l.hq + ')' : 'Pilihan HQ: ST' + l.hq) + '</div></div>';
-        });
-        h += '</div>';
+        h += '<div class="gh"><b>' + esc(g.k) + '</b>' + (g.ds ? ' · ' + esc(g.ds) : '') + '</div>';
+        g.L.forEach(function (l) { h += row(l); });
       });
+      h += '</div>';
     }
     if (DOC.ns.length) {
-      h += '<h2>2 · Tak scan semula, guna ST1 (' + DOC.ns.length + ' saiz)</h2><details class="box"><summary>Lihat senarai</summary>';
-      DOC.ns.forEach(function (l) { h += '<div class="nsr"><span>' + esc(l.a) + '-' + esc(l.c) + ' · <b>' + esc(l.z) + '</b>' + (l.ds ? ' <span class="m">' + esc(l.ds) + '</span>' : '') + '</span><span style="white-space:nowrap">sistem <b>' + l.sy + '</b> · ST1 <b>' + l.t1 + '</b></span></div>'; });
-      h += '</details>';
+      h += '<details class="box"><summary>Tak scan semula, guna ST1 (' + DOC.ns.length + ' saiz) &rsaquo;</summary><div class="tbl"><div class="th"><span>Saiz</span><span>Sistem</span><span>ST1</span><span></span></div>';
+      groups(DOC.ns).forEach(function (g) {
+        h += '<div class="gh"><b>' + esc(g.k) + '</b>' + (g.ds ? ' · ' + esc(g.ds) : '') + '</div>';
+        g.L.forEach(function (l) { h += '<div class="nsr"><span><b>' + esc(l.z) + '</b></span><span class="m">' + l.sy + '</span><span><b>' + l.t1 + '</b></span><span></span></div>'; });
+      });
+      h += '</div></details>';
     }
     h += '<div class="foot"><div>Dikemas kini ' + esc(fmtTime(DOC.updatedAt)) + '</div>' + (ch ? '<button class="linkbtn" data-act="reset">Kembali ke pilihan HQ</button>' : '') + '</div></main>';
     h += '<div class="bottom"><div class="wrap"><div class="sum">' + (ch ? '<b>' + ch + '</b> saiz ditukar' : 'Setuju semua pilihan HQ') + '</div><button class="primary" data-act="report">Hantar laporan</button></div></div>';
     app.innerHTML = h;
+    var tp = document.querySelector('.top'); if (tp) document.documentElement.style.setProperty('--toph', tp.getBoundingClientRect().bottom + 'px');
   }
 
   function report() {
@@ -181,7 +226,9 @@ details.box summary { cursor: pointer; min-height: 44px; display: flex; align-it
     if (!C.length) L.push('Setuju semua pilihan HQ (' + DOC.pick.length + ' saiz).');
     else {
       L.push('Tukar pilihan (' + C.length + ' saiz):');
-      C.forEach(function (l) { var c = cur(l); L.push('• ' + l.a + '-' + l.c + ' saiz ' + l.z + ': guna ST' + c + ' (' + (c === '1' ? l.t1 : l.t2) + ' pada 30/9)'); });
+      C.forEach(function (l) { var k = id(l), c = cur(l);
+        if (ST.v[k] != null) L.push('• ' + l.a + '-' + l.c + ' saiz ' + l.z + ': dua-dua salah, stok ' + fmtD(ST.vd[k]) + ' = ' + ST.v[k] + ' pcs');
+        else L.push('• ' + l.a + '-' + l.c + ' saiz ' + l.z + ': guna ST' + c + ' (' + (c === '1' ? l.t1 : l.t2) + ' pada 30/9)'); });
       L.push('Yang lain setuju pilihan HQ (' + (DOC.pick.length - C.length) + ' saiz).');
     }
     return L.join('\n');
@@ -200,18 +247,26 @@ details.box summary { cursor: pointer; min-height: 44px; display: flex; align-it
 
   document.addEventListener('click', function (e) {
     if (e.target.id === 'sheet') { closeSheet(); return; }
-    var b = e.target.closest('button, a'); if (!b) return;
-    if (b.dataset.pick) {
-      var k = b.closest('.ln').dataset.id, l = DOC.pick.filter(function (x) { return id(x) === k; })[0];
-      if (b.dataset.pick === l.hq) delete ST.p[k]; else ST.p[k] = b.dataset.pick;
-      save(); var y = window.scrollY; renderAll(); window.scrollTo(0, y);
-      toast(l.a + '-' + l.c + ' ' + l.z + ': ST' + b.dataset.pick);
+    var cl = e.target.closest('button[data-clear]');
+    if (cl) { var kc = cl.dataset.clear; delete ST.v[kc]; delete ST.vd[kc]; save(); var yc = window.scrollY; renderAll(); window.scrollTo(0, yc); toast('Kiraan sendiri dibatalkan'); return; }
+    var lnEl = e.target.closest('.ln');
+    if (lnEl) {                                   /* tap a number = pick it; tap the size/system = open the working */
+      var k = lnEl.dataset.id, l = DOC.pick.filter(function (x) { return id(x) === k; })[0];
+      var pb = e.target.closest('button[data-pick]');
+      var y = window.scrollY;
+      if (!pb) { OPEN[k] = !OPEN[k]; renderAll(); window.scrollTo(0, y); return; }
+      var v = pb.dataset.pick;
+      delete ST.v[k]; delete ST.vd[k];
+      if (v === l.hq) delete ST.p[k]; else ST.p[k] = v;
+      save(); renderAll(); window.scrollTo(0, y);
+      toast(l.a + '-' + l.c + ' ' + l.z + ': ST' + v + (v === l.hq ? ' (HQ)' : ' (ditukar)'));
       return;
     }
+    var b = e.target.closest('button, a'); if (!b) return;
     var act = b.dataset.act;
     if (act === 'report') openReport();
     else if (act === 'close') closeSheet();
-    else if (act === 'reset') { ST.p = {}; save(); renderAll(); toast('Kembali ke pilihan HQ'); }
+    else if (act === 'reset') { ST.p = {}; ST.v = {}; ST.vd = {}; save(); renderAll(); toast('Kembali ke pilihan HQ'); }
     else if (act === 'copy') {
       var txt = report();
       var ok = function () { toast('Disalin. Tampal dalam WhatsApp.'); };
@@ -220,6 +275,14 @@ details.box summary { cursor: pointer; min-height: 44px; display: flex; align-it
     }
   });
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeSheet(); });
+  document.addEventListener('change', function (e) {
+    var inp = e.target.closest('input[data-own]'); if (!inp) return;
+    var k = inp.dataset.own, n = inp.value.trim(), y = window.scrollY;
+    if (n === '' || !/^\d{1,4}$/.test(n)) { delete ST.v[k]; delete ST.vd[k]; }
+    else { var now = new Date(); ST.v[k] = +n; ST.vd[k] = now.getFullYear() + '-' + ('0' + (now.getMonth() + 1)).slice(-2) + '-' + ('0' + now.getDate()).slice(-2); }
+    save(); renderAll(); window.scrollTo(0, y);
+    if (ST.v[k] != null) toast('Kiraan sendiri: ' + ST.v[k] + ' pcs');
+  });
 
   var rendered = false;
   function start(d) { DOC = d; KEY = 'st2pilih:' + d.outlet + ':' + d.cycle; load(); rendered = true; renderAll(); }
