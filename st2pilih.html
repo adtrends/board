@@ -104,14 +104,15 @@ h2.e { color: var(--early); }
 .ac { background: var(--card); border: 1px solid var(--line); border-radius: var(--r); padding: 10px 12px; margin-bottom: 10px; box-shadow: var(--shadow); }
 .ac .t { font-weight: 700; font-size: 17px; }
 .ac .ds { font-size: 13px; color: var(--muted); margin-bottom: 4px; }
-.ln { display: grid; grid-template-columns: 54px 1fr 1fr; gap: 6px; align-items: center; padding: 8px 0; border-top: 1px solid var(--line); }
+.ln { display: grid; grid-template-columns: 54px 52px 1fr 1fr; gap: 6px; align-items: center; padding: 8px 0; border-top: 1px solid var(--line); }
 .ln .z { font-weight: 700; font-size: 16px; }
 .ln button { min-height: 52px; border-radius: 12px; border: 1.5px solid var(--line); background: var(--card); cursor: pointer; line-height: 1.15; padding: 4px 6px; display: grid; justify-items: center; }
 .ln button .q { font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums; }
 .ln button .l { font-size: 12px; color: var(--muted); }
 .ln button[aria-pressed="true"] { background: var(--done-bg); border-color: var(--done); box-shadow: inset 0 0 0 1.5px var(--done); }
 .ln button[aria-pressed="true"] .l { color: var(--done); font-weight: 700; }
-.ln .hq { grid-column: 2 / -1; font-size: 12px; color: var(--muted); margin-top: -2px; }
+.ln .sy { text-align: center; line-height: 1.1; } .ln .sy .q { font-size: 18px; font-weight: 700; font-variant-numeric: tabular-nums; } .ln .sy .l, .ln button .r { font-size: 11px; color: var(--muted); }
+.ln .hq { grid-column: 3 / -1; font-size: 12px; color: var(--muted); margin-top: -2px; }
 .ln .hq.ch { color: var(--early); font-weight: 700; }
 .nsr { display: flex; justify-content: space-between; gap: 8px; padding: 6px 2px; border-top: 1px solid var(--line); font-size: 15px; font-variant-numeric: tabular-nums; }
 .nsr .m { color: var(--muted); font-size: 13px; }
@@ -147,18 +148,19 @@ details.box summary { cursor: pointer; min-height: 44px; display: flex; align-it
       + '<div class="count"><b>' + P.length + '</b><span> saiz pilih</span></div></div></header><main class="wrap">';
     if (window.__PREVIEW) h += '<div class="preview"><b>Pratonton untuk HQ.</b> Pilihan di sini hanya disimpan dalam telefon ini.</div>';
     h += '<div class="intro"><p>Terima kasih, ST2 dah siap. HQ akan tutup stock take September pada <b>30/9</b>. Ini keputusan kami untuk <b>' + (DOC.agree + DOC.pick.length + DOC.ns.length) + ' saiz</b> dalam ST2:</p>'
-      + '<p>• <b>' + DOC.agree + '</b> saiz: ST1 dan ST2 sama, tiada masalah.<br>• <b>' + P.length + '</b> saiz: ST1 dan ST2 berbeza. HQ dah pilih satu (kotak hijau). <b>Kalau anda yakin kiraan yang satu lagi betul, tekan untuk tukar.</b><br>• <b>' + DOC.ns.length + '</b> saiz: tak di-scan semula, jadi HQ guna ST1.</p>'
-      + '<p class="small">Jualan selepas hari kira akan ditolak oleh HQ hingga 30/9, untuk kedua-dua kiraan. Anda tak perlu kira apa-apa.</p>'
+      + '<p>• <b>' + DOC.agree + '</b> saiz: ST1 dan ST2 sama pada 30/9, tiada masalah.<br>• <b>' + P.length + '</b> saiz: ST1 dan ST2 berbeza. HQ dah pilih satu (kotak hijau). <b>Kalau anda yakin kiraan yang satu lagi betul, tekan untuk tukar.</b><br>• <b>' + DOC.ns.length + '</b> saiz: tak di-scan semula, jadi HQ guna ST1.</p>'
+      + '<p class="small">ST1 dan ST2 di bawah dah dibawa ke 30/9: jualan selepas hari kira ditolak, IT selepas hari kira ditambah/ditolak. Anda tak perlu kira apa-apa.</p>'
       + (DOC.deadline ? '<div class="dl">Hantar laporan sebelum ' + esc(DOC.deadline) + '. Lepas tu HQ tutup ikut pilihan yang ditanda.</div>' : '') + '</div>';
     if (P.length) {
-      h += '<h2>1 · Pilih ST1 atau ST2 (' + P.length + ' saiz)</h2><p class="sub">Tekan kotak kiraan yang betul untuk setiap saiz.</p>';
+      h += '<h2>1 · Pilih ST1 atau ST2 (' + P.length + ' saiz)</h2><p class="sub">Semua nombor besar ialah stok pada <b>30/9</b>: sistem, dan kiraan anda selepas jualan/IT lepas hari kira diambil kira ("kira" = jumlah yang anda scan). Tekan kotak kiraan yang betul.</p>';
       groups(P).forEach(function (g) {
         h += '<div class="ac"><div class="t">' + esc(g.k) + '</div>' + (g.ds ? '<div class="ds">' + esc(g.ds) + '</div>' : '');
         g.L.forEach(function (l) {
           var c = cur(l), isCh = c !== l.hq;
           h += '<div class="ln" data-id="' + esc(id(l)) + '"><div class="z">' + esc(l.z) + '</div>'
-            + '<button data-pick="1" aria-pressed="' + (c === '1') + '"><span class="q">' + l.s1 + '</span><span class="l">ST1 · ' + esc(fmtD(l.d1) || '-') + (c === '1' ? ' ✓' : '') + '</span></button>'
-            + '<button data-pick="2" aria-pressed="' + (c === '2') + '"><span class="q">' + l.s2 + '</span><span class="l">ST2 · ' + esc(fmtD(l.d2)) + (c === '2' ? ' ✓' : '') + '</span></button>'
+            + '<div class="sy"><div class="q">' + l.sy + '</div><div class="l">sistem</div></div>'
+            + '<button data-pick="1" aria-pressed="' + (c === '1') + '"><span class="q">' + l.t1 + '</span><span class="l">ST1' + (c === '1' ? ' ✓' : '') + '</span><span class="r">kira ' + l.s1 + ' · ' + esc(fmtD(l.d1) || '-') + '</span></button>'
+            + '<button data-pick="2" aria-pressed="' + (c === '2') + '"><span class="q">' + l.t2 + '</span><span class="l">ST2' + (c === '2' ? ' ✓' : '') + '</span><span class="r">kira ' + l.s2 + ' · ' + esc(fmtD(l.d2)) + '</span></button>'
             + '<div class="hq' + (isCh ? ' ch' : '') + '">' + (isCh ? 'Anda tukar (HQ pilih ST' + l.hq + ')' : 'Pilihan HQ: ST' + l.hq) + '</div></div>';
         });
         h += '</div>';
@@ -166,7 +168,7 @@ details.box summary { cursor: pointer; min-height: 44px; display: flex; align-it
     }
     if (DOC.ns.length) {
       h += '<h2>2 · Tak scan semula, guna ST1 (' + DOC.ns.length + ' saiz)</h2><details class="box"><summary>Lihat senarai</summary>';
-      DOC.ns.forEach(function (l) { h += '<div class="nsr"><span>' + esc(l.a) + '-' + esc(l.c) + ' · <b>' + esc(l.z) + '</b>' + (l.ds ? ' <span class="m">' + esc(l.ds) + '</span>' : '') + '</span><span style="white-space:nowrap">ST1 <b>' + l.s1 + '</b></span></div>'; });
+      DOC.ns.forEach(function (l) { h += '<div class="nsr"><span>' + esc(l.a) + '-' + esc(l.c) + ' · <b>' + esc(l.z) + '</b>' + (l.ds ? ' <span class="m">' + esc(l.ds) + '</span>' : '') + '</span><span style="white-space:nowrap">sistem <b>' + l.sy + '</b> · ST1 <b>' + l.t1 + '</b></span></div>'; });
       h += '</details>';
     }
     h += '<div class="foot"><div>Dikemas kini ' + esc(fmtTime(DOC.updatedAt)) + '</div>' + (ch ? '<button class="linkbtn" data-act="reset">Kembali ke pilihan HQ</button>' : '') + '</div></main>';
@@ -179,7 +181,7 @@ details.box summary { cursor: pointer; min-height: 44px; display: flex; align-it
     if (!C.length) L.push('Setuju semua pilihan HQ (' + DOC.pick.length + ' saiz).');
     else {
       L.push('Tukar pilihan (' + C.length + ' saiz):');
-      C.forEach(function (l) { var c = cur(l); L.push('• ' + l.a + '-' + l.c + ' saiz ' + l.z + ': guna ST' + c + ' (' + (c === '1' ? l.s1 : l.s2) + ')'); });
+      C.forEach(function (l) { var c = cur(l); L.push('• ' + l.a + '-' + l.c + ' saiz ' + l.z + ': guna ST' + c + ' (' + (c === '1' ? l.t1 : l.t2) + ' pada 30/9)'); });
       L.push('Yang lain setuju pilihan HQ (' + (DOC.pick.length - C.length) + ' saiz).');
     }
     return L.join('\n');
