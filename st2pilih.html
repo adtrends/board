@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="ms">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#9989;</text></svg>">
+<style>[hidden]{display:none!important} img{max-width:100%}</style>
+</head>
+<body>
+<title>ST2 Semakan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<style>
+:root {
+  --ground: #eef3f1; --card: #ffffff; --ink: #16211e; --muted: #56655f; --line: #d5dfdb;
+  --brand: #0e4f55; --brand-2: #17656b; --on-brand: #ffffff; --brand-soft: #e1eeee;
+  --done: #1c7a45; --done-bg: #ddf2e4; --warn: #a3321f; --warn-bg: #fde9e4;
+  --early: #6a3fb0; --early-bg: #efe7fb; --todo-bg: #f5f8f7;
+  --shadow: 0 1px 2px rgba(14, 40, 36, .06); --r: 14px;
+  --font: 'Atkinson Hyperlegible', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --ground: #0e1715; --card: #16211e; --ink: #e6eeeb; --muted: #9aaba5; --line: #273532;
+    --brand: #103f43; --brand-2: #16555a; --on-brand: #eaf6f5; --brand-soft: #173235;
+    --done: #6fd39a; --done-bg: #173a27; --warn: #ff9b85; --warn-bg: #3d1d16;
+    --early: #c6a8ff; --early-bg: #2a2140; --todo-bg: #1b2724; --shadow: none;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --ground: #0e1715; --card: #16211e; --ink: #e6eeeb; --muted: #9aaba5; --line: #273532;
+  --brand: #103f43; --brand-2: #16555a; --on-brand: #eaf6f5; --brand-soft: #173235;
+  --done: #6fd39a; --done-bg: #173a27; --warn: #ff9b85; --warn-bg: #3d1d16;
+  --early: #c6a8ff; --early-bg: #2a2140; --todo-bg: #1b2724; --shadow: none;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--ground); color: var(--ink); font: 17px/1.45 var(--font); padding-bottom: calc(92px + env(safe-area-inset-bottom, 0px)); }
+button { font: inherit; color: inherit; }
+:focus-visible { outline: 3px solid var(--brand-2); outline-offset: 2px; }
+.wrap { max-width: 640px; margin: 0 auto; padding-inline: 16px; }
+.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--brand); color: var(--on-brand); box-shadow: 0 2px 8px rgba(0,0,0,.12); }
+.top .wrap { padding-block: 12px; display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+.eyebrow { font-size: 13px; letter-spacing: .07em; text-transform: uppercase; opacity: .85; }
+.outlet { font-size: 21px; font-weight: 700; }
+.count { text-align: right; font-variant-numeric: tabular-nums; }
+.count b { font-size: 26px; }
+.count span { font-size: 14px; opacity: .85; }
+.preview { background: #fff1cf; color: #8c5a00; font-size: 14px; padding: 8px 12px; border-radius: 10px; margin-top: 12px; }
+.intro { background: var(--card); border: 1px solid var(--line); border-radius: var(--r); padding: 14px 16px; margin-top: 14px; display: grid; gap: 8px; box-shadow: var(--shadow); }
+.intro p { margin: 0; }
+.intro .small { font-size: 15px; color: var(--muted); }
+h2 { margin: 20px 2px 8px; font-size: 14px; letter-spacing: .06em; text-transform: uppercase; }
+h2.u { color: var(--warn); }
+h2.e { color: var(--early); }
+.sub { margin: -4px 2px 10px; font-size: 15px; color: var(--muted); }
+.itc { border-radius: var(--r); padding: 12px 14px; display: grid; gap: 10px; margin-bottom: 10px; border: 1.5px solid; }
+.itc.u { background: var(--warn-bg); border-color: var(--warn); }
+.itc.e { background: var(--early-bg); border-color: var(--early); }
+.itc.y { background: var(--done-bg); border-color: var(--done); }
+.itc.n { background: var(--card); border-color: var(--line); }
+.itc .h { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; }
+.itc .no { font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.itc .pcs { font-weight: 700; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.itc .m { font-size: 14px; color: var(--muted); }
+.itc details summary { cursor: pointer; font-size: 15px; color: var(--brand-2); font-weight: 700; min-height: 36px; display: flex; align-items: center; }
+:root[data-theme="dark"] .itc details summary { color: var(--done); }
+.itc table { width: 100%; border-collapse: collapse; font-size: 14px; font-variant-numeric: tabular-nums; margin-top: 4px; }
+.itc td { padding: 4px 4px; border-top: 1px solid var(--line); }
+.itc td.r { text-align: right; font-weight: 700; }
+.itc .ch { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.itc .ch button { min-height: 54px; border-radius: 12px; border: 1.5px solid var(--line); background: var(--card); font-weight: 700; font-size: 15px; cursor: pointer; line-height: 1.2; padding: 6px 8px; }
+.itc .ch button[aria-pressed="true"].y { background: var(--done); border-color: var(--done); color: #fff; }
+.itc .ch button[aria-pressed="true"].n { background: var(--brand); border-color: var(--brand); color: var(--on-brand); }
+.none { text-align: center; color: var(--muted); padding: 40px 12px; }
+.none b { display: block; color: var(--done); font-size: 20px; margin-bottom: 6px; }
+.foot { margin: 24px 0 8px; display: grid; gap: 8px; justify-items: center; color: var(--muted); font-size: 13px; text-align: center; }
+.linkbtn { background: none; border: 0; color: var(--warn); font-size: 14px; text-decoration: underline; cursor: pointer; min-height: 40px; }
+.bottom { position: fixed; left: 0; right: 0; bottom: 0; z-index: 6; background: var(--card); border-top: 1px solid var(--line); padding: 10px 0 calc(10px + env(safe-area-inset-bottom, 0px)); }
+.bottom .wrap { display: flex; gap: 10px; align-items: center; }
+.bottom .sum { flex: 1; font-size: 14px; color: var(--muted); line-height: 1.3; }
+.bottom .sum b { color: var(--ink); }
+.primary { min-height: 52px; padding: 0 18px; border-radius: 14px; border: 0; background: var(--brand); color: var(--on-brand); font-weight: 700; font-size: 17px; cursor: pointer; white-space: nowrap; }
+.secondary { min-height: 52px; padding: 0 18px; border-radius: 14px; border: 1.5px solid var(--line); background: var(--card); font-weight: 700; font-size: 16px; cursor: pointer; }
+.sheet { position: fixed; inset: 0; z-index: 10; background: rgba(8, 20, 18, .5); display: flex; align-items: flex-end; justify-content: center; }
+.panel { background: var(--card); width: 100%; max-width: 640px; border-radius: 20px 20px 0 0; padding: 18px 16px calc(16px + env(safe-area-inset-bottom, 0px)); display: grid; gap: 12px; max-height: 88%; overflow: auto; }
+.panel h3 { margin: 0; font-size: 20px; }
+.panel p { margin: 0; color: var(--muted); font-size: 15px; }
+.report { white-space: pre-wrap; background: var(--todo-bg); border: 1px solid var(--line); border-radius: 12px; padding: 12px; font-size: 15px; max-height: 40vh; overflow: auto; user-select: all; -webkit-user-select: all; }
+.acts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.acts a.primary { display: grid; place-items: center; text-decoration: none; }
+.acts .wide { grid-column: 1 / -1; }
+.alert { background: var(--warn-bg); color: var(--warn); border-radius: 10px; padding: 10px 12px; font-size: 15px; }
+.toast { position: fixed; left: 50%; bottom: calc(96px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--ink); color: var(--card); padding: 10px 16px; border-radius: 12px; font-size: 15px; z-index: 20; max-width: calc(100% - 32px); text-align: center; }
+.msg { padding: 60px 16px; text-align: center; }
+.msg h1 { font-size: 22px; }
+</style>
+<style>
+.ac { background: var(--card); border: 1px solid var(--line); border-radius: var(--r); padding: 10px 12px; margin-bottom: 10px; box-shadow: var(--shadow); }
+.ac .t { font-weight: 700; font-size: 17px; }
+.ac .ds { font-size: 13px; color: var(--muted); margin-bottom: 4px; }
+.ln { display: grid; grid-template-columns: 54px 1fr 1fr; gap: 6px; align-items: center; padding: 8px 0; border-top: 1px solid var(--line); }
+.ln .z { font-weight: 700; font-size: 16px; }
+.ln button { min-height: 52px; border-radius: 12px; border: 1.5px solid var(--line); background: var(--card); cursor: pointer; line-height: 1.15; padding: 4px 6px; display: grid; justify-items: center; }
+.ln button .q { font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.ln button .l { font-size: 12px; color: var(--muted); }
+.ln button[aria-pressed="true"] { background: var(--done-bg); border-color: var(--done); box-shadow: inset 0 0 0 1.5px var(--done); }
+.ln button[aria-pressed="true"] .l { color: var(--done); font-weight: 700; }
+.ln .hq { grid-column: 2 / -1; font-size: 12px; color: var(--muted); margin-top: -2px; }
+.ln .hq.ch { color: var(--early); font-weight: 700; }
+.nsr { display: flex; justify-content: space-between; gap: 8px; padding: 6px 2px; border-top: 1px solid var(--line); font-size: 15px; font-variant-numeric: tabular-nums; }
+.nsr .m { color: var(--muted); font-size: 13px; }
+details.box { background: var(--card); border: 1px solid var(--line); border-radius: var(--r); padding: 6px 12px; }
+details.box summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; font-weight: 700; color: var(--brand-2); }
+:root[data-theme="dark"] details.box summary { color: var(--done); }
+.dl { background: var(--warn-bg); color: var(--warn); border-radius: 10px; padding: 8px 12px; font-size: 15px; font-weight: 700; }
+</style>
+
+<div id="app"><div class="msg"><p>Membuka semakan…</p></div></div>
+<div id="sheet" class="sheet" hidden></div>
+<div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+
+<!--DOC-->
+<script>
+(function () {
+  'use strict';
+  var DOC = null, KEY = '', ST = { p: {} };
+  var app = document.getElementById('app');
+  function load() { try { var s = localStorage.getItem(KEY); if (s) { var o = JSON.parse(s); ST.p = o.p || {}; } } catch (e) {} }
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(ST)); } catch (e) {} }
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function fmtD(s) { var m = /^(\d{4})-(\d\d)-(\d\d)/.exec(s || ''); return m ? (+m[3]) + '/' + (+m[2]) : ''; }
+  function fmtTime(s) { var m = /^(\d{4})-(\d\d)-(\d\d)T(\d\d):(\d\d)/.exec(s || ''); return m ? (+m[3]) + '/' + (+m[2]) + ' ' + m[4] + ':' + m[5] : ''; }
+  function id(l) { return l.a + '-' + l.c + '|' + l.z; }
+  function cur(l) { return ST.p[id(l)] || l.hq; }
+  function changed() { return DOC.pick.filter(function (l) { return cur(l) !== l.hq; }); }
+  function groups(list) { var g = [], m = {}; list.forEach(function (l) { var k = l.a + '-' + l.c; if (!m[k]) { m[k] = { k: k, ds: l.ds, L: [] }; g.push(m[k]); } m[k].L.push(l); }); return g; }
+
+  function renderAll() {
+    var P = DOC.pick, ch = changed().length;
+    var h = '<header class="top"><div class="wrap"><div><div class="eyebrow">Semakan ST2 · ' + esc(DOC.monthLabel) + '</div><div class="outlet">' + esc(DOC.outlet) + '</div></div>'
+      + '<div class="count"><b>' + P.length + '</b><span> saiz pilih</span></div></div></header><main class="wrap">';
+    if (window.__PREVIEW) h += '<div class="preview"><b>Pratonton untuk HQ.</b> Pilihan di sini hanya disimpan dalam telefon ini.</div>';
+    h += '<div class="intro"><p>Terima kasih, ST2 dah siap. HQ akan tutup stock take September pada <b>30/9</b>. Ini keputusan kami untuk <b>' + (DOC.agree + DOC.pick.length + DOC.ns.length) + ' saiz</b> dalam ST2:</p>'
+      + '<p>• <b>' + DOC.agree + '</b> saiz: ST1 dan ST2 sama, tiada masalah.<br>• <b>' + P.length + '</b> saiz: ST1 dan ST2 berbeza. HQ dah pilih satu (kotak hijau). <b>Kalau anda yakin kiraan yang satu lagi betul, tekan untuk tukar.</b><br>• <b>' + DOC.ns.length + '</b> saiz: tak di-scan semula, jadi HQ guna ST1.</p>'
+      + '<p class="small">Jualan selepas hari kira akan ditolak oleh HQ hingga 30/9, untuk kedua-dua kiraan. Anda tak perlu kira apa-apa.</p>'
+      + (DOC.deadline ? '<div class="dl">Hantar laporan sebelum ' + esc(DOC.deadline) + '. Lepas tu HQ tutup ikut pilihan yang ditanda.</div>' : '') + '</div>';
+    if (P.length) {
+      h += '<h2>1 · Pilih ST1 atau ST2 (' + P.length + ' saiz)</h2><p class="sub">Tekan kotak kiraan yang betul untuk setiap saiz.</p>';
+      groups(P).forEach(function (g) {
+        h += '<div class="ac"><div class="t">' + esc(g.k) + '</div>' + (g.ds ? '<div class="ds">' + esc(g.ds) + '</div>' : '');
+        g.L.forEach(function (l) {
+          var c = cur(l), isCh = c !== l.hq;
+          h += '<div class="ln" data-id="' + esc(id(l)) + '"><div class="z">' + esc(l.z) + '</div>'
+            + '<button data-pick="1" aria-pressed="' + (c === '1') + '"><span class="q">' + l.s1 + '</span><span class="l">ST1 · ' + esc(fmtD(l.d1) || '-') + (c === '1' ? ' ✓' : '') + '</span></button>'
+            + '<button data-pick="2" aria-pressed="' + (c === '2') + '"><span class="q">' + l.s2 + '</span><span class="l">ST2 · ' + esc(fmtD(l.d2)) + (c === '2' ? ' ✓' : '') + '</span></button>'
+            + '<div class="hq' + (isCh ? ' ch' : '') + '">' + (isCh ? 'Anda tukar (HQ pilih ST' + l.hq + ')' : 'Pilihan HQ: ST' + l.hq) + '</div></div>';
+        });
+        h += '</div>';
+      });
+    }
+    if (DOC.ns.length) {
+      h += '<h2>2 · Tak scan semula, guna ST1 (' + DOC.ns.length + ' saiz)</h2><details class="box"><summary>Lihat senarai</summary>';
+      DOC.ns.forEach(function (l) { h += '<div class="nsr"><span>' + esc(l.a) + '-' + esc(l.c) + ' · <b>' + esc(l.z) + '</b>' + (l.ds ? ' <span class="m">' + esc(l.ds) + '</span>' : '') + '</span><span style="white-space:nowrap">ST1 <b>' + l.s1 + '</b></span></div>'; });
+      h += '</details>';
+    }
+    h += '<div class="foot"><div>Dikemas kini ' + esc(fmtTime(DOC.updatedAt)) + '</div>' + (ch ? '<button class="linkbtn" data-act="reset">Kembali ke pilihan HQ</button>' : '') + '</div></main>';
+    h += '<div class="bottom"><div class="wrap"><div class="sum">' + (ch ? '<b>' + ch + '</b> saiz ditukar' : 'Setuju semua pilihan HQ') + '</div><button class="primary" data-act="report">Hantar laporan</button></div></div>';
+    app.innerHTML = h;
+  }
+
+  function report() {
+    var C = changed(), L = ['*Semakan ST2 ' + DOC.outlet + '* · ' + DOC.monthLabel];
+    if (!C.length) L.push('Setuju semua pilihan HQ (' + DOC.pick.length + ' saiz).');
+    else {
+      L.push('Tukar pilihan (' + C.length + ' saiz):');
+      C.forEach(function (l) { var c = cur(l); L.push('• ' + l.a + '-' + l.c + ' saiz ' + l.z + ': guna ST' + c + ' (' + (c === '1' ? l.s1 : l.s2) + ')'); });
+      L.push('Yang lain setuju pilihan HQ (' + (DOC.pick.length - C.length) + ' saiz).');
+    }
+    return L.join('\n');
+  }
+  function openReport() {
+    var txt = report();
+    showSheet('<div class="panel" role="dialog" aria-modal="true" aria-labelledby="rh"><h3 id="rh">Laporan semakan</h3><p>Hantar ke group WhatsApp kaunter anda.</p>'
+      + '<div class="report" id="rtext">' + esc(txt) + '</div>'
+      + '<div class="acts"><a class="primary wide" href="https://wa.me/?text=' + encodeURIComponent(txt) + '" target="_blank" rel="noopener">Buka WhatsApp</a>'
+      + '<button class="secondary" data-act="copy">Salin</button><button class="secondary" data-act="close">Tutup</button></div></div>');
+  }
+  function showSheet(h) { var s = document.getElementById('sheet'); s.innerHTML = h; s.hidden = false; var f = s.querySelector('a,button'); if (f) f.focus(); }
+  function closeSheet() { var s = document.getElementById('sheet'); s.hidden = true; s.innerHTML = ''; }
+  var tt;
+  function toast(m) { var el = document.getElementById('toast'); el.textContent = m; el.hidden = false; clearTimeout(tt); tt = setTimeout(function () { el.hidden = true; }, 2000); }
+
+  document.addEventListener('click', function (e) {
+    if (e.target.id === 'sheet') { closeSheet(); return; }
+    var b = e.target.closest('button, a'); if (!b) return;
+    if (b.dataset.pick) {
+      var k = b.closest('.ln').dataset.id, l = DOC.pick.filter(function (x) { return id(x) === k; })[0];
+      if (b.dataset.pick === l.hq) delete ST.p[k]; else ST.p[k] = b.dataset.pick;
+      save(); var y = window.scrollY; renderAll(); window.scrollTo(0, y);
+      toast(l.a + '-' + l.c + ' ' + l.z + ': ST' + b.dataset.pick);
+      return;
+    }
+    var act = b.dataset.act;
+    if (act === 'report') openReport();
+    else if (act === 'close') closeSheet();
+    else if (act === 'reset') { ST.p = {}; save(); renderAll(); toast('Kembali ke pilihan HQ'); }
+    else if (act === 'copy') {
+      var txt = report();
+      var ok = function () { toast('Disalin. Tampal dalam WhatsApp.'); };
+      var fb = function () { var r = document.createRange(), el = document.getElementById('rtext'); r.selectNodeContents(el); var s = getSelection(); s.removeAllRanges(); s.addRange(r); toast('Teks dipilih. Tekan Salin/Copy.'); };
+      try { navigator.clipboard.writeText(txt).then(ok, fb); } catch (x) { fb(); }
+    }
+  });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeSheet(); });
+
+  var rendered = false;
+  function start(d) { DOC = d; KEY = 'st2pilih:' + d.outlet + ':' + d.cycle; load(); rendered = true; renderAll(); }
+  function showInvalid() { rendered = true; app.innerHTML = '<div class="msg"><h1>Link tidak sah.</h1><p>Minta link baru dari HQ dalam group.</p></div>'; }
+  function showOffline() { rendered = true; app.innerHTML = '<div class="msg"><h1>Tak dapat buka.</h1><p>Semak internet, kemudian buka semula link.</p></div>'; }
+  /* crypto: same contract as push_board.py / topup.html */
+  function readKey() { var h = (location.hash || '').replace(/^#/, '').trim(); if (!h) return null; if (/^[0-9a-fA-F]{64}$/.test(h)) return h.toLowerCase(); return false; }
+  function hexToBytes(hex) { var out = new Uint8Array(hex.length / 2); for (var i = 0; i < out.length; i++) out[i] = parseInt(hex.substr(i * 2, 2), 16); return out; }
+  function b64ToBytes(b64) { var bin = atob(String(b64).replace(/-/g, '+').replace(/_/g, '/')); var out = new Uint8Array(bin.length); for (var i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i); return out; }
+  function docIdFor(keyHex) { return crypto.subtle.digest('SHA-256', new TextEncoder().encode(keyHex)).then(function (buf) { var b = new Uint8Array(buf), s = ''; for (var i = 0; i < 8; i++) s += (b[i] < 16 ? '0' : '') + b[i].toString(16); return s; }); }
+  function importKey(keyHex) { return crypto.subtle.importKey('raw', hexToBytes(keyHex), { name: 'AES-GCM' }, false, ['decrypt']); }
+  function decryptDoc(kk, doc) {
+    if (!doc || typeof doc.iv !== 'string' || typeof doc.ct !== 'string') return Promise.reject(new Error('bad doc'));
+    return crypto.subtle.decrypt({ name: 'AES-GCM', iv: b64ToBytes(doc.iv), tagLength: 128 }, kk, b64ToBytes(doc.ct)).then(function (buf) { return JSON.parse(new TextDecoder().decode(buf)); });
+  }
+  function boot() {
+    if (window.__DOC) { start(window.__DOC); return; }
+    if (!window.crypto || !crypto.subtle) { showOffline(); return; }
+    var kx = readKey();
+    if (kx === null || kx === false) { showInvalid(); return; }
+    var cacheKey = 'st2pdoc:' + kx.slice(0, 16);
+    Promise.all([docIdFor(kx), importKey(kx)]).then(function (r) {
+      return fetch('r/' + r[0] + '.json', { cache: 'no-store' }).then(function (res) {
+        if (res.status === 404) { showInvalid(); return; }
+        if (!res.ok) throw new Error('http ' + res.status);
+        return res.json().then(function (doc) {
+          return decryptDoc(r[1], doc).then(function (d) { try { localStorage.setItem(cacheKey, JSON.stringify(d)); } catch (e) {} start(d); }, showInvalid);
+        });
+      });
+    }).catch(function () {
+      var c = null; try { c = JSON.parse(localStorage.getItem(cacheKey) || 'null'); } catch (e) {}
+      if (c) { start(c); toast('Tiada internet: guna senarai tersimpan'); } else if (!rendered) showOffline();
+    });
+  }
+
+  window.addEventListener('hashchange', function () { location.reload(); });
+  boot();
+})();
+</script>
+
+</body>
+</html>
