@@ -156,7 +156,7 @@ h2.e { color: var(--early); }
       + '<div class="mc"><h3><b>B1</b> Terus pilih</h3><ol><li>PDF kiraan → counter confirm</li><li><b>Tiada ST2</b></li><li>Link semakan: pilih <b>SISTEM</b> atau <b>ST1</b> setiap saiz</li></ol><div class="n">' + D.n.B1 + ' outlet</div></div>'
       + '<div class="mc"><h3><b>B2</b> Kira yang besar</h3><ol><li>PDF kiraan → counter confirm</li><li><b>Tiada ST2.</b> Kira semula saiz beza 3+ pcs sahaja (muktamad)</li><li>Saiz lain: pilih SISTEM atau ST1</li></ol><div class="n">' + D.n.B2 + ' outlet</div></div></div>';
     h += '<h2>Selepas semakan - semua cara</h2><div class="flow">'
-      + fs('receipt', 'Senarai kerugian + cadangan tiket (BARU)', 'HQ hantar PDF kerugian. Kalau tiket September kurang dari portal, PDF cadangkan barang yang hilang untuk ditiket sebagai jualan, sehingga jumlah beza. Counter tiket yang memang terjual sahaja, balas "Tiket siap".', 'new')
+      + fs('receipt', 'Senarai kerugian + cadangan tiket (BARU)', 'Hanya kalau tiket September kurang dari portal: HQ hantar PDF kerugian + cadangan barang untuk ditiket, sehingga jumlah beza. Counter tiket yang memang terjual sahaja, balas "Tiket siap". Jualan sudah sama = terus ke 4 syarat.', 'new')
       + fs('gate', '4 syarat', 'Jualan = portal, IT selesai, kiraan lengkap, varian diterima.')
       + fs('db', 'Import & laporan penutup', 'HQ sediakan fail import, coordinator key dalam iDCP, HQ semak dan hantar laporan penutup ke outlet.')
       + '</div>';
