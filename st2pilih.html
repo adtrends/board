@@ -138,6 +138,10 @@ details.how summary { cursor: pointer; min-height: 36px; display: flex; align-it
 .ln.ch button[aria-pressed="true"] { background: var(--early); border-color: var(--early); }
 .ln button i { position: absolute; top: -7px; right: -5px; font-style: normal; font-size: 9px; font-weight: 700; letter-spacing: .04em; background: var(--ink); color: var(--card); border-radius: 6px; padding: 1px 4px; line-height: 1.3; }
 .nsr { padding: 5px 10px 5px 14px; font-size: 15px; font-variant-numeric: tabular-nums; }
+.nsr input { width: 64px; min-height: 40px; font: inherit; font-size: 17px; font-weight: 700; text-align: center; border-radius: 10px; border: 1.5px solid var(--line); background: var(--card); color: var(--ink); }
+.nsr.own input { border-color: var(--early); color: var(--early); }
+.nsr.own { background: var(--early-bg); }
+.got { background: var(--done-bg); color: var(--done); border-radius: 10px; padding: 8px 12px; font-size: 14px; margin-top: 10px; }
 .nsr .m { color: var(--muted); }
 details.box { margin-top: 10px; }
 details.box > summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; font-weight: 700; color: var(--brand-2); padding: 0 2px; }
@@ -162,6 +166,7 @@ details.box > summary { cursor: pointer; min-height: 44px; display: flex; align-
   function id(l) { return l.a + '-' + l.c + '|' + l.z; }
   function cur(l) { return ST.p[id(l)] || l.hq; }
   function changed() { return DOC.pick.filter(function (l) { return ST.v[id(l)] != null || cur(l) !== l.hq; }); }
+  function nsOwn() { return DOC.ns.filter(function (l) { return ST.v[id(l)] != null; }); }
   function groups(list) { var g = [], m = {}; list.forEach(function (l) { var k = l.a + '-' + l.c; if (!m[k]) { m[k] = { k: k, ds: l.ds, L: [] }; g.push(m[k]); } m[k].L.push(l); }); return g; }
 
   var OPEN = {};
@@ -191,10 +196,11 @@ details.box > summary { cursor: pointer; min-height: 44px; display: flex; align-
       + (OPEN[k] ? detail(l) : '');
   }
   function renderAll() {
-    var P = DOC.pick, ch = changed().length;
+    var P = DOC.pick, ch = changed().length + nsOwn().length;
     var h = '<header class="top"><div class="wrap"><div><div class="eyebrow">Semakan ST2 · ' + esc(DOC.monthLabel) + '</div><div class="outlet">' + esc(DOC.outlet) + '</div></div>'
       + '<div class="count"><b>' + (ch ? ch : '✓') + '</b><span> ' + (ch ? 'ditukar' : 'ikut HQ') + '</span></div></div></header><main class="wrap">';
     if (window.__PREVIEW) h += '<div class="preview"><b>Pratonton untuk HQ.</b> Pilihan hanya disimpan dalam telefon ini.</div>';
+    if (DOC.sub) h += '<div class="got">\u2713 HQ sudah terima jawapan anda (' + esc(DOC.sub.ts) + '). Pilihan anda ditunjukkan di bawah. Ada pembetulan? Tukar dan hantar laporan sekali lagi.</div>';
     h += '<div class="chips"><div class="chip k"><b>' + P.length + '</b><span>pilih ST1 / ST2</span></div><div class="chip"><b>' + DOC.agree + '</b><span>OK (sama / = sistem)</span></div><div class="chip"><b>' + DOC.ns.length + '</b><span>tak scan &rarr; ST1</span></div></div>'
       + '<p class="howto">HQ tutup stock take pada <b>30/9</b>. Kotak hijau = pilihan HQ. <b>Tekan nombor</b> untuk pilih ST1 atau ST2. <b>Tekan saiz</b> untuk lihat jualan/IT dan isi kiraan sendiri kalau dua-dua salah. Kalau setuju semua, terus tekan <b>Hantar laporan</b>.</p>'
       + (DOC.deadline ? '<div class="dl">Hantar sebelum ' + esc(DOC.deadline) + '</div>' : '')
@@ -208,10 +214,14 @@ details.box > summary { cursor: pointer; min-height: 44px; display: flex; align-
       h += '</div>';
     }
     if (DOC.ns.length) {
-      h += '<details class="box"><summary>Tak scan semula, guna ST1 (' + DOC.ns.length + ' saiz) &rsaquo;</summary><div class="tbl"><div class="th"><span>Saiz</span><span>Sistem</span><span>ST1</span><span></span></div>';
+      h += '<details class="box"' + (nsOwn().length ? ' open' : '') + '><summary>Tak scan semula, guna ST1 (' + DOC.ns.length + ' saiz) &rsaquo;</summary>'
+        + '<p class="howto">ST1 salah? Isi <b>stok hari ini</b> dalam kotak. Kosong = guna ST1.</p>'
+        + '<div class="tbl"><div class="th"><span>Saiz</span><span>Sistem</span><span>ST1</span><span>Stok</span></div>';
       groups(DOC.ns).forEach(function (g) {
         h += '<div class="gh"><b>' + esc(g.k) + '</b>' + (g.ds ? ' · ' + esc(g.ds) : '') + '</div>';
-        g.L.forEach(function (l) { h += '<div class="nsr"><span><b>' + esc(l.z) + '</b></span><span class="m">' + l.sy + '</span><span><b>' + l.t1 + '</b></span><span></span></div>'; });
+        g.L.forEach(function (l) { var k = id(l), v = ST.v[k];
+          h += '<div class="nsr' + (v != null ? ' own' : '') + '"><span><b>' + esc(l.z) + '</b></span><span class="m">' + l.sy + '</span><span><b>' + l.t1 + '</b></span>'
+            + '<input type="number" inputmode="numeric" min="0" step="1" data-own="' + esc(k) + '" value="' + (v != null ? v : '') + '" placeholder="stok" aria-label="Stok hari ini ' + esc(l.a + '-' + l.c + ' ' + l.z) + '"></div>'; });
       });
       h += '</div></details>';
     }
@@ -222,14 +232,19 @@ details.box > summary { cursor: pointer; min-height: 44px; display: flex; align-
   }
 
   function report() {
-    var C = changed(), L = ['*Semakan ST2 ' + DOC.outlet + '* · ' + DOC.monthLabel];
-    if (!C.length) L.push('Setuju semua pilihan HQ (' + DOC.pick.length + ' saiz).');
+    var C = changed(), N = nsOwn(), L = ['*Semakan ST2 ' + DOC.outlet + '* · ' + DOC.monthLabel];
+    if (!C.length && !N.length) L.push('Setuju semua pilihan HQ (' + DOC.pick.length + ' saiz).');
+    else if (!C.length) L.push('Setuju semua pilihan HQ (' + DOC.pick.length + ' saiz).');
     else {
       L.push('Tukar pilihan (' + C.length + ' saiz):');
       C.forEach(function (l) { var k = id(l), c = cur(l);
         if (ST.v[k] != null) L.push('• ' + l.a + '-' + l.c + ' saiz ' + l.z + ': dua-dua salah, stok ' + fmtD(ST.vd[k]) + ' = ' + ST.v[k] + ' pcs');
         else L.push('• ' + l.a + '-' + l.c + ' saiz ' + l.z + ': guna ST' + c + ' (' + (c === '1' ? l.t1 : l.t2) + ' pada 30/9)'); });
       L.push('Yang lain setuju pilihan HQ (' + (DOC.pick.length - C.length) + ' saiz).');
+    }
+    if (N.length) {
+      L.push('Tak scan semula, kiraan sendiri (' + N.length + ' saiz):');
+      N.forEach(function (l) { var k = id(l); L.push('• ' + l.a + '-' + l.c + ' saiz ' + l.z + ': ST1 salah, stok ' + fmtD(ST.vd[k]) + ' = ' + ST.v[k] + ' pcs'); });
     }
     return L.join('\n');
   }
@@ -285,7 +300,12 @@ details.box > summary { cursor: pointer; min-height: 44px; display: flex; align-
   });
 
   var rendered = false;
-  function start(d) { DOC = d; KEY = 'st2pilih:' + d.outlet + ':' + d.cycle; load(); rendered = true; renderAll(); }
+  function seed() {
+    if (!DOC.sub || Object.keys(ST.p).length || Object.keys(ST.v).length) return;
+    Object.keys(DOC.sub.lines || {}).forEach(function (k) { var a = DOC.sub.lines[k];
+      if (a.pick === 'STOCK') { ST.v[k] = a.stock; ST.vd[k] = a.stock_date; } else if (a.pick === 'ST1') ST.p[k] = '1'; else if (a.pick === 'ST2') ST.p[k] = '2'; });
+  }
+  function start(d) { DOC = d; KEY = 'st2pilih:' + d.outlet + ':' + d.cycle; load(); seed(); rendered = true; renderAll(); }
   function showInvalid() { rendered = true; app.innerHTML = '<div class="msg"><h1>Link tidak sah.</h1><p>Minta link baru dari HQ dalam group.</p></div>'; }
   function showOffline() { rendered = true; app.innerHTML = '<div class="msg"><h1>Tak dapat buka.</h1><p>Semak internet, kemudian buka semula link.</p></div>'; }
   /* crypto: same contract as push_board.py / topup.html */
