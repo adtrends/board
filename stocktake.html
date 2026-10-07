@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="ms">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#9989;</text></svg>">
+<style>[hidden]{display:none!important} img{max-width:100%}</style>
+</head>
+<body>
+<style>
+:root {
+  --ground: #eef3f1; --card: #ffffff; --ink: #16211e; --muted: #56655f; --line: #d5dfdb;
+  --brand: #0e4f55; --brand-2: #17656b; --on-brand: #ffffff; --brand-soft: #e1eeee;
+  --done: #1c7a45; --done-bg: #ddf2e4; --warn: #a3321f; --warn-bg: #fde9e4;
+  --early: #6a3fb0; --early-bg: #efe7fb; --todo-bg: #f5f8f7;
+  --shadow: 0 1px 2px rgba(14, 40, 36, .06); --r: 14px;
+  --font: 'Atkinson Hyperlegible', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --ground: #0e1715; --card: #16211e; --ink: #e6eeeb; --muted: #9aaba5; --line: #273532;
+    --brand: #103f43; --brand-2: #16555a; --on-brand: #eaf6f5; --brand-soft: #173235;
+    --done: #6fd39a; --done-bg: #173a27; --warn: #ff9b85; --warn-bg: #3d1d16;
+    --early: #c6a8ff; --early-bg: #2a2140; --todo-bg: #1b2724; --shadow: none;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --ground: #0e1715; --card: #16211e; --ink: #e6eeeb; --muted: #9aaba5; --line: #273532;
+  --brand: #103f43; --brand-2: #16555a; --on-brand: #eaf6f5; --brand-soft: #173235;
+  --done: #6fd39a; --done-bg: #173a27; --warn: #ff9b85; --warn-bg: #3d1d16;
+  --early: #c6a8ff; --early-bg: #2a2140; --todo-bg: #1b2724; --shadow: none;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--ground); color: var(--ink); font: 17px/1.45 var(--font); padding-bottom: calc(92px + env(safe-area-inset-bottom, 0px)); }
+button { font: inherit; color: inherit; }
+:focus-visible { outline: 3px solid var(--brand-2); outline-offset: 2px; }
+.wrap { max-width: 640px; margin: 0 auto; padding-inline: 16px; }
+.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--brand); color: var(--on-brand); box-shadow: 0 2px 8px rgba(0,0,0,.12); }
+.top .wrap { padding-block: 12px; display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+.eyebrow { font-size: 13px; letter-spacing: .07em; text-transform: uppercase; opacity: .85; }
+.outlet { font-size: 21px; font-weight: 700; }
+.count { text-align: right; font-variant-numeric: tabular-nums; }
+.count b { font-size: 26px; }
+.count span { font-size: 14px; opacity: .85; }
+.preview { background: #fff1cf; color: #8c5a00; font-size: 14px; padding: 8px 12px; border-radius: 10px; margin-top: 12px; }
+.intro { background: var(--card); border: 1px solid var(--line); border-radius: var(--r); padding: 14px 16px; margin-top: 14px; display: grid; gap: 8px; box-shadow: var(--shadow); }
+.intro p { margin: 0; }
+.intro .small { font-size: 15px; color: var(--muted); }
+h2 { margin: 20px 2px 8px; font-size: 14px; letter-spacing: .06em; text-transform: uppercase; }
+h2.u { color: var(--warn); }
+h2.e { color: var(--early); }
+.sub { margin: -4px 2px 10px; font-size: 15px; color: var(--muted); }
+.itc { border-radius: var(--r); padding: 12px 14px; display: grid; gap: 10px; margin-bottom: 10px; border: 1.5px solid; }
+.itc.u { background: var(--warn-bg); border-color: var(--warn); }
+.itc.e { background: var(--early-bg); border-color: var(--early); }
+.itc.y { background: var(--done-bg); border-color: var(--done); }
+.itc.n { background: var(--card); border-color: var(--line); }
+.itc .h { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; }
+.itc .no { font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.itc .pcs { font-weight: 700; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.itc .m { font-size: 14px; color: var(--muted); }
+.itc details summary { cursor: pointer; font-size: 15px; color: var(--brand-2); font-weight: 700; min-height: 36px; display: flex; align-items: center; }
+:root[data-theme="dark"] .itc details summary { color: var(--done); }
+.itc table { width: 100%; border-collapse: collapse; font-size: 14px; font-variant-numeric: tabular-nums; margin-top: 4px; }
+.itc td { padding: 4px 4px; border-top: 1px solid var(--line); }
+.itc td.r { text-align: right; font-weight: 700; }
+.itc .ch { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.itc .ch button { min-height: 54px; border-radius: 12px; border: 1.5px solid var(--line); background: var(--card); font-weight: 700; font-size: 15px; cursor: pointer; line-height: 1.2; padding: 6px 8px; }
+.itc .ch button[aria-pressed="true"].y { background: var(--done); border-color: var(--done); color: #fff; }
+.itc .ch button[aria-pressed="true"].n { background: var(--brand); border-color: var(--brand); color: var(--on-brand); }
+.none { text-align: center; color: var(--muted); padding: 40px 12px; }
+.none b { display: block; color: var(--done); font-size: 20px; margin-bottom: 6px; }
+.foot { margin: 24px 0 8px; display: grid; gap: 8px; justify-items: center; color: var(--muted); font-size: 13px; text-align: center; }
+.linkbtn { background: none; border: 0; color: var(--warn); font-size: 14px; text-decoration: underline; cursor: pointer; min-height: 40px; }
+.bottom { position: fixed; left: 0; right: 0; bottom: 0; z-index: 6; background: var(--card); border-top: 1px solid var(--line); padding: 10px 0 calc(10px + env(safe-area-inset-bottom, 0px)); }
+.bottom .wrap { display: flex; gap: 10px; align-items: center; }
+.bottom .sum { flex: 1; font-size: 14px; color: var(--muted); line-height: 1.3; }
+.bottom .sum b { color: var(--ink); }
+.primary { min-height: 52px; padding: 0 18px; border-radius: 14px; border: 0; background: var(--brand); color: var(--on-brand); font-weight: 700; font-size: 17px; cursor: pointer; white-space: nowrap; }
+.secondary { min-height: 52px; padding: 0 18px; border-radius: 14px; border: 1.5px solid var(--line); background: var(--card); font-weight: 700; font-size: 16px; cursor: pointer; }
+.sheet { position: fixed; inset: 0; z-index: 10; background: rgba(8, 20, 18, .5); display: flex; align-items: flex-end; justify-content: center; }
+.panel { background: var(--card); width: 100%; max-width: 640px; border-radius: 20px 20px 0 0; padding: 18px 16px calc(16px + env(safe-area-inset-bottom, 0px)); display: grid; gap: 12px; max-height: 88%; overflow: auto; }
+.panel h3 { margin: 0; font-size: 20px; }
+.panel p { margin: 0; color: var(--muted); font-size: 15px; }
+.report { white-space: pre-wrap; background: var(--todo-bg); border: 1px solid var(--line); border-radius: 12px; padding: 12px; font-size: 15px; max-height: 40vh; overflow: auto; user-select: all; -webkit-user-select: all; }
+.acts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.acts a.primary { display: grid; place-items: center; text-decoration: none; }
+.acts .wide { grid-column: 1 / -1; }
+.alert { background: var(--warn-bg); color: var(--warn); border-radius: 10px; padding: 10px 12px; font-size: 15px; }
+.toast { position: fixed; left: 50%; bottom: calc(96px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--ink); color: var(--card); padding: 10px 16px; border-radius: 12px; font-size: 15px; z-index: 20; max-width: calc(100% - 32px); text-align: center; }
+.msg { padding: 60px 16px; text-align: center; }
+.msg h1 { font-size: 22px; }
+</style>
+<title>Proses Stock Take</title>
+<style>
+/* Coordinator page: the 202609 process (Method A, B1, B2) + live pilot status. Base styles prepended from st2pilih. */
+.meth { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 10px; }
+@media (max-width: 560px) { .meth { grid-template-columns: minmax(0, 1fr); } }
+.mc { background: var(--card); border: 1px solid var(--line); border-radius: var(--r); padding: 12px 14px; display: grid; gap: 6px; align-content: start; box-shadow: var(--shadow); min-width: 0; }
+.mc h3 { margin: 0; font-size: 18px; display: flex; gap: 8px; align-items: center; }
+.mc h3 b { background: var(--brand); color: var(--on-brand); border-radius: 8px; padding: 1px 8px; font-size: 15px; }
+.mc ol { margin: 0; padding-left: 1.2em; font-size: 15px; display: grid; gap: 4px; }
+.mc .n { font-size: 13px; color: var(--muted); }
+.flow { display: grid; gap: 6px; margin-top: 10px; }
+.fs { display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 10px; align-items: start; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; }
+.fs svg { color: var(--brand-2); }
+.fs b { display: block; }
+.fs span { font-size: 15px; color: var(--muted); }
+.fs.new { border-color: var(--early); background: var(--early-bg); }
+.fs.new svg { color: var(--early); }
+.olist { background: var(--card); border: 1px solid var(--line); border-radius: var(--r); margin-top: 8px; box-shadow: var(--shadow); overflow: hidden; }
+.orow { display: grid; grid-template-columns: minmax(0, 1fr) 46px; gap: 8px; padding: 9px 12px; border-top: 1px solid var(--line); align-items: center; }
+.orow:first-child { border-top: 0; }
+.orow .c { font-weight: 700; }
+.orow .st { font-size: 14px; color: var(--muted); }
+.orow .st.hold { color: var(--warn); }
+.tag { text-align: center; font-weight: 700; font-size: 13px; border-radius: 8px; padding: 3px 0; background: var(--brand); color: var(--on-brand); }
+.tag.B2 { background: var(--early); color: var(--card); }
+.do { background: var(--warn-bg); color: var(--warn); border-radius: 12px; padding: 10px 12px; margin-top: 10px; font-size: 15px; display: grid; gap: 4px; }
+.small { font-size: 13px; color: var(--muted); }
+</style>
+
+<div id="app"><div class="msg"><p>Membuka…</p></div></div>
+<div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+
+<!--DOC-->
+<script>
+(function () {
+  'use strict';
+  var app = document.getElementById('app'), rendered = false;
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  var I = {
+    count: '<rect width="8" height="4" x="8" y="2" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="m9 14 2 2 4-4"/>',
+    pdf: '<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="m9 15 2 2 4-4"/>',
+    split: '<circle cx="12" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><circle cx="18" cy="6" r="3"/><path d="M18 9v2c0 .6-.4 1-1 1H7c-.6 0-1-.4-1-1V9"/><path d="M12 12v3"/>',
+    pick: '<path d="m3 17 2 2 4-4"/><path d="m3 7 2 2 4-4"/><path d="M13 6h8"/><path d="M13 12h8"/><path d="M13 18h8"/>',
+    receipt: '<path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 17.5v-11"/>',
+    gate: '<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/>',
+    db: '<ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5V19A9 3 0 0 0 21 19V5"/><path d="M3 12A9 3 0 0 0 21 12"/>'
+  };
+  function ic(n) { return '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + I[n] + '</svg>'; }
+  function fs(icon, t, d, cls) { return '<div class="fs' + (cls ? ' ' + cls : '') + '">' + ic(icon) + '<div><b>' + t + '</b><span>' + d + '</span></div></div>'; }
+
+  function render(D) {
+    var h = '<div class="top"><div class="wrap"><div><div class="eyebrow">Stock take ' + esc(D.monthLabel) + ' · untuk coordinator</div><div class="outlet">Proses & pilot</div></div>'
+      + '<div class="count"><b>' + D.pilot.length + '</b><span> outlet pilot</span></div></div></div><div class="wrap">';
+    h += '<div class="intro"><p><b>Bulan ini HQ cuba 2 cara baru tanpa ST2</b> untuk outlet yang belum confirm kiraan pada 7/10. Outlet lain teruskan cara biasa (Cara A).</p>'
+      + '<p class="small">Dikemas kini ' + esc(D.updatedAt.replace('T', ' ').slice(0, 16)) + '.</p></div>';
+    h += '<h2>3 cara</h2><div class="meth">'
+      + '<div class="mc"><h3><b>A</b> Cara biasa</h3><ol><li>PDF kiraan → counter confirm</li><li>ST2: scan saiz bertanda</li><li>Link semakan: pilih ST1 / ST2</li></ol><div class="n">' + D.nA + ' outlet</div></div>'
+      + '<div class="mc"><h3><b>B1</b> Terus pilih</h3><ol><li>PDF kiraan → counter confirm</li><li><b>Tiada ST2</b></li><li>Link semakan: pilih <b>SISTEM</b> atau <b>ST1</b> setiap saiz</li></ol><div class="n">' + D.n.B1 + ' outlet</div></div>'
+      + '<div class="mc"><h3><b>B2</b> Kira yang besar</h3><ol><li>PDF kiraan → counter confirm</li><li><b>Tiada ST2.</b> Kira semula saiz beza 3+ pcs sahaja (muktamad)</li><li>Saiz lain: pilih SISTEM atau ST1</li></ol><div class="n">' + D.n.B2 + ' outlet</div></div></div>';
+    h += '<h2>Selepas semakan - semua cara</h2><div class="flow">'
+      + fs('receipt', 'Senarai kerugian + cadangan tiket (BARU)', 'HQ hantar PDF kerugian. Kalau tiket September kurang dari portal, PDF cadangkan barang yang hilang untuk ditiket sebagai jualan, sehingga jumlah beza. Counter tiket yang memang terjual sahaja, balas "Tiket siap".', 'new')
+      + fs('gate', '4 syarat', 'Jualan = portal, IT selesai, kiraan lengkap, varian diterima.')
+      + fs('db', 'Import & laporan penutup', 'HQ sediakan fail import, coordinator key dalam iDCP, HQ semak dan hantar laporan penutup ke outlet.')
+      + '</div>';
+    h += '<div class="do"><b>Coordinator, tolong:</b><span>• Jangan minta ST2 dari outlet B1 / B2.</span><span>• Ingatkan counter yang belum confirm kiraan atau belum isi link semakan.</span><span>• Soalan tentang link: tag HQ dalam group outlet.</span></div>';
+    h += '<h2>Outlet pilot (' + D.pilot.length + ')</h2><div class="olist">';
+    D.pilot.forEach(function (r) {
+      h += '<div class="orow"><div><div class="c">' + esc(r.o) + '</div><div class="st' + (r.hold ? ' hold' : '') + '">' + esc(r.hold ? 'Ditahan: ' + r.hold : r.st) + '</div></div><div class="tag ' + esc(r.m) + '">' + esc(r.m) + '</div></div>';
+    });
+    h += '</div><p class="small" style="margin:14px 2px 30px">Kod outlet ikut iDCP. Pembahagian B1/B2 seimbang ikut EM / bukan EM dan saiz kiraan; outlet dalam group yang sama dapat cara yang sama.</p></div>';
+    app.innerHTML = h;
+  }
+  function start(d) { rendered = true; render(d); }
+  function showInvalid() { rendered = true; app.innerHTML = '<div class="msg"><h1>Link tidak sah.</h1><p>Minta link baru dari HQ.</p></div>'; }
+  function showOffline() { rendered = true; app.innerHTML = '<div class="msg"><h1>Tak dapat buka.</h1><p>Semak internet, kemudian buka semula link.</p></div>'; }
+  function readKey() { var h = (location.hash || '').replace(/^#/, '').trim(); if (!h) return null; if (/^[0-9a-fA-F]{64}$/.test(h)) return h.toLowerCase(); return false; }
+  function hexToBytes(hex) { var out = new Uint8Array(hex.length / 2); for (var i = 0; i < out.length; i++) out[i] = parseInt(hex.substr(i * 2, 2), 16); return out; }
+  function b64ToBytes(b64) { var bin = atob(String(b64).replace(/-/g, '+').replace(/_/g, '/')); var out = new Uint8Array(bin.length); for (var i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i); return out; }
+  function docIdFor(keyHex) { return crypto.subtle.digest('SHA-256', new TextEncoder().encode(keyHex)).then(function (buf) { var b = new Uint8Array(buf), s = ''; for (var i = 0; i < 8; i++) s += (b[i] < 16 ? '0' : '') + b[i].toString(16); return s; }); }
+  function importKey(keyHex) { return crypto.subtle.importKey('raw', hexToBytes(keyHex), { name: 'AES-GCM' }, false, ['decrypt']); }
+  function decryptDoc(kk, doc) {
+    if (!doc || typeof doc.iv !== 'string' || typeof doc.ct !== 'string') return Promise.reject(new Error('bad doc'));
+    return crypto.subtle.decrypt({ name: 'AES-GCM', iv: b64ToBytes(doc.iv), tagLength: 128 }, kk, b64ToBytes(doc.ct)).then(function (buf) { return JSON.parse(new TextDecoder().decode(buf)); });
+  }
+  function boot() {
+    if (window.__DOC) { start(window.__DOC); return; }
+    if (!window.crypto || !crypto.subtle) { showOffline(); return; }
+    var kx = readKey();
+    if (kx === null || kx === false) { showInvalid(); return; }
+    Promise.all([docIdFor(kx), importKey(kx)]).then(function (r) {
+      return fetch('r/' + r[0] + '.json', { cache: 'no-store' }).then(function (res) {
+        if (res.status === 404) { showInvalid(); return; }
+        if (!res.ok) throw new Error('http ' + res.status);
+        return res.json().then(function (doc) { return decryptDoc(r[1], doc).then(start, showInvalid); });
+      });
+    }).catch(function () { if (!rendered) showOffline(); });
+  }
+  window.addEventListener('hashchange', function () { location.reload(); });
+  boot();
+})();
+</script>
+
+</body>
+</html>
