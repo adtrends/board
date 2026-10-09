@@ -1,0 +1,1774 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<meta name="color-scheme" content="light">
+<title>Recall picker</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231f3561'/%3E%3Cpath d='M8 12h16v12H8z M8 12l3-4h10l3 4' fill='none' stroke='%23fff' stroke-width='2.2' stroke-linejoin='round'/%3E%3C/svg%3E">
+<style>
+:root {
+  --ground: #f6f3ee; --card: #ffffff; --ink: #1b1d22; --muted: #5d6270; --line: #e4e0d8; --line2: #eeebe5; --head: #f3f1ec;
+  --brand: #1f3561; --brand-2: #2c4a82; --on-brand: #ffffff;
+  --low: #b3261e; --low-bg: #fdecea; --warn: #8a5a00; --warn-bg: #fff4d6;
+  --ok: #1d6b3a; --ok-bg: #e5f4ea; --pick: #1f3561; --pick-bg: #e8eef9;
+  --sell-bg: #f1f8f3; --sel-bg: #dfe7f6; --focus: #2c6bd6;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body { margin: 0; background: var(--ground); color: var(--ink); font: 13.5px/1.35 system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; overflow: auto; }
+button, input, select, textarea { font: inherit; color: inherit; }
+[hidden] { display: none !important; }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; }
+.mono { font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace; font-size: 12.5px; }
+.muted { color: var(--muted); }
+.b { font-weight: 600; }
+.n { text-align: right; font-variant-numeric: tabular-nums; }
+.sp { flex: 1; }
+body.dragging { cursor: row-resize; user-select: none; }
+body.dragging.side { cursor: col-resize; }
+
+#app { height: 100vh; min-width: 1240px; display: flex; flex-direction: column; }
+
+/* ---------- top bar ---------- */
+.top { flex: none; position: relative; z-index: 20; background: var(--card); border-bottom: 1px solid var(--line); }
+.hd { background: linear-gradient(160deg, var(--brand), var(--brand-2)); color: var(--on-brand); padding: 6px 16px 8px; }
+.bar1 { display: flex; align-items: center; gap: 14px; }
+.bar1 h1 { font-size: 17px; margin: 0; letter-spacing: .01em; }
+.bar1 h1, .bar1 .hbtn, .bar1 details, .nosave { flex: none; }
+.bar1 .sub { font-size: 12.5px; opacity: .85; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hbtn { border: 1px solid rgba(255,255,255,.35); background: rgba(255,255,255,.1); color: #fff; border-radius: 8px; padding: 3px 10px; cursor: pointer; min-height: 28px; }
+.hbtn:hover { background: rgba(255,255,255,.2); }
+details.srcd { position: relative; }
+details.srcd > summary { list-style: none; }
+details.srcd > summary::-webkit-details-marker { display: none; }
+details.srcd > summary::after { content: ' \25BE'; }
+.pop { position: absolute; right: 0; top: 34px; width: 560px; background: #fff; color: var(--ink); border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 10px 30px rgba(20,25,40,.18); padding: 10px 14px; z-index: 50; font-size: 12.5px; }
+.pop h4 { margin: 6px 0 4px; font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+.pop table { border-collapse: collapse; width: 100%; }
+.pop td { padding: 2px 6px 2px 0; vertical-align: top; }
+.pop td:first-child { color: var(--muted); white-space: nowrap; width: 90px; }
+.pop ul { margin: 0; padding-left: 18px; }
+.tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)) minmax(0, 1.45fr) repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 6px; }
+.tile { background: rgba(255,255,255,.11); border-radius: 10px; padding: 3px 10px 4px; min-width: 0; }
+.tile .l { font-size: 12px; opacity: .9; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tile .v { font-size: 18px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1.2; white-space: nowrap; }
+.tile .v .dl { font-size: 12.5px; font-weight: 600; background: rgba(255,255,255,.18); border-radius: 6px; padding: 0 5px; margin-left: 4px; vertical-align: 2px; }
+.tile .c { font-size: 11.5px; opacity: .82; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.nosave { background: #fff4d6; color: #6b4500; border-radius: 7px; padding: 2px 9px; font-size: 12.5px; font-weight: 700; white-space: nowrap; }
+.bar3 { display: flex; align-items: center; gap: 10px; padding: 6px 16px; flex-wrap: wrap; }
+.tabs { display: flex; gap: 4px; }
+.tab { border: 1px solid var(--line); background: #fff; border-radius: 8px; padding: 4px 13px; font-weight: 600; cursor: pointer; min-height: 30px; }
+.tab:hover { border-color: var(--brand-2); }
+.tab[aria-selected="true"] { background: var(--brand); color: #fff; border-color: var(--brand); }
+.filters { display: flex; align-items: center; gap: 8px; margin-left: auto; flex-wrap: wrap; }
+.filters.off { visibility: hidden; }
+.filters label { display: inline-flex; align-items: center; gap: 5px; color: var(--muted); font-size: 12.5px; }
+.inp, .filters select { border: 1px solid #cfcac0; background: #fff; border-radius: 7px; padding: 3px 7px; min-height: 28px; }
+.filters input[type=search] { width: 290px; }
+.fcount { font-size: 12px; color: var(--muted); min-width: 90px; }
+.btn { border: 1px solid #cfcac0; background: #fff; border-radius: 7px; padding: 3px 10px; cursor: pointer; min-height: 28px; white-space: nowrap; text-decoration: none; display: inline-flex; align-items: center; }
+.btn:hover { border-color: var(--brand-2); background: #f9f8f5; }
+.btn.pri { background: var(--brand); color: #fff; border-color: var(--brand); }
+.btn.pri:hover { background: var(--brand-2); }
+.btn.sm { min-height: 24px; padding: 1px 8px; font-size: 12.5px; }
+.btn[aria-pressed="true"] { background: var(--brand); color: #fff; border-color: var(--brand); }
+.lnk { border: 0; background: none; padding: 0; color: var(--brand-2); cursor: pointer; text-decoration: underline; text-decoration-color: rgba(44,74,130,.35); text-underline-offset: 2px; }
+.lnk:hover { text-decoration-color: var(--brand-2); }
+
+/* ---------- panels / split ---------- */
+main { flex: 1; min-height: 0; position: relative; }
+.panel { position: absolute; inset: 0; display: flex; flex-direction: column; }
+.split { flex: 1; min-height: 0; display: grid; }
+.split.stack { grid-template-columns: minmax(0, 1fr); grid-template-rows: var(--lh, clamp(160px, 28vh, 280px)) 7px minmax(0, 1fr); }
+.split.collapsed { grid-template-columns: minmax(0, 1fr) !important; grid-template-rows: auto 0 minmax(0, 1fr) !important; }
+.split.collapsed .gut { visibility: hidden; border: 0; }
+.split.collapsed .pane:first-child > .scroll { display: none; }
+.split.side { grid-template-rows: minmax(0, 1fr); grid-template-columns: var(--lw, 600px) 7px minmax(0, 1fr); }
+.gut { background: var(--line2); border: solid var(--line); border-width: 1px 0; cursor: row-resize; position: relative; }
+.split.side .gut { border-width: 0 1px; cursor: col-resize; }
+.gut::after { content: ''; position: absolute; left: 50%; top: 50%; width: 36px; height: 3px; margin: -1.5px 0 0 -18px; border-radius: 2px; background: #c9c3b8; }
+.split.side .gut::after { width: 3px; height: 36px; margin: -18px 0 0 -1.5px; }
+.gut:hover, .gut:focus-visible { background: #e2ddd3; }
+.pane { min-height: 0; min-width: 0; display: flex; flex-direction: column; background: var(--card); }
+.ptool { flex: none; display: flex; align-items: center; gap: 8px; padding: 5px 12px; border-bottom: 1px solid var(--line); flex-wrap: wrap; font-size: 12.5px; min-height: 36px; }
+.ptool b { font-size: 13.5px; }
+.legend { display: inline-flex; align-items: center; gap: 4px; flex-wrap: wrap; color: var(--muted); }
+.scroll { flex: 1; min-height: 0; overflow: auto; }
+.dhead { flex: none; padding: 7px 12px 6px; border-bottom: 1px solid var(--line); background: #fbfaf8; }
+.dt { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.dt .code { font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace; font-size: 16px; font-weight: 700; color: var(--brand); }
+.dt .dn { font-size: 14.5px; font-weight: 600; }
+.dt .meta { color: var(--muted); font-size: 12.5px; }
+.dstat { margin-top: 4px; font-size: 12.5px; color: #3a3f4a; display: flex; flex-wrap: wrap; gap: 4px 14px; align-items: center; }
+.dstat b { font-variant-numeric: tabular-nums; color: var(--ink); }
+.dt .dstat { margin: 0 0 0 6px; }
+.bulk { margin-top: 6px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: 12.5px; }
+.note { margin-top: 5px; font-size: 12.5px; color: var(--warn); }
+.empty { padding: 28px; color: var(--muted); text-align: center; }
+
+/* ---------- tables ---------- */
+table.t { border-collapse: separate; border-spacing: 0; width: 100%; }
+.t th, .t td { padding: 3px 6px; border-bottom: 1px solid var(--line2); white-space: nowrap; vertical-align: middle; }
+.t thead th { position: sticky; top: 0; z-index: 3; background: var(--head); font-weight: 600; font-size: 12px; line-height: 1.2; color: #3a3f4a; text-align: left; border-bottom: 1px solid var(--line); vertical-align: bottom; }
+.t thead th.n { text-align: right; }
+.t tbody tr { background: #fff; }
+.sh { border: 0; background: none; padding: 0; font: inherit; font-weight: 600; color: inherit; cursor: pointer; text-align: inherit; }
+.sh:hover { color: var(--brand-2); text-decoration: underline; }
+th[aria-sort] .sh { color: var(--brand); }
+.tl tbody tr.lr { cursor: pointer; }
+.tl tbody tr.lr:hover { background: #f7f6f2; }
+.tl tbody tr.sel, .tl tbody tr.sel:hover { background: var(--sel-bg); }
+.tl tbody tr.sel td:first-child { box-shadow: inset 3px 0 0 var(--brand); }
+.tl td.nm { max-width: 230px; overflow: hidden; text-overflow: ellipsis; }
+.tl td.ds { max-width: 260px; overflow: hidden; text-overflow: ellipsis; }
+.t tfoot td { background: var(--head); font-weight: 600; border-top: 1px solid var(--line); }
+.tl tfoot td { position: sticky; bottom: 0; z-index: 2; }
+td.chg, .pk.chg { color: var(--brand); font-weight: 700; }
+td.chg::before, .pk.chg::before { content: '\25CF'; font-size: 8px; margin-right: 4px; vertical-align: 2px; color: var(--brand-2); }
+.td tbody.rb tr.mr td { border-bottom-color: var(--line2); }
+.td tr.mr.chg, .mx tr.chg { background: #f4f7fc; }
+.mx tr.seller { background: var(--sell-bg); }
+.mx tr.seller.chg { background: #eef4f2; }
+.td th, .td td, .mx th, .mx td { padding-left: 5px; padding-right: 5px; }
+.td td.ds { max-width: 165px; overflow: hidden; text-overflow: ellipsis; }
+.td td.mc, .td th.mc { padding-left: 1px; padding-right: 3px; width: 24px; color: #3a3f4a; }
+.td td.mc { font-size: 12px; }
+.td th.oc, .td td.oc { box-shadow: inset 1px 0 0 var(--line2); }
+.z, .zz { color: #b9b4aa; }
+.gs { box-shadow: inset 2px 0 0 var(--line); }
+.t th.gs { box-shadow: inset 2px 0 0 #d6d1c6; }
+.stk { position: sticky; left: 0; z-index: 1; background: inherit; }
+.t thead th.stk { z-index: 4; }
+.xb { width: 22px; height: 22px; border: 1px solid transparent; background: none; border-radius: 5px; cursor: pointer; color: var(--brand-2); padding: 0; line-height: 1; }
+.xb:hover { border-color: var(--line); background: #f4f2ee; }
+tr.sub > td { background: #fafaf8; padding: 4px 6px 10px; }
+table.sg { width: auto; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: #fff; }
+table.sg thead th { position: static; font-size: 11.5px; }
+table.sg td { padding: 2px 8px; }
+table.sg tr.tot td { background: var(--head); font-weight: 600; }
+th.pkh { color: var(--brand); }
+td.lowi { color: var(--low); font-weight: 600; }
+.msel { border: 1px solid #cfcac0; border-radius: 6px; background: #fff; padding: 1px 4px; height: 24px; max-width: 128px; font-size: 12.5px; }
+.msel:hover { border-color: var(--brand-2); }
+input.q { width: 42px; height: 23px; text-align: right; padding: 1px 5px; border: 1px solid #cfcac0; border-radius: 5px; background: #fff; font-variant-numeric: tabular-nums; font-size: 13px; }
+input.q::placeholder { color: #c3beb4; }
+input.q:hover:not(:disabled) { border-color: var(--brand-2); }
+input.q:disabled { background: transparent; border-color: transparent; }
+input.q:disabled::placeholder { color: #ddd8ce; }
+input.q.chg { border-color: var(--brand-2); background: var(--pick-bg); color: var(--brand); font-weight: 700; }
+input.q.wrn { box-shadow: inset 0 0 0 2px #e3b341; }
+input.q.clamp { border-color: var(--low); }
+.mx td.sz { padding: 2px 3px; text-align: right; }
+.mx th.szh { text-align: center; min-width: 64px; }
+.mx input.q { width: 38px; }
+.mx .st { display: inline-block; min-width: 18px; color: #8a8f9b; font-size: 11px; text-align: right; margin-right: 3px; font-variant-numeric: tabular-nums; }
+.mx .nd { display: inline-block; color: var(--brand-2); background: var(--pick-bg); border-radius: 4px; font-size: 10.5px; padding: 0 3px; margin-right: 2px; font-weight: 600; }
+.mx td.cn { max-width: 250px; overflow: hidden; text-overflow: ellipsis; }
+.mx td.cn .nm { color: var(--muted); font-size: 12px; margin-left: 4px; }
+.mx tfoot td { height: 23px; padding-top: 1px; padding-bottom: 1px; }
+.mx tfoot tr.gap td { position: sticky; bottom: 0; z-index: 2; }
+.mx tfoot tr.gap td.stk { z-index: 3; }
+.mx tfoot td.lbl { text-align: right; color: #3a3f4a; }
+.mx tfoot td.gneg { color: var(--low); background: #fbe3e0; }
+.mx tfoot td.gpos { color: var(--warn); background: #fdf0c8; }
+.mx tfoot td.gok { color: var(--ok); }
+
+/* ---------- chips ---------- */
+.chip { display: inline-block; padding: 0 6px; border-radius: 9px; font-size: 11.5px; line-height: 17px; border: 1px solid transparent; margin-right: 3px; white-space: nowrap; cursor: default; font-weight: 500; }
+.c-red { background: var(--low-bg); color: var(--low); border-color: #f2c6c1; }
+.c-amb { background: var(--warn-bg); color: var(--warn); border-color: #efd99a; }
+.c-grn { background: var(--ok-bg); color: var(--ok); border-color: #c4e3cf; }
+.c-blu { background: var(--pick-bg); color: var(--brand); border-color: #cdd9ef; }
+.c-gry { background: #efede8; color: #4a4f5c; border-color: #ddd8ce; }
+.role { display: inline-block; min-width: 46px; text-align: center; border-radius: 5px; font-size: 11.5px; line-height: 17px; padding: 0 5px; font-weight: 600; }
+.r-DEAD { background: #e7e4dd; color: #3d4250; }
+.r-SLOW { background: var(--pick-bg); color: var(--brand); }
+.r-SELLER { background: var(--ok-bg); color: var(--ok); }
+.r- { color: #a4a097; }
+.cov { font-variant-numeric: tabular-nums; font-weight: 600; }
+.cov.lo { color: var(--low); } .cov.mid { color: var(--warn); } .cov.hi { color: var(--ok); }
+
+/* ---------- item detail ---------- */
+.ibox { display: flex; gap: 16px; flex-wrap: wrap; align-items: flex-start; margin-top: 6px; }
+table.mini { border-collapse: collapse; font-size: 12px; }
+table.mini th, table.mini td { padding: 1px 6px; border: 1px solid var(--line2); text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+table.mini th { background: var(--head); font-weight: 600; color: #3a3f4a; }
+table.mini th.rl { text-align: left; }
+.kv { display: grid; grid-template-columns: repeat(3, auto auto); gap: 1px 12px; font-size: 12.5px; }
+.nav { display: inline-flex; gap: 4px; margin-left: auto; }
+.sgl { display: flex; flex-direction: column; gap: 3px; font-size: 12.5px; }
+.kv span { color: var(--muted); }
+.kv b { font-variant-numeric: tabular-nums; text-align: right; }
+details.recv { font-size: 12.5px; }
+details.recv summary { cursor: pointer; color: var(--brand-2); }
+details.recv .rwrap { max-height: 220px; overflow: auto; margin-top: 4px; border: 1px solid var(--line); border-radius: 8px; background: #fff; }
+details.recv table.t th { position: sticky; top: 0; }
+.seg { display: inline-flex; border: 1px solid #cfcac0; border-radius: 8px; overflow: hidden; }
+.seg button { border: 0; border-right: 1px solid #cfcac0; background: #fff; padding: 3px 10px; cursor: pointer; font-size: 12.5px; }
+.seg button:last-child { border-right: 0; }
+.seg button[aria-pressed="true"] { background: var(--brand); color: #fff; }
+details.ictx { position: sticky; left: 0; padding: 4px 12px 5px; border-bottom: 1px solid var(--line); background: #fbfaf8; font-size: 12.5px; }
+details.ictx > summary { cursor: pointer; color: #3a3f4a; padding: 1px 0; }
+details.ictx > summary .k { color: var(--brand-2); font-weight: 600; }
+details.ictx > summary b { font-variant-numeric: tabular-nums; }
+details.ictx .ibox { margin: 4px 0 2px; }
+.mk { display: inline-block; margin-left: 4px; padding: 0 4px; border-radius: 4px; font: 600 10.5px/15px system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; background: var(--pick-bg); color: var(--brand); border: 1px solid #cdd9ef; vertical-align: 1px; cursor: default; }
+.bynote { font-size: 12.5px; color: var(--muted); margin: -4px 0 8px; }
+.bynote.bad { color: var(--low); font-weight: 600; }
+.undo { border-color: #ffd98a; }
+
+/* ---------- review ---------- */
+.rscroll { flex: 1; min-height: 0; overflow: auto; padding: 12px 16px 40px; }
+.rv { display: grid; grid-template-columns: minmax(0, 1fr) 470px; gap: 14px; align-items: start; }
+.rv td.nmx { max-width: 230px; overflow: hidden; text-overflow: ellipsis; }
+.rcol { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.rcol.rside { align-self: stretch; }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+.card > h3 { margin: 0; padding: 9px 14px; font-size: 14px; border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 8px; }
+.card > h3 .muted { font-weight: 400; font-size: 12.5px; }
+.card .cb { padding: 10px 14px; }
+.card .tw { max-height: 420px; overflow: auto; }
+.exp { position: sticky; top: 0; }
+.exp .hint { margin: 0 0 8px; padding: 7px 10px; background: var(--pick-bg); color: var(--brand); border-radius: 8px; font-weight: 600; }
+.exp label.byl { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.exp textarea { width: 100%; height: 340px; resize: vertical; font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace; font-size: 12px; line-height: 1.4; border: 1px solid #cfcac0; border-radius: 8px; padding: 8px; background: #fbfaf8; white-space: pre; }
+.exp .acts { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 8px; }
+.exp .walong { color: var(--warn); font-size: 12.5px; }
+.wg { border-top: 1px solid var(--line2); }
+.wg:first-child { border-top: 0; }
+.wg summary { padding: 6px 14px; cursor: pointer; font-weight: 600; }
+.wg summary .chip { margin-left: 6px; }
+.wg ul { margin: 0; padding: 0 14px 8px 32px; max-height: 240px; overflow: auto; }
+.wg li { padding: 1px 0; font-size: 12.5px; }
+.wg .none { padding: 0 14px 8px 32px; color: var(--muted); font-size: 12.5px; }
+
+/* ---------- messages ---------- */
+.msg { max-width: 560px; margin: 12vh auto; background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 26px 30px; }
+.msg h1 { font-size: 20px; margin: 0 0 8px; color: var(--brand); }
+.msg p { margin: 6px 0; color: #3a3f4a; font-size: 14.5px; }
+.toast { position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%); background: #1b1d22; color: #fff; padding: 8px 16px; border-radius: 10px; font-size: 13px; opacity: 0; pointer-events: none; transition: opacity .2s; z-index: 100; }
+.toast.on { opacity: .95; }
+
+/* ---------- short screens (1366x768, 1440x900): one-line tiles; tall screens keep every matrix footer row in view ---------- */
+@media (max-height: 820px) {
+  .hd { padding: 4px 16px 6px; }
+  .tiles { margin-top: 4px; gap: 6px; }
+  .tile { display: flex; align-items: baseline; gap: 6px; padding: 2px 9px; }
+  .tile .l { flex: 0 1 auto; min-width: 0; }
+  .tile .v { flex: none; font-size: 15.5px; }
+  .tile .c { display: none; }
+  .bar3 { padding: 4px 16px; }
+  .exp textarea { height: 210px; }
+}
+@media (min-height: 821px) {
+  .mx tfoot td { position: sticky; z-index: 2; }
+  .mx tfoot td.stk { z-index: 3; }
+  .mx tfoot tr.fb3 td { bottom: 69px; }
+  .mx tfoot tr.fb2 td { bottom: 46px; }
+  .mx tfoot tr.fb1 td { bottom: 23px; }
+}
+</style>
+</head>
+<body>
+<noscript><div class="msg"><h1>JavaScript is off.</h1><p>Turn on JavaScript to use this page.</p></div></noscript>
+<div id="msg" class="msg" hidden></div>
+<div id="app" hidden>
+  <header class="top" id="top">
+    <div class="hd">
+      <div class="bar1">
+        <h1>Best-seller recall - choose returns</h1>
+        <span class="sub" id="planline"></span>
+        <span class="nosave" id="nosave" role="alert" hidden title="Picks are NOT saved in this browser: it does not let the page store anything (private window, blocked site data or full storage). Reloading or closing the tab loses every pick - export (Copy / Download on Review &amp; send) before closing.">Picks NOT saved here - Copy or Download before closing</span>
+        <span class="sp"></span>
+        <details class="srcd" id="srcd"><summary class="hbtn">Data sources</summary><div class="pop" id="srcpop"></div></details>
+        <button class="hbtn undo" type="button" id="undoBtn" data-act="undo" hidden>Undo bulk change</button>
+        <button class="hbtn" type="button" data-act="reset" title="Put every line back to the HQ plan">Reset all to HQ plan</button>
+        <button class="hbtn" type="button" data-act="clear" title="Set every line to None (return nothing)">Clear all (None)</button>
+      </div>
+      <div class="tiles" id="tiles"></div>
+    </div>
+    <div class="bar3">
+      <div class="tabs" role="tablist" aria-label="Views">
+        <button class="tab" role="tab" id="tb-o" aria-controls="tab-o" aria-selected="true" data-act="tab" data-tab="o">By counter</button>
+        <button class="tab" role="tab" id="tb-i" aria-controls="tab-i" aria-selected="false" data-act="tab" data-tab="i" tabindex="-1">By item</button>
+        <button class="tab" role="tab" id="tb-r" aria-controls="tab-r" aria-selected="false" data-act="tab" data-tab="r" tabindex="-1">Review &amp; send</button>
+      </div>
+      <div class="filters" id="filters">
+        <input type="search" class="inp" id="fq" placeholder="Search code, name, art-col, description" aria-label="Search outlet code, outlet name, art-col or description" autocomplete="off" spellcheck="false">
+        <label>PIC <select id="fpic" aria-label="PIC filter"></select></label>
+        <label>Region <select id="freg" aria-label="Region filter"></select></label>
+        <label>Brand <select id="fbrand" aria-label="Brand filter"><option value="">All</option><option value="AD">AD</option><option value="BF">BF</option></select></label>
+        <label title="Show only counter x item lines that the HQ plan returns"><input type="checkbox" id="fhq"> Only rows in HQ plan</label>
+        <button class="btn sm" type="button" data-act="clearf">Clear filters</button>
+        <span class="fcount" id="fcount"></span>
+      </div>
+    </div>
+  </header>
+  <main id="main">
+    <section id="tab-o" class="panel" role="tabpanel" aria-labelledby="tb-o">
+      <div class="split stack" id="split-o">
+        <div class="pane" id="olist"><div class="ptool" id="olist-t"></div><div class="scroll" id="olist-s"></div></div>
+        <div class="gut" role="separator" tabindex="0" aria-label="Resize the counter list (arrow keys)"></div>
+        <div class="pane" id="odetail"><div class="dhead" id="odetail-h"></div><div class="scroll" id="odetail-s"></div></div>
+      </div>
+    </section>
+    <section id="tab-i" class="panel" role="tabpanel" aria-labelledby="tb-i" hidden>
+      <div class="split stack" id="split-i">
+        <div class="pane" id="ilist"><div class="ptool" id="ilist-t"></div><div class="scroll" id="ilist-s"></div></div>
+        <div class="gut" role="separator" tabindex="0" aria-label="Resize the item list (arrow keys)"></div>
+        <div class="pane" id="idetail"><div class="dhead" id="idetail-h"></div><div class="scroll" id="idetail-s"></div></div>
+      </div>
+    </section>
+    <section id="tab-r" class="panel" role="tabpanel" aria-labelledby="tb-r" hidden>
+      <div class="rscroll" id="review"></div>
+    </section>
+  </main>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<!--PAGE-SCRIPT-->
+<script>
+(function () {
+  'use strict';
+
+  /* ================= constants ================= */
+  var CARTON = 30, WA_MAX = 3500;
+  var MODE_ORDER = ['N', 'H', 'E', 'F', 'C'];
+  var MODE_LABEL = { N: 'None', H: 'HQ plan', E: 'Excess sizes', F: 'Full run', C: 'Custom' };
+  var ROLE_ORDER = { DEAD: 0, SLOW: 1, '': 2, SELLER: 3 };
+  var ROLE_LABEL = { DEAD: 'Dead', SLOW: 'Slow', SELLER: 'Selling', '': '-' };
+  var MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+  /* ================= data + state ================= */
+  var DOC = null, started = false;
+  var ITEMS = [], ITEM = {}, ROWS = [], ROW = {}, BYO = {}, BYK = {}, OUTS = [], OHAY = {}, IHAY = {};
+  var STATE = { plan: '', by: 'Sharon', picks: {} };
+  var PICKS = STATE.picks;                 // key "OUTLET|ART-COL" -> {m:'N|H|E|F|C', q:[..] (C only)}
+  var C = null, HQT = null, QUIET = '';
+  var STORE_KEY = '', UI_KEY = 'recallpick:ui', STORE_OK = true;
+  var UNDO = null;                         // one-step undo of the last bulk change: {label, picks (JSON)}
+  var UI = { tab: 'o', layout: '', lh: 0, lw: 0, col: false, selO: '', selK: '', exp: {}, mf: 'stock', ictx: null, olOrder: [], ilOrder: [],
+    sort: { ol: { c: 'hq', d: -1 }, od: { c: 'role', d: 1 }, il: { c: 'ams', d: -1 }, mx: { c: 'role', d: 1 } } };
+  var F = { q: '', terms: [], pic: '', reg: '', brand: '', hq: false };
+
+  /* ================= helpers ================= */
+  function $(id) { return document.getElementById(id); }
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  function fmt(n) { n = Math.round(+n || 0); return n.toLocaleString('en-US'); }
+  function fx1(n) { return n == null || isNaN(n) ? '' : (Math.round(n * 10) / 10).toFixed(1); }
+  function pct(x) { return x == null || isNaN(x) ? '-' : (Math.round(x * 1000) / 10).toFixed(1) + '%'; }
+  function sum(a) { var s = 0; for (var i = 0; i < a.length; i++) s += a[i]; return s; }
+  function zeros(n) { var a = []; for (var i = 0; i < n; i++) a.push(0); return a; }
+  function ints(x, n) {
+    var a = zeros(n);
+    if (Array.isArray(x)) for (var i = 0; i < n; i++) { var v = Math.round(+x[i]); a[i] = isFinite(v) ? v : 0; }
+    return a;
+  }
+  function cmp(a, b) { return a < b ? -1 : a > b ? 1 : 0; }
+  function same(a, b) { for (var i = 0; i < a.length; i++) if (a[i] !== b[i]) return false; return true; }
+  function dshort(iso) { var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso || ''); return m ? (+m[3]) + ' ' + MON[+m[2] - 1] : '-'; }
+  function addDays(iso, n) {
+    var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso || ''); if (!m) return '';
+    return new Date(Date.UTC(+m[1], +m[2] - 1, +m[3] + n)).toISOString().slice(0, 10);
+  }
+  function fq(s) { return String(s).replace(/["\\]/g, '\\$&'); }
+  function outlet(o) { return (DOC && DOC.outlets && DOC.outlets[o]) || {}; }
+  function zz(v) { return v ? String(v) : '<span class="zz">0</span>'; }
+  function lsGet(k) { try { return window.localStorage.getItem(k); } catch (e) { return null; } }
+  function lsSet(k, v) { try { window.localStorage.setItem(k, v); return true; } catch (e) { return false; } }
+  function probeStorage() {
+    try {
+      var ls = window.localStorage, k = 'recallpick:probe';
+      ls.setItem(k, '1'); var ok = ls.getItem(k) === '1'; ls.removeItem(k);
+      return ok;
+    } catch (e) { return false; }
+  }
+  function storageFailed() {                // shown once, stays: picks will not survive a reload
+    if (!STORE_OK) return;
+    STORE_OK = false;
+    var el = $('nosave'); if (el) el.hidden = false;
+  }
+  var toastT = 0;
+  function toast(t) {
+    var el = $('toast'); el.textContent = t; el.classList.add('on');
+    clearTimeout(toastT); toastT = setTimeout(function () { el.classList.remove('on'); }, 2200);
+  }
+
+  /* ================= index the document ================= */
+  function indexDoc(d) {
+    (d.items || []).forEach(function (it) {
+      if (!it || !it.k || !Array.isArray(it.sizes) || ITEM[it.k]) return;
+      var n = it.sizes.length;
+      it._n = n; it._z = zeros(n); it._dem = ints(it.dem, n); it._sg = ints(it.sgsz, n); it._onl = ints(it.onl, n);
+      it._demT = sum(it._dem); it._hq = 0; it._wm = 0;
+      ITEMS.push(it); ITEM[it.k] = it; BYK[it.k] = [];
+      IHAY[it.k] = (it.k + ' ' + (it.d || '')).toLowerCase();
+      (it.rows || []).forEach(function (r) {
+        if (!r || !r.o) return;
+        var key = r.o + '|' + it.k;
+        if (ROW[key]) return;
+        var R = { o: r.o, k: it.k, key: key, it: it, r: r, n: n, role: r.role || '',
+          h: ints(r.h, n), p: ints(r.p, n), s3: ints(r.s3, n), ex: ints(r.ex, n), hq: ints(r.hq, n),
+          need: ints(r.need, n), ref: ints(r.ref, n), rin: ints(r.rin, n),
+          idcp: Array.isArray(r.idcp) ? ints(r.idcp, n) : null,
+          rc: +r.rc || 0, cv: r.cv == null ? null : +r.cv };
+        for (var i = 0; i < n; i++) {          // a pick can never exceed what is on hand
+          if (R.h[i] < 0) R.h[i] = 0;
+          R.ex[i] = Math.max(0, Math.min(R.ex[i], R.h[i]));
+          R.hq[i] = Math.max(0, Math.min(R.hq[i], R.h[i]));
+        }
+        R.sh = sum(R.h); R.sex = sum(R.ex); R.shq = sum(R.hq); R.sneed = sum(R.need);
+        R.def = R.shq > 0 ? 'H' : 'N';
+        R.rel = R.sh > 0 || R.sex > 0 || R.shq > 0;
+        R.cvs = R.cv != null ? R.cv : (R.sh > 0 ? 1e5 : -1);      // cover for sorting: stock but no sales = top
+        ROWS.push(R); ROW[key] = R; BYK[it.k].push(R); (BYO[R.o] || (BYO[R.o] = [])).push(R);
+        it._hq += R.shq; it._wm += R.sh;
+      });
+    });
+    OUTS = Object.keys(BYO).sort(cmp);
+    OUTS.forEach(function (o) { OHAY[o] = (o + ' ' + (outlet(o).n || '')).toLowerCase(); });
+  }
+
+  /* ================= modes ================= */
+  function avail(R, m) {
+    if (m === 'N') return true;
+    if (m === 'H') return R.shq > 0;
+    if (m === 'E') return R.sex > 0;
+    if (m === 'F' || m === 'C') return R.sh > 0;
+    return false;
+  }
+  function whyNot(R, m) {
+    if (m === 'H') return 'HQ plan: nothing planned from this counter for this item' + (R.r.small ? ' (counter left out: its whole return was under 10 pcs)' : '');
+    if (m === 'E') return 'Excess sizes: no recallable excess - ' + (R.sh <= 0 ? 'no stock on hand' : R.role === 'SELLER' ? 'the counter is selling it' :
+      R.role === '' ? 'not a donor (6 months of cover or less)' : 'stock arrived in the last 60 days or is within 3 months of own sales');
+    if (m === 'F') return 'Full run: no stock on hand';
+    if (m === 'C') return 'Custom: no stock on hand';
+    return '';
+  }
+  function modeOf(R) { var p = PICKS[R.key]; return p && avail(R, p.m) ? p.m : R.def; }
+  function effOf(R) {
+    var m = modeOf(R);
+    return m === 'H' ? R.hq : m === 'E' ? R.ex : m === 'F' ? R.h : m === 'C' ? PICKS[R.key].q : R.it._z;
+  }
+  function setModeR(R, m) {
+    if (!MODE_LABEL[m] || !avail(R, m)) return false;
+    if (m === 'C') { var q = effOf(R).slice(); PICKS[R.key] = { m: 'C', q: q }; }
+    else if (m === R.def) delete PICKS[R.key];
+    else PICKS[R.key] = { m: m };
+    return true;
+  }
+  function setQtyR(R, si, v) {
+    if (!(si >= 0 && si < R.n) || !avail(R, 'C')) return false;
+    v = Math.max(0, Math.min(R.h[si], Math.floor(+v || 0)));
+    var q = modeOf(R) === 'C' ? PICKS[R.key].q.slice() : effOf(R).slice();
+    q[si] = v;
+    if (sum(q) === 0) {                    // every size 0 = return nothing: store it as None, not an empty Custom
+      if (R.def === 'N') delete PICKS[R.key]; else PICKS[R.key] = { m: 'N' };
+    } else PICKS[R.key] = { m: 'C', q: q };
+    return true;
+  }
+  function isDonor(R) { return R.role === 'DEAD' || R.role === 'SLOW'; }
+  function setBulk(rows, m) {
+    // Excess / Full run in bulk only touch Dead and Slow lines: a selling counter (or one with 6 months of cover
+    // or less) is never emptied by one click - those lines are left as they are and can be set one by one.
+    var r = { set: 0, none: 0, kept: 0, keptSell: 0, keptSellPcs: 0 };
+    rows.forEach(function (R) {
+      if ((m === 'E' || m === 'F') && !isDonor(R)) {
+        r.kept++;
+        if (R.role === 'SELLER') { r.keptSell++; r.keptSellPcs += R.sh; }
+        return;
+      }
+      if (setModeR(R, m)) r.set++; else if (setModeR(R, 'N')) r.none++;
+    });
+    return r;
+  }
+  function snapUndo(label) { UNDO = { label: label, picks: JSON.stringify(PICKS) }; renderUndo(); }
+  function dropUndo() { if (UNDO) { UNDO = null; renderUndo(); } }
+  function renderUndo() {
+    var b = $('undoBtn'); if (!b) return;
+    b.hidden = !UNDO;
+    b.title = UNDO ? 'Undo: ' + UNDO.label + ' (only until you change another line)' : '';
+  }
+  function undoBulk() {
+    if (!UNDO) return;
+    var p = null, lab = UNDO.label;
+    try { p = JSON.parse(UNDO.picks); } catch (e) { p = null; }
+    UNDO = null; renderUndo();
+    if (!p) return;
+    clearPicks(); Object.keys(p).forEach(function (k) { PICKS[k] = p[k]; });
+    refreshAll(false); toast('Undone: ' + lab);
+  }
+  function clearPicks() { Object.keys(PICKS).forEach(function (k) { delete PICKS[k]; }); }
+  function resetHQ() { clearPicks(); }
+  function clearAllNone() { clearPicks(); ROWS.forEach(function (R) { if (R.def !== 'N') PICKS[R.key] = { m: 'N' }; }); }
+
+  /* ================= totals ================= */
+  function recompute() {
+    var c = { eff: {}, tot: {}, chg: {}, ipk: {}, icov: {}, opk: {}, ochg: {}, oit: {} };
+    var pcs = 0, changed = 0;
+    ITEMS.forEach(function (it) { c.ipk[it.k] = zeros(it._n); });
+    ROWS.forEach(function (R) {
+      var e = effOf(R), t = sum(e), ch = !same(e, R.hq), ip = c.ipk[R.k];
+      c.eff[R.key] = e; c.tot[R.key] = t; c.chg[R.key] = ch;
+      for (var j = 0; j < R.n; j++) ip[j] += e[j];
+      c.opk[R.o] = (c.opk[R.o] || 0) + t;
+      if (ch) { changed++; c.ochg[R.o] = (c.ochg[R.o] || 0) + 1; }
+      if (t > 0) c.oit[R.o] = (c.oit[R.o] || 0) + 1;
+      pcs += t;
+    });
+    var cov = 0, dem = 0, over = 0, covNH = 0, demNH = 0;
+    ITEMS.forEach(function (it) {
+      var p = c.ipk[it.k], d = it._dem, cv = 0, ov = 0, sh = 0;
+      for (var j = 0; j < it._n; j++) { cv += Math.min(p[j], d[j]); ov += Math.max(0, p[j] - d[j]); sh += Math.max(0, d[j] - p[j]); }
+      c.icov[it.k] = { pk: sum(p), cov: cv, over: ov, short: sh, pct: it._demT ? cv / it._demT : null, st: sh > 0 ? 'Short' : ov > 0 ? 'Over' : 'OK' };
+      cov += cv; dem += it._demT; over += ov;
+      if (!it.hold) { covNH += cv; demNH += it._demT; }
+    });
+    var outs = 0, ctn = 0;
+    Object.keys(c.opk).forEach(function (o) { var v = c.opk[o]; if (v > 0) { outs++; ctn += Math.ceil(v / CARTON); } });
+    c.T = { pcs: pcs, outlets: outs, cartons: ctn, covered: cov, dem: dem, pct: dem ? cov / dem : null,
+      pctNoHold: demNH ? covNH / demNH : null, over: over, changed: changed };
+    C = c;
+    return c;
+  }
+
+  /* ================= flags + warnings ================= */
+  function szWarn(R, i, v) { return v > 0 && (v > R.h[i] - R.rin[i] || (R.idcp != null && R.idcp[i] < v)); }
+  function idcpLower(o) {
+    var rows = BYO[o] || [];
+    for (var a = 0; a < rows.length; a++) {
+      var R = rows[a]; if (!R.idcp) continue;
+      var e = C.eff[R.key];
+      for (var i = 0; i < R.n; i++) if (e[i] > 0 && R.idcp[i] < e[i]) return true;
+    }
+    return false;
+  }
+  function isQuiet(o) { var O = outlet(o); return !O.last || O.last < QUIET; }
+  function isFirst(o) { return !/^CLOSE/i.test(outlet(o).src || ''); }
+  function isSmall(o) { return (BYO[o] || []).some(function (R) { return !!R.r.small; }); }
+  function oFlags(o, long) {
+    var O = outlet(o), f = [];
+    if (isQuiet(o)) f.push({ c: 'c-red', l: O.last ? (long ? 'No tickets since ' : 'No tix since ') + dshort(O.last) : 'No tickets',
+      t: 'No tickets since ' + (O.last || 'the start of the window') + ' (none from ' + QUIET + ' on). Check the counter is open before asking it to pack.' });
+    if (idcpLower(o)) f.push({ c: 'c-amb', l: 'iDCP lower', t: 'Live iDCP balance (incl. pending inbound) is lower than the picked qty for at least one size' });
+    if (isFirst(o)) f.push({ c: 'c-amb', l: 'First count only', t: 'Stock source: ' + (O.src || 'unknown') + '. No closing calc yet, so stock may be off.' });
+    if (isSmall(o)) f.push({ c: 'c-gry', l: 'Small', t: 'Small (<10 pcs) - not in HQ plan. HQ left this counter out because its whole return was under 10 pcs.' });
+    return f;
+  }
+  function rowWarns(R) {
+    var e = C.eff[R.key], t = C.tot[R.key], w = [], rec = [], low = [], sz = R.it.sizes;
+    if (t > 0 && R.role === 'SELLER') w.push({ c: 'c-red', l: 'Seller', t: 'This counter is selling it: sold ' + R.r.S3 + ' Jul-Sep, ' + fx1(R.rc) + '/mth' +
+      (R.sneed ? ', own 2-month need ' + R.sneed + ' pcs' : '') + '. Picking it leaves the counter short.' });
+    for (var i = 0; i < R.n; i++) {
+      if (e[i] > 0 && e[i] > R.h[i] - R.rin[i]) rec.push(sz[i] + ': pick ' + e[i] + ', stock ' + R.h[i] + ', arrived ' + R.rin[i]);
+      if (R.idcp && e[i] > 0 && R.idcp[i] < e[i]) low.push(sz[i] + ': pick ' + e[i] + ', iDCP ' + R.idcp[i]);
+    }
+    if (rec.length) w.push({ c: 'c-amb', l: 'New <60d', t: 'Picks include pcs that arrived in the last 60 days - ' + rec.join('; ') });
+    if (low.length) w.push({ c: 'c-amb', l: 'iDCP lower', t: 'Live iDCP balance is lower than the pick - ' + low.join('; ') });
+    if (R.r.ret60 > 0) w.push({ c: t > 0 ? 'c-amb' : 'c-gry', l: 'Returned ' + R.r.ret60, t: 'This counter already returned ' + R.r.ret60 + ' pcs of this article to a WH in the last 60 days' });
+    return w;                              // item Hold / No SG SKU show as marks in the Art-col cell (itemMarks)
+  }
+  function itemMarks(it) {
+    return (it.hold ? '<span class="mk" title="' + esc('Hold: shipment on the way (' + it.hold + '). HQ recalls nothing for this item.') + '">hold</span>' : '') +
+      (it.nosku ? '<span class="mk" title="No SG SKU: SiteGiant has no SKU for this item yet">no SKU</span>' : '');
+  }
+  function chips(list) {
+    return list.map(function (x) { return '<span class="chip ' + x.c + '" title="' + esc(x.t) + '">' + esc(x.l) + '</span>'; }).join('');
+  }
+  function roleBadge(role) { return '<span class="role r-' + esc(role) + '" title="' + esc(roleTip(role)) + '">' + esc(ROLE_LABEL[role] || role || '-') + '</span>'; }
+  function roleTip(role) {
+    var p = (DOC && DOC.params) || {};
+    if (role === 'DEAD') return 'Dead: sold ' + (p.DEAD_MAX6 != null ? p.DEAD_MAX6 : 1) + ' pc or less Apr-Sep';
+    if (role === 'SLOW') return 'Slow: more than ' + (p.DONOR_COVER || 6) + ' months of cover';
+    if (role === 'SELLER') return 'Selling: sold ' + (p.SELLER_MIN3 || 3) + '+ pcs Jul-Sep and needs stock';
+    return 'Neither donor nor seller';
+  }
+  function coverTxt(R) { return R.cv != null ? fx1(R.cv) : (R.sh > 0 ? '<span class="muted">no sales</span>' : '<span class="zz">-</span>'); }
+  function covHtml(k) {
+    var ic = C.icov[k]; if (ic.pct == null) return '<span class="zz">-</span>';
+    var cl = ic.pct >= 0.995 ? 'hi' : ic.pct >= 0.7 ? 'mid' : 'lo';
+    return '<span class="cov ' + cl + '" title="Covered ' + fmt(ic.cov) + ' of ' + fmt(ITEM[k]._demT) + ' demand pcs; short ' + fmt(ic.short) + ', over ' + fmt(ic.over) + '">' + pct(ic.pct) + '</span>';
+  }
+  function shortHtml(k) {
+    var ic = C.icov[k], it = ITEM[k];
+    var tip = 'Item demand ' + fmt(it._demT) + ' pcs \u00b7 picked by all counters ' + fmt(ic.pk) + ' \u00b7 still short ' + fmt(ic.short) +
+      (ic.over ? ' \u00b7 over ' + fmt(ic.over) + ' in other sizes (to SG stock)' : '') + (it.hold ? ' \u00b7 on hold: shipment on the way' : '');
+    var v = ic.short ? '<span class="' + (it.hold ? 'muted' : 'cov lo') + '">' + fmt(ic.short) + '</span>' : '<span class="zz">0</span>';
+    return '<span title="' + esc(tip) + '">' + v + '</span>';
+  }
+  function statusChip(k) {
+    var ic = C.icov[k], it = ITEM[k];
+    if (it.hold) return '<span class="chip c-blu" title="' + esc('Shipment on the way (' + it.hold + '): HQ recalls nothing for this item. Picked ' + fmt(ic.pk) +
+      ' of ' + fmt(it._demT) + ' demand pcs' + (ic.short ? ', short ' + fmt(ic.short) : '') + (ic.over ? ', over ' + fmt(ic.over) : '') + '.') + '">Hold - shipment due</span>';
+    if (ic.st === 'Short') return '<span class="chip c-red" title="Short ' + fmt(ic.short) + ' pcs vs demand' + (ic.over ? '; over ' + fmt(ic.over) + ' pcs in other sizes' : '') + '">Short ' + fmt(ic.short) + '</span>';
+    if (ic.st === 'Over') return '<span class="chip c-amb" title="Picked ' + fmt(ic.over) + ' pcs above demand - the extra goes to SG stock">Over ' + fmt(ic.over) + '</span>';
+    return '<span class="chip c-grn" title="Every size covered, nothing over">OK</span>';
+  }
+  function itemFlags(it) {
+    var f = [];
+    if (it.hold) f.push({ c: 'c-blu', l: 'Hold', t: 'Shipment on the way (' + it.hold + '): HQ recalls nothing for this item' });
+    if (it.nosku) f.push({ c: 'c-blu', l: 'No SG SKU', t: 'SiteGiant has no SKU for this item yet' });
+    return f;
+  }
+
+  /* ================= filters ================= */
+  function passO(o) {
+    var O = outlet(o);
+    if (F.pic && O.pic !== F.pic) return false;
+    if (F.reg && O.reg !== F.reg) return false;
+    return true;
+  }
+  function passRow(R) {
+    if (F.brand && R.it.b !== F.brand) return false;
+    if (F.hq && !(R.shq > 0)) return false;
+    if (!passO(R.o)) return false;
+    if (F.terms.length) {
+      var a = OHAY[R.o], b = IHAY[R.k];
+      for (var i = 0; i < F.terms.length; i++) { var t = F.terms[i]; if (a.indexOf(t) < 0 && b.indexOf(t) < 0) return false; }
+    }
+    return true;
+  }
+  function filtersOn() { return !!(F.terms.length || F.pic || F.reg || F.brand || F.hq); }
+  function clearFilters() {
+    F.q = ''; F.terms = []; F.pic = ''; F.reg = ''; F.brand = ''; F.hq = false;
+    $('fq').value = ''; $('fpic').value = ''; $('freg').value = ''; $('fbrand').value = ''; $('fhq').checked = false;
+  }
+
+  /* ================= sorting ================= */
+  function roleKey(R) { return ROLE_ORDER[R.role] * 1e6 + (1e5 - R.cvs); }
+  function sortBy(list, tb, cols) {
+    var s = UI.sort[tb], col = null;
+    for (var i = 0; i < cols.length; i++) if (cols[i].id === s.c && cols[i].g) col = cols[i];
+    if (!col) return;
+    list.sort(function (a, b) {
+      var x = col.g(a), y = col.g(b), r;
+      if (x == null && y == null) r = 0;
+      else if (x == null) return 1;
+      else if (y == null) return -1;
+      else r = (typeof x === 'number' && typeof y === 'number') ? x - y : cmp(String(x), String(y));
+      if (r === 0) return cmp(a.id || a.key || a.k, b.id || b.key || b.k);
+      return s.d * r;
+    });
+  }
+  function th(tb, col) {
+    var cls = (col.num ? 'n' : '') + (col.cls ? ' ' + col.cls : '');
+    var tip = col.t ? ' title="' + esc(col.t) + '"' : '';
+    if (!col.g) return '<th class="' + cls + '"' + tip + '>' + String(col.l).replace(/\n/g, '<br>') + '</th>';
+    var s = UI.sort[tb], on = s.c === col.id;
+    return '<th class="' + cls + '"' + tip + (on ? ' aria-sort="' + (s.d > 0 ? 'ascending' : 'descending') + '"' : '') +
+      '><button class="sh" type="button" data-act="sort" data-t="' + tb + '" data-c="' + col.id + '" data-fid="sort|' + tb + '|' + col.id + '">' +
+      String(col.l).replace(/\n/g, '<br>') + (on ? (s.d > 0 ? ' &#9650;' : ' &#9660;') : '') + '</button></th>';
+  }
+  function colsFor(tb) { return tb === 'ol' ? OL_COLS : tb === 'od' ? OD_COLS : tb === 'il' ? IL_COLS : MX_COLS; }
+
+  var OL_COLS = [
+    { id: 'o', l: 'Counter', g: function (a) { return a.o; } },
+    { id: 'n', l: 'Name', g: function (a) { return a.O.n || ''; } },
+    { id: 'pic', l: 'PIC', g: function (a) { return a.O.pic || ''; } },
+    { id: 'reg', l: 'Region', g: function (a) { return a.O.reg || ''; } },
+    { id: 'last', l: 'Last ticket', g: function (a) { return a.O.last || ''; }, t: 'Last ticket date for any item' },
+    { id: 'fl', l: 'Flags', g: function (a) { return a.flags.length; }, desc: 1 },
+    { id: 'hq', l: 'HQ', g: function (a) { return a.hq; }, num: 1, t: 'HQ plan pcs' },
+    { id: 'ex', l: 'Excess', g: function (a) { return a.ex; }, num: 1, t: 'Recallable excess pcs available' },
+    { id: 'full', l: 'Full stock', g: function (a) { return a.full; }, num: 1, t: 'All stock on hand of these items (sum over items)' },
+    { id: 'pk', l: 'Picked', g: function (a) { return a.pk; }, num: 1, t: 'Pcs picked now' },
+    { id: 'ctn', l: 'Ctn', g: function (a) { return a.ctn; }, num: 1, t: 'Cartons, ~30 pcs each, rounded up' }
+  ];
+  var OD_COLS = (function () {
+    var c = [
+      { id: 'x', l: '' },
+      { id: 'k', l: 'Art-col', g: function (R) { return R.k; }, cls: 'stk' },
+      { id: 'd', l: 'Description', g: function (R) { return R.it.d || ''; } },
+      { id: 'b', l: 'Br', g: function (R) { return R.it.b; }, t: 'Brand' },
+      { id: 'role', l: 'Role', g: roleKey, asc: 1, t: 'Dead / Slow / Selling - sorted Dead, Slow, others, Sellers, then cover high to low' },
+      { id: 'rc', l: 'Rate\n/mth', g: function (R) { return R.rc; }, num: 1, t: 'This counter\'s own sales rate of this item, pcs per month' },
+      { id: 's3', l: 'Sold\nJul-Sep', g: function (R) { return R.r.S3; }, num: 1, t: 'Sold Jul-Sep at this counter' }
+    ];
+    for (var i = 0; i < 6; i++) c.push({ id: 'm' + i, l: '', num: 1, cls: 'mc', mi: i });
+    c.push({ id: 'oct', l: '', g: function (R) { return R.r.oct; }, num: 1, cls: 'mc oc' });
+    c.push(
+      { id: 'sh', l: 'Stock', g: function (R) { return R.sh; }, num: 1, t: 'Estimated stock on hand now (202609 stocktake rolled forward)' },
+      { id: 'cv', l: 'Cover\nmths', g: function (R) { return R.cvs; }, num: 1, t: 'Months of cover at own sales rate ("no sales" = stock but nothing sold)' },
+      { id: 'sex', l: 'Excess', g: function (R) { return R.sex; }, num: 1, t: 'Recallable excess pcs' },
+      { id: 'shq', l: 'HQ', g: function (R) { return R.shq; }, num: 1, t: 'HQ plan return pcs' },
+      { id: 'mode', l: 'Mode', g: function (R) { return MODE_ORDER.indexOf(modeOf(R)); }, asc: 1 },
+      { id: 'pk', l: 'Picked', g: function (R) { return C.tot[R.key]; }, num: 1 },
+      { id: 'ams', l: 'Chain\nAMS', g: function (R) { return +R.it.ams || 0; }, num: 1, cls: 'gs', t: 'Item: chain average monthly sales (counters + online)' },
+      { id: 'sg', l: 'SG\nstock', g: function (R) { return +R.it.sg || 0; }, num: 1, t: 'Item: SG (ADECOMM) sellable pcs' },
+      { id: 'ishort', l: 'Item still\nshort', g: function (R) { return C.icov[R.k].short; }, num: 1,
+        t: 'Item: pcs SG still needs after the picks of ALL counters, size by size (demand minus picked, where short). Hover a cell for demand and picked.' },
+      { id: 'icov', l: 'Item\ncoverage', g: function (R) { var p = C.icov[R.k].pct; return p == null ? -1 : p; }, num: 1, t: 'Item: share of demand covered by all picks' },
+      { id: 'w', l: 'Warnings', g: function (R) { return rowWarns(R).length + (R.it.hold ? 1 : 0) + (R.it.nosku ? 1 : 0); }, desc: 1, cls: 'gs',
+        t: 'Seller / New <60d / iDCP lower / Returned - hover a chip for details. Hold and No SG SKU show next to the art-col.' }
+    );
+    return c;
+  })();
+  var IL_COLS = [
+    { id: 'k', l: 'Art-col', g: function (it) { return it.k; } },
+    { id: 'd', l: 'Description', g: function (it) { return it.d || ''; } },
+    { id: 'b', l: 'Br', g: function (it) { return it.b; }, t: 'Brand' },
+    { id: 'ams', l: 'Chain AMS', g: function (it) { return +it.ams || 0; }, num: 1, t: 'Chain average monthly sales (counters + online)' },
+    { id: 'sg', l: 'SG', g: function (it) { return +it.sg || 0; }, num: 1, t: 'SG (ADECOMM) sellable pcs' },
+    { id: 'dem', l: 'Demand', g: function (it) { return it._demT; }, num: 1, t: 'Pcs SG needs (sellers 2 months + East Malaysia + 1 month online)' },
+    { id: 'hq', l: 'HQ', g: function (it) { return it._hq; }, num: 1, t: 'HQ plan recall pcs' },
+    { id: 'pk', l: 'Picked', g: function (it) { return C.icov[it.k].pk; }, num: 1 },
+    { id: 'cov', l: 'Coverage', g: function (it) { var p = C.icov[it.k].pct; return p == null ? -1 : p; }, num: 1 },
+    { id: 'wm', l: 'WM ctr\nstock', g: function (it) { return it._wm; }, num: 1, t: 'Stock at West Malaysia counters' },
+    { id: 'st', l: 'Status', g: function (it) { var s = C.icov[it.k].st; return it.hold ? 3 : s === 'Short' ? 0 : s === 'Over' ? 1 : 2; }, asc: 1, t: 'Short / Over / OK vs demand; items on hold (shipment due) last' },
+    { id: 'fl', l: 'Flags', g: function (it) { return (it.hold ? 2 : 0) + (it.nosku ? 1 : 0); }, desc: 1 }
+  ];
+  var MX_COLS = [
+    { id: 'o', l: 'Counter', g: function (R) { return R.o; }, cls: 'stk' },
+    { id: 'pic', l: 'PIC', g: function (R) { return outlet(R.o).pic || ''; } },
+    { id: 'role', l: 'Role', g: roleKey, asc: 1, t: 'Sorted Dead, Slow, others, Sellers, then cover high to low' },
+    { id: 'rc', l: 'Rate\n/mth', g: function (R) { return R.rc; }, num: 1, t: 'Own sales rate of this item, pcs per month' },
+    { id: 's3', l: 'Sold\nJul-Sep', g: function (R) { return R.r.S3; }, num: 1 },
+    { id: 'cv', l: 'Cover\nmths', g: function (R) { return R.cvs; }, num: 1, t: 'Months of cover at own sales rate' },
+    { id: 'sh', l: 'Stock', g: function (R) { return R.sh; }, num: 1 },
+    { id: 'mode', l: 'Mode', g: function (R) { return MODE_ORDER.indexOf(modeOf(R)); }, asc: 1 },
+    { id: 'pk', l: 'Picked', g: function (R) { return C.tot[R.key]; }, num: 1 }
+  ];
+
+  /* ================= shared cell builders ================= */
+  function selHtml(R) {
+    var m = modeOf(R), why = [], key = esc(R.key);
+    var opts = MODE_ORDER.map(function (x) {
+      var ok = avail(R, x), n = x === 'H' ? R.shq : x === 'E' ? R.sex : x === 'F' ? R.sh : null;
+      if (!ok) why.push(whyNot(R, x));
+      return '<option value="' + x + '"' + (ok ? '' : ' disabled title="' + esc(whyNot(R, x)) + '"') + (x === m ? ' selected' : '') + '>' +
+        MODE_LABEL[x] + (n != null ? ' (' + n + ')' : '') + '</option>';
+    }).join('');
+    return '<select class="msel" data-b="sel" data-key="' + key + '" data-fid="s|' + key + '" aria-label="Return mode for ' + esc(R.o + ' ' + R.k) + '" title="' +
+      esc(why.length ? 'Not available: ' + why.join(' | ') : 'Choose what this counter returns of this item') + '">' + opts + '</select>';
+  }
+  function qInput(R, i) {
+    var v = C.eff[R.key][i], key = esc(R.key), dis = R.h[i] <= 0;
+    return '<input class="q' + (v !== R.hq[i] ? ' chg' : '') + (szWarn(R, i, v) ? ' wrn' : '') + '" type="text" inputmode="numeric" autocomplete="off" spellcheck="false" maxlength="4"' +
+      ' data-b="q" data-key="' + key + '" data-si="' + i + '" data-fid="q|' + key + '|' + i + '"' + (dis ? ' disabled' : '') +
+      ' value="' + (v ? v : '') + '" placeholder="0" aria-label="Pick ' + esc(R.o + ' ' + R.k + ' size ' + R.it.sizes[i]) + ', stock ' + R.h[i] + '"' +
+      ' title="' + (dis ? 'No stock in this size' : 'Pick 0-' + R.h[i] + (R.hq[i] ? ' (HQ plan ' + R.hq[i] + ')' : '') + ' - arrow keys +/-1, Enter = next row') + '">';
+  }
+  function trCls(R, base) { return (base || '') + (C.chg[R.key] ? ' chg' : '') + (R.role === 'SELLER' ? ' seller' : ''); }
+
+  /* ================= top bar ================= */
+  function renderTiles() {
+    var T = C.T, H = HQT;
+    function d(a, b) { var x = a - b; return x === 0 ? '' : '<span class="dl">' + (x > 0 ? '+' : '') + fmt(x) + '</span>'; }
+    function dp(a, b) {                      // percentage-point change vs HQ
+      if (a == null || b == null) return '';
+      var x = Math.round((a - b) * 1000) / 10;
+      return x === 0 ? '' : '<span class="dl">' + (x > 0 ? '+' : '') + x.toFixed(1) + ' pts</span>';
+    }
+    var nHold = ITEMS.filter(function (it) { return !!it.hold; }).length;
+    var covTip = 'Of the pcs SG needs to refill selling counters (2 months), East Malaysia and online (1 month), how many your picks supply in the right size. ' +
+      'Extra pcs in one size do not make up for another size; they stay in SG stock. ' +
+      'The headline leaves out the ' + nHold + ' item(s) on hold (shipment on the way, HQ recalls nothing). ' +
+      'Excl. hold: now ' + pct(T.pctNoHold) + ', HQ plan ' + pct(H.pctNoHold) + '. Incl. hold: now ' + pct(T.pct) + ', HQ plan ' + pct(H.pct) + '.';
+    var tiles = [
+      ['Return pcs', fmt(T.pcs) + d(T.pcs, H.pcs), 'HQ plan ' + fmt(H.pcs), 'Total pcs picked to return to ADECOMM'],
+      ['Counters returning', fmt(T.outlets) + d(T.outlets, H.outlets), 'HQ plan ' + fmt(H.outlets), 'Counters with at least 1 pc picked'],
+      ['Cartons', '~' + fmt(T.cartons) + d(T.cartons, H.cartons), 'HQ plan ~' + fmt(H.cartons), '~30 pcs per carton, rounded up per counter, summed'],
+      ['SG demand covered (excl. hold)', pct(T.pctNoHold) + dp(T.pctNoHold, H.pctNoHold), 'HQ plan ' + pct(H.pctNoHold) + ' \u00b7 incl. hold now ' + pct(T.pct), covTip],
+      ['Over demand pcs', fmt(T.over) + d(T.over, H.over), 'Goes to SG stock \u00b7 HQ ' + fmt(H.over), 'Sum over item-sizes of picked above demand'],
+      ['Changed lines vs HQ', fmt(T.changed), T.changed ? 'These lines go in the export' : 'Everything = HQ plan', 'Counter x item lines whose size quantities differ from the HQ plan']
+    ];
+    $('tiles').innerHTML = tiles.map(function (t) {      // the sub-line is also in the tooltip (short screens hide it)
+      return '<div class="tile" title="' + esc(t[0] + ': ' + t[2] + '. ' + t[3]) + '"><div class="l">' + esc(t[0]) + '</div><div class="v">' + t[1] + '</div><div class="c">' + esc(t[2]) + '</div></div>';
+    }).join('');
+  }
+  function renderSources() {
+    var s = DOC.sources || {}, p = DOC.params || {}, am = p.AMS_MIN || {};
+    var h = '<h4>Data sources</h4><table>' + Object.keys(s).map(function (k) {
+      return '<tr><td>' + esc(k) + '</td><td>' + esc(s[k]) + '</td></tr>';
+    }).join('') + '</table><h4>How the plan works</h4><ul>' +
+      '<li>Items: chain AMS at least AD ' + esc(am.AD) + ' / BF ' + esc(am.BF) + ' pcs, SG cover under ' + esc(p.SG_LOW_M) + ' month.</li>' +
+      '<li>Dead = sold ' + esc(p.DEAD_MAX6) + ' pc or less Apr-Sep: excess = all stock except arrivals in the last ' + esc(p.RECENT_DAYS) + ' days.</li>' +
+      '<li>Slow = more than ' + esc(p.DONOR_COVER) + ' months of cover: excess = stock above ' + esc(p.KEEP_M) + ' months of own sales (recent arrivals kept).</li>' +
+      '<li>Selling = sold ' + esc(p.SELLER_MIN3) + '+ Jul-Sep: needs ' + esc(p.TARGET_M) + ' months of own sales minus stock and transit.</li>' +
+      '<li>Demand = sellers\' need + East Malaysia spill + 1 month online. HQ recalls Dead first, then slowest, until demand is met.</li>' +
+      '<li>Counters whose whole return is under 10 pcs are left out of the HQ plan (flag Small). Items with a shipment on the way are not recalled (Hold).</li>' +
+      '<li>Excess sizes and Full run come from this data; the final return is built from your picks after you send them.</li></ul>';
+    $('srcpop').innerHTML = h;
+  }
+  function fillFilterSelects() {
+    var pics = {}, regs = {};
+    OUTS.forEach(function (o) { var O = outlet(o); if (O.pic) pics[O.pic] = 1; if (O.reg) regs[O.reg] = 1; });
+    $('fpic').innerHTML = '<option value="">All</option>' + Object.keys(pics).sort().map(function (x) { return '<option value="' + esc(x) + '">' + esc(x) + '</option>'; }).join('');
+    $('freg').innerHTML = '<option value="">All</option>' + Object.keys(regs).sort().map(function (x) { return '<option value="' + esc(x) + '">' + esc(x) + '</option>'; }).join('');
+  }
+  function renderFCount() {
+    if (UI.tab === 'r') { $('fcount').textContent = ''; return; }   // filters are hidden on Review (it shows everything)
+    if (!filtersOn()) { $('fcount').textContent = ''; return; }
+    var n = 0; ROWS.forEach(function (R) { if (R.rel && passRow(R)) n++; });
+    $('fcount').textContent = fmt(n) + ' lines match';
+  }
+
+  /* ================= TAB 1: by counter ================= */
+  function oListData() {
+    var out = [];
+    OUTS.forEach(function (o) {
+      var rows = BYO[o].filter(function (R) { return R.rel && passRow(R); });
+      if (!rows.length) return;
+      var a = { id: o, o: o, O: outlet(o), hq: 0, ex: 0, full: 0, pk: 0, chg: 0 };
+      rows.forEach(function (R) { a.hq += R.shq; a.ex += R.sex; a.full += R.sh; a.pk += C.tot[R.key]; if (C.chg[R.key]) a.chg++; });
+      a.ctn = Math.ceil(a.pk / CARTON);
+      a.flags = oFlags(o);
+      out.push(a);
+    });
+    return out;
+  }
+  function layoutBtn() {
+    return (UI.col ? '' : '<button class="btn sm" type="button" data-act="layout" data-fid="layout|' + UI.tab + '" title="Switch between list above / list beside the detail">' +
+      (UI.layout === 'side' ? 'List above' : 'List beside') + '</button>') +
+      '<button class="btn sm" type="button" data-act="col" data-fid="col|' + UI.tab + '" aria-expanded="' + (!UI.col) + '" title="' +
+      (UI.col ? 'Show the list again' : 'Hide the list to give the detail the full height - use Prev / Next to move') + '">' + (UI.col ? 'Show list' : 'Hide list') + '</button>';
+  }
+  function navBtns(kind) {
+    var ord = kind === 'o' ? UI.olOrder : UI.ilOrder, cur = kind === 'o' ? UI.selO : UI.selK, i = ord.indexOf(cur);
+    return '<span class="nav"><span class="muted" style="align-self:center">' + (i + 1) + ' of ' + ord.length + '</span>' +
+      '<button class="btn sm" type="button" data-act="step" data-kind="' + kind + '" data-dir="-1" data-fid="step|' + kind + '|-1"' + (i <= 0 ? ' disabled' : '') + ' title="Previous in the list (Alt+Up)">&#8249; Prev</button>' +
+      '<button class="btn sm" type="button" data-act="step" data-kind="' + kind + '" data-dir="1" data-fid="step|' + kind + '|1"' + (i < 0 || i >= ord.length - 1 ? ' disabled' : '') + ' title="Next in the list (Alt+Down)">Next &#8250;</button></span>';
+  }
+  function renderOList() {
+    var list = oListData();
+    sortBy(list, 'ol', OL_COLS);
+    if (!list.some(function (a) { return a.o === UI.selO; })) UI.selO = list.length ? list[0].o : '';
+    UI.olOrder = list.map(function (a) { return a.o; });
+    var t = { hq: 0, ex: 0, full: 0, pk: 0, ctn: 0 };
+    var h = '<table class="t tl"><thead><tr>' + OL_COLS.map(function (c) { return th('ol', c); }).join('') + '</tr></thead><tbody>';
+    list.forEach(function (a) {
+      t.hq += a.hq; t.ex += a.ex; t.full += a.full; t.pk += a.pk; t.ctn += a.ctn;
+      var sel = a.o === UI.selO, oe = esc(a.o);
+      h += '<tr class="lr' + (sel ? ' sel' : '') + '" data-act="selO" data-o="' + oe + '" data-fid="ol|' + oe + '" tabindex="0"' + (sel ? ' aria-current="true"' : '') + '>' +
+        '<td class="mono b">' + oe + '</td><td class="nm" title="' + esc(a.O.n || '') + '">' + esc(a.O.n || '') + '</td>' +
+        '<td>' + esc(a.O.pic || '') + '</td><td>' + esc(a.O.reg || '') + '</td>' +
+        '<td title="' + esc(a.O.last || 'no tickets') + '">' + esc(dshort(a.O.last)) + '</td><td>' + chips(a.flags) + '</td>' +
+        '<td class="n">' + fmt(a.hq) + '</td><td class="n">' + fmt(a.ex) + '</td><td class="n">' + fmt(a.full) + '</td>' +
+        '<td class="n' + (a.chg ? ' chg' : '') + '"' + (a.chg ? ' title="' + a.chg + ' line(s) changed vs HQ"' : '') + '>' + fmt(a.pk) + '</td>' +
+        '<td class="n">' + (a.ctn ? a.ctn : '<span class="zz">0</span>') + '</td></tr>';
+    });
+    if (!list.length) h += '<tr><td colspan="' + OL_COLS.length + '" class="empty">No counters match the filters.</td></tr>';
+    h += '</tbody><tfoot><tr><td colspan="6">' + list.length + ' counters' + (filtersOn() ? ' (filtered rows)' : '') + '</td><td class="n">' + fmt(t.hq) + '</td><td class="n">' + fmt(t.ex) +
+      '</td><td class="n">' + fmt(t.full) + '</td><td class="n">' + fmt(t.pk) + '</td><td class="n">' + fmt(t.ctn) + '</td></tr></tfoot></table>';
+    $('olist-s').innerHTML = h;
+    $('olist-t').innerHTML = '<b>Counters</b><span class="muted">' + list.length + ' of ' + OUTS.length + (filtersOn() ? ' \u00b7 figures follow the filters' : '') + '</span>' +
+      (UI.col && UI.selO ? '<span class="mono b">' + esc(UI.selO) + '</span>' : '') +
+      '<span class="legend">Flags: ' + chips([
+        { c: 'c-red', l: 'No tix since', t: 'No tickets since <date> (none from ' + QUIET + ')' },
+        { c: 'c-amb', l: 'iDCP lower', t: 'Live iDCP balance below the picked qty in a size' },
+        { c: 'c-amb', l: 'First count only', t: 'Stock from the first count, no closing calc' },
+        { c: 'c-gry', l: 'Small', t: 'Small (<10 pcs) - not in HQ plan' }]) + '</span><span class="sp"></span>' + layoutBtn();
+  }
+  function oStatHtml(o) {
+    var rows = BYO[o] || [], hq = 0, pk = C.opk[o] || 0;
+    rows.forEach(function (R) { hq += R.shq; });
+    return '<span>HQ plan <b>' + fmt(hq) + '</b> pcs</span><span>Picked <b>' + fmt(pk) + '</b> pcs</span><span>~<b>' + Math.ceil(pk / CARTON) + '</b> cartons</span>' +
+      '<span><b>' + (C.oit[o] || 0) + '</b> items picked</span><span><b>' + (C.ochg[o] || 0) + '</b> lines changed vs HQ</span>' + chips(oFlags(o, true));
+  }
+  function oDetailRows(o) {
+    var all = (BYO[o] || []).filter(function (R) { return R.rel; });
+    return { all: all, rows: all.filter(passRow) };
+  }
+  function bulkBtns(scope, n) {
+    return '<span class="muted">Set the ' + n + ' line' + (n === 1 ? '' : 's') + ' shown:</span>' +
+      [['H', 'HQ plan for all', 'Every line shown goes back to the HQ plan (lines with nothing in the HQ plan return nothing)'],
+       ['E', 'Excess for Dead/Slow', 'Dead and Slow lines return their excess sizes (None where there is no excess). Selling and other lines are left as they are.'],
+       ['F', 'Full run for Dead/Slow', 'Dead and Slow lines return all their stock. Selling and other lines are left as they are - set those one by one.'],
+       ['N', 'None for all', 'Every line shown returns nothing']].map(function (b) {
+        return '<button class="btn sm" type="button" data-act="bulk" data-scope="' + scope + '" data-m="' + b[0] + '" data-fid="bulk|' + scope + '|' + b[0] + '"' +
+          ' title="' + esc(b[2]) + '">' + b[1] + '</button>';
+      }).join('');
+  }
+  function renderODetail(resetScroll) {
+    var hd = $('odetail-h'), sc = $('odetail-s'), o = UI.selO;
+    if (!o) { hd.innerHTML = ''; sc.innerHTML = '<div class="empty">No counters match the filters.</div>'; return; }
+    var O = outlet(o), d = oDetailRows(o), rows = d.rows;
+    sortBy(rows, 'od', OD_COLS);
+    hd.innerHTML = '<div class="dt"><span class="code">' + esc(o) + '</span>' + (O.n ? '<span class="dn">' + esc(O.n) + '</span>' : '') +
+      '<span class="meta">' + [O.pic || '?', O.reg || '?', 'last ticket ' + (O.last || '-'), 'stock: ' + (O.src || '-'), O.idcp ? 'iDCP balance pulled' : 'no iDCP pull'].map(esc).join(' \u00b7 ') + '</span>' + navBtns('o') + '</div>' +
+      '<div class="dstat" data-b="ost" data-o="' + esc(o) + '">' + oStatHtml(o) + '</div>' +
+      '<div class="bulk">' + bulkBtns('o', rows.length) + '<span class="sp"></span>' +
+      '<button class="btn sm" type="button" data-act="expall" data-fid="expall">Expand all</button><button class="btn sm" type="button" data-act="collall" data-fid="collall">Collapse all</button></div>' +
+      (rows.length < d.all.length ? '<div class="note">' + (d.all.length - rows.length) + ' more line(s) of this counter hidden by the filters. <button class="lnk" type="button" data-act="clearf">Clear filters</button></div>' : '');
+    var heads = OD_COLS.map(function (c) {
+      if (c.mi != null) return '<th class="n mc" title="Sold in ' + esc(DOC.months[c.mi] || '') + '">' + esc(DOC.months[c.mi] || '') + '</th>';
+      if (c.id === 'oct') return th('od', { id: 'oct', l: esc(DOC.octLabel || 'Oct'), g: c.g, num: 1, cls: 'mc oc', t: 'Sold ' + (DOC.octLabel || 'this month') });
+      return th('od', { id: c.id, l: c.l, g: c.g, num: c.num, cls: c.cls, t: c.t });
+    }).join('');
+    var h = '<table class="t td"><thead><tr>' + heads + '</tr></thead>';
+    rows.forEach(function (R) { h += oRowHtml(R); });
+    if (!rows.length) h += '<tbody><tr><td colspan="' + OD_COLS.length + '" class="empty">No lines for this counter with these filters.</td></tr></tbody>';
+    h += '</table>';
+    var st = resetScroll ? 0 : sc.scrollTop, sl = resetScroll ? 0 : sc.scrollLeft;
+    sc.innerHTML = h; sc.scrollTop = st; sc.scrollLeft = sl;
+  }
+  function oRowHtml(R) {
+    var it = R.it, r = R.r, key = esc(R.key), ke = esc(R.k), ex = !!UI.exp[R.key], m = r.m || [], i;
+    var h = '<tbody class="rb"><tr data-b="tr" data-key="' + key + '" class="' + trCls(R, 'mr') + '">';
+    h += '<td><button class="xb" type="button" data-act="exp" data-key="' + key + '" data-fid="x|' + key + '" aria-expanded="' + ex + '" aria-label="Sizes for ' + ke + '" title="Show sizes">' + (ex ? '&#9662;' : '&#9656;') + '</button></td>';
+    h += '<td class="mono stk"><button class="lnk" type="button" data-act="gotoK" data-k="' + ke + '" title="Open ' + ke + ' in By item">' + ke + '</button>' + itemMarks(it) + '</td>';
+    h += '<td class="ds" title="' + esc(it.d) + '">' + esc(it.d) + '</td><td>' + esc(it.b) + '</td>';
+    h += '<td>' + roleBadge(R.role) + '</td><td class="n">' + fx1(R.rc) + '</td><td class="n">' + fmt(r.S3) + '</td>';
+    for (i = 0; i < 6; i++) h += '<td class="n mc' + (m[i] ? '' : ' z') + '">' + (+m[i] || 0) + '</td>';
+    h += '<td class="n mc oc' + (r.oct ? '' : ' z') + '">' + (+r.oct || 0) + '</td>';
+    h += '<td class="n">' + fmt(R.sh) + '</td><td class="n">' + coverTxt(R) + '</td><td class="n">' + fmt(R.sex) + '</td><td class="n">' + fmt(R.shq) + '</td>';
+    h += '<td>' + selHtml(R) + '</td>';
+    h += '<td class="n pk' + (C.chg[R.key] ? ' chg' : '') + '" data-b="tot" data-key="' + key + '" title="HQ plan ' + R.shq + '">' + fmt(C.tot[R.key]) + '</td>';
+    h += '<td class="n gs">' + fx1(it.ams) + '</td><td class="n">' + fmt(it.sg) + '</td>' +
+      '<td class="n" data-b="ishort" data-k="' + ke + '">' + shortHtml(R.k) + '</td><td class="n" data-b="icov" data-k="' + ke + '">' + covHtml(R.k) + '</td>';
+    h += '<td class="gs" data-b="warn" data-key="' + key + '">' + chips(rowWarns(R)) + '</td>';
+    h += '</tr>';
+    if (ex) h += '<tr class="sub"><td></td><td colspan="' + (OD_COLS.length - 1) + '">' + sizeGrid(R) + '</td></tr>';
+    return h + '</tbody>';
+  }
+  function sizeGrid(R) {
+    var it = R.it, sz = it.sizes, key = esc(R.key), ke = esc(R.k), hasI = !!R.idcp, hasN = R.sneed > 0, i;
+    var h = '<table class="t sg"><thead><tr><th>Size</th><th class="n">Stock</th>' +
+      (hasI ? '<th class="n" title="Live iDCP system balance incl. pending inbound">iDCP</th>' : '') +
+      '<th class="n">In transit</th><th class="n">Sold Jul-Sep</th><th class="n" title="Pcs received in the last 60 days">Arrived &lt;60d</th>' +
+      '<th class="n">Excess</th><th class="n">HQ</th><th class="n pkh">PICK</th>' + (hasN ? '<th class="n" title="This counter\'s own 2-month need">Own need</th>' : '') +
+      '<th class="n gs">SG stock</th><th class="n">Item demand</th><th class="n" title="Picked from all counters">Item picked (all)</th></tr></thead><tbody>';
+    for (i = 0; i < R.n; i++) {
+      h += '<tr><td class="b">' + esc(sz[i]) + '</td><td class="n">' + zz(R.h[i]) + '</td>' +
+        (hasI ? '<td class="n' + (R.idcp[i] < R.h[i] ? ' lowi' : '') + '"' + (R.idcp[i] < R.h[i] ? ' title="iDCP below estimated stock"' : '') + '>' + R.idcp[i] + '</td>' : '') +
+        '<td class="n">' + zz(R.p[i]) + '</td><td class="n">' + zz(R.s3[i]) + '</td><td class="n">' + zz(R.rin[i]) + '</td>' +
+        '<td class="n">' + zz(R.ex[i]) + '</td><td class="n">' + zz(R.hq[i]) + '</td><td class="n">' + qInput(R, i) + '</td>' +
+        (hasN ? '<td class="n">' + zz(R.need[i]) + '</td>' : '') +
+        '<td class="n gs">' + zz(it._sg[i]) + '</td><td class="n">' + zz(it._dem[i]) + '</td>' +
+        '<td class="n" data-b="ipks" data-k="' + ke + '" data-si="' + i + '">' + C.ipk[R.k][i] + '</td></tr>';
+    }
+    h += '<tr class="tot"><td>Total</td><td class="n">' + R.sh + '</td>' + (hasI ? '<td class="n">' + sum(R.idcp) + '</td>' : '') +
+      '<td class="n">' + sum(R.p) + '</td><td class="n">' + sum(R.s3) + '</td><td class="n">' + sum(R.rin) + '</td><td class="n">' + R.sex + '</td><td class="n">' + R.shq + '</td>' +
+      '<td class="n pk' + (C.chg[R.key] ? ' chg' : '') + '" data-b="tot" data-key="' + key + '">' + C.tot[R.key] + '</td>' + (hasN ? '<td class="n">' + R.sneed + '</td>' : '') +
+      '<td class="n gs">' + sum(it._sg) + '</td><td class="n">' + it._demT + '</td><td class="n" data-b="ipk" data-k="' + ke + '">' + C.icov[R.k].pk + '</td></tr>';
+    return h + '</tbody></table>';
+  }
+
+  /* ================= TAB 2: by item ================= */
+  function iListData() {
+    return ITEMS.filter(function (it) {
+      if (F.brand && it.b !== F.brand) return false;
+      return BYK[it.k].some(function (R) { return R.rel && passRow(R); }) || (!filtersOn());
+    });
+  }
+  function renderIList() {
+    var list = iListData().map(function (it) { it.id = it.k; return it; });
+    sortBy(list, 'il', IL_COLS);
+    if (!list.some(function (it) { return it.k === UI.selK; })) UI.selK = list.length ? list[0].k : '';
+    UI.ilOrder = list.map(function (it) { return it.k; });
+    var t = { dem: 0, hq: 0, pk: 0, wm: 0, sg: 0, cov: 0 };
+    var h = '<table class="t tl"><thead><tr>' + IL_COLS.map(function (c) { return th('il', c); }).join('') + '</tr></thead><tbody>';
+    list.forEach(function (it) {
+      var ic = C.icov[it.k], sel = it.k === UI.selK, ke = esc(it.k);
+      t.dem += it._demT; t.hq += it._hq; t.pk += ic.pk; t.wm += it._wm; t.sg += +it.sg || 0; t.cov += ic.cov;
+      h += '<tr class="lr' + (sel ? ' sel' : '') + '" data-act="selK" data-k="' + ke + '" data-fid="il|' + ke + '" tabindex="0"' + (sel ? ' aria-current="true"' : '') + '>' +
+        '<td class="mono b">' + ke + '</td><td class="ds" title="' + esc(it.d) + '">' + esc(it.d) + '</td><td>' + esc(it.b) + '</td>' +
+        '<td class="n">' + fx1(it.ams) + '</td><td class="n">' + fmt(it.sg) + '</td><td class="n">' + fmt(it._demT) + '</td><td class="n">' + fmt(it._hq) + '</td>' +
+        '<td class="n' + (ic.pk !== it._hq ? ' chg' : '') + '">' + fmt(ic.pk) + '</td><td class="n">' + covHtml(it.k) + '</td><td class="n">' + fmt(it._wm) + '</td>' +
+        '<td>' + statusChip(it.k) + '</td><td>' + chips(itemFlags(it)) + '</td></tr>';
+    });
+    if (!list.length) h += '<tr><td colspan="' + IL_COLS.length + '" class="empty">No items match the filters.</td></tr>';
+    h += '</tbody><tfoot><tr><td colspan="4">' + list.length + ' items</td><td class="n">' + fmt(t.sg) + '</td><td class="n">' + fmt(t.dem) + '</td><td class="n">' + fmt(t.hq) +
+      '</td><td class="n">' + fmt(t.pk) + '</td><td class="n">' + pct(t.dem ? t.cov / t.dem : null) + '</td><td class="n">' + fmt(t.wm) + '</td><td colspan="2"></td></tr></tfoot></table>';
+    $('ilist-s').innerHTML = h;
+    $('ilist-t').innerHTML = '<b>Items</b><span class="muted">' + list.length + ' of ' + ITEMS.length + ' \u00b7 item figures are for all counters' +
+      (filtersOn() ? '; filters pick which items show' : '') + '</span>' + (UI.col && UI.selK ? '<span class="mono b">' + esc(UI.selK) + '</span>' : '') +
+      '<span class="sp"></span>' + layoutBtn();
+  }
+  function mRowsFor(k) {
+    var all = BYK[k] || [], base = all.filter(passRow);
+    var cnt = { donor: 0, stock: 0, seller: 0 };
+    base.forEach(function (R) {
+      if (R.role === 'DEAD' || R.role === 'SLOW') cnt.donor++;
+      if (R.sh > 0 || R.shq > 0) cnt.stock++;
+      if (R.role === 'SELLER') cnt.seller++;
+    });
+    var rows = base.filter(function (R) {
+      return UI.mf === 'donor' ? (R.role === 'DEAD' || R.role === 'SLOW') : UI.mf === 'seller' ? R.role === 'SELLER' : (R.sh > 0 || R.shq > 0);
+    });
+    return { rows: rows, cnt: cnt, hidden: all.length - base.length };
+  }
+  function iStatHtml(k) {
+    var it = ITEM[k], ic = C.icov[k];
+    return '<span>Demand <b>' + fmt(it._demT) + '</b></span><span>HQ plan <b>' + fmt(it._hq) + '</b></span><span>Picked <b>' + fmt(ic.pk) + '</b></span>' +
+      '<span>Coverage ' + covHtml(k) + '</span><span>Short <b>' + fmt(ic.short) + '</b></span><span>Over <b>' + fmt(ic.over) + '</b> (to SG stock)</span>' + statusChip(k);
+  }
+  function chainHtml(it) {
+    var ch = it.chain || {}, ks = Object.keys(ch).sort();
+    if (!ks.length) return '';
+    var asM = String(DOC.asOf || '').slice(0, 7).replace('-', '');
+    return '<table class="mini" aria-label="Chain monthly sales"><tr><th class="rl">Chain sales</th>' + ks.map(function (k) {
+      var lab = k === asM ? (DOC.octLabel || MON[+k.slice(4) - 1]) : MON[+k.slice(4) - 1] || k;
+      return '<th title="' + esc(k) + '">' + esc(lab) + '</th>';
+    }).join('') + '</tr><tr><th class="rl">pcs</th>' + ks.map(function (k) { return '<td>' + fmt(ch[k]) + '</td>'; }).join('') + '</tr></table>';
+  }
+  function recvHtml(it) {
+    var rv = it.recv || [];
+    if (!rv.length) return '<div class="muted" style="font-size:12.5px">No selling counters for SG to refill.</div>';
+    var h = '<details class="recv"><summary>SG refills ' + rv.length + ' selling counters (priority order)</summary><div class="rwrap"><table class="t"><thead><tr><th class="n">#</th><th>Counter</th><th>Pool</th><th class="n">Rate/mth</th><th class="n">Needs</th><th>By size</th></tr></thead><tbody>';
+    rv.forEach(function (x, j) {
+      var o = x[0], O = outlet(o), nd = ints(x[3], it._n), parts = [];
+      for (var i = 0; i < it._n; i++) if (nd[i] > 0) parts.push(it.sizes[i] + ':' + nd[i]);
+      h += '<tr><td class="n">' + (j + 1) + '</td><td><span class="mono b">' + esc(o) + '</span>' + (O.n ? ' <span class="muted">' + esc(O.n) + '</span>' : '') + '</td><td>' + esc(x[1]) +
+        '</td><td class="n">' + fx1(x[2]) + '</td><td class="n">' + sum(nd) + '</td><td class="mono">' + esc(parts.join(' ')) + '</td></tr>';
+    });
+    return h + '</tbody></table></div></details>';
+  }
+  function renderIDetail(resetScroll) {
+    var hd = $('idetail-h'), sc = $('idetail-s'), k = UI.selK, it = ITEM[k];
+    if (!it) { hd.innerHTML = ''; sc.innerHTML = '<div class="empty">No items match the filters.</div>'; return; }
+    var mr = mRowsFor(k), rows = mr.rows, ke = esc(k);
+    sortBy(rows, 'mx', MX_COLS);
+    var ctrAll = +it.ctrAll || 0, nRecv = (it.recv || []).length;
+    hd.innerHTML = '<div class="dt"><span class="code">' + ke + '</span><span class="dn">' + esc(it.d) + '</span><span class="meta">' +
+      esc(it.b) + (it.price ? ' \u00b7 RM' + esc(it.price) : '') + '</span>' + chips(itemFlags(it)) +
+      '<span class="dstat" data-b="ist" data-k="' + ke + '">' + iStatHtml(k) + '</span>' + navBtns('i') + '</div>' +
+      '<div class="bulk"><span class="seg" role="group" aria-label="Which counters to show">' +
+      [['donor', 'Donors (Dead/Slow)', mr.cnt.donor], ['stock', 'All with stock', mr.cnt.stock], ['seller', 'Sellers', mr.cnt.seller]].map(function (b) {
+        return '<button type="button" data-act="mf" data-v="' + b[0] + '" data-fid="mf|' + b[0] + '" aria-pressed="' + (UI.mf === b[0]) + '">' + b[1] + ' (' + b[2] + ')</button>';
+      }).join('') + '</span>' + bulkBtns('k', rows.length) +
+      '<span class="sp"></span><span class="muted">grey = stock on hand \u00b7 <span class="mx"><span class="nd">n3</span></span> = seller\'s own 2-month need</span></div>' +
+      (mr.hidden ? '<div class="note">' + mr.hidden + ' counter line(s) of this item hidden by the filters. <button class="lnk" type="button" data-act="clearf">Clear filters</button></div>' : '');
+    // item context (chain sales, SG per size, refill list): collapsible, scrolls away above the matrix; open/closed is remembered
+    var ctxOpen = UI.ictx == null ? (window.innerHeight || 0) >= 860 : UI.ictx;
+    var ctx = '<details class="ictx"' + (ctxOpen ? ' open' : '') + '><summary data-act="ictx" data-fid="ictx" title="Chain sales by month, SG stock per size and the selling counters SG refills">' +
+      '<span class="k">Item context</span> \u00b7 Chain AMS <b>' + fx1(it.ams) + '</b> \u00b7 SG stock <b>' + fmt(it.sg) + '</b> \u00b7 WM counters <b>' + fmt(it._wm) +
+      '</b> \u00b7 online since Jul <b>' + fmt(it.ecom) + '</b> \u00b7 SG refills <b>' + nRecv + '</b> selling counter' + (nRecv === 1 ? '' : 's') + '</summary>' +
+      '<div class="ibox">' + chainHtml(it) +
+      '<div class="kv"><span>Chain AMS</span><b>' + fx1(it.ams) + '</b><span>SG stock</span><b>' + fmt(it.sg) + '</b><span>WM counter stock</span><b>' + fmt(it._wm) + '</b>' +
+      '<span>Online since Jul</span><b>' + fmt(it.ecom) + '</b><span>All counters (incl. EM)</span><b>' + fmt(ctrAll) + '</b><span>Online part of demand</span><b>' + fmt(sum(it._onl)) + '</b></div>' +
+      '<div class="sgl"><div><span class="muted">SG stock per size</span> <span class="mono">' +
+      it.sizes.map(function (z, j) { return esc(z) + ':' + it._sg[j]; }).join(' ') + '</span></div>' + recvHtml(it) + '</div></div></details>';
+
+    var n = it._n, i, lead = 8;
+    var h = ctx + '<table class="t mx"><thead><tr>' + MX_COLS.slice(0, lead).map(function (c) { return th('mx', c); }).join('');
+    var hqs = zeros(n); BYK[k].forEach(function (R) { for (var j = 0; j < n; j++) hqs[j] += R.hq[j]; });
+    for (i = 0; i < n; i++) h += '<th class="szh" title="Size ' + esc(it.sizes[i]) + ': demand ' + it._dem[i] + ' (online ' + it._onl[i] + '), SG stock ' + it._sg[i] + ', HQ plan ' + hqs[i] + '">' + esc(it.sizes[i]) + '</th>';
+    h += th('mx', MX_COLS[lead]) + '</tr></thead><tbody>';
+    rows.forEach(function (R) { h += mRowHtml(R); });
+    if (!rows.length) h += '<tr><td colspan="' + (lead + n + 1) + '" class="empty">No counters in this view.</td></tr>';
+    h += '</tbody><tfoot>';
+    // footer: Gap is always pinned to the bottom; on tall screens (CSS min-height 821px) the other three are pinned too
+    var frows = [
+      ['SG stock', function (j) { return '<td class="n">' + it._sg[j] + '</td>'; }, '<td class="n">' + fmt(sum(it._sg)) + '</td>'],
+      ['Picked (all counters)', function (j) { return '<td class="n" data-b="fp" data-k="' + ke + '" data-si="' + j + '">' + C.ipk[k][j] + '</td>'; },
+        '<td class="n" data-b="ipk" data-k="' + ke + '">' + fmt(C.icov[k].pk) + '</td>'],
+      ['Demand', function (j) { return '<td class="n">' + it._dem[j] + '</td>'; }, '<td class="n">' + fmt(it._demT) + '</td>'],
+      ['Gap (picked - demand)', function (j) { return gapTd(k, j); }, gapTd(k, -1)]
+    ];
+    frows.forEach(function (f, fi) {
+      var up = frows.length - 1 - fi;
+      var row = '<tr class="' + (up ? 'fb' + up : 'gap') + '"><td class="lbl stk">' + f[0] + '</td><td colspan="' + (lead - 1) + '"></td>';
+      for (var j = 0; j < n; j++) row += f[1](j);
+      row += f[2] + '</tr>';
+      h += row;
+    });
+    h += '</tfoot></table>';
+    var st = resetScroll ? 0 : sc.scrollTop, sl = resetScroll ? 0 : sc.scrollLeft;
+    sc.innerHTML = h; sc.scrollTop = st; sc.scrollLeft = sl;
+  }
+  function gapTip(k, j) {
+    var it = ITEM[k], p = j < 0 ? C.icov[k].pk : C.ipk[k][j], d = j < 0 ? it._demT : it._dem[j], sg = j < 0 ? sum(it._sg) : it._sg[j];
+    return (j < 0 ? 'All sizes' : 'Size ' + it.sizes[j]) + ': picked ' + p + ' - demand ' + d + ' = ' + (p - d) + ' \u00b7 SG stock ' + sg;
+  }
+  function gapTd(k, j) {
+    var g = j < 0 ? C.icov[k].pk - ITEM[k]._demT : C.ipk[k][j] - ITEM[k]._dem[j];
+    var cls = g < 0 ? 'gneg' : g > 0 ? 'gpos' : 'gok';
+    return '<td class="n ' + cls + '" data-b="fg" data-k="' + esc(k) + '" data-si="' + j + '" title="' + esc(gapTip(k, j)) + '">' + (g > 0 ? '+' : '') + g + '</td>';
+  }
+  function mRowHtml(R) {
+    var O = outlet(R.o), key = esc(R.key), oe = esc(R.o), it = R.it, i, f = [];
+    if (isQuiet(R.o)) f.push({ c: 'c-red', l: 'No tix', t: 'No tickets since ' + (O.last || '-') });
+    if (isFirst(R.o)) f.push({ c: 'c-amb', l: '1st count', t: 'Stock from the first count only (' + (O.src || '?') + ')' });
+    if (R.r.small) f.push({ c: 'c-gry', l: 'Small', t: 'Small (<10 pcs) - not in HQ plan' });
+    if (R.r.ret60 > 0) f.push({ c: 'c-gry', l: 'Ret ' + R.r.ret60, t: 'Returned ' + R.r.ret60 + ' pcs of this article to a WH in the last 60 days' });
+    var h = '<tr data-b="tr" data-key="' + key + '" class="' + trCls(R, '') + '">' +
+      '<td class="cn stk"><button class="lnk mono b" type="button" data-act="gotoO" data-o="' + oe + '" title="Open ' + oe + ' in By counter">' + oe + '</button>' +
+      (O.n ? '<span class="nm" title="' + esc(O.n) + '">' + esc(O.n) + '</span>' : '') + ' ' + chips(f) + '</td>' +
+      '<td>' + esc(O.pic || '') + '</td><td>' + roleBadge(R.role) + '</td><td class="n">' + fx1(R.rc) + '</td><td class="n">' + fmt(R.r.S3) + '</td>' +
+      '<td class="n">' + coverTxt(R) + '</td><td class="n">' + fmt(R.sh) + '</td><td>' + selHtml(R) + '</td>';
+    for (i = 0; i < R.n; i++) {
+      var tip = 'Size ' + it.sizes[i] + ': stock ' + R.h[i] + (R.idcp ? ', iDCP ' + R.idcp[i] : '') + ', in transit ' + R.p[i] + ', sold Jul-Sep ' + R.s3[i] +
+        ', arrived <60d ' + R.rin[i] + ', excess ' + R.ex[i] + ', HQ ' + R.hq[i] + (R.need[i] ? ', own 2-month need ' + R.need[i] : '');
+      h += '<td class="sz" title="' + esc(tip) + '">' + (R.need[i] ? '<span class="nd">n' + R.need[i] + '</span>' : '') +
+        '<span class="st">' + (R.h[i] ? R.h[i] : '') + '</span>' + qInput(R, i) + '</td>';
+    }
+    h += '<td class="n pk' + (C.chg[R.key] ? ' chg' : '') + '" data-b="tot" data-key="' + key + '" title="HQ plan ' + R.shq + '">' + fmt(C.tot[R.key]) + '</td></tr>';
+    return h;
+  }
+
+  /* ================= TAB 3: review & send ================= */
+  function warnGroups() {
+    var g = { seller: [], recent: [], idcp: [], ret: [], quiet: [], small: [], first: [], hold: [], nosku: [] };
+    ROWS.forEach(function (R) {
+      var t = C.tot[R.key]; if (!t) return;
+      var e = C.eff[R.key], rec = [], low = [];
+      for (var i = 0; i < R.n; i++) {
+        if (e[i] > 0 && e[i] > R.h[i] - R.rin[i]) rec.push(R.it.sizes[i] + ' pick ' + e[i] + '/stock ' + R.h[i] + '/arrived ' + R.rin[i]);
+        if (R.idcp && e[i] > 0 && R.idcp[i] < e[i]) low.push(R.it.sizes[i] + ' pick ' + e[i] + '/iDCP ' + R.idcp[i]);
+      }
+      if (R.role === 'SELLER') g.seller.push({ R: R, t: 'pick ' + t + ' \u00b7 sold ' + R.r.S3 + ' Jul-Sep (' + fx1(R.rc) + '/mth)' + (R.sneed ? ' \u00b7 own need ' + R.sneed : '') });
+      if (rec.length) g.recent.push({ R: R, t: rec.join(', ') });
+      if (low.length) g.idcp.push({ R: R, t: low.join(', ') });
+      if (R.r.ret60 > 0) g.ret.push({ R: R, t: 'pick ' + t + ' \u00b7 returned ' + R.r.ret60 + ' pcs of this article <60d' });
+    });
+    OUTS.forEach(function (o) {
+      var pk = C.opk[o] || 0; if (!pk) return;
+      var O = outlet(o);
+      if (isQuiet(o)) g.quiet.push({ o: o, t: 'picked ' + pk + ' pcs \u00b7 last ticket ' + (O.last || '-') });
+      if (isSmall(o)) g.small.push({ o: o, t: 'picked ' + pk + ' pcs \u00b7 HQ left it out (under 10 pcs)' });
+      if (isFirst(o)) g.first.push({ o: o, t: 'picked ' + pk + ' pcs \u00b7 stock source: ' + (O.src || '?') });
+    });
+    ITEMS.forEach(function (it) {
+      var pk = C.icov[it.k].pk; if (!pk) return;
+      if (it.hold) g.hold.push({ k: it.k, t: 'picked ' + pk + ' pcs \u00b7 ' + it.hold });
+      if (it.nosku) g.nosku.push({ k: it.k, t: 'picked ' + pk + ' pcs \u00b7 SiteGiant has no SKU yet' });
+    });
+    return g;
+  }
+  function wgHtml(title, cls, list, tip) {
+    var h = '<details class="wg"' + (list.length ? ' open' : '') + '><summary title="' + esc(tip) + '">' + esc(title) + '<span class="chip ' + (list.length ? cls : 'c-grn') + '">' + list.length + '</span></summary>';
+    if (!list.length) return h + '<div class="none">None.</div></details>';
+    h += '<ul>' + list.map(function (x) {
+      var lab, act;
+      if (x.R) { lab = x.R.o + ' \u00b7 ' + x.R.k; act = 'data-act="gotoOK" data-o="' + esc(x.R.o) + '" data-k="' + esc(x.R.k) + '"'; }
+      else if (x.o) { lab = x.o + (outlet(x.o).n ? ' (' + outlet(x.o).n + ')' : ''); act = 'data-act="gotoO" data-o="' + esc(x.o) + '"'; }
+      else { lab = x.k + ' ' + (ITEM[x.k].d || ''); act = 'data-act="gotoK" data-k="' + esc(x.k) + '"'; }
+      return '<li><button class="lnk mono" type="button" ' + act + '>' + esc(lab) + '</button> <span class="muted">' + esc(x.t) + '</span></li>';
+    }).join('') + '</ul></details>';
+    return h;
+  }
+  function renderReview() {
+    var T = C.T, H = HQT;
+    var outs = OUTS.filter(function (o) { return (C.opk[o] || 0) > 0 || (C.ochg[o] || 0) > 0; });
+    var ohq = {}; ROWS.forEach(function (R) { ohq[R.o] = (ohq[R.o] || 0) + R.shq; });
+    var tc = { pcs: 0, ctn: 0, it: 0, chg: 0 };
+    var h = '<div class="rv"><div class="rcol">';
+    h += '<div class="card"><h3>Counters returning <span class="muted">' + outs.filter(function (o) { return C.opk[o] > 0; }).length + ' counters \u00b7 click a code to open it</span></h3><div class="tw"><table class="t"><thead><tr><th>Counter</th><th>Name</th><th>PIC</th>' +
+      '<th class="n">Pcs</th><th class="n">HQ plan</th><th class="n">Cartons</th><th class="n">Items</th><th class="n">Changed vs HQ</th></tr></thead><tbody>';
+    outs.forEach(function (o) {
+      var O = outlet(o), pk = C.opk[o] || 0, ct = Math.ceil(pk / CARTON);
+      tc.pcs += pk; tc.ctn += ct; tc.it += C.oit[o] || 0; tc.chg += C.ochg[o] || 0;
+      h += '<tr><td><button class="lnk mono b" type="button" data-act="gotoO" data-o="' + esc(o) + '">' + esc(o) + '</button></td><td class="muted nmx" title="' + esc(O.n || '') + '">' + esc(O.n || '') + '</td><td>' + esc(O.pic || '') +
+        '</td><td class="n b">' + fmt(pk) + '</td><td class="n muted">' + fmt(ohq[o] || 0) + '</td><td class="n">' + ct + '</td><td class="n">' + (C.oit[o] || 0) + '</td><td class="n' + (C.ochg[o] ? ' chg' : '') + '">' + (C.ochg[o] || 0) + '</td></tr>';
+    });
+    if (!outs.length) h += '<tr><td colspan="8" class="empty">Nothing picked.</td></tr>';
+    h += '</tbody><tfoot><tr><td colspan="3">Total</td><td class="n">' + fmt(tc.pcs) + '</td><td class="n">' + fmt(H.pcs) + '</td><td class="n">' + fmt(tc.ctn) + '</td><td class="n">' + fmt(tc.it) +
+      '</td><td class="n">' + fmt(tc.chg) + '</td></tr></tfoot></table></div></div>';
+
+    var pics = {};
+    OUTS.forEach(function (o) {
+      var p = outlet(o).pic || '?', pk = C.opk[o] || 0;
+      var x = pics[p] || (pics[p] = { c: 0, pcs: 0, ctn: 0, chg: 0, hq: 0 });
+      if (pk > 0) { x.c++; x.pcs += pk; x.ctn += Math.ceil(pk / CARTON); }
+      x.chg += C.ochg[o] || 0; x.hq += ohq[o] || 0;
+    });
+    h += '<div class="card"><h3>By PIC</h3><div class="tw"><table class="t"><thead><tr><th>PIC</th><th class="n">Counters returning</th><th class="n">Pcs</th><th class="n">HQ plan</th><th class="n">Cartons</th><th class="n">Changed lines</th></tr></thead><tbody>' +
+      Object.keys(pics).sort().map(function (p) {
+        var x = pics[p];
+        return '<tr><td class="b">' + esc(p) + '</td><td class="n">' + x.c + '</td><td class="n b">' + fmt(x.pcs) + '</td><td class="n muted">' + fmt(x.hq) + '</td><td class="n">' + x.ctn + '</td><td class="n' + (x.chg ? ' chg' : '') + '">' + x.chg + '</td></tr>';
+      }).join('') + '</tbody></table></div></div>';
+
+    var its = ITEMS.slice().sort(function (a, b) {
+      var A = C.icov[a.k], B = C.icov[b.k];
+      var ga = A.short > 0 ? (a.hold ? 1 : 0) : 2, gb = B.short > 0 ? (b.hold ? 1 : 0) : 2;
+      if (ga !== gb) return ga - gb;
+      if (ga < 2 && A.short !== B.short) return B.short - A.short;
+      return cmp(a.k, b.k);
+    });
+    var nShort = its.filter(function (it) { return C.icov[it.k].short > 0 && !it.hold; }).length;
+    var nHoldR = its.filter(function (it) { return !!it.hold; }).length;
+    h += '<div class="card"><h3>Item coverage <span class="muted">' + nShort + ' of ' + (ITEMS.length - nHoldR) + ' items short' +
+      (nHoldR ? ' (' + nHoldR + ' more on hold - shipment due)' : '') + ' \u00b7 shortfalls first</span></h3><div class="tw"><table class="t"><thead><tr><th>Art-col</th><th>Description</th><th class="n">Demand</th><th class="n">HQ plan</th><th class="n">Picked</th><th class="n">Short</th><th class="n">Over</th><th class="n">Coverage</th><th>Flags</th></tr></thead><tbody>' +
+      its.map(function (it) {
+        var ic = C.icov[it.k];
+        return '<tr><td><button class="lnk mono b" type="button" data-act="gotoK" data-k="' + esc(it.k) + '">' + esc(it.k) + '</button></td><td class="muted nmx" title="' + esc(it.d) + '">' + esc(it.d) + '</td><td class="n">' + fmt(it._demT) +
+          '</td><td class="n muted">' + fmt(it._hq) + '</td><td class="n b">' + fmt(ic.pk) + '</td><td class="n">' + (ic.short ? '<span class="' + (it.hold ? 'muted' : 'cov lo') + '"' + (it.hold ? ' title="On hold: the shipment on the way covers it"' : '') + '>' + fmt(ic.short) + '</span>' : '<span class="zz">0</span>') +
+          '</td><td class="n">' + (ic.over ? '<span class="cov mid">' + fmt(ic.over) + '</span>' : '<span class="zz">0</span>') + '</td><td class="n">' + covHtml(it.k) + '</td><td>' + chips(itemFlags(it)) + '</td></tr>';
+      }).join('') + '</tbody></table></div></div>';
+
+    var g = warnGroups();
+    h += '<div class="card"><h3>Warnings <span class="muted">on picked lines \u00b7 click to open</span></h3>' +
+      wgHtml('Picking from a counter that is selling it', 'c-red', g.seller, 'The counter sold 3+ pcs Jul-Sep and needs stock') +
+      wgHtml('Picks include pcs that arrived in the last 60 days', 'c-amb', g.recent, 'Pick is more than stock minus recent arrivals') +
+      wgHtml('Live iDCP balance lower than the pick', 'c-amb', g.idcp, 'IMDR002 balance (incl. pending inbound) is below the picked qty') +
+      wgHtml('Counter already returned this article in the last 60 days', 'c-amb', g.ret, 'Returned to a WH in the last 60 days') +
+      wgHtml('Quiet counters (no tickets since ' + dshort(QUIET) + ')', 'c-red', g.quiet, 'Last ticket before ' + QUIET) +
+      wgHtml('Small counters (HQ left them out)', 'c-amb', g.small, 'Small (<10 pcs) - not in HQ plan') +
+      wgHtml('Stock from first count only', 'c-amb', g.first, 'No closing calc for the 202609 stocktake') +
+      wgHtml('Items on hold (shipment on the way)', 'c-amb', g.hold, 'HQ recalls nothing for these items') +
+      wgHtml('Items with no SG SKU', 'c-amb', g.nosku, 'SiteGiant has no SKU for these items yet') + '</div>';
+    h += '</div>';
+
+    h += '<div class="rcol rside"><div class="card exp"><h3>Send the picks</h3><div class="cb">' +
+      '<p class="hint">Send this in the WhatsApp group with Tze</p>' +
+      '<label class="byl">Picked by <input class="inp" id="byName" data-fid="byname" maxlength="40" autocomplete="off" aria-describedby="byNote" value="' + esc(STATE.by) + '"></label>' +
+      '<div class="bynote" id="byNote" role="status"></div>' +
+      '<div class="muted" style="font-size:12.5px;margin-bottom:6px">Return <b>' + fmt(T.pcs) + '</b> pcs (HQ ' + fmt(H.pcs) + ') from <b>' + T.outlets + '</b> counters, ~' + T.cartons + ' cartons \u00b7 SG demand covered ' + pct(T.pctNoHold) + ' excl. hold items (' + pct(T.pct) + ' incl.)' +
+      ' \u00b7 <b>' + T.changed + '</b> lines differ from the HQ plan. Lines not listed stay as the HQ plan.</div>' +
+      '<textarea id="exportTa" readonly aria-label="Export text for the WhatsApp group" spellcheck="false"></textarea>' +
+      '<div class="acts"><button class="btn pri" type="button" data-act="copy" data-fid="copy">Copy</button><button class="btn" type="button" data-act="dl" data-fid="dl">Download .txt</button>' +
+      '<a class="btn" id="waLink" target="_blank" rel="noopener noreferrer" href="#" hidden>Open WhatsApp</a><span class="walong" id="waNote" hidden>Too long for a link - use Copy and paste it in the group</span>' +
+      '<span class="sp"></span><span class="muted" id="expCount"></span></div></div></div></div></div>';
+    var sc = $('review'), st = sc.scrollTop;
+    sc.innerHTML = h; sc.scrollTop = st;
+    updateExport();
+  }
+  function updateExport() {
+    var ta = $('exportTa'); if (!ta) return;
+    renderByNote();
+    var t = exportText();
+    ta.value = t;
+    $('expCount').textContent = fmt(t.length) + ' chars';
+    var wa = $('waLink'), note = $('waNote');
+    if (t.length <= WA_MAX) { wa.href = 'https://wa.me/?text=' + encodeURIComponent(t); wa.hidden = false; note.hidden = true; }
+    else { wa.removeAttribute('href'); wa.hidden = true; note.hidden = false; }
+  }
+
+  /* ================= export ================= */
+  function asciiName(s) { return String(s || '').replace(/[^\x20-\x7E]/g, '').replace(/\s+/g, ' ').trim().slice(0, 40); }
+  function byName() {                       // what the BY line says: blank = the default Sharon; no Latin letters = unknown (never Sharon)
+    var raw = String(STATE.by || '').replace(/\s+/g, ' ').trim(), a = asciiName(raw);
+    return a || (raw ? 'unknown' : 'Sharon');
+  }
+  function renderByNote() {
+    var el = $('byNote'); if (!el) return;
+    var raw = String(STATE.by || '').replace(/\s+/g, ' ').trim(), a = asciiName(raw), t = '', bad = false;
+    if (!raw) t = 'Blank - the export will say BY Sharon.';
+    else if (!a) { t = 'Use Latin letters (A-Z): this name cannot go in the export, it will say BY unknown.'; bad = true; }
+    else if (a !== raw) { t = 'Use Latin letters (A-Z): the export will say BY ' + a + '.'; bad = true; }
+    el.textContent = t; el.hidden = !t; el.classList.toggle('bad', bad);
+  }
+  function stamp() {
+    var d = new Date(); function p(n) { return (n < 10 ? '0' : '') + n; }
+    return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
+  }
+  function exportText() {
+    if (!C) recompute();
+    var T = C.T, H = HQT, groups = {}, n = 0, body = [];
+    ROWS.forEach(function (R) { if (C.chg[R.key]) (groups[R.o] || (groups[R.o] = [])).push(R); });
+    Object.keys(groups).sort(cmp).forEach(function (o) {
+      body.push('O ' + o);
+      groups[o].sort(function (a, b) { return cmp(a.k, b.k); }).forEach(function (R) {
+        var e = C.eff[R.key], parts = [R.k, sum(e) === 0 ? 'N' : modeOf(R)];
+        for (var i = 0; i < R.n; i++) if (e[i] > 0) parts.push(R.it.sizes[i] + ':' + e[i]);
+        body.push(parts.join(' '));
+        n++;
+      });
+    });
+    var head = [
+      'RECALL PICKS v1 plan=' + DOC.plan,
+      'BY ' + byName(),
+      'TOTAL pcs=' + T.pcs + ' outlets=' + T.outlets + ' lines=' + n,
+      '# Final picks = HQ plan, overridden by every line below. Sizes not listed = 0. N = return nothing.',
+      '# Modes: H=HQ plan E=Excess sizes F=Full run N=None C=Custom',
+      '# Return ' + T.pcs + ' pcs from ' + T.outlets + ' counters, ~' + T.cartons + ' cartons (HQ plan ' + H.pcs + ' pcs, ' + H.outlets + ' counters, ~' + H.cartons + ' cartons)',
+      '# SG demand covered ' + pct(T.pctNoHold) + ' excl. hold items (HQ ' + pct(H.pctNoHold) + '), ' + pct(T.pct) + ' incl. hold (HQ ' + pct(H.pct) + '), over demand ' + T.over + ' pcs (to SG stock)',
+      '# ' + n + ' line(s) changed vs HQ plan, made ' + stamp()
+    ];
+    var txt = head.concat(body, ['END lines=' + n]).join('\n');
+    return txt.replace(/[^\x0A\x20-\x7E]/g, '?');
+  }
+  function copyText(t) {
+    function fallback() {
+      var ta = $('exportTa'); var ok = false;
+      try { ta.focus(); ta.select(); ok = document.execCommand('copy'); } catch (e) { ok = false; }
+      toast(ok ? 'Copied - paste it in the WhatsApp group' : 'Copy failed - select the text and press Ctrl+C');
+    }
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(t).then(function () { toast('Copied - paste it in the WhatsApp group'); }, fallback);
+    } else fallback();
+  }
+  function download(t) {
+    try {
+      var d = new Date(); function p(n) { return (n < 10 ? '0' : '') + n; }
+      var name = 'recall_picks_' + String(DOC.plan).replace(/[^A-Za-z0-9._-]/g, '_') + '_' + d.getFullYear() + p(d.getMonth() + 1) + p(d.getDate()) + '-' + p(d.getHours()) + p(d.getMinutes()) + '.txt';
+      var url = URL.createObjectURL(new Blob([t], { type: 'text/plain;charset=utf-8' }));
+      var a = document.createElement('a'); a.href = url; a.download = name; document.body.appendChild(a); a.click();
+      setTimeout(function () { URL.revokeObjectURL(url); a.remove(); }, 1500);
+    } catch (e) { toast('Download failed - use Copy instead'); }
+  }
+
+  /* ================= persistence ================= */
+  var saveT = 0;
+  function saveNow() {
+    clearTimeout(saveT); saveT = 0;
+    if (!lsSet(STORE_KEY, JSON.stringify({ v: 1, plan: DOC.plan, by: STATE.by, picks: PICKS, at: new Date().toISOString() }))) storageFailed();
+  }
+  function save() { clearTimeout(saveT); saveT = setTimeout(saveNow, 250); }
+  function load() {
+    var s = lsGet(STORE_KEY); if (!s) return;
+    var o; try { o = JSON.parse(s); } catch (e) { return; }
+    if (!o || typeof o !== 'object') return;
+    if (typeof o.by === 'string') STATE.by = o.by.slice(0, 40);
+    var p = o.picks && typeof o.picks === 'object' ? o.picks : {};
+    Object.keys(p).forEach(function (key) {
+      var R = ROW[key], v = p[key];
+      if (!R || !v || typeof v.m !== 'string' || !avail(R, v.m)) return;
+      if (v.m === 'C') {
+        if (!Array.isArray(v.q) || v.q.length !== R.n) return;
+        var q = v.q.map(function (x, i) { x = Math.floor(+x || 0); return Math.max(0, Math.min(R.h[i], x)); });
+        if (sum(q) > 0) PICKS[key] = { m: 'C', q: q };
+        else if (R.def !== 'N') PICKS[key] = { m: 'N' };   // an all-zero Custom saved by an older version = None
+      } else if (v.m !== R.def) PICKS[key] = { m: v.m };
+    });
+  }
+  function saveUI() {
+    lsSet(UI_KEY, JSON.stringify({ tab: UI.tab, layout: UI.layout, lh: UI.lh, lw: UI.lw, mf: UI.mf, col: UI.col, ictx: UI.ictx }));
+  }
+  function loadUI() {
+    var s = lsGet(UI_KEY), o = null;
+    if (s) try { o = JSON.parse(s); } catch (e) { o = null; }
+    if (o && typeof o === 'object') {
+      if (o.tab === 'o' || o.tab === 'i' || o.tab === 'r') UI.tab = o.tab;
+      if (o.layout === 'side' || o.layout === 'stack') UI.layout = o.layout;
+      if (+o.lh > 0) UI.lh = +o.lh;
+      if (+o.lw > 0) UI.lw = +o.lw;
+      if (o.mf === 'donor' || o.mf === 'stock' || o.mf === 'seller') UI.mf = o.mf;
+      UI.col = o.col === true;
+      if (typeof o.ictx === 'boolean') UI.ictx = o.ictx;
+    }
+    if (!UI.layout) UI.layout = 'stack';
+  }
+
+  /* ================= layout ================= */
+  function applyLayout() {
+    ['split-o', 'split-i'].forEach(function (id) {
+      var el = $(id);
+      el.className = 'split ' + UI.layout + (UI.col ? ' collapsed' : '');
+      if (UI.lh) el.style.setProperty('--lh', UI.lh + 'px'); else el.style.removeProperty('--lh');
+      if (UI.lw) el.style.setProperty('--lw', UI.lw + 'px'); else el.style.removeProperty('--lw');
+    });
+    document.body.classList.toggle('side', UI.layout === 'side');
+  }
+  function activePanel() { return $('tab-' + UI.tab); }
+
+  /* ================= render orchestration ================= */
+  function withFocus(fn) {
+    var a = document.activeElement, fid = a && a.getAttribute ? a.getAttribute('data-fid') : null, ss = null, se = null;
+    if (fid && a.tagName === 'INPUT') { try { ss = a.selectionStart; se = a.selectionEnd; } catch (e) { ss = null; } }
+    fn();
+    if (fid && document.activeElement !== a) {
+      var el = activePanel().querySelector('[data-fid="' + fq(fid) + '"]') || document.querySelector('[data-fid="' + fq(fid) + '"]');
+      if (el && !el.disabled) {
+        try { el.focus({ preventScroll: true }); } catch (e) { el.focus(); }
+        if (ss != null) try { el.setSelectionRange(ss, se); } catch (e) { /* ignore */ }
+      }
+    }
+  }
+  function renderActive(resetScroll) {
+    withFocus(function () {
+      renderFCount();
+      if (UI.tab === 'o') { renderOList(); renderODetail(resetScroll); }
+      else if (UI.tab === 'i') { renderIList(); renderIDetail(resetScroll); }
+      else renderReview();
+    });
+  }
+  function syncDom(root) {
+    var els = root.querySelectorAll('[data-b]'), act = document.activeElement;
+    for (var x = 0; x < els.length; x++) {
+      var el = els[x], b = el.getAttribute('data-b'), key = el.getAttribute('data-key'), k = el.getAttribute('data-k'), R = key ? ROW[key] : null, si;
+      switch (b) {
+        case 'q':
+          if (!R) break;
+          si = +el.getAttribute('data-si');
+          var v = C.eff[key][si];
+          if (el !== act) { el.value = v ? String(v) : ''; el.classList.remove('clamp'); }
+          el.classList.toggle('chg', v !== R.hq[si]);
+          el.classList.toggle('wrn', szWarn(R, si, v));
+          break;
+        case 'sel': if (R && el.value !== modeOf(R)) el.value = modeOf(R); break;
+        case 'tot': if (R) { el.textContent = fmt(C.tot[key]); el.classList.toggle('chg', C.chg[key]); } break;
+        case 'tr': if (R) el.classList.toggle('chg', C.chg[key]); break;
+        case 'warn': if (R) el.innerHTML = chips(rowWarns(R)); break;
+        case 'ipk': if (k && C.icov[k]) el.textContent = fmt(C.icov[k].pk); break;
+        case 'ipks': case 'fp': if (k && C.ipk[k]) el.textContent = C.ipk[k][+el.getAttribute('data-si')]; break;
+        case 'icov': if (k && C.icov[k]) el.innerHTML = covHtml(k); break;
+        case 'ishort': if (k && C.icov[k]) el.innerHTML = shortHtml(k); break;
+        case 'fg':
+          if (k && ITEM[k]) {
+            si = +el.getAttribute('data-si');
+            var g = si < 0 ? C.icov[k].pk - ITEM[k]._demT : C.ipk[k][si] - ITEM[k]._dem[si];
+            el.textContent = (g > 0 ? '+' : '') + g;
+            el.className = 'n ' + (g < 0 ? 'gneg' : g > 0 ? 'gpos' : 'gok');
+            el.title = gapTip(k, si);
+          }
+          break;
+        case 'ost': el.innerHTML = oStatHtml(el.getAttribute('data-o')); break;
+        case 'ist': if (k && ITEM[k]) el.innerHTML = iStatHtml(k); break;
+      }
+    }
+  }
+  function afterChange() {
+    dropUndo();
+    recompute(); save(); renderTiles();
+    withFocus(function () {
+      if (UI.tab === 'o') renderOList();
+      else if (UI.tab === 'i') renderIList();
+    });
+    if (UI.tab === 'r') updateExport(); else syncDom(activePanel());
+  }
+  function refreshAll(resetScroll) { recompute(); save(); renderTiles(); renderActive(resetScroll); }
+  function setTab(t) {
+    if (t !== 'o' && t !== 'i' && t !== 'r') return;
+    UI.tab = t;
+    ['o', 'i', 'r'].forEach(function (x) {
+      $('tab-' + x).hidden = x !== t;
+      var b = $('tb-' + x); b.setAttribute('aria-selected', String(x === t)); b.tabIndex = x === t ? 0 : -1;
+    });
+    $('filters').classList.toggle('off', t === 'r');
+    saveUI();
+    renderActive(false);
+  }
+  function selectRow(listId, attr, val) {
+    var s = $(listId), rows = s.querySelectorAll('tr.lr');
+    for (var i = 0; i < rows.length; i++) {
+      var on = rows[i].getAttribute(attr) === val;
+      rows[i].classList.toggle('sel', on);
+      if (on) rows[i].setAttribute('aria-current', 'true'); else rows[i].removeAttribute('aria-current');
+    }
+  }
+  function selO(o) { if (!BYO[o]) return; UI.selO = o; selectRow('olist-s', 'data-o', o); renderODetail(true); if (UI.col) renderOList(); }
+  function selK(k) { if (!ITEM[k]) return; UI.selK = k; selectRow('ilist-s', 'data-k', k); renderIDetail(true); if (UI.col) renderIList(); }
+  function gotoO(o, k) {
+    if (!BYO[o]) return;
+    UI.selO = o;
+    var vis = BYO[o].some(function (R) { return R.rel && passRow(R) && (!k || R.k === k); });
+    if (!vis && filtersOn()) { clearFilters(); toast('Filters cleared to show ' + o); }
+    if (k) UI.exp[o + '|' + k] = true;
+    setTab('o');
+    scrollSelIntoView('olist-s');
+    if (k) {
+      var tr = $('odetail-s').querySelector('tr[data-b="tr"][data-key="' + fq(o + '|' + k) + '"]');
+      if (tr) { tr.scrollIntoView({ block: 'center' }); var sel = tr.querySelector('select'); if (sel) sel.focus({ preventScroll: true }); }
+    }
+  }
+  function gotoK(k) {
+    if (!ITEM[k]) return;
+    UI.selK = k;
+    var it = ITEM[k];
+    var vis = (!F.brand || it.b === F.brand) && (BYK[k].some(function (R) { return R.rel && passRow(R); }) || !filtersOn());
+    if (!vis) { clearFilters(); toast('Filters cleared to show ' + k); }
+    setTab('i');
+    scrollSelIntoView('ilist-s');
+  }
+  function step(kind, dir) {
+    var ord = kind === 'o' ? UI.olOrder : UI.ilOrder, cur = kind === 'o' ? UI.selO : UI.selK, i = ord.indexOf(cur) + dir;
+    if (i < 0 || i >= ord.length) return;
+    withFocus(function () {
+      if (kind === 'o') { selO(ord[i]); renderOList(); scrollSelIntoView('olist-s'); }
+      else { selK(ord[i]); renderIList(); scrollSelIntoView('ilist-s'); }
+    });
+  }
+  function scrollSelIntoView(id) {
+    var tr = $(id).querySelector('tr.sel');
+    if (tr) try { tr.scrollIntoView({ block: 'nearest' }); } catch (e) { /* ignore */ }
+  }
+
+  /* ================= events ================= */
+  function onClick(e) {
+    var sd = $('srcd'); if (sd && sd.open && !sd.contains(e.target)) sd.open = false;
+    var t = e.target.closest ? e.target.closest('[data-act]') : null;
+    if (!t) return;
+    var act = t.getAttribute('data-act');
+    switch (act) {
+      case 'tab': setTab(t.getAttribute('data-tab')); break;
+      case 'selO': selO(t.getAttribute('data-o')); break;
+      case 'selK': selK(t.getAttribute('data-k')); break;
+      case 'sort': {
+        var tb = t.getAttribute('data-t'), c = t.getAttribute('data-c'), s = UI.sort[tb];
+        if (s.c === c) s.d = -s.d;
+        else { var col = colsFor(tb).filter(function (x) { return x.id === c; })[0] || {}; s.c = c; s.d = col.asc ? 1 : (col.num || col.desc) ? -1 : 1; }
+        renderActive(false);
+        break;
+      }
+      case 'exp': { var key = t.getAttribute('data-key'); UI.exp[key] = !UI.exp[key]; withFocus(function () { renderODetail(false); }); break; }
+      case 'expall': oDetailRows(UI.selO).rows.forEach(function (R) { UI.exp[R.key] = true; }); withFocus(function () { renderODetail(false); }); break;
+      case 'collall': UI.exp = {}; withFocus(function () { renderODetail(false); }); break;
+      case 'bulk': {
+        var m = t.getAttribute('data-m'), scope = t.getAttribute('data-scope');
+        var rows = scope === 'o' ? oDetailRows(UI.selO).rows : mRowsFor(UI.selK).rows;
+        var where = scope === 'o' ? UI.selO : UI.selK, donorOnly = m === 'E' || m === 'F';
+        var before = JSON.stringify(PICKS);
+        var n = setBulk(rows, m);
+        var msg = MODE_LABEL[m] + ' on ' + n.set + (donorOnly ? ' Dead/Slow' : '') + ' line' + (n.set === 1 ? '' : 's') +
+          (n.none && m !== 'N' ? ', None on ' + n.none + ' (not possible there)' : '');
+        if (n.kept) msg += '; ' + (n.keptSell ? n.keptSell + ' selling (' + fmt(n.keptSellPcs) + ' pcs)' + (n.kept > n.keptSell ? ' and ' : '') : '') +
+          (n.kept > n.keptSell ? (n.kept - n.keptSell) + ' other' : '') + ' line' + (n.kept === 1 ? '' : 's') + ' left as they were';
+        if (JSON.stringify(PICKS) !== before) { UNDO = { label: msg + ' (' + where + ')', picks: before }; renderUndo(); msg += ' \u00b7 Undo in the top bar'; }
+        refreshAll(false);
+        toast(msg);
+        break;
+      }
+      case 'undo': undoBulk(); break;
+      case 'ictx': UI.ictx = !t.parentNode.open; saveUI(); break;
+      case 'mf': UI.mf = t.getAttribute('data-v'); saveUI(); withFocus(function () { renderIDetail(true); }); break;
+      case 'step': step(t.getAttribute('data-kind'), +t.getAttribute('data-dir')); break;
+      case 'col': UI.col = !UI.col; applyLayout(); saveUI(); renderActive(false); scrollSelIntoView(UI.tab === 'i' ? 'ilist-s' : 'olist-s'); break;
+      case 'gotoO': gotoO(t.getAttribute('data-o')); break;
+      case 'gotoK': gotoK(t.getAttribute('data-k')); break;
+      case 'gotoOK': gotoO(t.getAttribute('data-o'), t.getAttribute('data-k')); break;
+      case 'layout': UI.layout = UI.layout === 'side' ? 'stack' : 'side'; applyLayout(); saveUI(); renderActive(false); break;
+      case 'clearf': clearFilters(); renderActive(true); break;
+      case 'reset':
+        if (window.confirm('Reset all ' + fmt(ROWS.length) + ' lines to the HQ plan (' + fmt(HQT.pcs) + ' pcs)?' + (C.T.changed ? '\nYour ' + C.T.changed + ' changed line(s) will be lost.' : ''))) {
+          if (C.T.changed) snapUndo('Reset all to HQ plan');
+          resetHQ(); refreshAll(false); toast('All lines back to the HQ plan' + (UNDO ? ' \u00b7 Undo in the top bar' : ''));
+        }
+        break;
+      case 'clear':
+        if (window.confirm('Set every line to None (return nothing)?\nYou can then pick counter by counter. Reset all to HQ plan undoes this.')) {
+          snapUndo('Clear all (None)');
+          clearAllNone(); refreshAll(false); toast('All lines set to None \u00b7 Undo in the top bar');
+        }
+        break;
+      case 'copy': copyText(exportText()); break;
+      case 'dl': download(exportText()); break;
+    }
+  }
+  var fqT = 0;
+  function onInput(e) {
+    var el = e.target;
+    if (el.id === 'fq') {
+      clearTimeout(fqT);
+      fqT = setTimeout(function () {
+        F.q = el.value; F.terms = F.q.toLowerCase().split(/\s+/).filter(Boolean);
+        renderActive(true);
+      }, 200);
+      return;
+    }
+    if (el.id === 'byName') { STATE.by = el.value.slice(0, 40); save(); updateExport(); return; }
+    if (el.getAttribute && el.getAttribute('data-b') === 'q') {
+      var R = ROW[el.getAttribute('data-key')], si = +el.getAttribute('data-si');
+      if (!R) return;
+      var raw = el.value, dg = raw.replace(/[^0-9]/g, '');
+      if (dg !== raw) el.value = dg;
+      var v = dg === '' ? 0 : parseInt(dg, 10);
+      if (v > R.h[si]) { v = R.h[si]; el.classList.add('clamp'); el.title = 'Max ' + R.h[si] + ' - that is all the stock on hand'; }
+      else el.classList.remove('clamp');
+      if (setQtyR(R, si, v)) afterChange();
+    }
+  }
+  function onChange(e) {
+    var el = e.target;
+    if (el.getAttribute && el.getAttribute('data-b') === 'sel') {
+      var R = ROW[el.getAttribute('data-key')];
+      if (R && setModeR(R, el.value)) afterChange(); else if (R) el.value = modeOf(R);
+      return;
+    }
+    if (el.getAttribute && el.getAttribute('data-b') === 'q') {
+      var R2 = ROW[el.getAttribute('data-key')]; if (!R2) return;
+      var v = C.eff[R2.key][+el.getAttribute('data-si')];
+      el.value = v ? String(v) : ''; el.classList.remove('clamp');
+      return;
+    }
+    if (el.id === 'fpic') { F.pic = el.value; renderActive(true); }
+    else if (el.id === 'freg') { F.reg = el.value; renderActive(true); }
+    else if (el.id === 'fbrand') { F.brand = el.value; renderActive(true); }
+    else if (el.id === 'fhq') { F.hq = el.checked; renderActive(true); }
+  }
+  function moveInput(el, dir) {
+    var table = el.closest('table'); if (!table) return;
+    var si = el.getAttribute('data-si');
+    var list = table.classList.contains('sg') ? table.querySelectorAll('input.q') : table.querySelectorAll('input.q[data-si="' + si + '"]');
+    var arr = [], i, idx = -1;
+    for (i = 0; i < list.length; i++) { if (list[i] === el) idx = arr.length; if (!list[i].disabled || list[i] === el) arr.push(list[i]); }
+    if (idx < 0) return;
+    var nx = arr[idx + dir];
+    if (nx) { nx.focus(); try { nx.select(); } catch (e2) { /* ignore */ } }
+  }
+  function onKey(e) {
+    var el = e.target;
+    if (e.altKey && (e.key === 'ArrowDown' || e.key === 'ArrowUp') && (UI.tab === 'o' || UI.tab === 'i') && el.tagName !== 'SELECT') {
+      e.preventDefault(); step(UI.tab, e.key === 'ArrowDown' ? 1 : -1); return;
+    }
+    if (el.getAttribute && el.getAttribute('data-b') === 'q') {
+      if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+        e.preventDefault();
+        var R = ROW[el.getAttribute('data-key')], si = +el.getAttribute('data-si');
+        var v = C.eff[R.key][si] + (e.key === 'ArrowUp' ? 1 : -1);
+        v = Math.max(0, Math.min(R.h[si], v));
+        if (setQtyR(R, si, v)) { el.value = v ? String(v) : ''; afterChange(); try { el.select(); } catch (e3) { /* ignore */ } }
+        return;
+      }
+      if (e.key === 'Enter') { e.preventDefault(); moveInput(el, e.shiftKey ? -1 : 1); return; }
+      return;
+    }
+    if (el.classList && el.classList.contains('lr')) {
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        var nx = e.key === 'ArrowDown' ? el.nextElementSibling : el.previousElementSibling;
+        if (nx && nx.classList.contains('lr')) {
+          nx.focus();
+          if (nx.getAttribute('data-act') === 'selO') selO(nx.getAttribute('data-o')); else selK(nx.getAttribute('data-k'));
+        }
+        return;
+      }
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        if (el.getAttribute('data-act') === 'selO') selO(el.getAttribute('data-o')); else selK(el.getAttribute('data-k'));
+      }
+      return;
+    }
+    if (el.getAttribute && el.getAttribute('role') === 'tab' && (e.key === 'ArrowRight' || e.key === 'ArrowLeft')) {
+      var order = ['o', 'i', 'r'], ix = order.indexOf(UI.tab) + (e.key === 'ArrowRight' ? 1 : -1);
+      ix = (ix + 3) % 3; setTab(order[ix]); $('tb-' + order[ix]).focus();
+      return;
+    }
+    if (el.classList && el.classList.contains('gut')) {
+      var stepK = { ArrowUp: -30, ArrowLeft: -30, ArrowDown: 30, ArrowRight: 30 }[e.key];
+      if (!stepK) return;
+      e.preventDefault();
+      var pane = el.previousElementSibling.getBoundingClientRect(), sp = el.parentNode.getBoundingClientRect();
+      if (UI.layout === 'side') UI.lw = Math.max(320, Math.min(sp.width - 480, pane.width + stepK));
+      else UI.lh = Math.max(90, Math.min(sp.height - 160, pane.height + stepK));
+      applyLayout(); saveUI();
+      return;
+    }
+    if (e.key === 'Escape') { var sd = $('srcd'); if (sd && sd.open) sd.open = false; }
+  }
+  var drag = null;
+  function onDown(e) {
+    var g = e.target.closest ? e.target.closest('.gut') : null;
+    if (!g || e.button !== 0) return;
+    e.preventDefault();
+    drag = { r: g.parentNode.getBoundingClientRect() };
+    document.body.classList.add('dragging');
+  }
+  function onMove(e) {
+    if (!drag) return;
+    var r = drag.r;
+    if (UI.layout === 'side') UI.lw = Math.round(Math.max(320, Math.min(r.width - 480, e.clientX - r.left)));
+    else UI.lh = Math.round(Math.max(90, Math.min(r.height - 160, e.clientY - r.top)));
+    applyLayout();
+  }
+  function onUp() { if (drag) { drag = null; document.body.classList.remove('dragging'); saveUI(); } }
+  function onFocusIn(e) {
+    var el = e.target;
+    if (el.getAttribute && el.getAttribute('data-b') === 'q') setTimeout(function () { try { if (document.activeElement === el) el.select(); } catch (e2) { /* ignore */ } }, 0);
+  }
+
+  /* ================= start ================= */
+  function showMsg(kind) {
+    var M = {
+      nokey: ['This link is missing its key.', 'Open the full link from HQ - it ends with # and a long code.'],
+      badkey: ['This link is not valid.', 'Ask HQ for a new link.'],
+      offline: ['Could not load the data.', 'Check the internet connection, then reload the page.'],
+      nocrypto: ['This browser cannot open the page.', 'Use a current Chrome or Edge, and open the https link.'],
+      baddata: ['The data could not be read.', 'Ask HQ to republish the page.'],
+      error: ['Something went wrong showing the data.', 'Reload the page. If it happens again, tell HQ.']
+    }[kind] || ['Could not open the page.', 'Reload and try again.'];
+    var el = $('msg');
+    el.innerHTML = '<h1>' + esc(M[0]) + '</h1><p>' + esc(M[1]) + '</p>';
+    el.hidden = false;
+    $('app').hidden = true;
+  }
+  function start(doc) {
+    if (started) return;
+    if (!doc || !Array.isArray(doc.items) || !doc.outlets || typeof doc.plan !== 'string') { showMsg('baddata'); return; }
+    started = true;
+    try {
+      DOC = doc;
+      if (!Array.isArray(DOC.months) || DOC.months.length < 6) DOC.months = ['Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep'];
+      STATE.plan = DOC.plan;
+      STORE_KEY = 'recallpick:' + DOC.plan;
+      if (!probeStorage()) storageFailed();
+      QUIET = addDays(DOC.asOf, -4);
+      indexDoc(DOC);
+      HQT = recompute().T;
+      load();
+      loadUI();
+      recompute();
+      $('planline').textContent = 'Plan ' + DOC.plan + ' \u00b7 as of ' + (DOC.asOf || '-') + ' \u00b7 ' + ITEMS.length + ' items \u00b7 ' + OUTS.length + ' West Malaysia counters';
+      document.title = 'Recall picker ' + DOC.plan;
+      renderSources();
+      fillFilterSelects();
+      applyLayout();
+      $('msg').hidden = true;
+      $('app').hidden = false;
+      renderTiles();
+      setTab(UI.tab);
+      document.addEventListener('click', onClick);
+      document.addEventListener('input', onInput);
+      document.addEventListener('change', onChange);
+      document.addEventListener('keydown', onKey);
+      document.addEventListener('mousedown', onDown);
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onUp);
+      document.addEventListener('focusin', onFocusIn);
+      window.addEventListener('pagehide', function () { if (saveT) saveNow(); });
+      window.addEventListener('beforeunload', function () { if (saveT) saveNow(); });
+    } catch (err) {
+      showMsg('error');
+      if (window.console) console.error('recall picker:', err && err.message ? err.message : err);
+    }
+  }
+
+  window.RecallPick = {
+    get state() { return STATE; },
+    setMode: function (o, k, mode) {
+      var R = ROW[o + '|' + k]; if (!R) return false;
+      var ok = setModeR(R, String(mode || '').toUpperCase());
+      if (ok) refreshAll(false);
+      return ok;
+    },
+    setQty: function (o, k, size, qty) {
+      var R = ROW[o + '|' + k]; if (!R) return false;
+      var si = R.it.sizes.indexOf(String(size));
+      if (si < 0 && typeof size === 'number' && Math.floor(size) === size && size >= 0 && size < R.n) si = size;
+      if (si < 0) return false;
+      var ok = setQtyR(R, si, qty);
+      if (ok) refreshAll(false);
+      return ok;
+    },
+    totals: function () { if (!C) return null; var t = {}, k; for (k in C.T) t[k] = C.T[k]; t.hq = {}; for (k in HQT) t.hq[k] = HQT[k]; return t; },
+    exportText: function () { return DOC ? exportText() : ''; },
+    resetHQ: function () { resetHQ(); refreshAll(false); return true; },
+    clearAll: function () { clearAllNone(); refreshAll(false); return true; },
+    mode: function (o, k) { var R = ROW[o + '|' + k]; return R ? modeOf(R) : null; },
+    eff: function (o, k) { var R = ROW[o + '|' + k]; return R && C ? C.eff[R.key].slice() : null; },
+    tab: function (t) { setTab(t); }
+  };
+
+  /* ---------- Crypto (same contract as topup.html / push_board.py), data in r/<docid>.json ---------- */
+  function readKey() { var h = (location.hash || '').replace(/^#/, '').trim(); if (!h) return null; if (/^[0-9a-fA-F]{64}$/.test(h)) return h.toLowerCase(); return false; }
+  function hexToBytes(hex) { var out = new Uint8Array(hex.length / 2); for (var i = 0; i < out.length; i++) out[i] = parseInt(hex.substr(i * 2, 2), 16); return out; }
+  function b64ToBytes(b64) { var bin = atob(String(b64).replace(/-/g, '+').replace(/_/g, '/')); var out = new Uint8Array(bin.length); for (var i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i); return out; }
+  function docIdFor(keyHex) {
+    return crypto.subtle.digest('SHA-256', new TextEncoder().encode(keyHex)).then(function (buf) {
+      var b = new Uint8Array(buf), s = ''; for (var i = 0; i < 8; i++) s += (b[i] < 16 ? '0' : '') + b[i].toString(16); return s;
+    });
+  }
+  function importKey(keyHex) { return crypto.subtle.importKey('raw', hexToBytes(keyHex), { name: 'AES-GCM' }, false, ['decrypt']); }
+  function decryptDoc(cryptoKey, doc) {
+    if (!doc || typeof doc.iv !== 'string' || typeof doc.ct !== 'string') return Promise.reject(new Error('bad doc'));
+    return crypto.subtle.decrypt({ name: 'AES-GCM', iv: b64ToBytes(doc.iv), tagLength: 128 }, cryptoKey, b64ToBytes(doc.ct)).then(function (buf) { return JSON.parse(new TextDecoder().decode(buf)); });
+  }
+  function boot() {
+    if (typeof window.__DOC__ !== 'undefined') { start(window.__DOC__); return; }   // TEST MODE: no fetch, no decrypt
+    if (!window.crypto || !crypto.subtle) { showMsg('nocrypto'); return; }
+    var k = readKey();
+    if (k === null) { showMsg('nokey'); return; }
+    if (k === false) { showMsg('badkey'); return; }
+    Promise.all([docIdFor(k), importKey(k)]).then(function (r) {
+      return fetch('r/' + r[0] + '.json', { cache: 'no-store' }).then(function (res) {
+        if (res.status === 404) { showMsg('badkey'); return; }
+        if (!res.ok) throw new Error('http ' + res.status);
+        return res.json().then(function (doc) {
+          return decryptDoc(r[1], doc).then(start, function () { showMsg('badkey'); });
+        });
+      });
+    }).catch(function () { if (!started) showMsg('offline'); });
+    window.addEventListener('hashchange', function () { location.reload(); });
+  }
+  boot();
+})();
+</script>
+</body>
+</html>
