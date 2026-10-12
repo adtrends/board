@@ -36,6 +36,11 @@ details{margin:6px 0}summary{cursor:pointer;font-weight:600;padding:6px 0}
 label.rm{display:flex;gap:8px;align-items:center;margin-top:10px;font-size:14px;color:var(--mute)}
 .top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
 .top button{width:auto;margin:0;font-size:13px;padding:6px 10px;background:transparent;color:var(--mute);border:1px solid var(--line)}
+.scr{background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden;margin-top:10px}
+.scr.full{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.scr iframe{border:0;display:block;transform-origin:0 0;background:#e9edf2}
+.sbar{display:flex;gap:8px;align-items:center;justify-content:space-between;margin-top:8px}
+.sbar button{width:auto;margin:0;font-size:13px;padding:6px 10px}
 </style>
 </head>
 <body>
@@ -85,6 +90,7 @@ function table(head, rows){
 
 function render(d){
   const k = d.kpi || {};
+  const hasScr = d.screens && Object.keys(d.screens).length > 0;
   const sec = d.sections.map((s, i) => `<button data-t="s${i}">${esc(s.zh)}</button>`).join("");
   let html = `<div class="top"><div><h1>${esc(d.title)}</h1>
     <div class="mute">更新 Updated ${esc(d.built)} · ${esc(d.source)}</div>
@@ -95,8 +101,11 @@ function render(d){
       <div class="card kpi"><span class="mute">准时率 On-time</span><b>${pct(k.ontime)}</b></div>
       <div class="card kpi"><span class="mute">排班天数 Rostered days</span><b>${k.sched_days ?? ""}</b></div>
     </div>
-    <div class="tabs"><button data-t="n" class="on">说明 Notes</button>${sec}<button data-t="p">各主管名单 By supervisor</button></div>
-    <div id="n" class="tab card"><div class="notes">${esc(d.notes || "（本周没有说明）")}</div></div>`;
+    <div class="tabs">${hasScr?`<button data-t="v" class="on">主管考勤表 Supervisor screens</button>`:""}<button data-t="n" class="${hasScr?"":"on"}">说明 Notes</button>${sec}<button data-t="p">各主管名单 By supervisor</button></div>
+    ${hasScr?`<div id="v" class="tab"><div class="tabs" id="sups">${Object.keys(d.screens).map((n,i)=>`<button data-s="${esc(n)}" class="${i?"":"on"}">${esc(n)}</button>`).join("")}</div>
+      <div class="sbar"><span class="mute" id="sname"></span><button id="fit">原尺寸 Full size</button></div>
+      <div class="scr" id="scr"><iframe id="ifr" sandbox="allow-same-origin" title="supervisor screen"></iframe></div></div>`:""}
+    <div id="n" class="tab card"${hasScr?" hidden":""}><div class="notes">${esc(d.notes || "（本周没有说明）")}</div></div>`;
   d.sections.forEach((s, i) => {
     html += `<div id="s${i}" class="tab" hidden>` + s.blocks.map(b => b.kind === "group"
       ? `<div class="card"><h3>主管 ${esc(b.title)}</h3><div class="mute">${esc(b.sub)}</div>${table(b.head, b.rows)}</div>`
@@ -106,12 +115,38 @@ function render(d){
   html += `<div id="p" class="tab" hidden>` + Object.entries(d.summary.by_sup).map(([sup, rows]) =>
     `<details class="card"><summary>${esc(sup)} · ${rows.length} 人</summary>${table(d.summary.cols, rows)}</details>`).join("") + `</div>`;
   const app = $("#app"); app.innerHTML = html; app.hidden = false; $("#gate").hidden = true;
-  app.querySelectorAll(".tabs button").forEach(b => b.onclick = () => {
-    app.querySelectorAll(".tabs button").forEach(x => x.classList.toggle("on", x === b));
+  app.querySelectorAll(".tabs button[data-t]").forEach(b => b.onclick = () => {
+    app.querySelectorAll(".tabs button[data-t]").forEach(x => x.classList.toggle("on", x === b));
     app.querySelectorAll(".tab").forEach(t => t.hidden = t.id !== b.dataset.t);
+    if (b.dataset.t === "v") fitScreen();
   });
+  if (hasScr) {
+    app.querySelectorAll("#sups button").forEach(b => b.onclick = () => {
+      app.querySelectorAll("#sups button").forEach(x => x.classList.toggle("on", x === b)); showScreen(d, b.dataset.s); });
+    $("#fit").onclick = () => { full = !full; $("#fit").textContent = full ? "适合屏幕 Fit width" : "原尺寸 Full size"; fitScreen(); };
+    showScreen(d, Object.keys(d.screens)[0]);
+  }
   $("#lock").onclick = () => { store.del(); location.reload(); };
 }
+
+
+let full = false;
+function showScreen(d, name){
+  const f = $("#ifr"); $("#sname").textContent = "主管 " + name;
+  f.onload = fitScreen; f.srcdoc = d.screens[name];
+}
+function fitScreen(){
+  const f = $("#ifr"), box = $("#scr"); if (!f || !f.contentDocument || !f.contentDocument.body) return;
+  const doc = f.contentDocument.documentElement;
+  f.style.transform = "none"; f.style.width = "2000px"; f.style.height = "100px";
+  const w = Math.max(doc.scrollWidth, f.contentDocument.body.scrollWidth), h = Math.max(doc.scrollHeight, f.contentDocument.body.scrollHeight);
+  const card = f.contentDocument.querySelector(".card"); const cw = card ? card.getBoundingClientRect().width + 40 : w;
+  f.style.width = cw + "px"; f.style.height = h + "px";
+  const s = full ? 1 : Math.min(1, box.clientWidth / cw);
+  f.style.transform = `scale(${s})`; box.classList.toggle("full", full);
+  box.style.height = (h * s) + "px";
+}
+addEventListener("resize", () => fitScreen());
 
 async function tryOpen(pw, remember){
   $("#err").textContent = ""; $("#go").disabled = true; $("#go").textContent = "打开中… Opening…";
