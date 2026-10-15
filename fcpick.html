@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Forest Pick</title>
+<style>
+  :root { --ink:#1d2733; --mut:#5a6773; --line:#e1e5ea; --bg:#f4f6f8; --card:#fff; --ms:#1f5fa8; --msbg:#e8f1fb; --cy:#b4561b; --cybg:#fdf1e4; --ok:#1a7f37; --x:#c62828; --hd:#1f3a5f; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --ink:#e6eaef; --mut:#9aa6b2; --line:#2c3540; --bg:#12171d; --card:#1a2129; --msbg:#1b2c40; --cybg:#3a2a1b; --hd:#2b4c75; --ms:#7fb2ef; --cy:#f0a46a; } }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif; color:var(--ink); background:var(--bg); font-size:15px; }
+  #app { max-width:760px; margin:0 auto; padding:12px 16px 120px; }
+  h1 { font-size:20px; margin:4px 0 2px; } .sub { color:var(--mut); font-size:13px; margin-bottom:8px; }
+  .kpi { display:flex; gap:8px; margin:8px 0; } .kpi div { flex:1; border-radius:10px; padding:8px 10px; font-size:13px; }
+  .kpi .m { background:var(--msbg); } .kpi .y { background:var(--cybg); } .kpi b { display:block; font-size:20px; }
+  .chips { display:flex; gap:6px; overflow-x:auto; padding:4px 0 8px; position:sticky; top:0; background:var(--bg); z-index:2; }
+  .chip { flex:none; border:1px solid var(--line); background:var(--card); color:var(--ink); border-radius:16px; padding:6px 10px; font-size:13px; cursor:pointer; }
+  .chip.on { background:var(--hd); color:#fff; border-color:var(--hd); }
+  .sec { margin:14px 0 4px; } .sec h2 { font-size:16px; margin:0; color:var(--hd); } .sec h2.can { color:var(--ok); } .sec p { margin:2px 0 0; color:var(--mut); font-size:13px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:10px; margin:8px 0; display:flex; gap:10px; }
+  .card.d-ms { border-left:5px solid var(--ms); } .card.d-cy { border-left:5px solid var(--cy); } .card.d-both { border-left:5px solid var(--ok); } .card.d-skip { opacity:.55; }
+  .ph { width:74px; flex:none; } .ph img { width:74px; height:92px; object-fit:contain; border-radius:6px; background:#fff; display:block; }
+  .ph .c { font-size:10px; color:var(--mut); text-align:center; }
+  .bd { flex:1; min-width:0; } .ac { font-weight:700; font-size:16px; } .nm { color:var(--mut); font-size:12.5px; }
+  .tag { display:inline-block; font-size:11.5px; padding:1px 7px; border-radius:9px; background:var(--bg); color:var(--mut); margin-top:3px; } .tag.s { color:var(--ok); }
+  table { border-collapse:collapse; margin:6px 0 4px; font-size:12.5px; } td, th { padding:2px 5px; text-align:center; border:1px solid var(--line); }
+  th { background:var(--bg); font-weight:600; } td.x { color:var(--x); font-weight:700; } td.lab { text-align:left; color:var(--mut); }
+  .btns { display:flex; gap:6px; flex-wrap:wrap; margin-top:4px; }
+  .btns button { border:1px solid var(--line); background:var(--card); color:var(--ink); border-radius:8px; padding:7px 10px; font-size:13.5px; cursor:pointer; min-width:62px; }
+  .btns button.on.ms { background:var(--ms); color:#fff; border-color:var(--ms); } .btns button.on.cy { background:var(--cy); color:#fff; border-color:var(--cy); }
+  .btns button.on.both { background:var(--ok); color:#fff; border-color:var(--ok); } .btns button.on.skip { background:#777; color:#fff; border-color:#777; }
+  .bar { position:fixed; left:0; right:0; bottom:0; background:var(--card); border-top:1px solid var(--line); padding:8px 16px calc(8px + env(safe-area-inset-bottom)); z-index:3; }
+  .bar .in { max-width:760px; margin:0 auto; display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+  .bar .t { flex:1; font-size:13px; min-width:180px; } .bar button { border:0; border-radius:8px; padding:10px 12px; font-size:14px; cursor:pointer; }
+  .wa { background:#25d366; color:#fff; } .cp { background:var(--bg); color:var(--ink); border:1px solid var(--line) !important; }
+  .msg { text-align:center; padding:60px 10px; } .more { display:block; margin:10px auto; padding:8px 14px; border-radius:8px; border:1px solid var(--line); background:var(--card); color:var(--ink); }
+</style>
+</head>
+<body>
+<div id="app"><div class="msg">Loading…</div></div>
+<script>
+(function () {
+  var app = document.getElementById('app'), DOC = null, rendered = false, STATE = {}, FILTER = 'all', SHOWN = {};
+  var PAGE = 60;
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function skey() { return 'fcpick:' + DOC.id; }
+  function load() { try { STATE = JSON.parse(localStorage.getItem(skey()) || '{}') || {}; } catch (e) { STATE = {}; } }
+  function save() { try { localStorage.setItem(skey(), JSON.stringify(STATE)); } catch (e) {} }
+  function totals() {
+    var t = { ms: 0, cy: 0, msn: 0, cyn: 0, skip: 0, n: 0 };
+    DOC.items.forEach(function (it) {
+      var d = STATE[it.k]; if (!d) return; t.n++;
+      if (d === 'ms' || d === 'both') { t.ms += it.pcs; t.msn++; }
+      if (d === 'cy' || d === 'both') { t.cy += it.pcs; t.cyn++; }
+      if (d === 'skip') t.skip++;
+    });
+    return t;
+  }
+  function card(it) {
+    var d = STATE[it.k] || '', sz = DOC.sizeSets[it.ss];
+    var h1 = '', h2 = '', h3 = '';
+    sz.forEach(function (z) {
+      var q = it.sizes[z] || 0, s = it.send[z] || 0, core = DOC.core.indexOf(z) >= 0 && it.ss !== 'plus';
+      h1 += '<th>' + esc(z) + '</th>';
+      h2 += q ? '<td>' + q + '</td>' : (core ? '<td class="x">×</td>' : '<td></td>');
+      h3 += '<td>' + (s || '') + '</td>';
+    });
+    var b = function (v, lab) { return '<button class="' + v + (d === v ? ' on' : '') + '" data-k="' + esc(it.k) + '" data-v="' + v + '">' + lab + '</button>'; };
+    return '<div class="card' + (d ? ' d-' + d : '') + '" id="c-' + esc(it.k) + '">' +
+      '<div class="ph">' + (it.img ? '<img loading="lazy" src="' + it.img + '" alt="">' : '<div class="c">no photo</div>') + (it.other ? '<div class="c">other colour</div>' : '') + '</div>' +
+      '<div class="bd"><div class="ac">' + esc(it.k) + '</div><div class="nm">' + esc(it.name) + ' · ' + esc(it.desc) + '</div>' +
+      '<div class="nm">B$' + esc(it.bnd) + ' · sells ' + esc(it.rate) + ' pcs/mth (counters + online)</div>' +
+      '<table><tr><th class="lab"></th>' + h1 + '</tr><tr><td class="lab">SG stock</td>' + h2 + '</tr><tr><td class="lab">1 set</td>' + h3 + '</tr></table>' +
+      '<div class="nm">1 display set = <b>' + it.pcs + ' pcs</b> per outlet' + (it.sets > 1 ? '' : ' · stock for one outlet only') + '</div>' +
+      (it.sugg ? '<span class="tag s">Suggested: ' + esc(it.sugg) + '</span>' : '') +
+      '<div class="btns">' + b('ms', 'Manggis') + b('cy', 'Yayasan') + (it.sets > 1 ? b('both', 'Both') : '') + b('skip', 'Skip') + '</div></div></div>';
+  }
+  function bar() {
+    var t = totals(), el = document.getElementById('bar-t'); if (!el) return;
+    el.innerHTML = '<b style="color:var(--ms)">Manggis +' + t.ms + '</b> (' + (DOC.current.ms + t.ms).toLocaleString() + ') · <b style="color:var(--cy)">Yayasan +' + t.cy + '</b> (' + (DOC.current.cy + t.cy).toLocaleString() + ')<br>' + t.n + ' of ' + DOC.items.length + ' decided';
+    var k1 = document.getElementById('k-ms'), k2 = document.getElementById('k-cy');
+    if (k1) k1.textContent = (DOC.current.ms + t.ms).toLocaleString() + ' pcs';
+    if (k2) k2.textContent = (DOC.current.cy + t.cy).toLocaleString() + ' pcs';
+  }
+  function renderList() {
+    var box = document.getElementById('list'), o = [];
+    DOC.sections.forEach(function (s) {
+      if (FILTER !== 'all' && FILTER !== s.key) return;
+      var its = DOC.items.filter(function (it) { return it.sec === s.key; });
+      if (!its.length) return;
+      var lim = SHOWN[s.key] || PAGE;
+      o.push('<div class="sec"><h2 class="' + (s.can ? 'can' : '') + '">' + esc(s.title) + ' · ' + its.length + ' colours</h2><p>' + esc(s.why) + '</p></div>');
+      its.slice(0, lim).forEach(function (it) { o.push(card(it)); });
+      if (its.length > lim) o.push('<button class="more" data-more="' + s.key + '">Show ' + Math.min(PAGE, its.length - lim) + ' more (' + (its.length - lim) + ' left)</button>');
+    });
+    box.innerHTML = o.join('');
+  }
+  function message() {
+    var g = { ms: [], cy: [], both: [], skip: [] }, t = totals();
+    DOC.items.forEach(function (it) { var d = STATE[it.k]; if (d) g[d].push(it.k); });
+    var L = ['*Forest casual - held-back picks (' + DOC.asof + ')*'];
+    if (g.ms.length) L.push('', '*Add to FEBRHHMS-C (Manggis)* - ' + g.ms.length + ' col', g.ms.join(', '));
+    if (g.cy.length) L.push('', '*Add to FEBRHHCY-C (Yayasan)* - ' + g.cy.length + ' col', g.cy.join(', '));
+    if (g.both.length) L.push('', '*Add to BOTH* - ' + g.both.length + ' col', g.both.join(', '));
+    L.push('', 'Skip: ' + g.skip.length + ' col', 'Not decided: ' + (DOC.items.length - t.n) + ' col');
+    L.push('', 'Manggis +' + t.ms + ' pcs -> ' + (DOC.current.ms + t.ms) + ' | Yayasan +' + t.cy + ' pcs -> ' + (DOC.current.cy + t.cy));
+    return L.join('\n');
+  }
+  function renderAll() {
+    rendered = true; load();
+    var chips = '<button class="chip' + (FILTER === 'all' ? ' on' : '') + '" data-f="all">All</button>' + DOC.sections.map(function (s) {
+      var n = DOC.items.filter(function (it) { return it.sec === s.key; }).length;
+      return n ? '<button class="chip' + (FILTER === s.key ? ' on' : '') + '" data-f="' + s.key + '">' + esc(s.short) + ' (' + n + ')</button>' : '';
+    }).join('');
+    app.innerHTML = '<h1>Forest casual - held back</h1><div class="sub">Men\'s Forest in SiteGiant that is not yet in the Manggis / Yayasan list. Tap Manggis, Yayasan, Both or Skip on each colour, then press Send to WhatsApp. Stock as of ' + esc(DOC.stockAsof) + '.</div>' +
+      '<div class="kpi"><div class="m">FEBRHHMS-C Manggis<b id="k-ms"></b>now ' + DOC.current.ms.toLocaleString() + '</div><div class="y">FEBRHHCY-C Yayasan<b id="k-cy"></b>now ' + DOC.current.cy.toLocaleString() + '</div></div>' +
+      '<div class="chips">' + chips + '</div><div id="list"></div>' +
+      '<div class="bar"><div class="in"><div class="t" id="bar-t"></div><button class="cp" id="cp">Copy</button><button class="wa" id="wa">Send to WhatsApp</button></div></div>';
+    renderList(); bar();
+  }
+  document.addEventListener('click', function (e) {
+    var t = e.target.closest('button'); if (!t || !DOC) return;
+    if (t.dataset.f) { FILTER = t.dataset.f; renderAll(); window.scrollTo(0, 0); return; }
+    if (t.dataset.more) { SHOWN[t.dataset.more] = (SHOWN[t.dataset.more] || PAGE) + PAGE; renderList(); return; }
+    if (t.dataset.k) {
+      var k = t.dataset.k, v = t.dataset.v; STATE[k] = STATE[k] === v ? undefined : v; if (!STATE[k]) delete STATE[k]; save();
+      var it = DOC.items.find(function (x) { return x.k === k; }), el = document.getElementById('c-' + k);
+      if (it && el) { var w = document.createElement('div'); w.innerHTML = card(it); el.replaceWith(w.firstChild); }
+      bar(); return;
+    }
+    if (t.id === 'wa') { window.open('https://wa.me/?text=' + encodeURIComponent(message()), '_blank'); return; }
+    if (t.id === 'cp') { var m = message(); (navigator.clipboard ? navigator.clipboard.writeText(m) : Promise.reject()).then(function () { t.textContent = 'Copied'; setTimeout(function () { t.textContent = 'Copy'; }, 1500); }, function () { prompt('Copy this:', m); }); }
+  });
+
+  function showInvalid() { rendered = true; app.innerHTML = '<div class="msg"><h1>Link not valid.</h1><p>Ask HQ for a new link.</p></div>'; }
+  function showOffline() { rendered = true; app.innerHTML = '<div class="msg"><h1>Cannot open.</h1><p>Check the internet, then open the link again.</p></div>'; }
+
+  /* ---------- Crypto (same contract as push_board.py / topup.html) ---------- */
+  function readKey() { var h = (location.hash || '').replace(/^#/, '').trim(); if (!h) return null; if (/^[0-9a-fA-F]{64}$/.test(h)) return h.toLowerCase(); return false; }
+  function hexToBytes(hex) { var out = new Uint8Array(hex.length / 2); for (var i = 0; i < out.length; i++) out[i] = parseInt(hex.substr(i * 2, 2), 16); return out; }
+  function b64ToBytes(b64) { var bin = atob(String(b64).replace(/-/g, '+').replace(/_/g, '/')); var out = new Uint8Array(bin.length); for (var i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i); return out; }
+  function docIdFor(keyHex) {
+    return crypto.subtle.digest('SHA-256', new TextEncoder().encode(keyHex)).then(function (buf) {
+      var b = new Uint8Array(buf), s = ''; for (var i = 0; i < 8; i++) s += (b[i] < 16 ? '0' : '') + b[i].toString(16); return s;
+    });
+  }
+  function importKey(keyHex) { return crypto.subtle.importKey('raw', hexToBytes(keyHex), { name: 'AES-GCM' }, false, ['decrypt']); }
+  function decryptDoc(cryptoKey, doc) {
+    if (!doc || typeof doc.iv !== 'string' || typeof doc.ct !== 'string') return Promise.reject(new Error('bad doc'));
+    return crypto.subtle.decrypt({ name: 'AES-GCM', iv: b64ToBytes(doc.iv), tagLength: 128 }, cryptoKey, b64ToBytes(doc.ct)).then(function (buf) { return JSON.parse(new TextDecoder().decode(buf)); });
+  }
+  function boot() {
+    if (!window.crypto || !crypto.subtle) { showOffline(); return; }
+    var k = readKey();
+    if (k === null || k === false) { showInvalid(); return; }
+    Promise.all([docIdFor(k), importKey(k)]).then(function (r) {
+      return fetch('f/' + r[0] + '.json', { cache: 'no-store' }).then(function (res) {
+        if (res.status === 404) { showInvalid(); return; }
+        if (!res.ok) throw new Error('http ' + res.status);
+        return res.json().then(function (doc) { return decryptDoc(r[1], doc).then(function (d) { DOC = d; renderAll(); }, showInvalid); });
+      });
+    }).catch(function () { if (!rendered) showOffline(); });
+  }
+  window.addEventListener('hashchange', function () { location.reload(); });
+  boot();
+})();
+</script>
+</body>
+</html>
