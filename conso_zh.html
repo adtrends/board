@@ -186,6 +186,7 @@ var D=null, W="6", CAP=3, VIEW="choose", SORT={k:"stuck",d:-1}, LIMIT=150;
 var TICK=new Set(), ROLES={}, CAPS={}, KEYHEX=null, STORE=null;
 /* language toggle (Tze, 18 Oct 2026): English by default, one tap to the other language; same link key, same ticks */
 var LANG_OTHER="conso.html", LANG_LABEL="English";
+var SHARE_MSG="链接已复制。请打开 WhatsApp，在输入框长按，按「粘贴」，再按发送。";
 /* Tze, 2026-09-22: "can you do it for every article color and also a global switch ... a default switch
    so they can ... adjust individually for every article color, because the demand changes for every color".
    CAP is the page default; CAPS["art|col"] overrides it for one colour. */
@@ -733,7 +734,12 @@ function wire(){
       case "resetCaps":CAPS={};saveState();render();break;
       case "resetRoles":if(confirm("放弃你对收货 / 调出的更改，恢复建议？")){ROLES={};saveState();render();}break;
       case "copyWa":copy(waText(),"#copyStatus");break;
-      case "share":copy(shareLink(),"#dockTxt");break;
+      /* Share my picks (Tze, 18 Oct 2026: supervisors miss the tiny "Copied" note): on a phone open the share sheet so
+         WhatsApp is one tap; otherwise copy and say so in a box they cannot miss. */
+      case "share":var SL=shareLink();
+        if(navigator.share){navigator.share({title:D.title+" conso",text:D.title+" conso plan",url:SL}).catch(function(e){if(!e||e.name!=="AbortError"){copy(SL,"#dockTxt");alert(SHARE_MSG);}});}
+        else{copy(SL,"#dockTxt");alert(SHARE_MSG);}
+        break;
       case "csv":var rows=[["From","To","Article","Colour","Size","Qty"]].concat(allMoves().map(function(m){return [m.from,m.to,m.a,m.c,m.z,m.q];}));
         var blob=new Blob([rows.map(function(r){return r.join(",");}).join("\n")],{type:"text/csv"});
         var aEl=document.createElement("a");aEl.href=URL.createObjectURL(blob);aEl.download=D.title.replace(/\W+/g,"_")+"_conso_plan_"+D.built+".csv";aEl.click();break;
