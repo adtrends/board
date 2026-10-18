@@ -51,6 +51,7 @@ input[type=search]{flex:1;min-width:180px}
 .chk{display:flex!important;flex-direction:row!important;align-items:center;gap:6px;font-size:13px}
 button.act{border:1px solid var(--accent);background:var(--accent);color:#fff;font:inherit;font-weight:600;
  font-size:13px;padding:7px 14px;border-radius:9px;cursor:pointer}
+a.langsw{float:right;border:1px solid var(--line);background:var(--card);color:var(--ink);font-weight:700;font-size:14px;padding:6px 14px;border-radius:999px;text-decoration:none;margin:4px 0 0 10px}
 button.ghost{border:1px solid var(--line);background:var(--card);color:var(--ink);font:inherit;font-size:12.5px;
  font-weight:600;padding:6px 11px;border-radius:9px;cursor:pointer}
 button:disabled{opacity:.45;cursor:default}
@@ -183,6 +184,8 @@ details.recvd summary{cursor:pointer;font-weight:600;font-size:13px;margin-botto
 "use strict";
 var D=null, W="6", CAP=3, VIEW="choose", SORT={k:"stuck",d:-1}, LIMIT=150;
 var TICK=new Set(), ROLES={}, CAPS={}, KEYHEX=null, STORE=null;
+/* language toggle (Tze, 18 Oct 2026): English by default, one tap to the other language; same link key, same ticks */
+var LANG_OTHER="conso.html", LANG_LABEL="English";
 /* Tze, 2026-09-22: "can you do it for every article color and also a global switch ... a default switch
    so they can ... adjust individually for every article color, because the demand changes for every color".
    CAP is the page default; CAPS["art|col"] overrides it for one colour. */
@@ -243,6 +246,7 @@ function loadState(){
   if(m){try{s=JSON.parse(decodeURIComponent(escape(atob(m[1].replace(/-/g,"+").replace(/_/g,"/")))));}catch(e){}}
   if(!s){try{s=JSON.parse(localStorage.getItem(STORE)||"null");}catch(e){}}
   if(s){TICK=new Set(s.t||[]);ROLES=s.r||{};CAP=s.cap||3;CAPS=s.caps||{};if(s.w&&D.windows.indexOf(s.w)>=0)W=s.w;}
+  else if(D.pretick&&D.pretick.length){TICK=new Set(D.pretick);}   // board built for a short list: start with all of it ticked
 }
 function shareLink(){
   var raw=JSON.stringify({t:[...TICK],r:ROLES,cap:CAP,caps:CAPS,w:W});
@@ -664,7 +668,7 @@ function boot(){
   STORE="conso:"+D.scope;
   loadState();
   try{PICKED=JSON.parse(localStorage.getItem(STORE+":picked")||"{}");}catch(e){PICKED={};}
-  $("#app").innerHTML='<h1>'+esc(D.title)+' 调货</h1><p class="sub">'+esc(D.title)+" 所有有库存或有销售的货品（"+D.outlets.length+
+  $("#app").innerHTML='<a class="langsw noprint" id="langsw" href="'+LANG_OTHER+'#'+KEYHEX+'">'+LANG_LABEL+'</a><h1>'+esc(D.title)+' 调货</h1><p class="sub">'+esc(D.title)+" 所有有库存或有销售的货品（"+D.outlets.length+
     " 间分店："+D.outlets.map(function(o){return esc(o.o);}).join("、")+"）。库存日期 "+fmtDate(D.built)+
     "。货只在本区内调动，AD 只调去 AD 专柜，BF 只调去 BF。</p>"+
     freshHTML()+
