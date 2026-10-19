@@ -10,14 +10,15 @@
 <style>
 :root{--bg:#f5f7f8;--card:#fff;--soft:#eef2f4;--line:#e0e6ea;--ink:#16202b;--muted:#66737f;
  --accent:#0f6d7d;--accent-s:#dcecef;--good:#1c7a4c;--good-s:#e2f2e9;--warn:#8f6200;--warn-s:#fbf1da;
- --bad:#ad2e22;--bad-s:#fae4e1;--shadow:0 1px 2px rgba(17,28,39,.06),0 8px 24px rgba(17,28,39,.06)}
+ --bad:#ad2e22;--bad-s:#fae4e1;--on:#fff;--shadow:0 1px 2px rgba(17,28,39,.06),0 8px 24px rgba(17,28,39,.06)}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0d1317;--card:#151e25;
  --soft:#1b262e;--line:#27343d;--ink:#e4eaee;--muted:#93a1ac;--accent:#57c3d2;--accent-s:#12333b;
- --good:#5cc38d;--good-s:#12301f;--warn:#e2b45c;--warn-s:#332715;--bad:#f0897c;--bad-s:#38201d;
+ --good:#5cc38d;--good-s:#12301f;--warn:#e2b45c;--warn-s:#332715;--bad:#f0897c;--bad-s:#38201d;--on:#0d1317;
  --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 22px rgba(0,0,0,.3)}}
 :root[data-theme="dark"]{--bg:#0d1317;--card:#151e25;--soft:#1b262e;--line:#27343d;--ink:#e4eaee;
  --muted:#93a1ac;--accent:#57c3d2;--accent-s:#12333b;--good:#5cc38d;--good-s:#12301f;--warn:#e2b45c;
- --warn-s:#332715;--bad:#f0897c;--bad-s:#38201d}
+ --warn-s:#332715;--bad:#f0897c;--bad-s:#38201d;--on:#0d1317;
+ --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 22px rgba(0,0,0,.3)}
 *{box-sizing:border-box}
 html,body{margin:0}
 body{background:var(--bg);color:var(--ink);font:14px/1.45 "IBM Plex Sans",-apple-system,Segoe UI,Roboto,sans-serif}
@@ -49,8 +50,9 @@ input[type=search]{flex:1;min-width:180px}
 .filters .row2{display:flex;gap:6px}
 .filters .row2 input{flex:1;min-width:0}
 .chk{display:flex!important;flex-direction:row!important;align-items:center;gap:6px;font-size:13px}
-button.act{border:1px solid var(--accent);background:var(--accent);color:#fff;font:inherit;font-weight:600;
+button.act{border:1px solid var(--accent);background:var(--accent);color:var(--on);font:inherit;font-weight:600;
  font-size:13px;padding:7px 14px;border-radius:9px;cursor:pointer}
+button.themesw{float:right;border:1px solid var(--line);background:var(--card);color:var(--ink);font:inherit;font-weight:700;font-size:14px;padding:6px 14px;border-radius:999px;margin:4px 0 0 10px;cursor:pointer}
 a.langsw{float:right;border:1px solid var(--line);background:var(--card);color:var(--ink);font-weight:700;font-size:14px;padding:6px 14px;border-radius:999px;text-decoration:none;margin:4px 0 0 10px}
 button.ghost{border:1px solid var(--line);background:var(--card);color:var(--ink);font:inherit;font-size:12.5px;
  font-weight:600;padding:6px 11px;border-radius:9px;cursor:pointer}
@@ -108,9 +110,9 @@ tr.give{background:var(--warn-s)}
 .pick{display:flex;gap:4px;justify-content:flex-end}
 .pick button{border:1px solid var(--line);background:var(--card);color:var(--muted);font:inherit;font-size:11px;
  font-weight:700;padding:4px 8px;border-radius:7px;cursor:pointer}
-.pick button[data-role="r"][aria-pressed="true"]{background:var(--good);border-color:var(--good);color:#fff}
-.pick button[data-role="g"][aria-pressed="true"]{background:var(--warn);border-color:var(--warn);color:#fff}
-.pick button[data-role="x"][aria-pressed="true"]{background:var(--bad);border-color:var(--bad);color:#fff}
+.pick button[data-role="r"][aria-pressed="true"]{background:var(--good);border-color:var(--good);color:var(--on)}
+.pick button[data-role="g"][aria-pressed="true"]{background:var(--warn);border-color:var(--warn);color:var(--on)}
+.pick button[data-role="x"][aria-pressed="true"]{background:var(--bad);border-color:var(--bad);color:var(--on)}
 td.left.chg{font-weight:700}
 td.left.zero{color:var(--bad);font-weight:700}
 .warn{background:var(--bad-s);color:var(--bad);border-radius:8px;padding:6px 10px;font-size:12px;margin:0 0 6px}
@@ -143,6 +145,9 @@ details.recvd summary{cursor:pointer;font-weight:600;font-size:13px;margin-botto
 .swatch.bad{background:color-mix(in srgb,var(--bad) 40%,transparent)}
 .swatch.acc{background:color-mix(in srgb,var(--accent) 40%,transparent)}
 @media print{
+  :root,:root[data-theme]{--bg:#fff;--card:#fff;--soft:#eef2f4;--line:#e0e6ea;--ink:#16202b;--muted:#66737f;
+   --accent:#0f6d7d;--accent-s:#dcecef;--good:#1c7a4c;--good-s:#e2f2e9;--warn:#8f6200;--warn-s:#fbf1da;
+   --bad:#ad2e22;--bad-s:#fae4e1;--on:#fff}  /* transfer lists always print light */
   body{background:#fff;color:#000}
   .noprint,.dock,.facts,.legend,.sub,h1,#winNote,.bar,.tabs,#choose,#desk,#summary{display:none!important}
   .wrap{padding:0;max-width:none}
@@ -176,6 +181,13 @@ details.recvd summary{cursor:pointer;font-weight:600;font-size:13px;margin-botto
   #choose td[data-h]::before{content:attr(data-h);display:block;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.03em}
 }
 </style>
+<script>
+/* Tze, 19 Oct 2026: "a light version and a dark version". conso.html?theme=dark#key opens dark,
+   ?theme=light opens light; the button flips it and the choice is remembered on that phone. */
+(function(){var t=(location.search.match(/[?&]theme=(light|dark)/)||[])[1];
+  if(!t){try{t=localStorage.getItem("conso-theme");}catch(e){}}
+  if(t==="light"||t==="dark")document.documentElement.setAttribute("data-theme",t);})();
+</script>
 </head>
 <body>
 <div id="app" class="wrap"><div class="msg"><h1>Loading…</h1></div></div>
@@ -186,6 +198,14 @@ var D=null, W="6", CAP=3, VIEW="choose", SORT={k:"stuck",d:-1}, LIMIT=150;
 var TICK=new Set(), ROLES={}, CAPS={}, KEYHEX=null, STORE=null;
 /* language toggle (Tze, 18 Oct 2026): English by default, one tap to the other language; same link key, same ticks */
 var LANG_OTHER="conso_zh.html", LANG_LABEL="中文";
+var THEME_LBL={dark:"Dark",light:"Light"};
+function themeNow(){var t=document.documentElement.getAttribute("data-theme");
+  return t||(window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");}
+function themeBtn(){var to=themeNow()==="dark"?"light":"dark";
+  return '<button type="button" class="themesw noprint" id="themesw" data-to="'+to+'">'+(to==="dark"?"☾ ":"☀ ")+THEME_LBL[to]+'</button>';}
+document.addEventListener("click",function(e){var b=e.target.closest&&e.target.closest("#themesw");if(!b)return;
+  var t=b.dataset.to;document.documentElement.setAttribute("data-theme",t);try{localStorage.setItem("conso-theme",t);}catch(x){}
+  b.outerHTML=themeBtn();});
 var SHARE_MSG="Link copied. Open WhatsApp, long-press the message box, tap Paste, then Send.";
 /* Tze, 2026-09-22: "can you do it for every article color and also a global switch ... a default switch
    so they can ... adjust individually for every article color, because the demand changes for every color".
@@ -669,7 +689,7 @@ function boot(){
   STORE="conso:"+D.scope;
   loadState();
   try{PICKED=JSON.parse(localStorage.getItem(STORE+":picked")||"{}");}catch(e){PICKED={};}
-  $("#app").innerHTML='<a class="langsw noprint" id="langsw" href="'+LANG_OTHER+'#'+KEYHEX+'">'+LANG_LABEL+'</a><h1>'+esc(D.title)+' conso</h1><p class="sub">Every article held or sold in '+esc(D.title)+" ("+D.outlets.length+
+  $("#app").innerHTML='<a class="langsw noprint" id="langsw" href="'+LANG_OTHER+location.search+'#'+KEYHEX+'">'+LANG_LABEL+'</a>'+themeBtn()+'<h1>'+esc(D.title)+' conso</h1><p class="sub">Every article held or sold in '+esc(D.title)+" ("+D.outlets.length+
     " doors: "+D.outlets.map(function(o){return esc(o.o);}).join(", ")+"). Stock as of "+fmtDate(D.built)+
     ". Stock never leaves the cluster, and AD only moves to AD counters, BF to BF.</p>"+
     freshHTML()+
