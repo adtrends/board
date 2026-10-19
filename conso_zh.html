@@ -140,6 +140,23 @@ td.pt b,td.yr b{font-size:14px}
 .pgy span{display:inline-block!important;font-size:13px!important;font-weight:700;padding:2px 9px;border-radius:6px;color:var(--ink)!important}
 .pgy .pg{background:var(--accent-s)}.pgy .yr{background:var(--warn-s)}
 div.artbar{margin:6px 0 4px}
+table.work th,table.work td{padding:3px 6px;font-size:12px;white-space:nowrap}
+table.work td.dsc{max-width:170px;overflow:hidden;text-overflow:ellipsis;font-size:11px;color:var(--muted)}
+table.work td.o{font-family:ui-monospace,Consolas,monospace;font-size:11.5px}
+table.work td.o.get{background:var(--good-s);color:var(--good);font-weight:700}
+table.work td.o.give{background:var(--warn-s);color:var(--warn);font-weight:700}
+table.work tr.cfirst td{border-top:2px solid var(--line)}
+table.work tr.on td.yr,table.work tr.on td.mono b{color:var(--accent)}
+table.work tr.ctot td{background:var(--soft);font-weight:700}
+table.work tr.sgrow td{font-size:11px;color:var(--muted)}
+table.work td.sz.fill{color:var(--good);font-weight:700}table.work td.sz.take{color:var(--bad);font-weight:700}
+table.work td.pk button{font:inherit;font-size:10px;font-weight:700;padding:2px 6px;margin-right:2px;border:1px solid var(--line);background:var(--card);color:var(--muted);border-radius:6px;cursor:pointer}
+table.work td.pk button[data-role="r"][aria-pressed="true"]{background:var(--good);border-color:var(--good);color:var(--on)}
+table.work td.pk button[data-role="g"][aria-pressed="true"]{background:var(--warn);border-color:var(--warn);color:var(--on)}
+table.work td.pk button[data-role="x"][aria-pressed="true"]{background:var(--bad);border-color:var(--bad);color:var(--on)}
+table.work .capc{margin-right:6px;font-weight:600;color:var(--muted)}table.work .capc b{display:inline-block;min-width:14px;text-align:center;color:var(--ink)}
+table.work .capc.own b{color:var(--accent)}
+table.work .warnt{color:var(--bad);font-weight:700}
 tr.sgrow td{background:var(--soft);border-top:2px dashed var(--line)}
 table.byart td.o{font-family:ui-monospace,Consolas,monospace;font-size:11px;white-space:nowrap}
 table.byart td.o.get{background:var(--good-s);color:var(--good);font-weight:700}
@@ -212,7 +229,7 @@ details.recvd summary{cursor:pointer;font-weight:600;font-size:13px;margin-botto
 <script>
 (function(){
 "use strict";
-var D=null, W="6", CAP=3, VIEW="choose", SORT={k:"stuck",d:-1}, LIMIT=150;
+var D=null, W="6", CAP=3, VIEW="choose", SORT={k:"stuck",d:-1}, LIMIT=40;
 var TICK=new Set(), ROLES={}, CAPS={}, KEYHEX=null, STORE=null;
 /* language toggle (Tze, 18 Oct 2026): English by default, one tap to the other language; same link key, same ticks */
 var LANG_OTHER="conso.html", LANG_LABEL="English";
@@ -318,7 +335,7 @@ var AUTO=false, SUGG=new Set();
 var SUG_TXT={on:"建议：全部货号已开启",off:"建议：关闭 - 由你选择",all:"全部给建议",clearAll:"清除全部选择",
   one:"这个货号给建议",clearOne:"清除这个货号",confAll:"用页面的建议替换所有已勾选货号的收货 / 调出选择？",
   confClear:"清除所有货号的收货 / 调出 / 全部调出选择？"};
-function roleOf(a,c,r){var k=rk(a.a,c.c,r.o),v=ROLES[k]!==undefined?ROLES[k]:((AUTO||SUGG.has(a.a))?suggest(a,c,r):"");return v==="r"&&!sameBrand(a,r)?"":v;}
+function roleOf(a,c,r){var k=rk(a.a,c.c,r.o),v=ROLES[k]!==undefined?ROLES[k]:((AUTO||SUGG.has(a.a)||SUGG.has(a.a+"|"+c.c))?suggest(a,c,r):"");return v==="r"&&!sameBrand(a,r)?"":v;}
 /* Roles: r = GET, g = GIVE (only what receivers need, up to CAP a size), x = ALL OUT (the door
    sends every piece of the art-colour - promoters often want nothing left behind). */
 var UNPLACED={};                                 // "art|col" -> pcs an ALL OUT door could not place
@@ -416,44 +433,85 @@ function chooseShell(){
    '<label><span class="lbl">当前折扣码</span><select id="fd">'+opts([["","所有折扣码"]].concat(discs.map(function(d){return [d,d];})),"")+'</select></label>'+
    (D.sg?'<label><span class="lbl">SG 网店库存</span><select id="fsg">'+opts([["","全部"],["has","网店有货"],["none","网店没货"]],"")+'</select></label>':'')+
    (brands.length>1?'<label><span class="lbl">品牌</span><select id="fb">'+opts([["","AD 和 BF"]].concat(brands.map(function(b){return [b,b==="BF"?"Byford":"Alain Delon"];})),"")+'</select></label>':'')+
+   '<label><span class="lbl">'+GRID_TXT.sort+'</span><select id="fsort">'+opts(GRID_TXT.sorts,SORT.k)+'</select></label>'+
    '<label class="chk"><input type="checkbox" id="fs"> 只看有滞销库存的</label>'+
-   '<label class="chk"><input type="checkbox" id="ftk"> 只看已勾选</label>'+
+   '<label class="chk"><input type="checkbox" id="ftk"> 只看有选择的货号</label>'+
    '</div><div class="bar"><span class="status" id="cnt"></span><span style="flex:1"></span>'+
-   '<button class="ghost" id="tickAll">勾选全部显示的</button><button class="ghost" id="untick">清除勾选</button></div>'+
+   '</div>'+
    '<div id="capBar"></div>'+
-   '<div class="scroll mainscroll"><table id="chooseT"><thead id="th"></thead><tbody id="tb"></tbody></table></div><div class="more" id="more"></div>'+
+   '<div id="grid"></div><div class="more" id="more"></div>'+
    '<div id="allMovesBox"></div>';
 }
 var COLS=[["","",""],["g","产品类别","l"],["yr","年份",""],["a","货号","l"],["price","现价",""],["start","Sale start",""],
   ["held","库存",""],["sg","SG 网店库存",""],["doors","分店",""],["sold","已售",""],["sell","有卖的分店",""],["stuck","滞销件数",""],
   ["stuckrm","滞销金额",""],["kind","建议","l"]];
+/* Tab 1 as one compact working grid (Tze, 19 Oct 2026: "i prefer it to be more compact and easier to work on
+   like this" - his Excel conso). Product type > article > colour, one row per outlet with its stock by size,
+   the pick buttons and the allocation on the same row, an SG online row and a grey total row per colour. */
+var GRID_TXT={sort:"货号排序",year:"年份",art:"货号",desc:"描述",col:"颜色",outlet:"分店",tot:"总数",sold:"已卖",
+  cover:"可卖周数",pick:"选择",alloc:"调去哪里",colTot:"合计",sg:"SG 网店",sugC:"建议",clrC:"清除",pcs:"件/尺码",
+  none:"没有符合筛选的货号。",arts:"个货号",nowhere:"件没有地方去 - 请标一间收货",
+  sorts:[["stuck","没卖的件数（多到少）"],["held","库存（多到少）"],["sold","已卖（多到少）"],["yr","年份（新到旧）"],["start","上市日期（新到旧）"],["a","货号"]]};
+function gridCell(q,inn,out){
+  if(inn)return '<td class="sz fill">'+(q?q+"+":"+")+inn+"</td>";
+  if(out)return '<td class="sz take">'+q+"−"+out+"</td>";
+  return '<td class="sz'+(q?"":" gap")+'">'+(q||"")+"</td>";
+}
+function gridArticle(a,sizes){
+  var moves=TICK.has(a.a)?allocate(a):[], on=TICK.has(a.a), price=priceNow(a), html="", first=true;
+  a.cols.filter(colHeld).forEach(function(c){
+    var rows=c.rows.filter(function(r){return rowHeld(r)||rowSold(r);}).sort(function(x,y){return rowHeld(y)-rowHeld(x)||rowSold(y)-rowSold(x);});
+    var tot=sizes.map(function(){return 0;}), tq=0, ts=0, key=a.a+"|"+c.c;
+    rows.forEach(function(r,i){
+      var role=roleOf(a,c,r), d=' data-a="'+esc(a.a)+'" data-c="'+esc(c.c)+'" data-o="'+esc(r.o)+'"', to={}, from={};
+      moves.forEach(function(m){if(m.c!==c.c)return;if(m.from===r.o)to[m.to]=(to[m.to]||0)+m.q;if(m.to===r.o)from[m.from]=(from[m.from]||0)+m.q;});
+      var n=rowHeld(r), cv=cover(r);tq+=n;ts+=rowSold(r);
+      var cells=sizes.map(function(z,j){var q=r.q[z]||0;tot[j]+=q;
+        var inn=moves.filter(function(m){return m.c===c.c&&m.to===r.o&&m.z===z;}).reduce(function(t,m){return t+m.q;},0),
+            out=moves.filter(function(m){return m.c===c.c&&m.from===r.o&&m.z===z;}).reduce(function(t,m){return t+m.q;},0);
+        return gridCell(q,inn,out);}).join("");
+      var lead=first?'<td class="yr"><b>'+esc(yearOf(a)||"–")+'</b></td><td class="l mono"><b>'+esc(a.a)+'</b></td><td class="l dsc" title="'+esc(a.n)+'">'+esc(a.n)+
+          '</td><td>'+(price?Math.round(price):"")+"</td>"
+        :'<td></td><td></td><td></td><td></td>';
+      first=false;
+      html+='<tr class="'+(i?"":"cfirst")+(on?" on":"")+'">'+lead+'<td class="l mono">'+(i?"":esc(c.c))+"</td>"+
+        '<td class="o'+(role==="r"?" get":role==="g"||role==="x"?" give":"")+'" title="'+esc(outletName(r.o))+'">'+esc(r.o)+"</td>"+cells+
+        "<td><b>"+n+"</b></td><td>"+rowSold(r)+"</td><td>"+(cv==null?"–":cv+"周")+"</td>"+
+        '<td class="pk">'+(sameBrand(a,r)?'<button data-role="r"'+d+' aria-pressed="'+(role==="r")+'">收货</button>':"")+
+        '<button data-role="g"'+d+' aria-pressed="'+(role==="g")+'">调出</button><button data-role="x"'+d+' aria-pressed="'+(role==="x")+'">ALL OUT</button></td>'+
+        '<td class="al">'+baAllocTxt({to:to,from:from},true)+"</td></tr>";
+    });
+    var sgc=D.sg?sgCol(a.a,c.c):null;
+    if(sgc&&sgc[0]){var by=sgc[2]||{};   // only when SiteGiant holds some - keeps the grid compact
+      html+='<tr class="sgrow"><td></td><td></td><td></td><td></td><td></td><td class="o">'+GRID_TXT.sg+"</td>"+
+        sizes.map(function(z){return '<td class="sz">'+(by[z]||"")+"</td>";}).join("")+"<td>"+((sgc&&sgc[0])||0)+"</td><td>"+(sgc&&sgc[1]?sgc[1]+"/m":"")+"</td><td></td><td></td><td></td></tr>";}
+    var cap=capOf(a.a,c.c), own=!!CAPS[key], un=UNPLACED[key];
+    html+='<tr class="ctot"><td></td><td class="l mono">'+esc(a.a)+'</td><td class="l" colspan="3">'+esc(c.c)+" "+GRID_TXT.colTot+"</td><td></td>"+
+      tot.map(function(v){return "<td>"+(v||"")+"</td>";}).join("")+"<td>"+tq+"</td><td>"+ts+"</td><td></td>"+
+      '<td class="pk"><span class="capc'+(own?" own":"")+'"><button data-capc="'+esc(key)+'" data-d="-1">−</button><b>'+cap+'</b><button data-capc="'+esc(key)+'" data-d="1">+</button> '+GRID_TXT.pcs+"</span>"+
+      '<button data-sugc="'+esc(key)+'">'+GRID_TXT.sugC+'</button><button data-clrc="'+esc(key)+'">'+GRID_TXT.clrC+"</button></td>"+
+      '<td class="al">'+(un?'<span class="warnt">'+un+" "+GRID_TXT.nowhere+"</span>":"")+"</td></tr>";
+  });
+  return html;
+}
 function renderChoose(){
-  $("#th").innerHTML="<tr>"+COLS.map(function(c){if(!c[0])return "<th></th>";
-    var on=SORT.k===c[0];return '<th class="s '+c[2]+(on?" sorted":"")+'" data-sort="'+c[0]+'">'+esc(c[1])+(on?(SORT.d<0?" ↓":" ↑"):"")+"</th>";}).join("")+"</tr>";
   var list=filtered(), shown=list.slice(0,LIMIT);
   MOVED={};D.arts.forEach(function(a){if(TICK.has(a.a))MOVED[a.a]=allocate(a).reduce(function(t,m){return t+m.q;},0);});
-  $("#capBar").innerHTML=TICK.size?capBarHTML():"";
+  $("#capBar").innerHTML=capBarHTML();
   $("#allMovesBox").innerHTML=TICK.size?allMovesHTML():"";
   if(TICK.size)$("#allplan").innerHTML=planTable(allMoves());
-  $("#tb").innerHTML=shown.map(function(a){
-    var s=stats(a), K=KIND[s.kind], on=TICK.has(a.a);
-    var price=a.nett&&a.nett<a.p?'<span class="disc">'+rm(a.nett)+'</span><br><span class="muted" style="text-decoration:line-through">'+rm(a.p)+"</span>":rm(a.p);
-    var chips=[a.disc?'<span class="chip">'+esc(a.disc)+"</span>":"",a.season?'<span class="chip mono">'+esc(a.season)+"</span>":"",
-      a.coll?'<span class="chip">'+esc(a.coll)+"</span>":"",a.cut?'<span class="chip">'+esc(a.cut)+"</span>":""].join("");
-    return '<tr class="'+(on?"on":"")+'"><td class="tk"><input type="checkbox" class="tick" data-tick="'+esc(a.a)+'"'+(on?" checked":"")+' aria-label="Tick '+esc(a.a)+'"></td>'+
-      '<td class="l pt" data-h="产品类别"><b>'+esc(a.g||"–")+"</b>"+(a.cat&&a.cat!==a.g?'<br><span class="muted">'+esc(a.cat)+"</span>":"")+"</td>"+
-      '<td class="yr" data-h="年份"><b>'+esc(yearOf(a)||"–")+"</b></td>"+
-      '<td class="o l"><b>'+esc(a.a)+"</b><span>"+esc(a.n)+" · "+a.cols.length+" 个颜色"+"</span>"+chips+
-      (on?'<br><button class="opn" data-opn="'+esc(a.a)+'">'+(OPEN.has(a.a)?"▾ 收起分配":"▸ 分配")+(MOVED[a.a]?" · "+MOVED[a.a]+" 件":"")+"</button>":"")+"</td>"+
-      '<td data-h="现价">'+price+"</td>"+
-      '<td data-h="上市日期" title="首次到货 '+esc(fmtDate(a.start))+(a.lastIn?"，最后到货 "+esc(fmtDate(a.lastIn)):"")+'">'+monYr(a.start)+'<br><span class="muted">'+ageTxt(s.age)+(a.lastIn&&a.lastIn!==a.start?" · 最后到货 "+monYr(a.lastIn):"")+"</span></td>"+
-      '<td data-h="库存">'+s.held+'</td><td data-h="SG 网店库存" title="'+esc(sgTip(a))+'">'+(s.sg||"–")+(sgArt(a.a)[1]?'<br><span class="muted">'+sgArt(a.a)[1]+"/月</span>":"")+'</td><td data-h="分店">'+s.doors+'</td><td data-h="已售 '+W+'个月">'+s.sold+"</td>"+
-      '<td data-h="有卖的分店">'+s.sell+'</td><td data-h="滞销件数">'+(s.stuck||"–")+'</td><td data-h="滞销金额">'+(s.stuck?rm(s.stuck*s.price):"–")+"</td>"+
-      '<td class="l" data-h="建议"><span class="kind '+K[1]+'" title="'+esc(K[2])+'">'+K[0]+"</span></td></tr>"+
-      (on&&OPEN.has(a.a)?'<tr class="alloc"><td colspan="14">'+allocPanel(a)+"</td></tr>":"");
-  }).join("")||'<tr><td colspan="14" class="empty l">没有符合条件的货品。</td></tr>';
+  var order=[], groups={};
+  shown.forEach(function(a){var g=a.g||"Other";if(!groups[g]){groups[g]=[];order.push(g);}groups[g].push(a);});
+  $("#grid").innerHTML=order.map(function(g){
+    var arts=groups[g], sizes=baSizes(arts.map(function(a){return {cols:a.cols.filter(colHeld),a:a.a};}));
+    return '<h4 class="sgrp">'+esc(g)+' <span class="muted">· '+arts.length+" "+GRID_TXT.arts+"</span></h4>"+
+      '<div class="scroll"><table class="grid work"><thead><tr><th>'+GRID_TXT.year+'</th><th class="l">'+GRID_TXT.art+'</th><th class="l">'+GRID_TXT.desc+
+      "</th><th>RM</th><th class=\"l\">"+GRID_TXT.col+'</th><th class="l">'+GRID_TXT.outlet+"</th>"+sizes.map(function(z){return "<th>"+esc(z)+"</th>";}).join("")+
+      "<th>"+GRID_TXT.tot+"</th><th>"+GRID_TXT.sold+" "+W+"m</th><th>"+GRID_TXT.cover+'</th><th class="l">'+GRID_TXT.pick+'</th><th class="l">'+GRID_TXT.alloc+"</th></tr></thead><tbody>"+
+      arts.map(function(a){return gridArticle(a,sizes);}).join("")+"</tbody></table></div>";
+  }).join("")||'<p class="empty">'+GRID_TXT.none+"</p>";
   $("#cnt").textContent=list.length+" / "+D.arts.length+" 个货号"+(list.length>LIMIT?" · 显示 "+LIMIT:"");
-  $("#more").innerHTML=list.length>LIMIT?'<button class="ghost" id="moreBtn">再显示 '+Math.min(150,list.length-LIMIT)+" 个</button>":"";
+  $("#more").innerHTML=list.length>LIMIT?'<button class="ghost" id="moreBtn">再显示 '+Math.min(40,list.length-LIMIT)+" 个</button>":"";
   CUR_LIST=list;
 }
 var CUR_LIST=[];
@@ -808,7 +866,7 @@ function render(){
   ["choose","lists","summary","byart"].forEach(function(v){$("#tab_"+v).setAttribute("aria-selected",VIEW===v);$("#"+v).hidden=VIEW!==v;});
   $("#tab_choose .n").textContent=TICK.size;
   if(VIEW==="choose")renderChoose();else if(VIEW==="lists")renderLists();else if(VIEW==="byart")renderByArt();else renderSummary();
-  $("#dockTxt").innerHTML="已勾选 <b>"+TICK.size+"</b> 个货号 · 计划调货 <b>"+pcs+"</b> 件 · 预设每个尺码最多 <b>"+CAP+"</b> 件";
+  $("#dockTxt").innerHTML="有选择的货号 <b>"+TICK.size+"</b> 个 · 计划调货 <b>"+pcs+"</b> 件 · 预设每个尺码最多 <b>"+CAP+"</b> 件";
   $("#goDesk").textContent=VIEW==="lists"?"返回选货与分配":"调货单 →";
 }
 /* How old each source is (Tze, 2026-09-22: "let me know how fresh are the data") */
@@ -830,7 +888,7 @@ function boot(){
     freshHTML()+
     '<div class="facts" id="facts"></div>'+
     '<div class="bar"><span class="lbl">销售期间</span><div class="seg" id="wins"></div><span class="status" id="winNote"></span></div>'+
-    '<div class="legend"><b>使用方法：</b>1) <b>选货与分配</b>：按类别、价格、上市日期或建议筛选，勾选值得调动的货号；勾选后，它的各个颜色会直接在下面展开。'+
+    '<div class="legend"><b>使用方法：</b>1) <b>选货与分配</b>：按产品类别、年份、价格、上市日期或建议筛选；每个货号按分店一行显示各尺码库存；在那一行按收货 / 调出 / 全部调出，「调去哪里」一栏显示货调去哪里。不用另外勾选。'+
     '你点之前不会有任何选择：按<b>这个货号给建议</b>（或<b>全部给建议</b>）由页面建议，按<b>清除</b>清掉选择。<b>收货</b> = 有在卖的分店；<b>调出</b> = 有货但这段期间没卖的分店，只调出收货分店需要的件数；<b>全部调出</b> = 这间分店这个颜色全部调走，一件不留。'+
     '点一下就可以更改。每间收货分店每个尺码预设最多补到 <b>'+CAP+' 件</b>，卖得最好的分店优先；每个颜色下面的<b>每个尺码调几件</b>按钮可以单独更改。'+
     '2) 按最下面「所有调货」里的 <b>复制到 WhatsApp</b> 或 <b>分享我的选择</b>，对方就能打开同一份计划。3) <b>调货单</b>：每间分店一张拣货单，可打印或发送。4) <b>分店总结</b>：调货后每间分店各类别的库存搭配，对比它的销售。5) <b>按货号</b>：产品类别 &gt; 货号 &gt; 颜色，看每间分店的货调去哪里。'+
@@ -864,7 +922,13 @@ function wire(){
     if(t.dataset.view){VIEW=t.dataset.view;render();window.scrollTo(0,0);return;}
     if(t.dataset.win){W=t.dataset.win;saveState();render();return;}
     if(t.dataset.sort){var k=t.dataset.sort;SORT=SORT.k===k?{k:k,d:-SORT.d}:{k:k,d:(k==="a"||k==="g"||k==="kind")?1:-1};renderChoose();return;}
-    if(t.dataset.sug){var sa=t.dataset.sug;SUGG.add(sa);Object.keys(ROLES).forEach(function(k){if(k.split("|")[0]===sa)delete ROLES[k];});
+    if(t.dataset.capc){var cpk=t.dataset.capc,cpa=cpk.split("|");CAPS[cpk]=Math.max(1,Math.min(6,capOf(cpa[0],cpa[1])+(+t.dataset.d)));
+      if(CAPS[cpk]===CAP)delete CAPS[cpk];saveState();render();return;}
+    if(t.dataset.sugc){var sk=t.dataset.sugc,sp=sk.split("|");SUGG.add(sk);TICK.add(sp[0]);
+      Object.keys(ROLES).forEach(function(k){var kp=k.split("|");if(kp[0]===sp[0]&&kp[1]===sp[1])delete ROLES[k];});saveState();render();return;}
+    if(t.dataset.clrc){var ck2=t.dataset.clrc,cp=ck2.split("|"),art2=D.arts.find(function(x){return x.a===cp[0];}),col2=art2&&art2.cols.find(function(x){return x.c===cp[1];});
+      SUGG.delete(ck2);if(col2)col2.rows.forEach(function(r){ROLES[rk(cp[0],cp[1],r.o)]="";});saveState();render();return;}
+    if(t.dataset.sug){var sa=t.dataset.sug;SUGG.add(sa);TICK.add(sa);Object.keys(ROLES).forEach(function(k){if(k.split("|")[0]===sa)delete ROLES[k];});
       OPEN.add(sa);saveState();render();return;}
     if(t.dataset.clr){var ca=t.dataset.clr,art=D.arts.find(function(x){return x.a===ca;});SUGG.delete(ca);
       art.cols.forEach(function(c){c.rows.forEach(function(r){ROLES[rk(ca,c.c,r.o)]="";});});OPEN.add(ca);saveState();render();return;}
@@ -876,7 +940,7 @@ function wire(){
       OPEN.add(t.dataset.ca);saveState();render();return;}
     if(t.dataset.role){var k2=rk(t.dataset.a,t.dataset.c,t.dataset.o);
       var a=D.arts.find(function(x){return x.a===t.dataset.a;}),c=a.cols.find(function(x){return x.c===t.dataset.c;}),r=c.rows.find(function(x){return x.o===t.dataset.o;});
-      ROLES[k2]=roleOf(a,c,r)===t.dataset.role?"":t.dataset.role;OPEN.add(a.a);saveState();render();return;}
+      ROLES[k2]=roleOf(a,c,r)===t.dataset.role?"":t.dataset.role;TICK.add(a.a);saveState();render();return;}
     switch(t.id){
       case "printList":case "baPrint":window.print();break;
       case "baTicked":BA_ALL=false;BA_LIMIT=80;renderByArt();break;
@@ -890,13 +954,13 @@ function wire(){
         var blob2=new Blob([rows2.map(function(r){return r.map(function(v){v=String(v);return /[",]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;}).join(",");}).join("\n")],{type:"text/csv"});
         var a2=document.createElement("a");a2.href=URL.createObjectURL(blob2);a2.download=D.title.replace(/\W+/g,"_")+"_transfer_lists_"+D.built+".csv";a2.click();break;
       case "goDesk":VIEW=VIEW==="lists"?"choose":"lists";render();window.scrollTo(0,0);break;
-      case "moreBtn":LIMIT+=150;renderChoose();break;
+      case "moreBtn":LIMIT+=40;renderChoose();break;
       case "tickAll":CUR_LIST.slice(0,LIMIT).forEach(function(a){TICK.add(a.a);});saveState();render();break;
       case "untick":TICK.clear();saveState();render();break;
       case "allOut":D.arts.forEach(function(a){if(!TICK.has(a.a))return;a.cols.forEach(function(c){c.rows.forEach(function(r){
           if(roleOf(a,c,r)==="g")ROLES[rk(a.a,c.c,r.o)]="x";});});});saveState();render();break;
       case "resetCaps":CAPS={};saveState();render();break;
-      case "sugAll":if(!Object.keys(ROLES).length||confirm(SUG_TXT.confAll)){AUTO=true;ROLES={};SUGG.clear();saveState();render();}break;
+      case "sugAll":if(!Object.keys(ROLES).length||confirm(SUG_TXT.confAll)){AUTO=true;ROLES={};SUGG.clear();CUR_LIST.forEach(function(a){TICK.add(a.a);});saveState();render();}break;
       case "clearAll":if(confirm(SUG_TXT.confClear)){AUTO=false;ROLES={};SUGG.clear();saveState();render();}break;
       case "copyWa":copy(waText(),"#copyStatus");break;
       /* Share my picks (Tze, 18 Oct 2026: supervisors miss the tiny "Copied" note): on a phone open the share sheet so
@@ -918,7 +982,7 @@ function wire(){
 
     if(e.target.dataset&&e.target.dataset.pick!==undefined){PICKED[e.target.dataset.pick]=e.target.checked;try{localStorage.setItem(STORE+":picked",JSON.stringify(PICKED));}catch(x){}}
   });
-  document.addEventListener("input",function(e){if(e.target.closest("#choose .filters")){LIMIT=150;renderChoose();}});
+  document.addEventListener("input",function(e){if(e.target.closest("#choose .filters")){if(e.target.id==="fsort"){var sv=e.target.value;SORT={k:sv,d:sv==="a"?1:-1};}LIMIT=40;renderChoose();}});
 }
 
 /* ---------- crypto (same contract as push_board.py) ---------- */
