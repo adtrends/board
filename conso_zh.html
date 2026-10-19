@@ -135,6 +135,7 @@ table.grid td.l,table.grid th.l{text-align:left}
 table.grid tr.sub td{background:var(--soft);font-weight:600}
 table.grid tr.gt td{border-top:2px solid var(--ink);font-weight:700}
 table.grid .tk{width:22px}
+td.pt b,td.yr b{font-size:14px}
 .pgy{display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 2px}
 .pgy span{display:inline-block!important;font-size:13px!important;font-weight:700;padding:2px 9px;border-radius:6px;color:var(--ink)!important}
 .pgy .pg{background:var(--accent-s)}.pgy .yr{background:var(--warn-s)}
@@ -366,14 +367,14 @@ function allMoves(){var m=[];D.arts.forEach(function(a){if(TICK.has(a.a))m=m.con
 function filtered(){
   var q=($("#q")||{}).value||"", br=($("#fb")||{}).value||"", g=($("#fg")||{}).value||"", pb=($("#fp")||{}).value||"",
       k=($("#fk")||{}).value||"", d=($("#fd")||{}).value||"", from=($("#ff")||{}).value||"", to=($("#ft")||{}).value||"",
-      stk=($("#fs")||{}).checked, tk=($("#ftk")||{}).checked, sgf=($("#fsg")||{}).value||"";
+      stk=($("#fs")||{}).checked, yf=($("#fy")||{}).value||"", tk=($("#ftk")||{}).checked, sgf=($("#fsg")||{}).value||"";
   q=q.trim().toUpperCase();
   var lo=0,hi=1e9;if(pb){var p=pb.split("-");lo=+p[0];hi=+p[1];}
   return D.arts.filter(function(a){
     var s=stats(a);
     if(!s.held)return false;   // sold in the last 12m but nothing left in the area: nothing to move
     if(q&&(a.a+" "+a.n+" "+a.coll+" "+a.cut).toUpperCase().indexOf(q)<0)return false;
-    if(br&&a.b!==br)return false; if(g&&a.g!==g)return false; if(k&&s.kind!==k)return false;
+    if(br&&a.b!==br)return false; if(g&&a.g!==g)return false; if(yf&&yearOf(a)!==yf)return false; if(k&&s.kind!==k)return false;
     if(d&&(a.disc||"(none)")!==d)return false;
     if(pb&&!(s.price>=lo&&s.price<=hi))return false;
     if(from&&(!a.start||a.start.slice(0,7)<from))return false;
@@ -384,7 +385,7 @@ function filtered(){
   }).sort(function(x,y){
     var sx=stats(x),sy=stats(y),k=SORT.k,vx,vy;
     if(k==="a"){vx=x.a;vy=y.a;}else if(k==="start"){vx=x.start||"";vy=y.start||"";}
-    else if(k==="g"){vx=x.g;vy=y.g;}else if(k==="stuckrm"){vx=sx.stuck*sx.price;vy=sy.stuck*sy.price;}
+    else if(k==="g"){vx=x.g;vy=y.g;}else if(k==="yr"){vx=yearOf(x);vy=yearOf(y);}else if(k==="stuckrm"){vx=sx.stuck*sx.price;vy=sy.stuck*sy.price;}
     else {vx=sx[k];vy=sy[k];}
     if(vx==null)vx=-1e9; if(vy==null)vy=-1e9;
     return (vx<vy?-1:vx>vy?1:0)*SORT.d || (x.a<y.a?-1:1);
@@ -395,9 +396,11 @@ function chooseShell(){
   var groups=[...new Set(D.arts.map(function(a){return a.g;}).filter(Boolean))].sort();
   var discs=[...new Set(D.arts.map(function(a){return a.disc||"(none)";}))].sort();
   var brands=[...new Set(D.arts.map(function(a){return a.b;}))].sort();
+  var years=[...new Set(D.arts.map(yearOf).filter(Boolean))].sort().reverse();
   return '<div class="filters">'+
    '<label><span class="lbl">搜索</span><input type="search" id="q" placeholder="货号、名称、系列…"></label>'+
-   '<label><span class="lbl">类别</span><select id="fg">'+opts([["","所有类别"]].concat(groups.map(function(g){return [g,g];})),"")+'</select></label>'+
+   '<label><span class="lbl">产品类别</span><select id="fg">'+opts([["","所有产品类别"]].concat(groups.map(function(g){return [g,g];})),"")+'</select></label>'+
+   '<label><span class="lbl">年份</span><select id="fy">'+opts([["","所有年份"]].concat(years.map(function(y){return [y,y];})),"")+'</select></label>'+
    '<label><span class="lbl">现价 ('+(D.region==="EAST"?"EM":"WM")+')</span><select id="fp">'+opts(BANDS,"")+'</select></label>'+
    '<label><span class="lbl">上市日期（首次到货），从 – 到</span><span class="row2"><input type="month" id="ff"><input type="month" id="ft"></span></label>'+
    '<label><span class="lbl">建议</span><select id="fk">'+opts([["","所有建议"],["move","可调货"],["conc","集中"],["clear","清货"],["new","太新"],["ok","正常"]],"")+'</select></label>'+
@@ -412,7 +415,7 @@ function chooseShell(){
    '<div class="scroll mainscroll"><table id="chooseT"><thead id="th"></thead><tbody id="tb"></tbody></table></div><div class="more" id="more"></div>'+
    '<div id="allMovesBox"></div>';
 }
-var COLS=[["","",""],["a","货号","l"],["g","类别","l"],["price","现价",""],["start","上市日期",""],
+var COLS=[["","",""],["g","产品类别","l"],["yr","年份",""],["a","货号","l"],["price","现价",""],["start","Sale start",""],
   ["held","库存",""],["sg","SG 网店库存",""],["doors","分店",""],["sold","已售",""],["sell","有卖的分店",""],["stuck","滞销件数",""],
   ["stuckrm","滞销金额",""],["kind","建议","l"]];
 function renderChoose(){
@@ -429,16 +432,17 @@ function renderChoose(){
     var chips=[a.disc?'<span class="chip">'+esc(a.disc)+"</span>":"",a.season?'<span class="chip mono">'+esc(a.season)+"</span>":"",
       a.coll?'<span class="chip">'+esc(a.coll)+"</span>":"",a.cut?'<span class="chip">'+esc(a.cut)+"</span>":""].join("");
     return '<tr class="'+(on?"on":"")+'"><td class="tk"><input type="checkbox" class="tick" data-tick="'+esc(a.a)+'"'+(on?" checked":"")+' aria-label="Tick '+esc(a.a)+'"></td>'+
-      '<td class="o l"><b>'+esc(a.a)+'</b><div class="pgy"><span class="pg">'+esc(a.g||"–")+'</span><span class="yr">'+esc(yearOf(a))+"</span></div><span>"+esc(a.n)+" · "+a.cols.length+" 个颜色"+"</span>"+chips+
+      '<td class="l pt" data-h="产品类别"><b>'+esc(a.g||"–")+"</b>"+(a.cat&&a.cat!==a.g?'<br><span class="muted">'+esc(a.cat)+"</span>":"")+"</td>"+
+      '<td class="yr" data-h="年份"><b>'+esc(yearOf(a)||"–")+"</b></td>"+
+      '<td class="o l"><b>'+esc(a.a)+"</b><span>"+esc(a.n)+" · "+a.cols.length+" 个颜色"+"</span>"+chips+
       (on?'<br><button class="opn" data-opn="'+esc(a.a)+'">'+(OPEN.has(a.a)?"▾ 收起分配":"▸ 分配")+(MOVED[a.a]?" · "+MOVED[a.a]+" 件":"")+"</button>":"")+"</td>"+
-      '<td class="l" data-h="类别">'+esc(a.g)+(a.cat&&a.cat!==a.g?'<br><span class="muted">'+esc(a.cat)+"</span>":"")+"</td>"+
       '<td data-h="现价">'+price+"</td>"+
       '<td data-h="上市日期" title="首次到货 '+esc(fmtDate(a.start))+(a.lastIn?"，最后到货 "+esc(fmtDate(a.lastIn)):"")+'">'+monYr(a.start)+'<br><span class="muted">'+ageTxt(s.age)+(a.lastIn&&a.lastIn!==a.start?" · 最后到货 "+monYr(a.lastIn):"")+"</span></td>"+
       '<td data-h="库存">'+s.held+'</td><td data-h="SG 网店库存" title="'+esc(sgTip(a))+'">'+(s.sg||"–")+(sgArt(a.a)[1]?'<br><span class="muted">'+sgArt(a.a)[1]+"/月</span>":"")+'</td><td data-h="分店">'+s.doors+'</td><td data-h="已售 '+W+'个月">'+s.sold+"</td>"+
       '<td data-h="有卖的分店">'+s.sell+'</td><td data-h="滞销件数">'+(s.stuck||"–")+'</td><td data-h="滞销金额">'+(s.stuck?rm(s.stuck*s.price):"–")+"</td>"+
       '<td class="l" data-h="建议"><span class="kind '+K[1]+'" title="'+esc(K[2])+'">'+K[0]+"</span></td></tr>"+
-      (on&&OPEN.has(a.a)?'<tr class="alloc"><td colspan="13">'+allocPanel(a)+"</td></tr>":"");
-  }).join("")||'<tr><td colspan="13" class="empty l">没有符合条件的货品。</td></tr>';
+      (on&&OPEN.has(a.a)?'<tr class="alloc"><td colspan="14">'+allocPanel(a)+"</td></tr>":"");
+  }).join("")||'<tr><td colspan="14" class="empty l">没有符合条件的货品。</td></tr>';
   $("#cnt").textContent=list.length+" / "+D.arts.length+" 个货号"+(list.length>LIMIT?" · 显示 "+LIMIT:"");
   $("#more").innerHTML=list.length>LIMIT?'<button class="ghost" id="moreBtn">再显示 '+Math.min(150,list.length-LIMIT)+" 个</button>":"";
   CUR_LIST=list;
