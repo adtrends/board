@@ -135,6 +135,10 @@ table.grid td.l,table.grid th.l{text-align:left}
 table.grid tr.sub td{background:var(--soft);font-weight:600}
 table.grid tr.gt td{border-top:2px solid var(--ink);font-weight:700}
 table.grid .tk{width:22px}
+.pgy{display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 2px}
+.pgy span{display:inline-block!important;font-size:13px!important;font-weight:700;padding:2px 9px;border-radius:6px;color:var(--ink)!important}
+.pgy .pg{background:var(--accent-s)}.pgy .yr{background:var(--warn-s)}
+tr.sgrow td{background:var(--soft);border-top:2px dashed var(--line)}
 table.byart td.o{font-family:ui-monospace,Consolas,monospace;font-size:11px;white-space:nowrap}
 table.byart td.o.get{background:var(--good-s);color:var(--good);font-weight:700}
 table.byart td.o.give{background:var(--warn-s);color:var(--warn);font-weight:700}
@@ -291,8 +295,10 @@ function shareLink(){
 function rk(a,c,o){return a+"|"+c+"|"+o;}
 function sizesOf(a,c){var set={};c.rows.forEach(function(r){for(var k in r.q)set[k]=1;});
   var ss=D.ss[a.a+"|"+c.c]||{};for(var k in ss)set[k]=1;return Object.keys(set).sort(sizeCmp);}
-function liveSizes(a,c){var ss=D.ss[a.a+"|"+c.c]||{};var l=sizesOf(a,c).filter(function(s){return ss[s]&&ss[s][W];});
-  return l.length?l:sizesOf(a,c).filter(function(s){return c.rows.some(function(r){return r.q[s];});});}
+/* Tze, 19 Oct 2026: "i dont think it should count till the size? just the art-col is fine". Whether a door
+   GETS is decided by the art-colour's sales; every size someone in the area holds is then given out,
+   not only the sizes that sold in the window (size 29 was skipped because no 29 sold in 6m). */
+function liveSizes(a,c){return sizesOf(a,c).filter(function(s){return c.rows.some(function(r){return r.q[s];});});}
 function cover(r){var s=rowSold(r);if(!s)return null;return Math.round(rowHeld(r)/(s/(+W*4.35)));}
 function suggest(a,c,r){
   var st=stats(a), s=rowSold(r), h=rowHeld(r);
@@ -322,7 +328,7 @@ function allocate(a){
     var got={};                                  // size -> outlet -> pcs received
     function have(r,z){return (r.q[z]||0)+((got[z]||{})[r.o]||0);}
     function take(from,r,z){pool[from][z]--;got[z]=got[z]||{};got[z][r.o]=(got[z][r.o]||0)+1;add(from,r.o,c.c,z);}
-    // pass 1: fill each receiver up to CAP per selling size; ALL OUT doors are emptied first
+    // pass 1: fill each receiver up to CAP per size held in the area; ALL OUT doors are emptied first
     liveSizes(a,c).forEach(function(z){
       for(var guard=0;guard<60;guard++){
         var moved=false;
@@ -365,6 +371,7 @@ function filtered(){
   var lo=0,hi=1e9;if(pb){var p=pb.split("-");lo=+p[0];hi=+p[1];}
   return D.arts.filter(function(a){
     var s=stats(a);
+    if(!s.held)return false;   // sold in the last 12m but nothing left in the area: nothing to move
     if(q&&(a.a+" "+a.n+" "+a.coll+" "+a.cut).toUpperCase().indexOf(q)<0)return false;
     if(br&&a.b!==br)return false; if(g&&a.g!==g)return false; if(k&&s.kind!==k)return false;
     if(d&&(a.disc||"(none)")!==d)return false;
@@ -422,7 +429,7 @@ function renderChoose(){
     var chips=[a.disc?'<span class="chip">'+esc(a.disc)+"</span>":"",a.season?'<span class="chip mono">'+esc(a.season)+"</span>":"",
       a.coll?'<span class="chip">'+esc(a.coll)+"</span>":"",a.cut?'<span class="chip">'+esc(a.cut)+"</span>":""].join("");
     return '<tr class="'+(on?"on":"")+'"><td class="tk"><input type="checkbox" class="tick" data-tick="'+esc(a.a)+'"'+(on?" checked":"")+' aria-label="Tick '+esc(a.a)+'"></td>'+
-      '<td class="o l"><b>'+esc(a.a)+"</b><span>"+esc(a.n)+" · "+a.cols.length+" colour"+(a.cols.length>1?"s":"")+"</span>"+chips+
+      '<td class="o l"><b>'+esc(a.a)+'</b><div class="pgy"><span class="pg">'+esc(a.g||"–")+'</span><span class="yr">'+esc(yearOf(a))+"</span></div><span>"+esc(a.n)+" · "+a.cols.length+" colour"+(a.cols.length>1?"s":"")+"</span>"+chips+
       (on?'<br><button class="opn" data-opn="'+esc(a.a)+'">'+(OPEN.has(a.a)?"▾ Hide allocation":"▸ Allocate")+(MOVED[a.a]?" · "+MOVED[a.a]+" pcs":"")+"</button>":"")+"</td>"+
       '<td class="l" data-h="Category">'+esc(a.g)+(a.cat&&a.cat!==a.g?'<br><span class="muted">'+esc(a.cat)+"</span>":"")+"</td>"+
       '<td data-h="Price now">'+price+"</td>"+
@@ -437,12 +444,18 @@ function renderChoose(){
   CUR_LIST=list;
 }
 var CUR_LIST=[];
+/* year for the article: season code (201912 -> 2019), else the first-received year */
+function yearOf(a){return /^\d{4}/.test(a.season||"")?a.season.slice(0,4):(a.start?a.start.slice(0,4):"");}
 function sgTip(a){if(!D.sg)return "";var ss=D.sg.s,out=[];for(var k in ss){if(k.split("|")[0]!==a.a)continue;
   out.push("col "+k.split("|")[1]+": "+ss[k][0]+" pcs, sells "+ss[k][1]+"/mth online");}
   return out.length?"SiteGiant "+D.sg.asof+" \n"+out.join("\n"):"No SiteGiant stock ("+D.sg.asof+")";}
 
 /* ---------- render: desk ---------- */
 function outletName(o){var x=D.outlets.find(function(y){return y.o===o;});return x&&x.name?x.name:"";}
+/* SiteGiant (online) stock for the colour, by size, as the last row (Tze, 19 Oct 2026) */
+function sgRow(sizes,sgc){var by=(sgc&&sgc[2])||{};
+  return '<tr class="sgrow"><td class="o l"><b>SG online</b><span>SiteGiant'+(D.sg.asof?" · "+esc(D.sg.asof):"")+(sgc&&sgc[1]?" · "+sgc[1]+"/mth":"")+'</span></td><td>'+((sgc&&sgc[0])||0)+
+    "</td><td></td><td>"+(sgc&&sgc[1]?sgc[1]+"/m":"")+"</td><td></td>"+sizes.map(function(z){return '<td class="sz">'+(by[z]||"·")+"</td>";}).join("")+"<td></td></tr>";}
 function colourTable(a,c,moves){
   var sizes=sizesOf(a,c), live=liveSizes(a,c), ss=D.ss[a.a+"|"+c.c]||{};
   var head='<tr><th class="l">Outlet</th><th>Held</th><th title="What the outlet holds of this colour after the plan">Left after</th><th>Sold</th><th>Cover</th>'+sizes.map(function(z){
@@ -472,7 +485,7 @@ function colourTable(a,c,moves){
   return '<div class="colhead">Colour '+esc(c.c)+' <span>· '+pcs+" pcs held · "+sold+" sold in "+W+"m"+
       (sgc?' · <b title="'+esc(Object.keys(sgc[2]).sort(sizeCmp).map(function(z){return z+":"+sgc[2][z];}).join(" "))+'">SG online '+sgc[0]+" pcs</b> ("+sgc[1]+"/mth)":(D.sg?" · SG online 0":""))+"</span></div>"+
     capSel+(un?'<div class="warn">'+un+" pcs from an ALL OUT outlet have nowhere to go. Mark at least one outlet as GET for this colour.</div>":"")+
-    '<div class="scroll"><table><thead>'+head+"</thead><tbody>"+body+"</tbody></table></div>";
+    '<div class="scroll"><table><thead>'+head+"</thead><tbody>"+body+(D.sg?sgRow(sizes,sgc):"")+"</tbody></table></div>";
 }
 function planTable(moves){
   if(!moves.length)return '<p class="empty">No moves yet. Mark who GETS and who GIVES.</p>';
@@ -504,9 +517,10 @@ function capBarHTML(){
     '<button class="ghost" id="allOut" title="Every outlet marked GIVE sends out every piece of that colour">Every GIVE → ALL OUT</button>'+
     '<button class="ghost" id="resetRoles">Back to suggestions</button></div>';
 }
+function colHeld(c){return c.rows.some(function(r){return rowHeld(r)>0;});}
 function allocPanel(a){
   var moves=allocate(a);
-  return '<div class="panel">'+a.cols.map(function(c){return colourTable(a,c,moves);}).join("")+
+  return '<div class="panel">'+a.cols.filter(colHeld).map(function(c){return colourTable(a,c,moves);}).join("")+
     outletSummary(a,moves)+'<div class="plan"><h4>Moves for '+esc(a.a)+"</h4>"+planTable(moves)+"</div></div>";
 }
 function allMovesHTML(){
@@ -718,7 +732,7 @@ function renderByArt(){
     if(blocks>=BA_LIMIT)return;
     var arts=G.g[k], sizes=baSizes(arts), p=k.split("|"), body="", pcs=0;
     arts.forEach(function(a){a.cols.forEach(function(c){
-      if(blocks>=BA_LIMIT)return;
+      if(blocks>=BA_LIMIT||!colHeld(c))return;
       var rows=baRows(a,c,moves).filter(function(x){return rowHeld(x.r)||rowSold(x.r)||Object.keys(x.from).length;});
       if(!rows.length)return;
       blocks++;
