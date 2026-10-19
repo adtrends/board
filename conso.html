@@ -139,6 +139,7 @@ td.pt b,td.yr b{font-size:14px}
 .pgy{display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 2px}
 .pgy span{display:inline-block!important;font-size:13px!important;font-weight:700;padding:2px 9px;border-radius:6px;color:var(--ink)!important}
 .pgy .pg{background:var(--accent-s)}.pgy .yr{background:var(--warn-s)}
+div.artbar{margin:6px 0 4px}
 tr.sgrow td{background:var(--soft);border-top:2px dashed var(--line)}
 table.byart td.o{font-family:ui-monospace,Consolas,monospace;font-size:11px;white-space:nowrap}
 table.byart td.o.get{background:var(--good-s);color:var(--good);font-weight:700}
@@ -278,16 +279,18 @@ var KIND={move:["Move","k-move","Doors in the cluster sell it and have room — 
 var BANDS=[["","All prices"],["0-99","Below RM100"],["100-149","RM100–149"],["150-199","RM150–199"],["200-299","RM200–299"],["300-99999","RM300 and up"]];
 
 /* ---------- state: this browser + shareable in the link ---------- */
-function saveState(){try{localStorage.setItem(STORE,JSON.stringify({t:[...TICK],r:ROLES,cap:CAP,caps:CAPS,w:W}));}catch(e){}}
+function saveState(){try{localStorage.setItem(STORE,JSON.stringify({t:[...TICK],r:ROLES,cap:CAP,caps:CAPS,w:W,auto:AUTO,sg:[...SUGG]}));}catch(e){}}
 function loadState(){
   var s=null; var m=(location.hash||"").match(/[&]s=([A-Za-z0-9_\-]+)/);
   if(m){try{s=JSON.parse(decodeURIComponent(escape(atob(m[1].replace(/-/g,"+").replace(/_/g,"/")))));}catch(e){}}
+  var fromLink=!!s;
   if(!s){try{s=JSON.parse(localStorage.getItem(STORE)||"null");}catch(e){}}
-  if(s){TICK=new Set(s.t||[]);ROLES=s.r||{};CAP=s.cap||3;CAPS=s.caps||{};if(s.w&&D.windows.indexOf(s.w)>=0)W=s.w;}
+  if(s){TICK=new Set(s.t||[]);ROLES=s.r||{};CAP=s.cap||3;CAPS=s.caps||{};if(s.w&&D.windows.indexOf(s.w)>=0)W=s.w;
+    AUTO=s.auto===undefined?fromLink:!!s.auto;SUGG=new Set(s.sg||[]);}   // a plan shared before 19 Oct relied on suggestions
   else if(D.pretick&&D.pretick.length){TICK=new Set(D.pretick);}   // board built for a short list: start with all of it ticked
 }
 function shareLink(){
-  var raw=JSON.stringify({t:[...TICK],r:ROLES,cap:CAP,caps:CAPS,w:W});
+  var raw=JSON.stringify({t:[...TICK],r:ROLES,cap:CAP,caps:CAPS,w:W,auto:AUTO,sg:[...SUGG]});
   var b=btoa(unescape(encodeURIComponent(raw))).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
   return location.origin+location.pathname+"#"+KEYHEX+"&s="+b;
 }
@@ -309,7 +312,13 @@ function suggest(a,c,r){
   return "";
 }
 function sameBrand(a,r){return r.o.slice(0,2)===a.b;}
-function roleOf(a,c,r){var k=rk(a.a,c.c,r.o),v=ROLES[k]!==undefined?ROLES[k]:suggest(a,c,r);return v==="r"&&!sameBrand(a,r)?"":v;}
+/* AUTO = the page proposes GET / GIVE everywhere; SUGG = articles where it was asked to for that article only.
+   Off by default: nothing moves until someone taps GET / GIVE / ALL OUT or Suggest. */
+var AUTO=false, SUGG=new Set();
+var SUG_TXT={on:"Suggestions: ON for all articles",off:"Suggestions: OFF - you pick",all:"Suggest for all",clearAll:"Clear all picks",
+  one:"Suggest for this article",clearOne:"Clear this article",confAll:"Replace your GET/GIVE picks with suggestions for every ticked article?",
+  confClear:"Clear every GET / GIVE / ALL OUT pick on every article?"};
+function roleOf(a,c,r){var k=rk(a.a,c.c,r.o),v=ROLES[k]!==undefined?ROLES[k]:((AUTO||SUGG.has(a.a))?suggest(a,c,r):"");return v==="r"&&!sameBrand(a,r)?"":v;}
 /* Roles: r = GET, g = GIVE (only what receivers need, up to CAP a size), x = ALL OUT (the door
    sends every piece of the art-colour - promoters often want nothing left behind). */
 var UNPLACED={};                                 // "art|col" -> pcs an ALL OUT door could not place
@@ -519,12 +528,14 @@ function capBarHTML(){
     (nOver?'<button class="ghost" id="resetCaps">'+nOver+' colour'+(nOver>1?"s":"")+' set by hand \u2192 back to default</button>':'')+
     '<span style="flex:1"></span>'+
     '<button class="ghost" id="allOut" title="Every outlet marked GIVE sends out every piece of that colour">Every GIVE → ALL OUT</button>'+
-    '<button class="ghost" id="resetRoles">Back to suggestions</button></div>';
+    '<span class="status">'+(AUTO?SUG_TXT.on:SUG_TXT.off)+'</span>'+
+    '<button class="ghost" id="sugAll">'+SUG_TXT.all+'</button><button class="ghost" id="clearAll">'+SUG_TXT.clearAll+'</button></div>';
 }
 function colHeld(c){return c.rows.some(function(r){return rowHeld(r)>0;});}
 function allocPanel(a){
   var moves=allocate(a);
-  return '<div class="panel">'+a.cols.filter(colHeld).map(function(c){return colourTable(a,c,moves);}).join("")+
+  return '<div class="panel"><div class="bar artbar"><button class="ghost" data-sug="'+esc(a.a)+'">'+SUG_TXT.one+'</button>'+
+    '<button class="ghost" data-clr="'+esc(a.a)+'">'+SUG_TXT.clearOne+"</button></div>"+a.cols.filter(colHeld).map(function(c){return colourTable(a,c,moves);}).join("")+
     outletSummary(a,moves)+'<div class="plan"><h4>Moves for '+esc(a.a)+"</h4>"+planTable(moves)+"</div></div>";
 }
 function allMovesHTML(){
@@ -820,7 +831,7 @@ function boot(){
     '<div class="facts" id="facts"></div>'+
     '<div class="bar"><span class="lbl">Sales window</span><div class="seg" id="wins"></div><span class="status" id="winNote"></span></div>'+
     '<div class="legend"><b>How to use.</b> 1) <b>Choose &amp; allocate</b>: filter by category, price, sale start or verdict and tick the articles worth moving; each ticked article opens its colours right under it. '+
-    'Each colour starts with a suggestion. <b>GET</b> = a door that sells it; <b>GIVE</b> = a door holding it with no sales in the window, sending only what the GET doors need; <b>ALL OUT</b> = the door sends every piece of that colour so nothing is left. '+
+    'Nothing is picked until you tap: <b>Suggest for this article</b> (or <b>Suggest for all</b>) lets the page propose, <b>Clear</b> wipes the picks. <b>GET</b> = a door that sells it; <b>GIVE</b> = a door holding it with no sales in the window, sending only what the GET doors need; <b>ALL OUT</b> = the door sends every piece of that colour so nothing is left. '+
     'Tap to change. Each receiving door is filled up to <b>'+CAP+' pcs per size</b> by default, best-selling door first; change it for any colour with the <b>Pcs per size to give</b> buttons under each colour. '+
     '2) <b>Copy for WhatsApp</b> (under All moves at the bottom) or <b>Share my picks</b> so the other person opens the same plan. 3) <b>Transfer lists</b>: one pick list per outlet to print or send. 4) <b>Outlet summary</b>: each outlet&rsquo;s product-group mix after the plan, against what it sells. 5) <b>By article</b>: product group &gt; article &gt; colour with where each outlet&rsquo;s pieces go. '+
     '<span class="muted">Ticks are saved in this browser only, until you share them.'+(D.sg?" SG stock = SiteGiant (online) available stock on "+esc(D.sg.asof)+"; /mth = average online sales a month.":"")+'</span></div>'+
@@ -853,6 +864,10 @@ function wire(){
     if(t.dataset.view){VIEW=t.dataset.view;render();window.scrollTo(0,0);return;}
     if(t.dataset.win){W=t.dataset.win;saveState();render();return;}
     if(t.dataset.sort){var k=t.dataset.sort;SORT=SORT.k===k?{k:k,d:-SORT.d}:{k:k,d:(k==="a"||k==="g"||k==="kind")?1:-1};renderChoose();return;}
+    if(t.dataset.sug){var sa=t.dataset.sug;SUGG.add(sa);Object.keys(ROLES).forEach(function(k){if(k.split("|")[0]===sa)delete ROLES[k];});
+      OPEN.add(sa);saveState();render();return;}
+    if(t.dataset.clr){var ca=t.dataset.clr,art=D.arts.find(function(x){return x.a===ca;});SUGG.delete(ca);
+      art.cols.forEach(function(c){c.rows.forEach(function(r){ROLES[rk(ca,c.c,r.o)]="";});});OPEN.add(ca);saveState();render();return;}
     if(t.dataset.opn){var oa=t.dataset.opn;if(OPEN.has(oa))OPEN.delete(oa);else OPEN.add(oa);renderChoose();return;}
     if(t.dataset.tick!==undefined){if(t.checked){TICK.add(t.dataset.tick);OPEN.add(t.dataset.tick);}else{TICK.delete(t.dataset.tick);OPEN.delete(t.dataset.tick);}
       t.closest("tr").className=t.checked?"on":"";saveState();render();return;}
@@ -881,7 +896,8 @@ function wire(){
       case "allOut":D.arts.forEach(function(a){if(!TICK.has(a.a))return;a.cols.forEach(function(c){c.rows.forEach(function(r){
           if(roleOf(a,c,r)==="g")ROLES[rk(a.a,c.c,r.o)]="x";});});});saveState();render();break;
       case "resetCaps":CAPS={};saveState();render();break;
-      case "resetRoles":if(confirm("Drop your GET/GIVE changes and go back to the suggestions?")){ROLES={};saveState();render();}break;
+      case "sugAll":if(!Object.keys(ROLES).length||confirm(SUG_TXT.confAll)){AUTO=true;ROLES={};SUGG.clear();saveState();render();}break;
+      case "clearAll":if(confirm(SUG_TXT.confClear)){AUTO=false;ROLES={};SUGG.clear();saveState();render();}break;
       case "copyWa":copy(waText(),"#copyStatus");break;
       /* Share my picks (Tze, 18 Oct 2026: supervisors miss the tiny "Copied" note): on a phone open the share sheet so
          WhatsApp is one tap; otherwise copy and say so in a box they cannot miss. */
