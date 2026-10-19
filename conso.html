@@ -70,6 +70,10 @@ td.o b{font-family:"IBM Plex Mono",monospace}
 td.o span{display:block;color:var(--muted);font-size:10.5px;white-space:normal;max-width:300px}
 tr:last-child td{border-bottom:none}
 tr.on{background:var(--accent-s)}
+tr.alloc>td{background:var(--bg);padding:6px 0 14px!important;white-space:normal;border-bottom:2px solid var(--accent)}
+tr.alloc>td{text-align:left}
+tr.alloc .panel{padding:0 4px;position:sticky;left:0;max-width:min(calc(100vw - 40px),1200px);box-sizing:border-box}
+button.opn{border:1px solid var(--accent);background:var(--card);color:var(--accent);font:inherit;font-size:12px;font-weight:700;padding:3px 10px;border-radius:999px;cursor:pointer;margin-top:6px}
 .chip{display:inline-block;font-size:10px;font-weight:600;padding:1px 7px;border-radius:999px;background:var(--soft);
  color:var(--muted);margin:3px 4px 0 0}
 .kind{font-size:10px;font-weight:700;padding:3px 8px;border-radius:999px;background:var(--soft);color:var(--muted)}
@@ -156,7 +160,7 @@ details.recvd summary{cursor:pointer;font-weight:600;font-size:13px;margin-botto
    --accent:#0f6d7d;--accent-s:#dcecef;--good:#1c7a4c;--good-s:#e2f2e9;--warn:#8f6200;--warn-s:#fbf1da;
    --bad:#ad2e22;--bad-s:#fae4e1;--on:#fff}  /* transfer lists always print light */
   body{background:#fff;color:#000}
-  .noprint,.dock,.facts,.legend,p.sub,h1,#winNote,.bar,.tabs,#choose,#desk,#summary{display:none!important}
+  .noprint,.dock,.facts,.legend,p.sub,h1,#winNote,.bar,.tabs,#choose,#summary{display:none!important}
   .wrap{padding:0;max-width:none}
   .scroll{overflow:visible;border:0}
   .olist{break-after:page}
@@ -176,16 +180,17 @@ details.recvd summary{cursor:pointer;font-weight:600;font-size:13px;margin-botto
 @media (max-width:760px){
   .wrap{padding:14px 12px 150px}
   .dock{flex-direction:column;align-items:stretch;gap:8px}
-  #choose table,#choose thead,#choose tbody,#choose tr,#choose td{display:block}
-  #choose thead{display:none}
-  #choose .scroll{border:0;background:transparent;overflow:visible}
-  #choose tr{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:8px;position:relative}
-  #choose tr.on{border-color:var(--accent)}
-  #choose td{border:0;padding:0;text-align:left;white-space:normal}
-  #choose td.o{margin-bottom:6px;padding-right:34px}
-  #choose td.tk{position:absolute;top:10px;right:10px}
-  #choose td[data-h]{display:inline-block;min-width:31%;margin:0 2% 6px 0}
-  #choose td[data-h]::before{content:attr(data-h);display:block;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.03em}
+  #chooseT,#chooseT>thead,#chooseT>tbody,#chooseT>tbody>tr,#chooseT>tbody>tr>td{display:block}
+  #chooseT>thead{display:none}
+  #choose .mainscroll{border:0;background:transparent;overflow:visible}
+  #chooseT>tbody>tr{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:8px;position:relative}
+  #chooseT>tbody>tr.on{border-color:var(--accent)}
+  #chooseT>tbody>tr.alloc{margin-top:-6px;padding:4px 6px 8px;border-color:var(--accent)}
+  #chooseT>tbody>tr>td{border:0;padding:0;text-align:left;white-space:normal}
+  #chooseT>tbody>tr>td.o{margin-bottom:6px;padding-right:34px}
+  #chooseT>tbody>tr>td.tk{position:absolute;top:10px;right:10px}
+  #chooseT>tbody>tr>td[data-h]{display:inline-block;min-width:31%;margin:0 2% 6px 0}
+  #chooseT>tbody>tr>td[data-h]::before{content:attr(data-h);display:block;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.03em}
 }
 </style>
 <script>
@@ -396,7 +401,9 @@ function chooseShell(){
    '<label class="chk"><input type="checkbox" id="ftk"> Only ticked</label>'+
    '</div><div class="bar"><span class="status" id="cnt"></span><span style="flex:1"></span>'+
    '<button class="ghost" id="tickAll">Tick all shown</button><button class="ghost" id="untick">Clear ticks</button></div>'+
-   '<div class="scroll"><table><thead id="th"></thead><tbody id="tb"></tbody></table></div><div class="more" id="more"></div>';
+   '<div id="capBar"></div>'+
+   '<div class="scroll mainscroll"><table id="chooseT"><thead id="th"></thead><tbody id="tb"></tbody></table></div><div class="more" id="more"></div>'+
+   '<div id="allMovesBox"></div>';
 }
 var COLS=[["","",""],["a","Article","l"],["g","Category","l"],["price","Price now",""],["start","Sale start",""],
   ["held","Held",""],["sg","SG stock",""],["doors","Doors",""],["sold","Sold",""],["sell","Selling doors",""],["stuck","Not selling",""],
@@ -405,19 +412,25 @@ function renderChoose(){
   $("#th").innerHTML="<tr>"+COLS.map(function(c){if(!c[0])return "<th></th>";
     var on=SORT.k===c[0];return '<th class="s '+c[2]+(on?" sorted":"")+'" data-sort="'+c[0]+'">'+esc(c[1])+(on?(SORT.d<0?" ↓":" ↑"):"")+"</th>";}).join("")+"</tr>";
   var list=filtered(), shown=list.slice(0,LIMIT);
+  MOVED={};D.arts.forEach(function(a){if(TICK.has(a.a))MOVED[a.a]=allocate(a).reduce(function(t,m){return t+m.q;},0);});
+  $("#capBar").innerHTML=TICK.size?capBarHTML():"";
+  $("#allMovesBox").innerHTML=TICK.size?allMovesHTML():"";
+  if(TICK.size)$("#allplan").innerHTML=planTable(allMoves());
   $("#tb").innerHTML=shown.map(function(a){
     var s=stats(a), K=KIND[s.kind], on=TICK.has(a.a);
     var price=a.nett&&a.nett<a.p?'<span class="disc">'+rm(a.nett)+'</span><br><span class="muted" style="text-decoration:line-through">'+rm(a.p)+"</span>":rm(a.p);
     var chips=[a.disc?'<span class="chip">'+esc(a.disc)+"</span>":"",a.season?'<span class="chip mono">'+esc(a.season)+"</span>":"",
       a.coll?'<span class="chip">'+esc(a.coll)+"</span>":"",a.cut?'<span class="chip">'+esc(a.cut)+"</span>":""].join("");
     return '<tr class="'+(on?"on":"")+'"><td class="tk"><input type="checkbox" class="tick" data-tick="'+esc(a.a)+'"'+(on?" checked":"")+' aria-label="Tick '+esc(a.a)+'"></td>'+
-      '<td class="o l"><b>'+esc(a.a)+"</b><span>"+esc(a.n)+" · "+a.cols.length+" colour"+(a.cols.length>1?"s":"")+"</span>"+chips+"</td>"+
+      '<td class="o l"><b>'+esc(a.a)+"</b><span>"+esc(a.n)+" · "+a.cols.length+" colour"+(a.cols.length>1?"s":"")+"</span>"+chips+
+      (on?'<br><button class="opn" data-opn="'+esc(a.a)+'">'+(OPEN.has(a.a)?"▾ Hide allocation":"▸ Allocate")+(MOVED[a.a]?" · "+MOVED[a.a]+" pcs":"")+"</button>":"")+"</td>"+
       '<td class="l" data-h="Category">'+esc(a.g)+(a.cat&&a.cat!==a.g?'<br><span class="muted">'+esc(a.cat)+"</span>":"")+"</td>"+
       '<td data-h="Price now">'+price+"</td>"+
       '<td data-h="Sale start" title="First received '+esc(fmtDate(a.start))+(a.lastIn?", last received "+esc(fmtDate(a.lastIn)):"")+'">'+monYr(a.start)+'<br><span class="muted">'+ageTxt(s.age)+(a.lastIn&&a.lastIn!==a.start?" · last in "+monYr(a.lastIn):"")+"</span></td>"+
       '<td data-h="Held">'+s.held+'</td><td data-h="SG stock" title="'+esc(sgTip(a))+'">'+(s.sg||"–")+(sgArt(a.a)[1]?'<br><span class="muted">'+sgArt(a.a)[1]+"/mth</span>":"")+'</td><td data-h="Doors">'+s.doors+'</td><td data-h="Sold '+W+'m">'+s.sold+"</td>"+
       '<td data-h="Selling doors">'+s.sell+'</td><td data-h="Not selling">'+(s.stuck||"–")+'</td><td data-h="Not selling RM">'+(s.stuck?rm(s.stuck*s.price):"–")+"</td>"+
-      '<td class="l" data-h="Verdict"><span class="kind '+K[1]+'" title="'+esc(K[2])+'">'+K[0]+"</span></td></tr>";
+      '<td class="l" data-h="Verdict"><span class="kind '+K[1]+'" title="'+esc(K[2])+'">'+K[0]+"</span></td></tr>"+
+      (on&&OPEN.has(a.a)?'<tr class="alloc"><td colspan="13">'+allocPanel(a)+"</td></tr>":"");
   }).join("")||'<tr><td colspan="13" class="empty l">Nothing matches these filters.</td></tr>';
   $("#cnt").textContent=list.length+" of "+D.arts.length+" articles"+(list.length>LIMIT?" · showing "+LIMIT:"");
   $("#more").innerHTML=list.length>LIMIT?'<button class="ghost" id="moreBtn">Show '+Math.min(150,list.length-LIMIT)+" more</button>":"";
@@ -480,30 +493,26 @@ function outletSummary(a,moves){
       '</td><td class="left'+(l===0&&v.h?" zero":l!==v.h?" chg":"")+'">'+(l===0&&v.h?"0 ✓":l)+"</td></tr>";}).join("");
   return '<div class="plan"><h4>Each outlet, all colours of '+esc(a.a)+'</h4><div class="scroll"><table><thead><tr><th class="l">Outlet</th><th>Holds now</th><th>Sends</th><th>Gets</th><th>Left after</th></tr></thead><tbody>'+rows+"</tbody></table></div></div>";
 }
-var OPEN=new Set();
-function renderDesk(){
-  var arts=D.arts.filter(function(a){return TICK.has(a.a);});
-  if(!arts.length){$("#desk").innerHTML='<p class="empty">Tick articles on the <b>Choose</b> tab first, then come back here.</p>';return;}
+var OPEN=new Set(), MOVED={};
+function capBarHTML(){
   var nOver=Object.keys(CAPS).length;
-  $("#desk").innerHTML='<div class="bar"><span class="lbl">Default: up to</span><div class="seg" id="caps">'+[1,2,3,4,5,6].map(function(n){
+  return '<div class="bar"><span class="lbl">Default: up to</span><div class="seg" id="caps">'+[1,2,3,4,5,6].map(function(n){
       return '<button data-cap="'+n+'" aria-pressed="'+(n===CAP)+'">'+n+"</button>";}).join("")+
     '</div><span class="lbl">pcs per size, per receiving door</span>'+
     (nOver?'<button class="ghost" id="resetCaps">'+nOver+' colour'+(nOver>1?"s":"")+' set by hand \u2192 back to default</button>':'')+
     '<span style="flex:1"></span>'+
     '<button class="ghost" id="allOut" title="Every outlet marked GIVE sends out every piece of that colour">Every GIVE → ALL OUT</button>'+
-    '<button class="ghost" id="resetRoles">Back to suggestions</button></div>'+
-    arts.map(function(a){
-      var moves=allocate(a), s=stats(a), n=moves.reduce(function(t,m){return t+m.q;},0), K=KIND[s.kind];
-      return '<details class="item" data-art="'+esc(a.a)+'"'+(OPEN.has(a.a)?" open":"")+'><summary><div><span class="code">'+esc(a.a)+"</span> "+
-        '<span class="kind '+K[1]+'">'+K[0]+'</span><div class="nm">'+esc(a.n)+" · "+esc(a.g)+" · "+rm(s.price)+(a.disc?" ("+esc(a.disc)+")":"")+" · sale start "+monYr(a.start)+"</div></div>"+
-        '<div><span class="tag">'+s.held+" held</span><span class=\"tag\">"+s.sold+" sold "+W+"m</span>"+(n?'<span class="tag rec">'+n+" pcs to move</span>":"")+"</div></summary>"+
-        '<div class="panel">'+a.cols.map(function(c){return colourTable(a,c,moves);}).join("")+
-        outletSummary(a,moves)+'<div class="plan"><h4>Moves for '+esc(a.a)+"</h4>"+planTable(moves)+"</div></div></details>";
-    }).join("")+
-    '<div class="legend" style="margin-top:14px"><b>All moves</b> — one transfer (IT) per From → To.<div id="allplan" style="margin-top:8px"></div>'+
+    '<button class="ghost" id="resetRoles">Back to suggestions</button></div>';
+}
+function allocPanel(a){
+  var moves=allocate(a);
+  return '<div class="panel">'+a.cols.map(function(c){return colourTable(a,c,moves);}).join("")+
+    outletSummary(a,moves)+'<div class="plan"><h4>Moves for '+esc(a.a)+"</h4>"+planTable(moves)+"</div></div>";
+}
+function allMovesHTML(){
+  return '<div class="legend" style="margin-top:14px"><b>All moves</b> — one transfer (IT) per From → To.<div id="allplan" style="margin-top:8px"></div>'+
     '<div class="bar" style="margin-top:10px"><button class="act" id="copyWa">Copy for WhatsApp</button><button class="ghost" id="csv">Download CSV</button>'+
     '<span class="status" id="copyStatus"></span></div></div>';
-  $("#allplan").innerHTML=planTable(allMoves());
 }
 
 /* ---------- transfer lists: what each promoter picks and sends, and what arrives ---------- */
@@ -674,7 +683,7 @@ function renderSummary(){
 var BA_TXT={ticked:"Ticked articles",all:"All articles",grp:"All product groups",csv:"Download for Excel (CSV)",print:"Print / save PDF",
   outlet:"Outlet",art:"Art no",desc:"Description",col:"Col",tot:"Total",sold:"Sold",alloc:"Allocation",colTot:"total",
   arts:"articles",pcs:"pcs",more:"Show more",group:"Product group",name:"Outlet name",role:"Pick",
-  none:"Nothing to show. Tick articles on 1 Choose, or switch to All articles.",
+  none:"Nothing to show. Tick articles on 1 Choose & allocate, or switch to All articles.",
   note:"Stock now, by size. Green outlet = GET (receives), amber = GIVE or ALL OUT (sends). Allocation = where that outlet's pieces go (→) or where it gets them from (←) under the current plan; only ticked articles have a plan."};
 var BA_ALL=null, BA_GRP="", BA_LIMIT=80;
 function baGroups(){
@@ -767,11 +776,11 @@ function render(){
     return '<div class="fact"><b>'+f[0]+"</b><span>"+f[1]+"</span></div>";}).join("");
   $("#wins").innerHTML=D.windows.map(function(w){return '<button data-win="'+w+'" aria-pressed="'+(w===W)+'">'+w+" mth</button>";}).join("");
   $("#winNote").textContent="Sales from "+fmtDate(D.ranges[W])+" to "+fmtDate(D.built)+".";
-  ["choose","desk","lists","summary","byart"].forEach(function(v){$("#tab_"+v).setAttribute("aria-selected",VIEW===v);$("#"+v).hidden=VIEW!==v;});
-  $("#tab_desk .n").textContent=TICK.size;
-  if(VIEW==="choose")renderChoose();else if(VIEW==="desk")renderDesk();else if(VIEW==="lists")renderLists();else if(VIEW==="byart")renderByArt();else renderSummary();
+  ["choose","lists","summary","byart"].forEach(function(v){$("#tab_"+v).setAttribute("aria-selected",VIEW===v);$("#"+v).hidden=VIEW!==v;});
+  $("#tab_choose .n").textContent=TICK.size;
+  if(VIEW==="choose")renderChoose();else if(VIEW==="lists")renderLists();else if(VIEW==="byart")renderByArt();else renderSummary();
   $("#dockTxt").innerHTML="<b>"+TICK.size+"</b> articles ticked · <b>"+pcs+"</b> pcs planned · default up to <b>"+CAP+"</b> per size per door";
-  $("#goDesk").textContent=VIEW==="desk"?"Back to Choose":"Open Give & get";
+  $("#goDesk").textContent=VIEW==="lists"?"Back to Choose & allocate":"Transfer lists →";
 }
 /* How old each source is (Tze, 2026-09-22: "let me know how fresh are the data") */
 function freshHTML(){
@@ -792,14 +801,14 @@ function boot(){
     freshHTML()+
     '<div class="facts" id="facts"></div>'+
     '<div class="bar"><span class="lbl">Sales window</span><div class="seg" id="wins"></div><span class="status" id="winNote"></span></div>'+
-    '<div class="legend"><b>How to use.</b> 1) <b>Choose</b>: filter by category, price, sale start or verdict and tick the articles worth moving. '+
-    '2) <b>Give &amp; get</b>: each colour starts with a suggestion. <b>GET</b> = a door that sells it; <b>GIVE</b> = a door holding it with no sales in the window, sending only what the GET doors need; <b>ALL OUT</b> = the door sends every piece of that colour so nothing is left. '+
+    '<div class="legend"><b>How to use.</b> 1) <b>Choose &amp; allocate</b>: filter by category, price, sale start or verdict and tick the articles worth moving; each ticked article opens its colours right under it. '+
+    'Each colour starts with a suggestion. <b>GET</b> = a door that sells it; <b>GIVE</b> = a door holding it with no sales in the window, sending only what the GET doors need; <b>ALL OUT</b> = the door sends every piece of that colour so nothing is left. '+
     'Tap to change. Each receiving door is filled up to <b>'+CAP+' pcs per size</b> by default, best-selling door first; change it for any colour with the <b>Pcs per size to give</b> buttons under each colour. '+
-    '3) <b>Copy for WhatsApp</b> or <b>Share my picks</b> so the other person opens the same plan. 4) <b>Transfer lists</b>: one pick list per outlet to print or send. 5) <b>Outlet summary</b>: each outlet&rsquo;s product-group mix after the plan, against what it sells. '+
+    '2) <b>Copy for WhatsApp</b> (under All moves at the bottom) or <b>Share my picks</b> so the other person opens the same plan. 3) <b>Transfer lists</b>: one pick list per outlet to print or send. 4) <b>Outlet summary</b>: each outlet&rsquo;s product-group mix after the plan, against what it sells. 5) <b>By article</b>: product group &gt; article &gt; colour with where each outlet&rsquo;s pieces go. '+
     '<span class="muted">Ticks are saved in this browser only, until you share them.'+(D.sg?" SG stock = SiteGiant (online) available stock on "+esc(D.sg.asof)+"; /mth = average online sales a month.":"")+'</span></div>'+
-    '<div class="tabs noprint" role="tablist"><button id="tab_choose" data-view="choose" role="tab">1 Choose</button><button id="tab_desk" data-view="desk" role="tab">2 Give &amp; get <span class="n">0</span></button>'+
-    '<button id="tab_lists" data-view="lists" role="tab">3 Transfer lists</button><button id="tab_summary" data-view="summary" role="tab">4 Outlet summary</button><button id="tab_byart" data-view="byart" role="tab">5 By article</button></div>'+
-    '<div id="choose">'+chooseShell()+'</div><div id="desk" hidden></div><div id="lists" hidden></div><div id="summary" hidden></div><div id="byart" hidden></div>'+
+    '<div class="tabs noprint" role="tablist"><button id="tab_choose" data-view="choose" role="tab">1 Choose &amp; allocate <span class="n">0</span></button>'+
+    '<button id="tab_lists" data-view="lists" role="tab">2 Transfer lists</button><button id="tab_summary" data-view="summary" role="tab">3 Outlet summary</button><button id="tab_byart" data-view="byart" role="tab">4 By article</button></div>'+
+    '<div id="choose">'+chooseShell()+'</div><div id="lists" hidden></div><div id="summary" hidden></div><div id="byart" hidden></div>'+
     '<div class="dock"><span id="dockTxt"></span><span class="bar" style="margin:0"><button class="ghost" id="share">Share my picks</button><button class="act" id="goDesk"></button></span></div>';
   wire(); render();
 }
@@ -826,7 +835,8 @@ function wire(){
     if(t.dataset.view){VIEW=t.dataset.view;render();window.scrollTo(0,0);return;}
     if(t.dataset.win){W=t.dataset.win;saveState();render();return;}
     if(t.dataset.sort){var k=t.dataset.sort;SORT=SORT.k===k?{k:k,d:-SORT.d}:{k:k,d:(k==="a"||k==="g"||k==="kind")?1:-1};renderChoose();return;}
-    if(t.dataset.tick!==undefined){if(t.checked)TICK.add(t.dataset.tick);else TICK.delete(t.dataset.tick);
+    if(t.dataset.opn){var oa=t.dataset.opn;if(OPEN.has(oa))OPEN.delete(oa);else OPEN.add(oa);renderChoose();return;}
+    if(t.dataset.tick!==undefined){if(t.checked){TICK.add(t.dataset.tick);OPEN.add(t.dataset.tick);}else{TICK.delete(t.dataset.tick);OPEN.delete(t.dataset.tick);}
       t.closest("tr").className=t.checked?"on":"";saveState();render();return;}
     if(t.dataset.cap){CAP=+t.dataset.cap;saveState();render();return;}
     if(t.dataset.cn!==undefined){var ck=t.dataset.ca+"|"+t.dataset.cc;if(+t.dataset.cn)CAPS[ck]=+t.dataset.cn;else delete CAPS[ck];
@@ -846,7 +856,7 @@ function wire(){
           return [m.from,outletName(m.from),m.to,outletName(m.to),m.a,(artOf(m.a)||{}).n||"",m.c,m.z,m.q];}));
         var blob2=new Blob([rows2.map(function(r){return r.map(function(v){v=String(v);return /[",]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;}).join(",");}).join("\n")],{type:"text/csv"});
         var a2=document.createElement("a");a2.href=URL.createObjectURL(blob2);a2.download=D.title.replace(/\W+/g,"_")+"_transfer_lists_"+D.built+".csv";a2.click();break;
-      case "goDesk":VIEW=VIEW==="desk"?"choose":"desk";render();window.scrollTo(0,0);break;
+      case "goDesk":VIEW=VIEW==="lists"?"choose":"lists";render();window.scrollTo(0,0);break;
       case "moreBtn":LIMIT+=150;renderChoose();break;
       case "tickAll":CUR_LIST.slice(0,LIMIT).forEach(function(a){TICK.add(a.a);});saveState();render();break;
       case "untick":TICK.clear();saveState();render();break;
