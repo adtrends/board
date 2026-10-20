@@ -151,6 +151,9 @@ table.work th,table.work td{padding:3px 6px;font-size:12px;white-space:nowrap}
 #grid .gscroll{max-height:calc(100vh - 170px);overflow:auto}
 table.work thead{position:sticky;top:0;z-index:3}
 table.work thead th{position:static;background:var(--card)}
+table.work thead tr.hbar th{text-align:left;padding:5px 6px;background:var(--soft);border-bottom:1px solid var(--line)}
+table.work .hb{position:sticky;left:6px;display:inline-flex;flex-wrap:wrap;gap:6px 12px;align-items:center;max-width:calc(100vw - 48px)}
+table.work .hb label{display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.03em;font-weight:600}
 table.work thead tr.flt th{padding:2px 4px;border-bottom:2px solid var(--line)}
 table.work select.hf{font:inherit;font-size:11px;text-transform:none;letter-spacing:0;padding:2px 4px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);max-width:120px}
 table.work td.io{text-align:center;font-size:13px}table.work .inq{color:var(--good)}table.work .outq{color:var(--bad)}
@@ -218,8 +221,9 @@ details.recvd summary{cursor:pointer;font-weight:600;font-size:13px;margin-botto
    year / description / RM / cover are dropped, the outlet code stays pinned on the left, buttons are thumb-sized. */
 :root[data-layout="phone"] .wrap{padding:12px 10px 150px}
 :root[data-layout="phone"] #grid .gscroll{max-height:none;overflow-x:auto;overflow-y:visible}
-:root[data-layout="phone"] table.work tr>:nth-child(1),:root[data-layout="phone"] table.work tr>:nth-child(3),
-:root[data-layout="phone"] table.work tr>:nth-child(4),:root[data-layout="phone"] table.work tr>:nth-last-child(4){display:none}
+:root[data-layout="phone"] table.work tr:not(.hbar)>:nth-child(1),:root[data-layout="phone"] table.work tr:not(.hbar)>:nth-child(3),
+:root[data-layout="phone"] table.work tr:not(.hbar)>:nth-child(4),:root[data-layout="phone"] table.work tr:not(.hbar)>:nth-last-child(4){display:none}
+:root[data-layout="phone"] table.work tr.hbar>th{position:static}
 :root[data-layout="phone"] table.work th,:root[data-layout="phone"] table.work td{font-size:13px;padding:3px 5px}
 :root[data-layout="phone"] table.work td.o,:root[data-layout="phone"] table.work tr>:nth-child(6){position:sticky;left:0;z-index:1;background:var(--card)}
 :root[data-layout="phone"] table.work td.o.get{background:var(--good-s)}:root[data-layout="phone"] table.work td.o.give{background:var(--warn-s)}
@@ -228,7 +232,7 @@ details.recvd summary{cursor:pointer;font-weight:600;font-size:13px;margin-botto
 :root[data-layout="phone"] table.work td.pk button{font-size:13px;padding:7px 10px;margin:1px 4px 1px 0;border-radius:8px}
 :root[data-layout="phone"] table.work select.hf{font-size:13px;padding:6px;max-width:150px}
 :root[data-layout="phone"] button.themesw,:root[data-layout="phone"] a.langsw{font-size:13px;padding:6px 10px;margin:2px 0 6px 6px}
-:root[data-layout="phone"] .filters .hdrf{display:contents}:root[data-layout="phone"] .filters .fhint{display:none}
+:root[data-layout="phone"] .filters .fhint{display:none}
 @media (max-width:760px){
   .wrap{padding:14px 12px 150px}
   .dock{flex-direction:column;align-items:stretch;gap:8px}
@@ -468,8 +472,8 @@ function chooseShell(){
   var years=[...new Set(D.arts.map(yearOf).filter(Boolean))].sort().reverse();
   return '<div class="filters">'+
    '<label><span class="lbl">Search</span><input type="search" id="q" placeholder="Article, name, collection…"></label>'+
-   '<label><span class="lbl">'+GRID_TXT.sort+'</span><select id="fsort">'+opts(GRID_TXT.sorts,SORT.k)+'</select></label>'+
    '<span class="hdrf">'+
+   '<label><span class="lbl">'+GRID_TXT.sort+'</span><select id="fsort">'+opts(GRID_TXT.sorts,SORT.k)+'</select></label>'+
    '<label><span class="lbl">Product type</span><select id="fg">'+opts([["","All product types"]].concat(groups.map(function(g){return [g,g];})),"")+'</select></label>'+
    '<label><span class="lbl">Year</span><select id="fy">'+opts([["","All years"]].concat(years.map(function(y){return [y,y];})),"")+'</select></label>'+
    '<label><span class="lbl">Price now ('+(D.region==="EAST"?"EM":"WM")+')</span><select id="fp">'+opts(BANDS,"")+'</select></label>'+
@@ -501,7 +505,7 @@ var GRID_TXT={sort:"Sort articles by",year:"Year",art:"Art no",desc:"Description
   sorts:[["stuck","Not selling (most first)"],["held","Held (most first)"],["sold","Sold (most first)"],["yr","Year (newest first)"],["start","Sale start (newest first)"],["a","Article no"]]};
 var OUTF="", PICKF="";
 /* Tze, 19 Oct 2026 (phone): the top filters duplicated the table header - keep search + sort on top, the rest folded */
-var FLT_TXT={more:"More filters",hint:"Product type, year, price, outlet and pick: use the filters in the table header."};
+var FLT_TXT={more:"More filters",hint:"Product type, year, price, sort, outlet and pick: in the table header."};
 var GRID_TXT2={all:"All",anyPick:"Any pick",noPick:"No pick",get:"GET",give:"GIVE",allout:"ALL OUT"};
 var GRID_TXT3={io:"In / out",noGet:"Nothing moves: mark a GET outlet",full:"Nothing moves: the GET outlets already hold # a size - tap + to send more",zero:"0"};
 function ioTxt(inQ,outQ,role){
@@ -567,6 +571,15 @@ function hd(label,key,cls){var on=SORT.k===key;
   return '<th class="s'+(cls?" "+cls:"")+(on?" sorted":"")+'" data-sort="'+key+'">'+label+(on?(SORT.d<0?" ↓":" ↑"):" ↕")+"</th>";}
 function hsel(id,list,cur){return '<select class="hf" data-hf="'+id+'">'+opts(list,cur)+"</select>";}
 function grpOpts(){var f=$("#fg");return f?[].map.call(f.options,function(o){return [o.value,o.textContent];}):[["",""]];}
+/* Tze, 20 Oct 2026: "move the year and product group filter and sort to the header" - one bar on top of every
+   table, in both Phone and Computer view; it stays in sight when the table slides sideways. */
+var HB_TXT={grp:"Product type",yr:"Year",price:"Price",sort:"Sort"};
+function hbarRow(n){
+  function f(lbl,id,list,cur){return '<label><span>'+lbl+"</span>"+hsel(id,list,cur)+"</label>";}
+  return '<tr class="hbar"><th colspan="'+n+'"><div class="hb">'+
+    f(HB_TXT.grp,"fg",grpOpts(),($("#fg")||{}).value||"")+f(HB_TXT.yr,"fy",yearOpts(),($("#fy")||{}).value||"")+
+    f(HB_TXT.price,"fp",BANDS,($("#fp")||{}).value||"")+f(HB_TXT.sort,"sort",GRID_TXT.sorts,SORT.k)+"</div></th></tr>";
+}
 function yearOpts(){var f=$("#fy");return f?[].map.call(f.options,function(o){return [o.value,o.textContent];}):[["",""]];}
 function renderChoose(){
   var fs=$("#fsort");if(fs&&[].some.call(fs.options,function(o){return o.value===SORT.k;}))fs.value=SORT.k;
@@ -580,10 +593,10 @@ function renderChoose(){
   $("#grid").innerHTML=order.map(function(g){
     var arts=groups[g], sizes=baSizes(arts.map(function(a){return {cols:a.cols.filter(colHeld),a:a.a};}));
     return '<h4 class="sgrp">'+esc(g)+' <span class="muted">· '+arts.length+" "+GRID_TXT.arts+"</span></h4>"+
-      '<div class="scroll gscroll" data-g="'+esc(g)+'"><table class="grid work"><thead><tr>'+hd(GRID_TXT.year,"yr")+hd(GRID_TXT.art,"a","l")+hd(GRID_TXT.desc,"n","l")+hd("RM","price")+
+      '<div class="scroll gscroll" data-g="'+esc(g)+'"><table class="grid work"><thead>'+hbarRow(12+sizes.length)+'<tr>'+hd(GRID_TXT.year,"yr")+hd(GRID_TXT.art,"a","l")+hd(GRID_TXT.desc,"n","l")+hd("RM","price")+
       '<th class="l">'+GRID_TXT.col+'</th><th class="l">'+GRID_TXT.outlet+"</th>"+sizes.map(function(z){return "<th>"+esc(z)+"</th>";}).join("")+
       hd(GRID_TXT.tot,"held")+hd(GRID_TXT.sold+" "+W+"m","sold")+hd(GRID_TXT.cover,"cover")+'<th class="l">'+GRID_TXT.pick+'</th><th>'+GRID_TXT3.io+'</th><th class="l">'+GRID_TXT.alloc+"</th></tr>"+
-      '<tr class="flt"><th>'+hsel("fy",yearOpts(),($("#fy")||{}).value||"")+'</th><th></th><th>'+hsel("fg",grpOpts(),($("#fg")||{}).value||"")+'</th><th>'+hsel("fp",BANDS,($("#fp")||{}).value||"")+"</th><th></th><th>"+
+      '<tr class="flt"><th></th><th></th><th></th><th></th><th></th><th>'+
       hsel("out",[["",GRID_TXT2.all]].concat(D.outlets.map(function(x){return [x.o,x.o];})),OUTF)+"</th>"+sizes.map(function(){return "<th></th>";}).join("")+
       "<th></th><th></th><th></th><th>"+hsel("pick",[["",GRID_TXT2.all],["r",GRID_TXT2.get],["g",GRID_TXT2.give],["x",GRID_TXT2.allout],["any",GRID_TXT2.anyPick],["none",GRID_TXT2.noPick]],PICKF)+
       "</th><th></th><th></th></tr></thead><tbody>"+
@@ -1087,7 +1100,7 @@ function onChange(e){
     if(e.target.id==="hideSea"){HIDE_SEA=e.target.checked;renderSummary();}
     if(e.target.id==="baGrp"){BA_GRP=e.target.value;BA_LIMIT=80;renderByArt();}
     if(e.target.dataset&&e.target.dataset.hf){var hf=e.target.dataset.hf,hv=e.target.value;
-      if(hf==="fy"||hf==="fp"||hf==="fg"){$("#"+hf).value=hv;}else if(hf==="out")OUTF=hv;else if(hf==="pick")PICKF=hv;
+      if(hf==="fy"||hf==="fp"||hf==="fg"){$("#"+hf).value=hv;}else if(hf==="sort"){SORT={k:hv,d:hv==="a"?1:-1};$("#fsort").value=hv;}else if(hf==="out")OUTF=hv;else if(hf==="pick")PICKF=hv;
       LIMIT=40;renderChoose();}
 
     if(e.target.dataset&&e.target.dataset.pick!==undefined){PICKED[e.target.dataset.pick]=e.target.checked;try{localStorage.setItem(STORE+":picked",JSON.stringify(PICKED));}catch(x){}}
