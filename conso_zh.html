@@ -22,7 +22,7 @@
 *{box-sizing:border-box}
 html,body{margin:0}
 body{background:var(--bg);color:var(--ink);font:14px/1.45 "IBM Plex Sans",-apple-system,Segoe UI,Roboto,sans-serif}
-.wrap{max-width:1240px;margin:0 auto;padding:18px 16px 110px}
+.wrap{max-width:none;margin:0 auto;padding:18px 20px 24px}
 h1{font-size:22px;margin:0 0 2px}
 .sub{color:var(--muted);font-size:13px;margin:0 0 14px}
 .mono{font-family:"IBM Plex Mono",monospace}
@@ -92,7 +92,7 @@ button.opn{border:1px solid var(--accent);background:var(--card);color:var(--acc
 .muted{color:var(--muted)}
 .tick{width:18px;height:18px;accent-color:var(--accent);cursor:pointer}
 .more{margin:10px 0;text-align:center}
-.dock{position:fixed;left:50%;transform:translateX(-50%);bottom:12px;width:min(1208px,calc(100% - 24px));
+.dock{position:static;margin:14px 0 0;
  background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 14px;display:flex;gap:12px;
  align-items:center;justify-content:space-between;box-shadow:var(--shadow);z-index:5}
 .note{font-size:12px;color:var(--muted);line-height:1.55}
@@ -148,7 +148,7 @@ td.pt b,td.yr b{font-size:14px}
 .pgy .pg{background:var(--accent-s)}.pgy .yr{background:var(--warn-s)}
 div.artbar{margin:6px 0 4px}
 table.work th,table.work td{padding:3px 6px;font-size:12px;white-space:nowrap}
-#grid .gscroll{max-height:calc(100vh - 170px);overflow:auto}
+#grid .gscroll{max-height:none;overflow-x:auto;overflow-y:visible}
 table.work thead{position:sticky;top:0;z-index:3}
 table.work thead th{position:static;background:var(--card)}
 table.work td.grp{font-size:11px;color:var(--muted);font-weight:700;max-width:120px;overflow:hidden;text-overflow:ellipsis}
@@ -228,21 +228,21 @@ details.recvd summary{cursor:pointer;font-weight:600;font-size:13px;margin-botto
 
 /* Phone view (data-layout=phone): the page is the only vertical scroller, the table only slides sideways,
    year / description / RM / cover are dropped, the outlet code stays pinned on the left, buttons are thumb-sized. */
-:root[data-layout="phone"] .wrap{padding:12px 10px 150px}
+:root[data-layout="phone"] .wrap{padding:12px 10px 24px}
 :root[data-layout="phone"] #grid .gscroll{max-height:none;overflow-x:auto;overflow-y:visible}
-:root[data-layout="phone"] table.work tr>:nth-child(4),:root[data-layout="phone"] table.work tr>:nth-child(5),
+:root[data-layout="phone"] table.work tr>:nth-child(4),
 :root[data-layout="phone"] table.work tr>:nth-last-child(4){display:none}
 :root[data-layout="phone"] table.work th,:root[data-layout="phone"] table.work td{font-size:13px;padding:3px 5px}
-:root[data-layout="phone"] table.work td.o,:root[data-layout="phone"] table.work tr>:nth-child(7){position:sticky;left:0;z-index:1;background:var(--card)}
+:root[data-layout="phone"] table.work td.o,:root[data-layout="phone"] table.work tr>:nth-child(6){position:sticky;left:0;z-index:1;background:var(--card)}
 :root[data-layout="phone"] table.work td.o.get{background:var(--good-s)}:root[data-layout="phone"] table.work td.o.give{background:var(--warn-s)}
-:root[data-layout="phone"] table.work tr.ctot>:nth-child(7){background:var(--soft)}
+:root[data-layout="phone"] table.work tr.ctot>:nth-child(6){background:var(--soft)}
 :root[data-layout="phone"] table.work td.pk{white-space:nowrap}
 :root[data-layout="phone"] table.work td.pk button{font-size:13px;padding:7px 10px;margin:1px 4px 1px 0;border-radius:8px}
 :root[data-layout="phone"] table.work select.hf{font-size:13px;padding:6px;max-width:150px}
 :root[data-layout="phone"] button.themesw,:root[data-layout="phone"] a.langsw{font-size:13px;padding:6px 10px;margin:2px 0 6px 6px}
 :root[data-layout="phone"] .filters .fhint{display:none}
 @media (max-width:760px){
-  .wrap{padding:14px 12px 150px}
+  .wrap{padding:14px 12px 24px}
   .dock{flex-direction:column;align-items:stretch;gap:8px}
   #chooseT,#chooseT>thead,#chooseT>tbody,#chooseT>tbody>tr,#chooseT>tbody>tr>td{display:block}
   #chooseT>thead{display:none}
@@ -579,7 +579,7 @@ function gridArticle(a,sizes){
             out=moves.filter(function(m){return m.c===c.c&&m.from===r.o&&m.z===z;}).reduce(function(t,m){return t+m.q;},0);
         return gridCell(q,inn,out);}).join("");
       first=false;
-      html+='<tr class="'+(on?"on":"")+'"><td></td><td></td><td></td><td></td><td></td><td></td>'+
+      html+='<tr class="'+(on?"on":"")+'"><td></td><td></td><td></td><td></td><td></td>'+
         '<td class="o'+(role==="r"||role==="s"?" get":role==="g"||role==="x"||role==="w"?" give":"")+'" title="'+esc(outletName(r.o))+'">'+esc(r.o)+"</td>"+cells+
         "<td><b>"+n+"</b></td><td>"+rowSold(r)+"</td><td>"+(cv==null?"–":cv+"周")+"</td>"+
         '<td class="pk">'+(sameBrand(a,r)?'<button data-role="r"'+d+' aria-pressed="'+(role==="r")+'">收货</button>':"")+
@@ -588,14 +588,14 @@ function gridArticle(a,sizes){
     });
     var sgc=D.sg?sgCol(a.a,c.c):null;
     if(sgc&&sgc[0]){var by=sgc[2]||{};   // only when SiteGiant holds some - keeps the grid compact
-      html+='<tr class="sgrow"><td></td><td></td><td></td><td></td><td></td><td></td><td class="o">'+GRID_TXT.sg+"</td>"+
+      html+='<tr class="sgrow"><td></td><td></td><td></td><td></td><td></td><td class="o">'+GRID_TXT.sg+"</td>"+
         sizes.map(function(z){return '<td class="sz">'+(by[z]||"")+"</td>";}).join("")+"<td>"+((sgc&&sgc[0])||0)+"</td><td>"+(sgc&&sgc[1]?sgc[1]+"/m":"")+"</td><td></td><td></td><td></td><td></td></tr>";}
     var cap=capOf(a.a,c.c), own=!!CAPS[key], un=UNPLACED[key];
     var mvIn=moves.filter(function(m){return m.c===c.c;}).reduce(function(t2,m){return t2+m.q;},0);
     var givers=c.rows.some(function(r){var ro=roleOf(a,c,r);return ro==="g"||ro==="x";}), getters=c.rows.some(function(r){var ro=roleOf(a,c,r);return ro==="r"||ro==="s";});
     var note=givers&&!getters?'<span class="warnt">'+GRID_TXT3.noGet+"</span>":givers&&getters&&!mvIn?'<span class="warnt">'+GRID_TXT3.full.replace("#",cap)+"</span>":"";
-    var totRow='<tr class="ctot'+(isFirst?" afirst":"")+'"><td class="l grp">'+(isFirst?esc(a.g||""):"")+'</td><td class="yr">'+(isFirst?"<b>"+esc(yearOf(a)||"–")+"</b>":"")+'</td><td class="l mono"><b>'+esc(a.a)+"</b></td>"+
-      '<td class="l dsc" title="'+esc(a.n)+'">'+(isFirst?esc(a.n):"")+"</td><td>"+(isFirst&&price?Math.round(price):"")+'</td><td class="l mono"><b>'+esc(c.c)+"</b></td><td class=\"l\">"+GRID_TXT.colTot+"</td>"+
+    var totRow='<tr class="ctot'+(isFirst?" afirst":"")+'"><td class="l grp">'+(isFirst?esc(a.g||""):"")+'</td><td class="yr">'+(isFirst?"<b>"+esc(yearOf(a)||"–")+"</b>":"")+'</td><td class="l mono" title="'+esc(a.n)+'"><b>'+esc(a.a)+"</b></td>"+
+      "<td>"+(isFirst&&price?Math.round(price):"")+'</td><td class="l mono"><b>'+esc(c.c)+"</b></td><td class=\"l\">"+GRID_TXT.colTot+"</td>"+
       tot.map(function(v){return "<td>"+(v||"")+"</td>";}).join("")+"<td>"+tq+"</td><td>"+ts+"</td><td></td>"+
       '<td class="pk"><span class="capc'+(own?" own":"")+'"><button data-capc="'+esc(key)+'" data-d="-1">−</button><b>'+cap+'</b><button data-capc="'+esc(key)+'" data-d="1">+</button> '+GRID_TXT.pcs+"</span>"+
       '<button data-sugc="'+esc(key)+'">'+GRID_TXT.sugC+'</button><button data-clrc="'+esc(key)+'">'+GRID_TXT.clrC+"</button></td>"+
@@ -621,15 +621,23 @@ function renderChoose(){
   $("#allMovesBox").innerHTML=TICK.size?allMovesHTML():"";
   if(TICK.size)$("#allplan").innerHTML=planTable(allMoves());
   var order=[], groups={};
-  shown.forEach(function(a){var g=a.g||"Other";if(!groups[g]){groups[g]=[];order.push(g);}groups[g].push(a);});
+  /* Tze, 20 Oct 2026: "group the article of certain size group together, so the size group isn't too long" -
+     one table per product type AND size group (collar / S-XXXL / waist / suit / kids), each with its own size columns */
+  function artSizeGroup(a){var n={};a.cols.forEach(function(c){c.rows.forEach(function(r){for(var z in r.q){var k=sizeGroup(z);n[k]=(n[k]||0)+(r.q[z]||0);}});});
+    return Object.keys(n).sort(function(x,y){return n[y]-n[x];})[0]||"other";}
+  var sgLbl={};SIZE_GROUPS.forEach(function(x){sgLbl[x[0]]=x[1];});
+  var typeGroups={};
+  shown.forEach(function(a){var t=a.g||"Other",g=t+"|"+artSizeGroup(a);(typeGroups[t]=typeGroups[t]||{})[g]=1;
+    if(!groups[g]){groups[g]=[];order.push(g);}groups[g].push(a);});
   $("#grid").innerHTML=order.map(function(g){
     var arts=groups[g], sizes=baSizes(arts.map(function(a){return {cols:a.cols.filter(colHeld),a:a.a};}));
-    return '<h4 class="sgrp">'+esc(g)+' <span class="muted">· '+arts.length+" "+GRID_TXT.arts+"</span></h4>"+
-      '<div class="scroll gscroll" data-g="'+esc(g)+'"><table class="grid work"><thead><tr>'+hd(HB_TXT.grp,"g","l")+hd(GRID_TXT.year,"yr")+hd(GRID_TXT.art,"a","l")+hd(GRID_TXT.desc,"n","l")+hd("RM","price")+
+    var gp=g.split("|"), gTitle=gp[0]+(Object.keys(typeGroups[gp[0]]).length>1?" · "+(sgLbl[gp[1]]||gp[1]):"");
+    return '<h4 class="sgrp">'+esc(gTitle)+' <span class="muted">· '+arts.length+" "+GRID_TXT.arts+"</span></h4>"+
+      '<div class="scroll gscroll" data-g="'+esc(g)+'"><table class="grid work"><thead><tr>'+hd(HB_TXT.grp,"g","l")+hd(GRID_TXT.year,"yr")+hd(GRID_TXT.art,"a","l")+hd("RM","price")+
       '<th class="l">'+GRID_TXT.col+'</th><th class="l">'+GRID_TXT.outlet+"</th>"+sizes.map(function(z){return "<th>"+esc(z)+"</th>";}).join("")+
       hd(GRID_TXT.tot,"held")+hd(GRID_TXT.sold+" "+W+"m","sold")+hd(GRID_TXT.cover,"cover")+'<th class="l">'+GRID_TXT.pick+'</th><th>'+GRID_TXT3.io+'</th><th class="l">'+GRID_TXT.alloc+"</th></tr>"+
       '<tr class="flt"><th>'+hsel("fg",grpOpts(),($("#fg")||{}).value||"")+"</th><th>"+hsel("fy",yearOpts(),($("#fy")||{}).value||"")+"</th>"+
-      '<th><input type="search" class="hf hq" data-hf="q" placeholder="'+HB_TXT.q+'" value="'+esc(($("#q")||{}).value||"")+'"></th><th></th><th>'+
+      '<th><input type="search" class="hf hq" data-hf="q" placeholder="'+HB_TXT.q+'" value="'+esc(($("#q")||{}).value||"")+'"></th><th>'+
       hsel("fp",BANDS,($("#fp")||{}).value||"")+"</th><th></th><th>"+
       hsel("out",[["",GRID_TXT2.all]].concat(D.outlets.map(function(x){return [x.o,x.o];})),OUTF)+"</th>"+sizes.map(function(){return "<th></th>";}).join("")+
       "<th></th><th></th><th></th><th>"+hsel("pick",[["",GRID_TXT2.all],["r",GRID_TXT2.get],["g",GRID_TXT2.give],["x",GRID_TXT2.allout],["w",XR_TXT.wh],["s",XR_TXT.sg],["any",GRID_TXT2.anyPick],["none",GRID_TXT2.noPick]],PICKF)+
