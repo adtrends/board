@@ -177,6 +177,8 @@ table.work td.pk button{font:inherit;font-size:10px;font-weight:700;padding:2px 
 table.work td.pk button[data-role="r"][aria-pressed="true"]{background:var(--good);border-color:var(--good);color:var(--on)}
 table.work td.pk button[data-role="g"][aria-pressed="true"]{background:var(--warn);border-color:var(--warn);color:var(--on)}
 table.work td.pk button[data-role="x"][aria-pressed="true"]{background:var(--bad);border-color:var(--bad);color:var(--on)}
+table.work td.pk button[data-role="w"][aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+table.work td.pk button[data-role="s"][aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--on)}
 table.work .capc{margin-right:6px;font-weight:600;color:var(--muted)}table.work .capc b{display:inline-block;min-width:14px;text-align:center;color:var(--ink)}
 table.work .capc.own b{color:var(--accent)}
 table.work .warnt{color:var(--bad);font-weight:700}
@@ -386,34 +388,42 @@ var AUTO=false, SUGG=new Set();
 var SUG_TXT={on:"建议：全部货号已开启",off:"建议：关闭 - 由你选择",all:"全部给建议",clearAll:"清除全部选择",
   one:"这个货号给建议",clearOne:"清除这个货号",confAll:"用页面的建议替换所有已勾选货号的收货 / 调出选择？",
   confClear:"清除所有货号的收货 / 调出 / 全部调出选择？"};
-function roleOf(a,c,r){var k=rk(a.a,c.c,r.o),v=ROLES[k]!==undefined?ROLES[k]:((AUTO||SUGG.has(a.a)||SUGG.has(a.a+"|"+c.c))?suggest(a,c,r):"");return v==="r"&&!sameBrand(a,r)?"":v;}
+function roleOf(a,c,r){var k=rk(a.a,c.c,r.o),v=ROLES[k]!==undefined?ROLES[k]:((AUTO||SUGG.has(a.a)||SUGG.has(a.a+"|"+c.c))?suggest(a,c,r):"");return (v==="r"||v==="s")&&!sameBrand(a,r)?"":v;}
 /* Roles: r = GET, g = GIVE (only what receivers need, up to CAP a size), x = ALL OUT (the door
    sends every piece of the art-colour - promoters often want nothing left behind). */
 var UNPLACED={};                                 // "art|col" -> pcs an ALL OUT door could not place
+/* Tze, 20 Oct 2026: "add 2 more actions for each art col outlet, one is to return to WH, the other is to repeat from SG".
+   w = TO WH: the door sends what the GET doors still need first (stock stays in the area), every piece left goes back
+       to the warehouse WH_CODE - nothing stays at the door.
+   s = FROM SG: the door is a receiver like GET (area stock first), then each size is topped up to the pcs-per-size
+       from SG online stock (SG_CODE), best-selling door first, never more than SG holds of that size.
+   Codes from iDCP transfers: every AD and BF door returns to ADCEWHTR-O; SG repeats ship from ADECOMM. */
+var WH_CODE="ADCEWHTR-O", SG_CODE="ADECOMM";
 function allocate(a){
   var moves=[];
-  function add(from,to,c,z){var m=moves.find(function(x){return x.from===from&&x.to===to&&x.c===c&&x.z===z;});
-    if(m)m.q++;else moves.push({a:a.a,c:c,from:from,to:to,z:z,q:1});}
+  function add(from,to,c,z,q){q=q||1;var m=moves.find(function(x){return x.from===from&&x.to===to&&x.c===c&&x.z===z;});
+    if(m)m.q+=q;else moves.push({a:a.a,c:c,from:from,to:to,z:z,q:q});}
   a.cols.forEach(function(c){
     var role={};c.rows.forEach(function(r){role[r.o]=roleOf(a,c,r);});
-    var give=c.rows.filter(function(r){return role[r.o]==="g"||role[r.o]==="x";});
-    var allOut=c.rows.filter(function(r){return role[r.o]==="x";});
-    var get=c.rows.filter(function(r){return role[r.o]==="r";}).sort(function(x,y){return rowSold(y)-rowSold(x);});
+    var give=c.rows.filter(function(r){return role[r.o]==="g"||role[r.o]==="x"||role[r.o]==="w";});
+    var allOut=c.rows.filter(function(r){return role[r.o]==="x";}), ret=c.rows.filter(function(r){return role[r.o]==="w";});
+    var get=c.rows.filter(function(r){return role[r.o]==="r"||role[r.o]==="s";}).sort(function(x,y){return rowSold(y)-rowSold(x);});
+    var sgReq=get.filter(function(r){return role[r.o]==="s";});
     var key=a.a+"|"+c.c, cap=capOf(a.a,c.c); delete UNPLACED[key];
-    if(!give.length)return;
-    if(!get.length){var left=allOut.reduce(function(n,r){return n+rowHeld(r);},0);if(left)UNPLACED[key]=left;return;}
+    if(!give.length&&!sgReq.length)return;
     var pool={};give.forEach(function(g){pool[g.o]=Object.assign({},g.q);});
     var got={};                                  // size -> outlet -> pcs received
     function have(r,z){return (r.q[z]||0)+((got[z]||{})[r.o]||0);}
-    function take(from,r,z){pool[from][z]--;got[z]=got[z]||{};got[z][r.o]=(got[z][r.o]||0)+1;add(from,r.o,c.c,z);}
-    // pass 1: fill each receiver up to CAP per size held in the area; ALL OUT doors are emptied first
-    liveSizes(a,c).forEach(function(z){
+    function recv(r,z){got[z]=got[z]||{};got[z][r.o]=(got[z][r.o]||0)+1;}
+    function take(from,r,z){pool[from][z]--;recv(r,z);add(from,r.o,c.c,z);}
+    // pass 1: fill each receiver up to CAP per size held in the area; ALL OUT / TO WH doors are emptied first
+    if(give.length&&get.length)liveSizes(a,c).forEach(function(z){
       for(var guard=0;guard<60;guard++){
         var moved=false;
         for(var i=0;i<get.length;i++){
           var r=get[i]; if(have(r,z)>=cap)continue;
           var best=null;give.forEach(function(g){var n=pool[g.o][z]||0;if(g.o===r.o||!n)return;
-            var pri=role[g.o]==="x"?1:0;if(!best||pri>best.pri||(pri===best.pri&&n>best.n))best={o:g.o,pri:pri,n:n};});
+            var pri=role[g.o]==="x"||role[g.o]==="w"?1:0;if(!best||pri>best.pri||(pri===best.pri&&n>best.n))best={o:g.o,pri:pri,n:n};});
           if(!best)return;
           take(best.o,r,z);moved=true;
         }
@@ -432,6 +442,20 @@ function allocate(a){
       }
     });});
     if(unplaced)UNPLACED[key]=unplaced;
+    // pass 3: TO WH doors send every piece still left back to the warehouse
+    ret.forEach(function(g){Object.keys(pool[g.o]).forEach(function(z){var n=pool[g.o][z]||0;if(n>0){pool[g.o][z]=0;add(g.o,WH_CODE,c.c,z,n);}});});
+    // pass 4: FROM SG doors top up each size to CAP from SG online stock, one piece at a time, best seller first
+    if(sgReq.length){
+      var sgc=sgCol(a.a,c.c), sp=Object.assign({},(sgc&&sgc[2])||{}), zs={};
+      liveSizes(a,c).concat(Object.keys(sp)).forEach(function(z){zs[z]=1;});
+      Object.keys(zs).forEach(function(z){
+        for(var guard=0;guard<60;guard++){var moved=false;
+          for(var i=0;i<sgReq.length;i++){var r=sgReq[i];
+            if((sp[z]||0)<=0)break; if(have(r,z)>=cap)continue;
+            sp[z]--;recv(r,z);add(SG_CODE,r.o,c.c,z);moved=true;}
+          if(!moved)break;}
+      });
+    }
   });
   return moves;
 }
@@ -531,6 +555,13 @@ function gridCell(q,inn,out){
   if(out)return '<td class="sz take">'+q+"−"+out+"</td>";
   return '<td class="sz'+(q?"":" gap")+'">'+(q||"")+"</td>";
 }
+var XR_TXT={wh:"退仓",sg:"SG补货",whT:"先给收货的分店，剩下的全部退回仓库",
+  sgT:"每个尺码从 SG 网店库存补到设定件数（先用本区的货）",
+  list:"退仓 = 退回仓库 ADCEWHTR-O（开一张退货 IT）。SG补货 = 从 ADECOMM 发货：在分店列表选 ADECOMM，就是网店团队的拣货单。"};
+function extraRoles(a,r,d,role){
+  return '<button data-role="w"'+d+' aria-pressed="'+(role==="w")+'" title="'+XR_TXT.whT+' ('+WH_CODE+')">'+XR_TXT.wh+"</button>"+
+    (D.sg&&sameBrand(a,r)?'<button data-role="s"'+d+' aria-pressed="'+(role==="s")+'" title="'+XR_TXT.sgT+' ('+SG_CODE+')">'+XR_TXT.sg+"</button>":"");
+}
 function gridArticle(a,sizes){
   var moves=TICK.has(a.a)?allocate(a):[], on=TICK.has(a.a), price=priceNow(a), html="", first=true;
   a.cols.filter(colHeld).forEach(function(c){
@@ -549,10 +580,10 @@ function gridArticle(a,sizes){
         return gridCell(q,inn,out);}).join("");
       first=false;
       html+='<tr class="'+(on?"on":"")+'"><td></td><td></td><td></td><td></td><td></td><td></td>'+
-        '<td class="o'+(role==="r"?" get":role==="g"||role==="x"?" give":"")+'" title="'+esc(outletName(r.o))+'">'+esc(r.o)+"</td>"+cells+
+        '<td class="o'+(role==="r"||role==="s"?" get":role==="g"||role==="x"||role==="w"?" give":"")+'" title="'+esc(outletName(r.o))+'">'+esc(r.o)+"</td>"+cells+
         "<td><b>"+n+"</b></td><td>"+rowSold(r)+"</td><td>"+(cv==null?"–":cv+"周")+"</td>"+
         '<td class="pk">'+(sameBrand(a,r)?'<button data-role="r"'+d+' aria-pressed="'+(role==="r")+'">收货</button>':"")+
-        '<button data-role="g"'+d+' aria-pressed="'+(role==="g")+'">调出</button><button data-role="x"'+d+' aria-pressed="'+(role==="x")+'" title="这个颜色全部调出">全部调出</button></td>'+
+        '<button data-role="g"'+d+' aria-pressed="'+(role==="g")+'">调出</button><button data-role="x"'+d+' aria-pressed="'+(role==="x")+'" title="这个颜色全部调出">全部调出</button>'+extraRoles(a,r,d,role)+'</td>'+
         '<td class="io">'+ioTxt(inQ,outQ,role)+'</td><td class="al">'+baAllocTxt({to:to,from:from},true)+"</td></tr>";
     });
     var sgc=D.sg?sgCol(a.a,c.c):null;
@@ -561,7 +592,7 @@ function gridArticle(a,sizes){
         sizes.map(function(z){return '<td class="sz">'+(by[z]||"")+"</td>";}).join("")+"<td>"+((sgc&&sgc[0])||0)+"</td><td>"+(sgc&&sgc[1]?sgc[1]+"/m":"")+"</td><td></td><td></td><td></td><td></td></tr>";}
     var cap=capOf(a.a,c.c), own=!!CAPS[key], un=UNPLACED[key];
     var mvIn=moves.filter(function(m){return m.c===c.c;}).reduce(function(t2,m){return t2+m.q;},0);
-    var givers=c.rows.some(function(r){var ro=roleOf(a,c,r);return ro==="g"||ro==="x";}), getters=c.rows.some(function(r){return roleOf(a,c,r)==="r";});
+    var givers=c.rows.some(function(r){var ro=roleOf(a,c,r);return ro==="g"||ro==="x";}), getters=c.rows.some(function(r){var ro=roleOf(a,c,r);return ro==="r"||ro==="s";});
     var note=givers&&!getters?'<span class="warnt">'+GRID_TXT3.noGet+"</span>":givers&&getters&&!mvIn?'<span class="warnt">'+GRID_TXT3.full.replace("#",cap)+"</span>":"";
     var totRow='<tr class="ctot'+(isFirst?" afirst":"")+'"><td class="l grp">'+(isFirst?esc(a.g||""):"")+'</td><td class="yr">'+(isFirst?"<b>"+esc(yearOf(a)||"–")+"</b>":"")+'</td><td class="l mono"><b>'+esc(a.a)+"</b></td>"+
       '<td class="l dsc" title="'+esc(a.n)+'">'+(isFirst?esc(a.n):"")+"</td><td>"+(isFirst&&price?Math.round(price):"")+'</td><td class="l mono"><b>'+esc(c.c)+"</b></td><td class=\"l\">"+GRID_TXT.colTot+"</td>"+
@@ -601,7 +632,7 @@ function renderChoose(){
       '<th><input type="search" class="hf hq" data-hf="q" placeholder="'+HB_TXT.q+'" value="'+esc(($("#q")||{}).value||"")+'"></th><th></th><th>'+
       hsel("fp",BANDS,($("#fp")||{}).value||"")+"</th><th></th><th>"+
       hsel("out",[["",GRID_TXT2.all]].concat(D.outlets.map(function(x){return [x.o,x.o];})),OUTF)+"</th>"+sizes.map(function(){return "<th></th>";}).join("")+
-      "<th></th><th></th><th></th><th>"+hsel("pick",[["",GRID_TXT2.all],["r",GRID_TXT2.get],["g",GRID_TXT2.give],["x",GRID_TXT2.allout],["any",GRID_TXT2.anyPick],["none",GRID_TXT2.noPick]],PICKF)+
+      "<th></th><th></th><th></th><th>"+hsel("pick",[["",GRID_TXT2.all],["r",GRID_TXT2.get],["g",GRID_TXT2.give],["x",GRID_TXT2.allout],["w",XR_TXT.wh],["s",XR_TXT.sg],["any",GRID_TXT2.anyPick],["none",GRID_TXT2.noPick]],PICKF)+
       "</th><th></th><th></th></tr></thead><tbody>"+
       arts.map(function(a){return gridArticle(a,sizes);}).join("")+"</tbody></table></div>";
   }).join("")||'<p class="empty">'+GRID_TXT.none+"</p>";
@@ -774,7 +805,7 @@ function outletList(o,moves){
 function renderLists(){
   var moves=allMoves();
   if(!moves.length){$("#lists").innerHTML='<p class="empty">还没有调货计划。请先勾选货号，再设定 收货 / 调出 / 全部调出。</p>';return;}
-  var involved=D.outlets.map(function(x){return x.o;}).filter(function(o){return moves.some(function(m){return m.from===o||m.to===o;});});
+  var involved=D.outlets.map(function(x){return x.o;}).concat([SG_CODE,WH_CODE]).filter(function(o){return moves.some(function(m){return m.from===o||m.to===o;});});
   if(LIST_OUTLET&&LIST_OUTLET!=="ALL"&&involved.indexOf(LIST_OUTLET)<0)LIST_OUTLET="";
   if(!LIST_OUTLET)LIST_OUTLET=involved[0];
   var show=LIST_OUTLET==="ALL"?involved:[LIST_OUTLET];
@@ -786,7 +817,7 @@ function renderLists(){
     '<button class="act" id="printList">打印 / 存 PDF</button><button class="ghost" id="copyList">复制到 WhatsApp</button>'+
     '<button class="ghost" id="csvList">下载 CSV（所有分店）</button><span class="status" id="listStatus"></span></div>'+
     '<p class="note noprint">促销员按照这张单拣货，每个目的地（"调往"那一栏）开一张 IT。全部调出 = 这个颜色全部调走。按尺码类型分组（衬衫、上衣、裤子、西装、童装），每组有自己的尺码栏。请先核对货架：库存是系统在这天的数量 '+fmtDate(D.built)+'.</p>'+
-    show.map(function(o){return outletList(o,moves);}).join("");
+    '<p class="note noprint">'+XR_TXT.list+"</p>"+show.map(function(o){return outletList(o,moves);}).join("");
 }
 function listText(o,moves){
   var out=moves.filter(function(m){return m.from===o;}), inn=moves.filter(function(m){return m.to===o;}), by={}, lines=[];
@@ -893,7 +924,7 @@ function baAllocTxt(x,html){
   var t=Object.keys(x.to).map(function(o){return (html?'<span class="to">→ ':"→ ")+o+" "+x.to[o]+(html?"</span>":"");}),
       f=Object.keys(x.from).map(function(o){return (html?'<span class="from">← ':"← ")+o+" "+x.from[o]+(html?"</span>":"");});
   return t.concat(f).join(html?"<br>":"; ");}
-function baRoleTxt(role){return role==="r"?"收货":role==="g"?"调出":role==="x"?"全部调出":"";}
+function baRoleTxt(role){return role==="r"?"收货":role==="g"?"调出":role==="x"?"全部调出":role==="w"?XR_TXT.wh:role==="s"?XR_TXT.sg:"";}
 function renderByArt(){
   if(BA_ALL===null)BA_ALL=!TICK.size;
   var moves=allMoves(), G=baGroups(), shown=0, blocks=0, html="";
