@@ -183,6 +183,9 @@ table.work td.pk button{font:inherit;font-size:10px;font-weight:700;padding:2px 
 table.work td.pk button[data-role="r"][aria-pressed="true"]{background:var(--good);border-color:var(--good);color:var(--on)}
 table.work td.pk button[data-role="g"][aria-pressed="true"]{background:var(--warn);border-color:var(--warn);color:var(--on)}
 table.work td.pk button[data-role="x"][aria-pressed="true"]{background:var(--bad);border-color:var(--bad);color:var(--on)}
+table.work td.pk button[data-role="o"][aria-pressed="true"]{background:#7a4fb5;border-color:#7a4fb5;color:#fff}
+table.work td.pk select.dst{font:inherit;font-size:10.5px;padding:1px 3px;margin-right:2px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);max-width:150px}
+table.work td.pk select.dst.need{border-color:var(--bad);color:var(--bad)}
 table.work td.pk button[data-role="w"][aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--bg)}
 table.work td.pk button[data-role="s"][aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--on)}
 table.work .capc{margin-right:3px;font-weight:600;color:var(--muted)}table.work .capc b{display:inline-block;min-width:14px;text-align:center;color:var(--ink)}
@@ -283,7 +286,7 @@ details.recvd summary{cursor:pointer;font-weight:600;font-size:13px;margin-botto
 (function(){
 "use strict";
 var D=null, W="6", CAP=3, VIEW="choose", SORT={k:"stuck",d:-1}, LIMIT=40;
-var TICK=new Set(), ROLES={}, CAPS={}, KEYHEX=null, STORE=null;
+var TICK=new Set(), ROLES={}, CAPS={}, KEYHEX=null, STORE=null, DEST={};
 /* language toggle (Tze, 18 Oct 2026): English by default, one tap to the other language; same link key, same ticks */
 var LANG_OTHER="conso.html", LANG_LABEL="English";
 var THEME_LBL={dark:"深色",light:"浅色"};
@@ -355,18 +358,18 @@ var KIND={move:["可调货","k-move","同区有分店在卖而且还有空间，
 var BANDS=[["","所有价格"],["0-99","RM100 以下"],["100-149","RM100–149"],["150-199","RM150–199"],["200-299","RM200–299"],["300-99999","RM300 以上"]];
 
 /* ---------- state: this browser + shareable in the link ---------- */
-function saveState(){try{localStorage.setItem(STORE,JSON.stringify({t:[...TICK],r:ROLES,cap:CAP,caps:CAPS,w:W,auto:AUTO,sg:[...SUGG]}));}catch(e){}}
+function saveState(){try{localStorage.setItem(STORE,JSON.stringify({t:[...TICK],r:ROLES,cap:CAP,caps:CAPS,w:W,auto:AUTO,sg:[...SUGG],d:DEST}));}catch(e){}}
 function loadState(){
   var s=null; var m=(location.hash||"").match(/[&]s=([A-Za-z0-9_\-]+)/);
   if(m){try{s=JSON.parse(decodeURIComponent(escape(atob(m[1].replace(/-/g,"+").replace(/_/g,"/")))));}catch(e){}}
   var fromLink=!!s;
   if(!s){try{s=JSON.parse(localStorage.getItem(STORE)||"null");}catch(e){}}
   if(s){TICK=new Set(s.t||[]);ROLES=s.r||{};CAP=s.cap||3;CAPS=s.caps||{};if(s.w&&D.windows.indexOf(s.w)>=0)W=s.w;
-    AUTO=s.auto===undefined?fromLink:!!s.auto;SUGG=new Set(s.sg||[]);}   // a plan shared before 19 Oct relied on suggestions
+    AUTO=s.auto===undefined?fromLink:!!s.auto;SUGG=new Set(s.sg||[]);DEST=s.d||{};}   // a plan shared before 19 Oct relied on suggestions
   else if(D.pretick&&D.pretick.length){TICK=new Set(D.pretick);}   // board built for a short list: start with all of it ticked
 }
 function shareLink(){
-  var raw=JSON.stringify({t:[...TICK],r:ROLES,cap:CAP,caps:CAPS,w:W,auto:AUTO,sg:[...SUGG]});
+  var raw=JSON.stringify({t:[...TICK],r:ROLES,cap:CAP,caps:CAPS,w:W,auto:AUTO,sg:[...SUGG],d:DEST});
   var b=btoa(unescape(encodeURIComponent(raw))).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
   return location.origin+location.pathname+"#"+KEYHEX+"&s="+b;
 }
@@ -411,8 +414,9 @@ function allocate(a){
     if(m)m.q+=q;else moves.push({a:a.a,c:c,from:from,to:to,z:z,q:q});}
   a.cols.forEach(function(c){
     var role={};c.rows.forEach(function(r){role[r.o]=roleOf(a,c,r);});
-    var give=c.rows.filter(function(r){return role[r.o]==="g"||role[r.o]==="x"||role[r.o]==="w";});
-    var allOut=c.rows.filter(function(r){return role[r.o]==="x";}), ret=c.rows.filter(function(r){return role[r.o]==="w";});
+    var give=c.rows.filter(function(r){return role[r.o]==="g"||role[r.o]==="x"||role[r.o]==="w"||role[r.o]==="o";});
+    var allOut=c.rows.filter(function(r){return role[r.o]==="x";}), ret=c.rows.filter(function(r){return role[r.o]==="w";}),
+        oth=c.rows.filter(function(r){return role[r.o]==="o";});
     var get=c.rows.filter(function(r){return role[r.o]==="r"||role[r.o]==="s";}).sort(function(x,y){return rowSold(y)-rowSold(x);});
     var sgReq=get.filter(function(r){return role[r.o]==="s";});
     var key=a.a+"|"+c.c, cap=capOf(a.a,c.c); delete UNPLACED[key];
@@ -429,7 +433,7 @@ function allocate(a){
         for(var i=0;i<get.length;i++){
           var r=get[i]; if(have(r,z)>=cap)continue;
           var best=null;give.forEach(function(g){var n=pool[g.o][z]||0;if(g.o===r.o||!n)return;
-            var pri=role[g.o]==="x"||role[g.o]==="w"?1:0;if(!best||pri>best.pri||(pri===best.pri&&n>best.n))best={o:g.o,pri:pri,n:n};});
+            var pri=role[g.o]==="x"||role[g.o]==="w"||role[g.o]==="o"?1:0;if(!best||pri>best.pri||(pri===best.pri&&n>best.n))best={o:g.o,pri:pri,n:n};});
           if(!best)return;
           take(best.o,r,z);moved=true;
         }
@@ -450,6 +454,9 @@ function allocate(a){
     if(unplaced)UNPLACED[key]=unplaced;
     // pass 3: TO WH doors send every piece still left back to the warehouse
     ret.forEach(function(g){Object.keys(pool[g.o]).forEach(function(z){var n=pool[g.o][z]||0;if(n>0){pool[g.o][z]=0;add(g.o,WH_CODE,c.c,z,n);}});});
+    // pass 3b: TO OTHER doors send every piece still left to the outlet chosen for that row (outside this board)
+    oth.forEach(function(g){var to=DEST[rk(a.a,c.c,g.o)];if(!to)return;
+      Object.keys(pool[g.o]).forEach(function(z){var n=pool[g.o][z]||0;if(n>0){pool[g.o][z]=0;add(g.o,to,c.c,z,n);}});});
     // pass 4: FROM SG doors top up each size to CAP from SG online stock, one piece at a time, best seller first
     if(sgReq.length){
       var sgc=sgCol(a.a,c.c), sp=Object.assign({},(sgc&&sgc[2])||{}), zs={};
@@ -564,8 +571,18 @@ function gridCell(q,inn,out){
 var XR_TXT={wh:"退仓",sg:"SG补货",whT:"先给收货的分店，剩下的全部退回仓库",
   sgT:"每个尺码从 SG 网店库存补到设定件数（先用本区的货）",
   list:"退仓 = 退回仓库 ADCEWHTR-O（开一张退货 IT）。SG补货 = 从 ADECOMM 发货：在分店列表选 ADECOMM，就是网店团队的拣货单。"};
-function extraRoles(a,r,d,role){
-  return '<button data-role="w"'+d+' aria-pressed="'+(role==="w")+'" title="'+XR_TXT.whT+' ('+WH_CODE+')">'+XR_TXT.wh+"</button>"+
+/* Tze, 20 Oct 2026: "add another action to transfer the item to other outlets not in the list" */
+var OT_TXT={ot:"调去他店",otT:"先给收货的分店，剩下的全部调去本表以外的分店",pick:"选择分店…",
+  none:"请选择要调去的分店",list:"调去他店 = 调去本表以外的分店，收货分店写在「To」栏。"};
+function otherOpts(a,cur){
+  var l=(D.others||[]).filter(function(x){return x.o.slice(0,2)===a.b;});
+  return '<option value="">'+OT_TXT.pick+"</option>"+l.map(function(x){return '<option value="'+esc(x.o)+'"'+(x.o===cur?" selected":"")+">"+esc(x.o)+" · "+esc(x.pic)+(x.st?" · "+esc(x.st):"")+"</option>";}).join("");
+}
+function extraRoles(a,r,d,role,c){
+  var key=rk(a.a,c.c,r.o), cur=DEST[key]||"";
+  return '<button data-role="o"'+d+' aria-pressed="'+(role==="o")+'" title="'+OT_TXT.otT+'">'+OT_TXT.ot+"</button>"+
+    (role==="o"?'<select class="dst'+(cur?"":" need")+'" data-dst="'+esc(key)+'" title="'+OT_TXT.none+'">'+otherOpts(a,cur)+"</select>":"")+
+    '<button data-role="w"'+d+' aria-pressed="'+(role==="w")+'" title="'+XR_TXT.whT+' ('+WH_CODE+')">'+XR_TXT.wh+"</button>"+
     (D.sg&&sameBrand(a,r)?'<button data-role="s"'+d+' aria-pressed="'+(role==="s")+'" title="'+XR_TXT.sgT+' ('+SG_CODE+')">'+XR_TXT.sg+"</button>":"");
 }
 function gridArticle(a,sizes){
@@ -586,10 +603,10 @@ function gridArticle(a,sizes){
         return gridCell(q,inn,out);}).join("");
       first=false;
       html+='<tr class="'+(on?"on":"")+'"><td></td><td></td><td></td><td></td><td></td>'+
-        '<td class="o'+(role==="r"||role==="s"?" get":role==="g"||role==="x"||role==="w"?" give":"")+'" title="'+esc(outletName(r.o))+'">'+esc(r.o)+"</td>"+cells+
+        '<td class="o'+(role==="r"||role==="s"?" get":role==="g"||role==="x"||role==="w"||role==="o"?" give":"")+'" title="'+esc(outletName(r.o))+'">'+esc(r.o)+"</td>"+cells+
         "<td><b>"+n+"</b></td><td>"+rowSold(r)+"</td><td>"+(cv==null?"–":cv+"周")+"</td>"+
         '<td class="pk">'+(sameBrand(a,r)?'<button data-role="r"'+d+' aria-pressed="'+(role==="r")+'">收货</button>':"")+
-        '<button data-role="g"'+d+' aria-pressed="'+(role==="g")+'">调出</button><button data-role="x"'+d+' aria-pressed="'+(role==="x")+'" title="这个颜色全部调出">全部调出</button>'+extraRoles(a,r,d,role)+'</td>'+
+        '<button data-role="g"'+d+' aria-pressed="'+(role==="g")+'">调出</button><button data-role="x"'+d+' aria-pressed="'+(role==="x")+'" title="这个颜色全部调出">全部调出</button>'+extraRoles(a,r,d,role,c)+'</td>'+
         '<td class="io">'+ioTxt(inQ,outQ,role)+'</td><td class="al">'+baAllocTxt({to:to,from:from},true)+"</td></tr>";
     });
     var sgc=D.sg?sgCol(a.a,c.c):null;
@@ -646,7 +663,7 @@ function renderChoose(){
       '<th><input type="search" class="hf hq" data-hf="q" placeholder="'+HB_TXT.q+'" value="'+esc(($("#q")||{}).value||"")+'"></th><th>'+
       hsel("fp",BANDS,($("#fp")||{}).value||"")+"</th><th></th><th>"+
       hsel("out",[["",GRID_TXT2.all]].concat(D.outlets.map(function(x){return [x.o,x.o];})),OUTF)+"</th>"+sizes.map(function(){return "<th></th>";}).join("")+
-      "<th></th><th></th><th></th><th>"+hsel("pick",[["",GRID_TXT2.all],["r",GRID_TXT2.get],["g",GRID_TXT2.give],["x",GRID_TXT2.allout],["w",XR_TXT.wh],["s",XR_TXT.sg],["any",GRID_TXT2.anyPick],["none",GRID_TXT2.noPick]],PICKF)+
+      "<th></th><th></th><th></th><th>"+hsel("pick",[["",GRID_TXT2.all],["r",GRID_TXT2.get],["g",GRID_TXT2.give],["x",GRID_TXT2.allout],["o",OT_TXT.ot],["w",XR_TXT.wh],["s",XR_TXT.sg],["any",GRID_TXT2.anyPick],["none",GRID_TXT2.noPick]],PICKF)+
       "</th><th></th><th></th></tr></thead><tbody>"+
       arts.map(function(a){return gridArticle(a,sizes);}).join("")+"</tbody></table></div>";
   }).join("")||'<p class="empty">'+GRID_TXT.none+"</p>";
@@ -664,7 +681,8 @@ function sgTip(a){if(!D.sg)return "";var ss=D.sg.s,out=[];for(var k in ss){if(k.
   return out.length?"SiteGiant "+D.sg.asof+" \n"+out.join("\n"):"SiteGiant 没有库存 ("+D.sg.asof+")";}
 
 /* ---------- render: desk ---------- */
-function outletName(o){var x=D.outlets.find(function(y){return y.o===o;});return x&&x.name?x.name:"";}
+function outletName(o){var x=D.outlets.find(function(y){return y.o===o;});if(x&&x.name)return x.name;
+  var y=(D.others||[]).find(function(z){return z.o===o;});return y?y.pic+(y.st?" · "+y.st:""):"";}
 /* SiteGiant (online) stock for the colour, by size, as the last row (Tze, 19 Oct 2026) */
 function sgRow(sizes,sgc){var by=(sgc&&sgc[2])||{};
   return '<tr class="sgrow"><td class="o l"><b>SG online</b><span>SiteGiant'+(D.sg.asof?" · "+esc(D.sg.asof):"")+(sgc&&sgc[1]?" · "+sgc[1]+"/mth":"")+'</span></td><td>'+((sgc&&sgc[0])||0)+
@@ -819,7 +837,8 @@ function outletList(o,moves){
 function renderLists(){
   var moves=allMoves();
   if(!moves.length){$("#lists").innerHTML='<p class="empty">还没有调货计划。请先勾选货号，再设定 收货 / 调出 / 全部调出。</p>';return;}
-  var involved=D.outlets.map(function(x){return x.o;}).concat([SG_CODE,WH_CODE]).filter(function(o){return moves.some(function(m){return m.from===o||m.to===o;});});
+  var extra=[];moves.forEach(function(m){[m.from,m.to].forEach(function(o){if(!D.outlets.some(function(x){return x.o===o;})&&extra.indexOf(o)<0&&o!==SG_CODE&&o!==WH_CODE)extra.push(o);});});
+  var involved=D.outlets.map(function(x){return x.o;}).concat(extra.sort(),[SG_CODE,WH_CODE]).filter(function(o){return moves.some(function(m){return m.from===o||m.to===o;});});
   if(LIST_OUTLET&&LIST_OUTLET!=="ALL"&&involved.indexOf(LIST_OUTLET)<0)LIST_OUTLET="";
   if(!LIST_OUTLET)LIST_OUTLET=involved[0];
   var show=LIST_OUTLET==="ALL"?involved:[LIST_OUTLET];
@@ -831,7 +850,7 @@ function renderLists(){
     '<button class="act" id="printList">打印 / 存 PDF</button><button class="ghost" id="copyList">复制到 WhatsApp</button>'+
     '<button class="ghost" id="csvList">下载 CSV（所有分店）</button><span class="status" id="listStatus"></span></div>'+
     '<p class="note noprint">促销员按照这张单拣货，每个目的地（"调往"那一栏）开一张 IT。全部调出 = 这个颜色全部调走。按尺码类型分组（衬衫、上衣、裤子、西装、童装），每组有自己的尺码栏。请先核对货架：库存是系统在这天的数量 '+fmtDate(D.built)+'.</p>'+
-    '<p class="note noprint">'+XR_TXT.list+"</p>"+show.map(function(o){return outletList(o,moves);}).join("");
+    '<p class="note noprint">'+XR_TXT.list+" "+OT_TXT.list+"</p>"+show.map(function(o){return outletList(o,moves);}).join("");
 }
 function listText(o,moves){
   var out=moves.filter(function(m){return m.from===o;}), inn=moves.filter(function(m){return m.to===o;}), by={}, lines=[];
@@ -938,7 +957,7 @@ function baAllocTxt(x,html){
   var t=Object.keys(x.to).map(function(o){return (html?'<span class="to">→ ':"→ ")+o+" "+x.to[o]+(html?"</span>":"");}),
       f=Object.keys(x.from).map(function(o){return (html?'<span class="from">← ':"← ")+o+" "+x.from[o]+(html?"</span>":"");});
   return t.concat(f).join(html?"<br>":"; ");}
-function baRoleTxt(role){return role==="r"?"收货":role==="g"?"调出":role==="x"?"全部调出":role==="w"?XR_TXT.wh:role==="s"?XR_TXT.sg:"";}
+function baRoleTxt(role){return role==="r"?"收货":role==="g"?"调出":role==="x"?"全部调出":role==="w"?XR_TXT.wh:role==="s"?XR_TXT.sg:role==="o"?OT_TXT.ot:"";}
 function renderByArt(){
   if(BA_ALL===null)BA_ALL=!TICK.size;
   var moves=allMoves(), G=baGroups(), shown=0, blocks=0, html="";
@@ -1150,6 +1169,7 @@ document.addEventListener("input",function(e){var t=e.target;if(!t.dataset||t.da
     var n=document.querySelector('.gscroll[data-g="'+(window.CSS&&CSS.escape?CSS.escape(g||""):g)+'"] input[data-hf="q"]')||document.querySelector('input[data-hf="q"]');
     if(n){n.focus({preventScroll:true});try{n.setSelectionRange(v.length,v.length);}catch(x){}}},350);});
 function onChange(e){
+    if(e.target.dataset&&e.target.dataset.dst){var dk=e.target.dataset.dst;if(e.target.value)DEST[dk]=e.target.value;else delete DEST[dk];saveState();render();return;}
     if(e.target.id==="listSel"){LIST_OUTLET=e.target.value;renderLists();}
     if(e.target.id==="hideSea"){HIDE_SEA=e.target.checked;renderSummary();}
     if(e.target.id==="baGrp"){BA_GRP=e.target.value;BA_LIMIT=80;renderByArt();}
