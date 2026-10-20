@@ -49,6 +49,7 @@ input[type=search]{flex:1;min-width:180px}
 .filters label{display:flex;flex-direction:column;gap:3px}
 .filters .row2{display:flex;gap:6px}
 .filters .row2 input{flex:1;min-width:0}
+.filters[hidden]{display:none!important}   /* nothing above the table: the header drives these */
 .filters .hdrf{display:none}
 .filters .hdrf label{display:flex;flex-direction:column;gap:3px}
 .filters .moref{grid-column:1/-1}
@@ -154,6 +155,7 @@ table.work th,table.work td{padding:2px 4px;font-size:11.5px;white-space:nowrap}
 #grid .gscroll{max-height:none;overflow:visible}
 table.work thead{position:sticky;top:0;z-index:3;box-shadow:0 2px 0 var(--line)}
 table.work thead th{position:static;background:var(--card)}
+table.work td.meta{max-width:74px;overflow:hidden;text-overflow:ellipsis;font-size:10px;color:var(--muted)}
 table.work td.grp{font-size:0;padding:0;max-width:0}
 table.work input.hq{font:inherit;font-size:11px;padding:2px 6px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);width:66px;min-width:0}
 :root[data-layout="phone"] table.work input.hq{font-size:16px;padding:5px 6px;width:84px}
@@ -179,13 +181,13 @@ table.work tr.on td.yr,table.work tr.on td.mono b{color:var(--accent)}
 table.work tr.ctot td{background:var(--soft);font-weight:700}
 table.work tr.sgrow td{font-size:11px;color:var(--muted)}
 table.work td.sz.fill{color:var(--good);font-weight:700}table.work td.sz.take{color:var(--bad);font-weight:700}
-table.work td.pk button{font:inherit;font-size:10px;font-weight:700;padding:2px 4px;margin-right:1px;border:1px solid var(--line);background:var(--card);color:var(--muted);border-radius:6px;cursor:pointer}
+table.work td.pk button{font:inherit;font-size:10px;font-weight:700;padding:2px 3px;margin-right:1px;border:1px solid var(--line);background:var(--card);color:var(--muted);border-radius:6px;cursor:pointer}
 table.work td.pk button[data-role="r"][aria-pressed="true"]{background:var(--good);border-color:var(--good);color:var(--on)}
 table.work td.pk button[data-role="g"][aria-pressed="true"]{background:var(--warn);border-color:var(--warn);color:var(--on)}
 table.work td.pk button[data-role="x"][aria-pressed="true"]{background:var(--bad);border-color:var(--bad);color:var(--on)}
 table.work td.pk button[data-role="o"][aria-pressed="true"]{background:#7a4fb5;border-color:#7a4fb5;color:#fff}
-table.work td.pk select.dst{font:inherit;font-size:10.5px;padding:1px 3px;margin-right:2px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);max-width:150px}
-table.work td.pk select.dst.need{border-color:var(--bad);color:var(--bad)}
+table.work td.al select.dst{display:block;width:100%;font:inherit;font-size:10.5px;padding:1px 3px;margin:0 0 2px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);max-width:150px}
+table.work td.al select.dst.need{border-color:var(--bad);color:var(--bad)}
 table.work td.pk button[data-role="w"][aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--bg)}
 table.work td.pk button[data-role="s"][aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--on)}
 table.work .capc{margin-right:3px;font-weight:600;color:var(--muted)}table.work .capc b{display:inline-block;min-width:14px;text-align:center;color:var(--ink)}
@@ -574,14 +576,25 @@ var XR_TXT={wh:"退仓",sg:"SG补货",whT:"先给收货的分店，剩下的全�
 /* Tze, 20 Oct 2026: "add another action to transfer the item to other outlets not in the list" */
 var OT_TXT={ot:"调去他店",otT:"先给收货的分店，剩下的全部调去本表以外的分店",pick:"选择分店…",
   none:"请选择要调去的分店",list:"调去他店 = 调去本表以外的分店，收货分店写在「To」栏。"};
-function otherOpts(a,cur){
-  var l=(D.others||[]).filter(function(x){return x.o.slice(0,2)===a.b;});
-  return '<option value="">'+OT_TXT.pick+"</option>"+l.map(function(x){return '<option value="'+esc(x.o)+'"'+(x.o===cur?" selected":"")+">"+esc(x.o)+" · "+esc(x.pic)+(x.st?" · "+esc(x.st):"")+"</option>";}).join("");
+/* Tze, 20 Oct 2026: "1 more action ... to transfer to outlets that currently don't carry this" - the picker lists
+   the outlets with none of this art-colour first (this board's own empty doors, then every other outlet with
+   0 today), and the outlets that already hold it after. */
+var OTG_TXT={no:"没有这货的分店",yes:"已有这货的分店",here:"本表分店"};
+function otherOpts(a,c,from,cur){
+  function opt(o,lbl){return '<option value="'+esc(o)+'"'+(o===cur?" selected":"")+">"+esc(o)+" · "+esc(lbl)+"</option>";}
+  var held={};c.rows.forEach(function(r){if(rowHeld(r)>0)held[r.o]=1;});
+  var mine=D.outlets.filter(function(x){return x.o!==from&&x.o.slice(0,2)===a.b&&!held[x.o];}).map(function(x){return opt(x.o,OTG_TXT.here);});
+  var has={};((D.carry||{})[a.a+"|"+c.c]||[]).forEach(function(i){has[i]=1;});
+  var no=[],yes=[];(D.others||[]).forEach(function(x,i){if(x.o.slice(0,2)!==a.b)return;(has[i]?yes:no).push(opt(x.o,x.pic+(x.st?" · "+x.st:"")));});
+  return '<option value="">'+OT_TXT.pick+"</option>"+'<optgroup label="'+OTG_TXT.no+" ("+(mine.length+no.length)+')">'+mine.concat(no).join("")+"</optgroup>"+
+    (yes.length?'<optgroup label="'+OTG_TXT.yes+" ("+yes.length+')">'+yes.join("")+"</optgroup>":"");
 }
+/* the destination picker sits in the Allocation cell so the table keeps its width (Tze, 20 Oct 2026) */
+function dstSelect(a,c,r,role){if(role!=="o")return "";var key=rk(a.a,c.c,r.o),cur=DEST[key]||"";
+  return '<select class="dst'+(cur?"":" need")+'" data-dst="'+esc(key)+'" title="'+OT_TXT.none+'">'+otherOpts(a,c,r.o,cur)+"</select>";}
 function extraRoles(a,r,d,role,c){
   var key=rk(a.a,c.c,r.o), cur=DEST[key]||"";
   return '<button data-role="o"'+d+' aria-pressed="'+(role==="o")+'" title="'+OT_TXT.otT+'">'+OT_TXT.ot+"</button>"+
-    (role==="o"?'<select class="dst'+(cur?"":" need")+'" data-dst="'+esc(key)+'" title="'+OT_TXT.none+'">'+otherOpts(a,cur)+"</select>":"")+
     '<button data-role="w"'+d+' aria-pressed="'+(role==="w")+'" title="'+XR_TXT.whT+' ('+WH_CODE+')">'+XR_TXT.wh+"</button>"+
     (D.sg&&sameBrand(a,r)?'<button data-role="s"'+d+' aria-pressed="'+(role==="s")+'" title="'+XR_TXT.sgT+' ('+SG_CODE+')">'+XR_TXT.sg+"</button>":"");
 }
@@ -602,12 +615,13 @@ function gridArticle(a,sizes){
             out=moves.filter(function(m){return m.c===c.c&&m.from===r.o&&m.z===z;}).reduce(function(t,m){return t+m.q;},0);
         return gridCell(q,inn,out);}).join("");
       first=false;
-      html+='<tr class="'+(on?"on":"")+'"><td></td><td></td><td></td><td></td><td></td>'+
+      var meta=i===0?a.coll:i===1?a.cut:"";   // Tze, 20 Oct 2026: collection and cutting under each art-col
+      html+='<tr class="'+(on?"on":"")+'"><td></td><td></td><td class="meta l" title="'+esc(meta||"")+'">'+esc(meta||"")+"</td><td></td><td></td>"+
         '<td class="o'+(role==="r"||role==="s"?" get":role==="g"||role==="x"||role==="w"||role==="o"?" give":"")+'" title="'+esc(outletName(r.o))+'">'+esc(r.o)+"</td>"+cells+
         "<td><b>"+n+"</b></td><td>"+rowSold(r)+"</td><td>"+(cv==null?"–":cv+"周")+"</td>"+
         '<td class="pk">'+(sameBrand(a,r)?'<button data-role="r"'+d+' aria-pressed="'+(role==="r")+'">收货</button>':"")+
         '<button data-role="g"'+d+' aria-pressed="'+(role==="g")+'">调出</button><button data-role="x"'+d+' aria-pressed="'+(role==="x")+'" title="这个颜色全部调出">全部调出</button>'+extraRoles(a,r,d,role,c)+'</td>'+
-        '<td class="io">'+ioTxt(inQ,outQ,role)+'</td><td class="al">'+baAllocTxt({to:to,from:from},true)+"</td></tr>";
+        '<td class="io">'+ioTxt(inQ,outQ,role)+'</td><td class="al">'+dstSelect(a,c,r,role)+baAllocTxt({to:to,from:from},true)+"</td></tr>";
     });
     var sgc=D.sg?sgCol(a.a,c.c):null;
     if(sgc&&sgc[0]){var by=sgc[2]||{};   // only when SiteGiant holds some - keeps the grid compact
