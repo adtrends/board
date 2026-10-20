@@ -151,6 +151,13 @@ table.work th,table.work td{padding:3px 6px;font-size:12px;white-space:nowrap}
 #grid .gscroll{max-height:calc(100vh - 170px);overflow:auto}
 table.work thead{position:sticky;top:0;z-index:3}
 table.work thead th{position:static;background:var(--card)}
+table.work td.grp{font-size:11px;color:var(--muted);font-weight:700;max-width:120px;overflow:hidden;text-overflow:ellipsis}
+table.work input.hq{font:inherit;font-size:11px;padding:2px 6px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);width:110px;min-width:0}
+:root[data-layout="phone"] table.work input.hq{font-size:16px;padding:5px 6px;width:84px}
+/* phone: product type is already the table's own heading - keep its filter, drop the repeated name, slim the left columns */
+:root[data-layout="phone"] table.work td.grp{font-size:0;max-width:0;padding:0}
+:root[data-layout="phone"] table.work tr.flt>:nth-child(1) select{max-width:86px}
+:root[data-layout="phone"] table.work tr.flt>:nth-child(2) select{max-width:66px}
 table.work thead tr.hbar th{text-align:left;padding:5px 6px;background:var(--soft);border-bottom:1px solid var(--line)}
 table.work .hb{position:sticky;left:6px;display:inline-flex;flex-wrap:wrap;gap:6px 12px;align-items:center;max-width:calc(100vw - 48px)}
 table.work .hb label{display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.03em;font-weight:600}
@@ -221,13 +228,12 @@ details.recvd summary{cursor:pointer;font-weight:600;font-size:13px;margin-botto
    year / description / RM / cover are dropped, the outlet code stays pinned on the left, buttons are thumb-sized. */
 :root[data-layout="phone"] .wrap{padding:12px 10px 150px}
 :root[data-layout="phone"] #grid .gscroll{max-height:none;overflow-x:auto;overflow-y:visible}
-:root[data-layout="phone"] table.work tr:not(.hbar)>:nth-child(1),:root[data-layout="phone"] table.work tr:not(.hbar)>:nth-child(3),
-:root[data-layout="phone"] table.work tr:not(.hbar)>:nth-child(4),:root[data-layout="phone"] table.work tr:not(.hbar)>:nth-last-child(4){display:none}
-:root[data-layout="phone"] table.work tr.hbar>th{position:static}
+:root[data-layout="phone"] table.work tr>:nth-child(4),:root[data-layout="phone"] table.work tr>:nth-child(5),
+:root[data-layout="phone"] table.work tr>:nth-last-child(4){display:none}
 :root[data-layout="phone"] table.work th,:root[data-layout="phone"] table.work td{font-size:13px;padding:3px 5px}
-:root[data-layout="phone"] table.work td.o,:root[data-layout="phone"] table.work tr>:nth-child(6){position:sticky;left:0;z-index:1;background:var(--card)}
+:root[data-layout="phone"] table.work td.o,:root[data-layout="phone"] table.work tr>:nth-child(7){position:sticky;left:0;z-index:1;background:var(--card)}
 :root[data-layout="phone"] table.work td.o.get{background:var(--good-s)}:root[data-layout="phone"] table.work td.o.give{background:var(--warn-s)}
-:root[data-layout="phone"] table.work tr.ctot>:nth-child(6){background:var(--soft)}
+:root[data-layout="phone"] table.work tr.ctot>:nth-child(7){background:var(--soft)}
 :root[data-layout="phone"] table.work td.pk{white-space:nowrap}
 :root[data-layout="phone"] table.work td.pk button{font-size:13px;padding:7px 10px;margin:1px 4px 1px 0;border-radius:8px}
 :root[data-layout="phone"] table.work select.hf{font-size:13px;padding:6px;max-width:150px}
@@ -470,7 +476,7 @@ function chooseShell(){
   var discs=[...new Set(D.arts.map(function(a){return a.disc||"(none)";}))].sort();
   var brands=[...new Set(D.arts.map(function(a){return a.b;}))].sort();
   var years=[...new Set(D.arts.map(yearOf).filter(Boolean))].sort().reverse();
-  return '<div class="filters">'+
+  return '<div class="filters" hidden>'+
    '<label><span class="lbl">Search</span><input type="search" id="q" placeholder="Article, name, collection…"></label>'+
    '<span class="hdrf">'+
    '<label><span class="lbl">'+GRID_TXT.sort+'</span><select id="fsort">'+opts(GRID_TXT.sorts,SORT.k)+'</select></label>'+
@@ -542,7 +548,7 @@ function gridArticle(a,sizes){
             out=moves.filter(function(m){return m.c===c.c&&m.from===r.o&&m.z===z;}).reduce(function(t,m){return t+m.q;},0);
         return gridCell(q,inn,out);}).join("");
       first=false;
-      html+='<tr class="'+(on?"on":"")+'"><td></td><td></td><td></td><td></td><td></td>'+
+      html+='<tr class="'+(on?"on":"")+'"><td></td><td></td><td></td><td></td><td></td><td></td>'+
         '<td class="o'+(role==="r"?" get":role==="g"||role==="x"?" give":"")+'" title="'+esc(outletName(r.o))+'">'+esc(r.o)+"</td>"+cells+
         "<td><b>"+n+"</b></td><td>"+rowSold(r)+"</td><td>"+(cv==null?"–":cv+"w")+"</td>"+
         '<td class="pk">'+(sameBrand(a,r)?'<button data-role="r"'+d+' aria-pressed="'+(role==="r")+'">GET</button>':"")+
@@ -551,13 +557,13 @@ function gridArticle(a,sizes){
     });
     var sgc=D.sg?sgCol(a.a,c.c):null;
     if(sgc&&sgc[0]){var by=sgc[2]||{};   // only when SiteGiant holds some - keeps the grid compact
-      html+='<tr class="sgrow"><td></td><td></td><td></td><td></td><td></td><td class="o">'+GRID_TXT.sg+"</td>"+
+      html+='<tr class="sgrow"><td></td><td></td><td></td><td></td><td></td><td></td><td class="o">'+GRID_TXT.sg+"</td>"+
         sizes.map(function(z){return '<td class="sz">'+(by[z]||"")+"</td>";}).join("")+"<td>"+((sgc&&sgc[0])||0)+"</td><td>"+(sgc&&sgc[1]?sgc[1]+"/m":"")+"</td><td></td><td></td><td></td><td></td></tr>";}
     var cap=capOf(a.a,c.c), own=!!CAPS[key], un=UNPLACED[key];
     var mvIn=moves.filter(function(m){return m.c===c.c;}).reduce(function(t2,m){return t2+m.q;},0);
     var givers=c.rows.some(function(r){var ro=roleOf(a,c,r);return ro==="g"||ro==="x";}), getters=c.rows.some(function(r){return roleOf(a,c,r)==="r";});
     var note=givers&&!getters?'<span class="warnt">'+GRID_TXT3.noGet+"</span>":givers&&getters&&!mvIn?'<span class="warnt">'+GRID_TXT3.full.replace("#",cap)+"</span>":"";
-    var totRow='<tr class="ctot'+(isFirst?" afirst":"")+'"><td class="yr">'+(isFirst?"<b>"+esc(yearOf(a)||"–")+"</b>":"")+'</td><td class="l mono"><b>'+esc(a.a)+"</b></td>"+
+    var totRow='<tr class="ctot'+(isFirst?" afirst":"")+'"><td class="l grp">'+(isFirst?esc(a.g||""):"")+'</td><td class="yr">'+(isFirst?"<b>"+esc(yearOf(a)||"–")+"</b>":"")+'</td><td class="l mono"><b>'+esc(a.a)+"</b></td>"+
       '<td class="l dsc" title="'+esc(a.n)+'">'+(isFirst?esc(a.n):"")+"</td><td>"+(isFirst&&price?Math.round(price):"")+'</td><td class="l mono"><b>'+esc(c.c)+"</b></td><td class=\"l\">"+GRID_TXT.colTot+"</td>"+
       tot.map(function(v){return "<td>"+(v||"")+"</td>";}).join("")+"<td>"+tq+"</td><td>"+ts+"</td><td></td>"+
       '<td class="pk"><span class="capc'+(own?" own":"")+'"><button data-capc="'+esc(key)+'" data-d="-1">−</button><b>'+cap+'</b><button data-capc="'+esc(key)+'" data-d="1">+</button> '+GRID_TXT.pcs+"</span>"+
@@ -571,15 +577,10 @@ function hd(label,key,cls){var on=SORT.k===key;
   return '<th class="s'+(cls?" "+cls:"")+(on?" sorted":"")+'" data-sort="'+key+'">'+label+(on?(SORT.d<0?" ↓":" ↑"):" ↕")+"</th>";}
 function hsel(id,list,cur){return '<select class="hf" data-hf="'+id+'">'+opts(list,cur)+"</select>";}
 function grpOpts(){var f=$("#fg");return f?[].map.call(f.options,function(o){return [o.value,o.textContent];}):[["",""]];}
-/* Tze, 20 Oct 2026: "move the year and product group filter and sort to the header" - one bar on top of every
-   table, in both Phone and Computer view; it stays in sight when the table slides sideways. */
-var HB_TXT={grp:"Product type",yr:"Year",price:"Price",sort:"Sort"};
-function hbarRow(n){
-  function f(lbl,id,list,cur){return '<label><span>'+lbl+"</span>"+hsel(id,list,cur)+"</label>";}
-  return '<tr class="hbar"><th colspan="'+n+'"><div class="hb">'+
-    f(HB_TXT.grp,"fg",grpOpts(),($("#fg")||{}).value||"")+f(HB_TXT.yr,"fy",yearOpts(),($("#fy")||{}).value||"")+
-    f(HB_TXT.price,"fp",BANDS,($("#fp")||{}).value||"")+f(HB_TXT.sort,"sort",GRID_TXT.sorts,SORT.k)+"</div></th></tr>";
-}
+/* Tze, 20 Oct 2026 (2nd round): "I just need the filter to be part of the header ... add one more column to the most
+   left ... no need any filter above". Every filter sits in the filter row under its own column title, the
+   titles sort, and Product type is the first column. Nothing above the table. */
+var HB_TXT={grp:"Product type",q:"Search"};
 function yearOpts(){var f=$("#fy");return f?[].map.call(f.options,function(o){return [o.value,o.textContent];}):[["",""]];}
 function renderChoose(){
   var fs=$("#fsort");if(fs&&[].some.call(fs.options,function(o){return o.value===SORT.k;}))fs.value=SORT.k;
@@ -593,10 +594,12 @@ function renderChoose(){
   $("#grid").innerHTML=order.map(function(g){
     var arts=groups[g], sizes=baSizes(arts.map(function(a){return {cols:a.cols.filter(colHeld),a:a.a};}));
     return '<h4 class="sgrp">'+esc(g)+' <span class="muted">· '+arts.length+" "+GRID_TXT.arts+"</span></h4>"+
-      '<div class="scroll gscroll" data-g="'+esc(g)+'"><table class="grid work"><thead>'+hbarRow(12+sizes.length)+'<tr>'+hd(GRID_TXT.year,"yr")+hd(GRID_TXT.art,"a","l")+hd(GRID_TXT.desc,"n","l")+hd("RM","price")+
+      '<div class="scroll gscroll" data-g="'+esc(g)+'"><table class="grid work"><thead><tr>'+hd(HB_TXT.grp,"g","l")+hd(GRID_TXT.year,"yr")+hd(GRID_TXT.art,"a","l")+hd(GRID_TXT.desc,"n","l")+hd("RM","price")+
       '<th class="l">'+GRID_TXT.col+'</th><th class="l">'+GRID_TXT.outlet+"</th>"+sizes.map(function(z){return "<th>"+esc(z)+"</th>";}).join("")+
       hd(GRID_TXT.tot,"held")+hd(GRID_TXT.sold+" "+W+"m","sold")+hd(GRID_TXT.cover,"cover")+'<th class="l">'+GRID_TXT.pick+'</th><th>'+GRID_TXT3.io+'</th><th class="l">'+GRID_TXT.alloc+"</th></tr>"+
-      '<tr class="flt"><th></th><th></th><th></th><th></th><th></th><th>'+
+      '<tr class="flt"><th>'+hsel("fg",grpOpts(),($("#fg")||{}).value||"")+"</th><th>"+hsel("fy",yearOpts(),($("#fy")||{}).value||"")+"</th>"+
+      '<th><input type="search" class="hf hq" data-hf="q" placeholder="'+HB_TXT.q+'" value="'+esc(($("#q")||{}).value||"")+'"></th><th></th><th>'+
+      hsel("fp",BANDS,($("#fp")||{}).value||"")+"</th><th></th><th>"+
       hsel("out",[["",GRID_TXT2.all]].concat(D.outlets.map(function(x){return [x.o,x.o];})),OUTF)+"</th>"+sizes.map(function(){return "<th></th>";}).join("")+
       "<th></th><th></th><th></th><th>"+hsel("pick",[["",GRID_TXT2.all],["r",GRID_TXT2.get],["g",GRID_TXT2.give],["x",GRID_TXT2.allout],["any",GRID_TXT2.anyPick],["none",GRID_TXT2.noPick]],PICKF)+
       "</th><th></th><th></th></tr></thead><tbody>"+
@@ -1095,11 +1098,17 @@ function onClick(e,t){
     }
   })();
 }
+var QT=null;
+document.addEventListener("input",function(e){var t=e.target;if(!t.dataset||t.dataset.hf!=="q")return;
+  var g=(t.closest(".gscroll")||{dataset:{}}).dataset.g, v=t.value;clearTimeout(QT);
+  QT=setTimeout(function(){$("#q").value=v;LIMIT=40;var sv=snapView(null);renderChoose();restoreView(sv);
+    var n=document.querySelector('.gscroll[data-g="'+(window.CSS&&CSS.escape?CSS.escape(g||""):g)+'"] input[data-hf="q"]')||document.querySelector('input[data-hf="q"]');
+    if(n){n.focus({preventScroll:true});try{n.setSelectionRange(v.length,v.length);}catch(x){}}},350);});
 function onChange(e){
     if(e.target.id==="listSel"){LIST_OUTLET=e.target.value;renderLists();}
     if(e.target.id==="hideSea"){HIDE_SEA=e.target.checked;renderSummary();}
     if(e.target.id==="baGrp"){BA_GRP=e.target.value;BA_LIMIT=80;renderByArt();}
-    if(e.target.dataset&&e.target.dataset.hf){var hf=e.target.dataset.hf,hv=e.target.value;
+    if(e.target.dataset&&e.target.dataset.hf&&e.target.dataset.hf!=="q"){var hf=e.target.dataset.hf,hv=e.target.value;
       if(hf==="fy"||hf==="fp"||hf==="fg"){$("#"+hf).value=hv;}else if(hf==="sort"){SORT={k:hv,d:hv==="a"?1:-1};$("#fsort").value=hv;}else if(hf==="out")OUTF=hv;else if(hf==="pick")PICKF=hv;
       LIMIT=40;renderChoose();}
 
