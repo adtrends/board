@@ -147,12 +147,15 @@ td.pt b,td.yr b{font-size:14px}
 .pgy span{display:inline-block!important;font-size:13px!important;font-weight:700;padding:2px 9px;border-radius:6px;color:var(--ink)!important}
 .pgy .pg{background:var(--accent-s)}.pgy .yr{background:var(--warn-s)}
 div.artbar{margin:6px 0 4px}
-table.work th,table.work td{padding:3px 6px;font-size:12px;white-space:nowrap}
-#grid .gscroll{max-height:none;overflow-x:auto;overflow-y:visible}
-table.work thead{position:sticky;top:0;z-index:3}
+/* Tze, 20 Oct 2026: "freeze the top column and compact the width ... the left columns took up too much space".
+   No scroll box around the table, so the titles + filter row stick to the top of the screen while the page scrolls;
+   tight padding, small filters, and the product type column carries only its filter (the table heading names it). */
+table.work th,table.work td{padding:2px 4px;font-size:11.5px;white-space:nowrap}
+#grid .gscroll{max-height:none;overflow:visible}
+table.work thead{position:sticky;top:0;z-index:3;box-shadow:0 2px 0 var(--line)}
 table.work thead th{position:static;background:var(--card)}
-table.work td.grp{font-size:11px;color:var(--muted);font-weight:700;max-width:120px;overflow:hidden;text-overflow:ellipsis}
-table.work input.hq{font:inherit;font-size:11px;padding:2px 6px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);width:110px;min-width:0}
+table.work td.grp{font-size:0;padding:0;max-width:0}
+table.work input.hq{font:inherit;font-size:11px;padding:2px 6px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);width:66px;min-width:0}
 :root[data-layout="phone"] table.work input.hq{font-size:16px;padding:5px 6px;width:84px}
 /* phone: product type is already the table's own heading - keep its filter, drop the repeated name, slim the left columns */
 :root[data-layout="phone"] table.work td.grp{font-size:0;max-width:0;padding:0}
@@ -162,8 +165,11 @@ table.work thead tr.hbar th{text-align:left;padding:5px 6px;background:var(--sof
 table.work .hb{position:sticky;left:6px;display:inline-flex;flex-wrap:wrap;gap:6px 12px;align-items:center;max-width:calc(100vw - 48px)}
 table.work .hb label{display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.03em;font-weight:600}
 table.work thead tr.flt th{padding:2px 4px;border-bottom:2px solid var(--line)}
-table.work select.hf{font:inherit;font-size:11px;text-transform:none;letter-spacing:0;padding:2px 4px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);max-width:120px}
-table.work td.io{text-align:center;font-size:13px}table.work .inq{color:var(--good)}table.work .outq{color:var(--bad)}
+table.work select.hf{font:inherit;font-size:11px;text-transform:none;letter-spacing:0;padding:2px 4px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);max-width:84px}
+table.work td.io{text-align:center;font-size:12px}
+table.work td.al{white-space:normal;min-width:90px;max-width:170px;font-size:11px;line-height:1.25}
+table.work tr.flt>:nth-child(1) select{max-width:64px}table.work tr.flt>:nth-child(2) select{max-width:52px}
+table.work tr.flt>:nth-child(4) select{max-width:54px}table.work tr.flt>:nth-child(6) select{max-width:96px}table.work .inq{color:var(--good)}table.work .outq{color:var(--bad)}
 table.work td.dsc{max-width:170px;overflow:hidden;text-overflow:ellipsis;font-size:11px;color:var(--muted)}
 table.work td.o{font-family:ui-monospace,Consolas,monospace;font-size:11.5px}
 table.work td.o.get{background:var(--good-s);color:var(--good);font-weight:700}
@@ -173,13 +179,13 @@ table.work tr.on td.yr,table.work tr.on td.mono b{color:var(--accent)}
 table.work tr.ctot td{background:var(--soft);font-weight:700}
 table.work tr.sgrow td{font-size:11px;color:var(--muted)}
 table.work td.sz.fill{color:var(--good);font-weight:700}table.work td.sz.take{color:var(--bad);font-weight:700}
-table.work td.pk button{font:inherit;font-size:10px;font-weight:700;padding:2px 6px;margin-right:2px;border:1px solid var(--line);background:var(--card);color:var(--muted);border-radius:6px;cursor:pointer}
+table.work td.pk button{font:inherit;font-size:10px;font-weight:700;padding:2px 4px;margin-right:1px;border:1px solid var(--line);background:var(--card);color:var(--muted);border-radius:6px;cursor:pointer}
 table.work td.pk button[data-role="r"][aria-pressed="true"]{background:var(--good);border-color:var(--good);color:var(--on)}
 table.work td.pk button[data-role="g"][aria-pressed="true"]{background:var(--warn);border-color:var(--warn);color:var(--on)}
 table.work td.pk button[data-role="x"][aria-pressed="true"]{background:var(--bad);border-color:var(--bad);color:var(--on)}
 table.work td.pk button[data-role="w"][aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--bg)}
 table.work td.pk button[data-role="s"][aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--on)}
-table.work .capc{margin-right:6px;font-weight:600;color:var(--muted)}table.work .capc b{display:inline-block;min-width:14px;text-align:center;color:var(--ink)}
+table.work .capc{margin-right:3px;font-weight:600;color:var(--muted)}table.work .capc b{display:inline-block;min-width:14px;text-align:center;color:var(--ink)}
 table.work .capc.own b{color:var(--accent)}
 table.work .warnt{color:var(--bad);font-weight:700}
 tr.sgrow td{background:var(--soft);border-top:2px dashed var(--line)}
@@ -229,7 +235,7 @@ details.recvd summary{cursor:pointer;font-weight:600;font-size:13px;margin-botto
 /* Phone view (data-layout=phone): the page is the only vertical scroller, the table only slides sideways,
    year / description / RM / cover are dropped, the outlet code stays pinned on the left, buttons are thumb-sized. */
 :root[data-layout="phone"] .wrap{padding:12px 10px 24px}
-:root[data-layout="phone"] #grid .gscroll{max-height:none;overflow-x:auto;overflow-y:visible}
+:root[data-layout="phone"] #grid .gscroll{max-height:none;overflow:visible}
 :root[data-layout="phone"] table.work tr>:nth-child(4),
 :root[data-layout="phone"] table.work tr>:nth-last-child(4){display:none}
 :root[data-layout="phone"] table.work th,:root[data-layout="phone"] table.work td{font-size:13px;padding:3px 5px}
