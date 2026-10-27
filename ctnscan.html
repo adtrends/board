@@ -91,16 +91,16 @@ pre{white-space:pre-wrap;font-size:13px;background:#f8fafc;border:1px solid var(
   }
   function status(c){var st=getS(c.id);if(!st.s.length)return['t0','Belum'];var t=tally(c,st);
     if(!st.done)return['t1','Sedang '+t.n+'/'+t.exp];
-    return(t.short||t.over||t.wrong)?['t3','Beza: -'+t.short+' / +'+(t.over+t.wrong)]:['t2','Tepat '+t.n];}
+    var hq=st.sent?' ✓HQ':' (belum HQ)';return(t.short||t.over||t.wrong)?['t3','Beza: -'+t.short+' / +'+(t.over+t.wrong)+hq]:['t2','Tepat '+t.n+hq];}
   function start(){
     D.ctnIdx={};D.cartons.forEach(function(c,i){D.ctnIdx[c.id]=i;});migrate();
     D.skuSet={};Object.keys(D.bc).forEach(function(b){D.skuSet[D.bc[b]]=1;});
     window.addEventListener('hashchange',function(){});
-    list();
+    list();retryAll();
   }
   function list(){
     stopCam();cur=null;backB.hidden=true;ttl.textContent='Semak Karton '+D.wave;
-    var h='<div class="card"><b>Cara guna</b><div class="mute">1. Scan label karton (atau tekan karton di bawah).<br>2. Scan SETIAP helai dalam karton, satu demi satu.<br>3. Tekan <b>Siap</b>, kemudian <b>Hantar WhatsApp</b> ke group.</div>'+
+    var h='<div class="card"><b>Cara guna</b><div class="mute">1. Scan label karton (atau tekan karton di bawah).<br>2. Scan SETIAP helai dalam karton, satu demi satu.<br>3. Tekan <b>Siap</b>. Keputusan terus dihantar ke HQ (tak perlu WhatsApp).</div>'+
       '<input id="scanin" placeholder="Scan / taip label karton..." autocomplete="off" style="margin-top:10px"><div class="row"><button class="btn" id="cambtn">&#128247; Kamera</button></div><div id="cam"></div><div class="mute" id="dbg"></div></div>';
     D.cartons.forEach(function(c){var s=status(c);h+='<div class="card ctn" data-id="'+esc(c.id)+'"><div class="chute">'+esc(c.chute)+'</div><div class="nm">'+esc(c.id)+'<div class="mute">'+c.lines.reduce(function(a,l){return a+l[1];},0)+' pcs ikut sorter</div></div><span class="tag '+s[0]+'">'+esc(s[1])+'</span></div>';});
     h+='<div class="row"><button class="btn p" id="allrep">Hantar laporan SEMUA karton</button></div>';
@@ -121,7 +121,7 @@ pre{white-space:pre-wrap;font-size:13px;background:#f8fafc;border:1px solid var(
     inp.oninput=function(){clearTimeout(tm);tm=setTimeout(function(){if(inp.value.length>=8){add(inp.value);inp.value='';}},400);};
     document.getElementById('undo').onclick=function(){var st=getS(c.id);st.s.pop();st.done=false;putS(c.id,st);draw();inp.focus();};
     document.getElementById('reset').onclick=function(){if(confirm('Padam semua scan karton ini?')){putS(c.id,{s:[],done:false});draw();}};
-    document.getElementById('done').onclick=function(){var st=getS(c.id);st.done=true;st.at=new Date().toISOString();putS(c.id,st);draw();};
+    document.getElementById('done').onclick=function(){var st=getS(c.id);st.done=true;st.at=new Date().toISOString();st.sent=false;putS(c.id,st);draw();send(c);};
     document.getElementById('cambtn').onclick=toggleCam;
     draw();setTimeout(function(){inp.focus();},50);
   }
@@ -147,7 +147,7 @@ pre{white-space:pre-wrap;font-size:13px;background:#f8fafc;border:1px solid var(
     var pct=Math.min(100,Math.round(100*t.n/Math.max(1,t.exp)));
     var h='<div class="card"><b>'+t.n+'</b> discan · label sorter <b>'+t.exp+'</b>'+(st.done?' · <span class="tag '+((t.short||t.over||t.wrong)?'t3':'t2')+'">SIAP</span>':'')+
       '<div class="prog"><i style="width:'+pct+'%"></i></div><div class="mute" style="margin-top:6px">Kurang '+t.short+' · <b style="color:var(--bad)">Lebihan '+(t.over+t.wrong)+'</b> (lebih '+t.over+', bukan karton ini '+t.wrong+')</div>'+
-      (st.done?'<div class="row"><button class="btn p" id="rep">Hantar WhatsApp</button><button class="btn" id="copy">Salin teks</button></div>':'')+'</div>';
+      (st.done?'<div style="margin-top:8px;font-weight:700;color:'+(st.sent?'var(--ok)':'var(--warn)')+'">'+(st.sent?'&#10003; Sudah dihantar ke HQ':'Belum sampai HQ')+'</div><div class="row">'+(st.sent?'':'<button class="btn p" id="hq">Hantar ke HQ</button>')+'<button class="btn" id="rep">WhatsApp (pilihan)</button><button class="btn" id="copy">Salin teks</button></div>':'')+'</div>';
     // LEBIHAN (Tze 27 Oct: "let me know whats the excess"): every piece to take OUT of this carton, in one list
     var ov=t.rows.filter(function(r){return r.d>0;});
     if(ov.length||t.extra.length){
@@ -160,7 +160,7 @@ pre{white-space:pre-wrap;font-size:13px;background:#f8fafc;border:1px solid var(
       h+='<tr class="'+cls+'"><td class="sku">'+esc(r.k)+'</td><td class="n">'+r.e+'</td><td class="n"><b>'+r.g+'</b></td><td class="n">'+(r.d===0?'&#10003;':(r.d>0?'+':'')+r.d)+'</td></tr>';});
     h+='</table></div>';
     b.innerHTML=h;
-    var rp=document.getElementById('rep');if(rp)rp.onclick=function(){share(report(c));};
+    var hq=document.getElementById('hq');if(hq)hq.onclick=function(){send(c);};var rp=document.getElementById('rep');if(rp)rp.onclick=function(){share(report(c));};
     var cp=document.getElementById('copy');if(cp)cp.onclick=function(){var tx=report(c);(navigator.clipboard?navigator.clipboard.writeText(tx):Promise.reject()).then(function(){alert('Disalin');},function(){prompt('Salin:',tx);});};
   }
   function report(c){
@@ -173,6 +173,14 @@ pre{white-space:pre-wrap;font-size:13px;background:#f8fafc;border:1px solid var(
     L.push('ISI:'+t.rows.filter(function(r){return r.g;}).map(function(r){return r.k+'='+r.g;}).concat(t.extra.map(function(x){return x.k+'='+x.g;})).join(','));
     return L.join('\n');
   }
+  var FORM='https://docs.google.com/forms/d/e/1FAIpQLScYDGCsuTz5QLuMjONq_6gfQXFx0hUB3bVL_WbiRG6W3AalNg/formResponse',FIELD='entry.1287064873';
+  function send(c){
+    var st=getS(c.id);if(!st.done)return;var b=new URLSearchParams();b.append(FIELD,'#SEMAK v1\n'+report(c));
+    fetch(FORM,{method:'POST',mode:'no-cors',body:b}).then(function(){var s2=getS(c.id);s2.sent=true;s2.sentAt=new Date().toISOString();putS(c.id,s2);if(cur&&cur.id===c.id)draw();},
+      function(){alert('Tiada internet - keputusan belum sampai HQ. Tekan "Hantar ke HQ" bila ada line.');if(cur&&cur.id===c.id)draw();});
+  }
+  function retryAll(){D.cartons.forEach(function(c){var st=getS(c.id);if(st.done&&!st.sent)send(c);});}
+  window.addEventListener('online',retryAll);
   function reportAll(){
     var out=[D.wave+' SEMAK KARTON - ringkasan'],dn=0;
     D.cartons.forEach(function(c){var st=getS(c.id);if(!st.s.length)return;dn++;out.push('');out.push(report(c)+(st.done?'':'\n(BELUM SIAP)'));});
