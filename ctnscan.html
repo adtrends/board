@@ -65,9 +65,10 @@ pre{white-space:pre-wrap;font-size:13px;background:#f8fafc;border:1px solid var(
       });
     }).catch(function(){try{var c=localStorage.getItem(ck);if(c){D=JSON.parse(c);return start();}}catch(e){}app.innerHTML='<div class="msg">Tidak dapat buka senarai. Semak internet dan cuba lagi.</div>';});
   }
-  function sk(id){return 'ctnscan:'+D.wave+':'+id;}   // scans are physical facts: kept when the expected list is refreshed
+  function wv(id){var c=D.cartons[D.ctnIdx[id]];return (c&&c.w)||D.wave;}
+  function sk(id){return 'ctnscan:'+wv(id)+':'+id;}   // scans are physical facts: kept when the expected list is refreshed
   function migrate(){try{for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i),m=k&&k.match(/^ctnscan:([^:]+):[^:]+:(.+)$/);
-    if(m&&m[1]===D.wave&&!localStorage.getItem('ctnscan:'+m[1]+':'+m[2])){var o=JSON.parse(localStorage.getItem(k));if(o&&o.s&&o.s.length)localStorage.setItem('ctnscan:'+m[1]+':'+m[2],JSON.stringify(o));}}}catch(e){}}
+    if(m&&(D.waves||[D.wave]).indexOf(m[1])>=0&&!localStorage.getItem('ctnscan:'+m[1]+':'+m[2])){var o=JSON.parse(localStorage.getItem(k));if(o&&o.s&&o.s.length)localStorage.setItem('ctnscan:'+m[1]+':'+m[2],JSON.stringify(o));}}}catch(e){}}
   function getS(id){try{return JSON.parse(localStorage.getItem(sk(id))||'{"s":[],"done":false}');}catch(e){return{s:[],done:false};}}
   function putS(id,st){try{localStorage.setItem(sk(id),JSON.stringify(st));}catch(e){}}
   function lookup(code){
@@ -99,17 +100,19 @@ pre{white-space:pre-wrap;font-size:13px;background:#f8fafc;border:1px solid var(
     list();retryAll();
   }
   function list(){
-    stopCam();cur=null;backB.hidden=true;ttl.textContent='Semak Karton '+D.wave;
+    stopCam();cur=null;backB.hidden=true;var WS=D.waves||[D.wave],sel=WS[0];try{sel=localStorage.getItem('ctnscan-wave:'+D.wave)||sel;}catch(e){}if(WS.indexOf(sel)<0)sel=WS[0];
+    ttl.textContent='Semak Karton '+(WS.length>1?sel:D.wave);
     var h='<div class="card"><b>Cara guna</b><div class="mute">1. Scan label karton (atau tekan karton di bawah).<br>2. Scan SETIAP helai dalam karton, satu demi satu.<br>3. Tekan <b>Siap</b>. Keputusan terus dihantar ke HQ (tak perlu WhatsApp).</div>'+
-      '<input id="scanin" placeholder="Scan / taip label karton..." autocomplete="off" style="margin-top:10px"><div class="row"><button class="btn" id="cambtn">&#128247; Kamera</button></div><div id="cam"></div><div class="mute" id="dbg"></div></div>';
-    D.cartons.forEach(function(c){var s=status(c);h+='<div class="card ctn" data-id="'+esc(c.id)+'"><div class="chute">'+esc(c.chute)+'</div><div class="nm">'+esc(c.id)+'<div class="mute">'+c.lines.reduce(function(a,l){return a+l[1];},0)+' pcs ikut sorter</div></div><span class="tag '+s[0]+'">'+esc(s[1])+'</span></div>';});
+      (WS.length>1?'<div class="row" style="margin-top:10px">'+WS.map(function(w){return '<button class="btn'+(w===sel?' p':'')+' wsel" data-w="'+w+'">'+w+'</button>';}).join('')+'</div><div class="mute">Pilih wave, atau terus scan label mana-mana karton.</div>':'')+'<input id="scanin" placeholder="Scan / taip label karton..." autocomplete="off" style="margin-top:10px"><div class="row"><button class="btn" id="cambtn">&#128247; Kamera</button></div><div id="cam"></div><div class="mute" id="dbg"></div></div>';
+    D.cartons.forEach(function(c){if(c.w&&c.w!==sel)return;var s=status(c);h+='<div class="card ctn" data-id="'+esc(c.id)+'"><div class="chute">'+esc(c.chute)+'</div><div class="nm">'+esc(c.id)+'<div class="mute">'+c.lines.reduce(function(a,l){return a+l[1];},0)+' pcs ikut sorter</div></div><span class="tag '+s[0]+'">'+esc(s[1])+'</span></div>';});
     h+='<div class="row"><button class="btn p" id="allrep">Hantar laporan SEMUA karton</button></div>';
     app.innerHTML=h;
+    app.querySelectorAll('.wsel').forEach(function(e){e.onclick=function(){try{localStorage.setItem('ctnscan-wave:'+D.wave,e.getAttribute('data-w'));}catch(x){}list();};});
     app.querySelectorAll('.ctn').forEach(function(e){e.onclick=function(){open(e.getAttribute('data-id'));};});
-    document.getElementById('allrep').onclick=function(){share(reportAll());};
+    document.getElementById('allrep').onclick=function(){share(reportAll(sel));};
     document.getElementById('cambtn').onclick=toggleCam;
     var inp=document.getElementById('scanin');
-    inp.focus();inp.onkeydown=function(ev){if(ev.key==='Enter'||ev.key==='Tab'){ev.preventDefault();var r=lookup(inp.value);inp.value='';if(r&&r.ctn)open(r.ctn);else alert('Bukan label karton '+D.wave);}};
+    inp.focus();inp.onkeydown=function(ev){if(ev.key==='Enter'||ev.key==='Tab'){ev.preventDefault();var r=lookup(inp.value);inp.value='';if(r&&r.ctn)open(r.ctn);else alert('Bukan label karton');}};
     var tl=null;inp.oninput=function(){clearTimeout(tl);tl=setTimeout(function(){var r=lookup(inp.value);if(r&&r.ctn){inp.value='';open(r.ctn);}},400);};
   }
   function open(id){
@@ -128,7 +131,7 @@ pre{white-space:pre-wrap;font-size:13px;background:#f8fafc;border:1px solid var(
   function beep(ok){try{var a=new(window.AudioContext||window.webkitAudioContext)(),o=a.createOscillator(),g=a.createGain();o.frequency.value=ok?1200:300;o.connect(g);g.connect(a.destination);g.gain.value=.2;o.start();o.stop(a.currentTime+(ok?.08:.35));}catch(e){} if(!ok&&navigator.vibrate)navigator.vibrate(300);}
   function flash(cls,txt){var f=document.getElementById('flash');if(!f)return;f.style.display='block';f.style.background=cls==='ok'?'var(--okbg)':cls==='warn'?'var(--warnbg)':'var(--badbg)';f.style.color=cls==='ok'?'var(--ok)':cls==='warn'?'var(--warn)':'var(--bad)';f.textContent=txt;}
   function dbg(raw){var d=document.getElementById('dbg');if(d)d.textContent='Terima: '+raw;}
-  function onScan(raw){raw=String(raw||'').trim();if(!raw)return;dbg(raw);if(cur)return add(raw);var r=lookup(raw);if(r&&r.ctn)open(r.ctn);else alert('Bukan label karton '+D.wave+': '+raw);}
+  function onScan(raw){raw=String(raw||'').trim();if(!raw)return;dbg(raw);if(cur)return add(raw);var r=lookup(raw);if(r&&r.ctn)open(r.ctn);else alert('Bukan label karton: '+raw);}
   function add(code){
     var c=cur;if(!c)return;dbg(code);var r=lookup(code);if(!r)return;
     if(r.ctn){if(r.ctn!==c.id)open(r.ctn);return;}
@@ -164,7 +167,7 @@ pre{white-space:pre-wrap;font-size:13px;background:#f8fafc;border:1px solid var(
     var cp=document.getElementById('copy');if(cp)cp.onclick=function(){var tx=report(c);(navigator.clipboard?navigator.clipboard.writeText(tx):Promise.reject()).then(function(){alert('Disalin');},function(){prompt('Salin:',tx);});};
   }
   function report(c){
-    var st=getS(c.id),t=tally(c,st),L=[D.wave+' SEMAK '+c.id+' ('+c.chute+')','Scan '+t.n+' / label '+t.exp,'Kurang '+t.short+' | Lebihan '+(t.over+t.wrong)];
+    var st=getS(c.id),t=tally(c,st),L=[wv(c.id)+' SEMAK '+c.id+' ('+c.chute+')','Scan '+t.n+' / label '+t.exp,'Kurang '+t.short+' | Lebihan '+(t.over+t.wrong)];
     var sh=t.rows.filter(function(r){return r.d<0;}),ov=t.rows.filter(function(r){return r.d>0;});
     if(!sh.length&&!ov.length&&!t.extra.length)L.push('TEPAT - tiada beza');
     if(sh.length){L.push('KURANG:');sh.forEach(function(r){L.push(r.k+' '+r.d);});}
@@ -181,9 +184,9 @@ pre{white-space:pre-wrap;font-size:13px;background:#f8fafc;border:1px solid var(
   }
   function retryAll(){D.cartons.forEach(function(c){var st=getS(c.id);if(st.done&&!st.sent)send(c);});}
   window.addEventListener('online',retryAll);
-  function reportAll(){
-    var out=[D.wave+' SEMAK KARTON - ringkasan'],dn=0;
-    D.cartons.forEach(function(c){var st=getS(c.id);if(!st.s.length)return;dn++;out.push('');out.push(report(c)+(st.done?'':'\n(BELUM SIAP)'));});
+  function reportAll(w){
+    var out=[(w||D.wave)+' SEMAK KARTON - ringkasan'],dn=0;
+    D.cartons.forEach(function(c){if(w&&c.w&&c.w!==w)return;var st=getS(c.id);if(!st.s.length)return;dn++;out.push('');out.push(report(c)+(st.done?'':'\n(BELUM SIAP)'));});
     if(!dn)out.push('Belum ada karton discan.');return out.join('\n');
   }
   function share(tx){
