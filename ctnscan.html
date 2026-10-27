@@ -136,7 +136,7 @@ pre{white-space:pre-wrap;font-size:13px;background:#f8fafc;border:1px solid var(
     var e=null;c.lines.forEach(function(l){if(l[0]===r.sku)e=l[1];});
     var g=st.s.filter(function(x){return x.k===r.sku;}).length;
     if(e===null){beep(false);flash('bad','BUKAN karton ini: '+r.sku+' — asingkan');}
-    else if(g>e){beep(false);flash('warn','LEBIH: '+r.sku+' ('+g+'/'+e+')');}
+    else if(g>e){beep(false);flash('warn','LEBIH '+(g-e)+': keluarkan '+r.sku+' (label '+e+', scan '+g+')');}
     else{beep(true);flash('ok','OK '+r.sku+' ('+g+'/'+e+')');}
     draw();
   }
@@ -144,10 +144,15 @@ pre{white-space:pre-wrap;font-size:13px;background:#f8fafc;border:1px solid var(
     var c=cur,st=getS(c.id),t=tally(c,st),b=document.getElementById('body');if(!b)return;
     var pct=Math.min(100,Math.round(100*t.n/Math.max(1,t.exp)));
     var h='<div class="card"><b>'+t.n+'</b> discan · label sorter <b>'+t.exp+'</b>'+(st.done?' · <span class="tag '+((t.short||t.over||t.wrong)?'t3':'t2')+'">SIAP</span>':'')+
-      '<div class="prog"><i style="width:'+pct+'%"></i></div><div class="mute" style="margin-top:6px">Kurang '+t.short+' · Lebih '+t.over+' · Bukan karton ini '+t.wrong+'</div>'+
+      '<div class="prog"><i style="width:'+pct+'%"></i></div><div class="mute" style="margin-top:6px">Kurang '+t.short+' · <b style="color:var(--bad)">Lebihan '+(t.over+t.wrong)+'</b> (lebih '+t.over+', bukan karton ini '+t.wrong+')</div>'+
       (st.done?'<div class="row"><button class="btn p" id="rep">Hantar WhatsApp</button><button class="btn" id="copy">Salin teks</button></div>':'')+'</div>';
-    if(t.extra.length){h+='<h2 style="color:var(--bad)">Bukan dalam karton ini (asingkan)</h2><div class="card"><table><tr><th>SKU / barcode</th><th class="n">Scan</th></tr>';
-      t.extra.forEach(function(x){h+='<tr class="bad"><td class="sku">'+esc(x.k)+(x.u?' <span class="mute">(tidak dikenali)</span>':'')+'</td><td class="n"><b>'+x.g+'</b></td></tr>';});h+='</table></div>';}
+    // LEBIHAN (Tze 27 Oct: "let me know whats the excess"): every piece to take OUT of this carton, in one list
+    var ov=t.rows.filter(function(r){return r.d>0;});
+    if(ov.length||t.extra.length){
+      h+='<h2 style="color:var(--bad)">LEBIHAN: keluarkan '+(t.over+t.wrong)+' helai dari karton ini</h2><div class="card" style="border:2px solid var(--bad)"><table><tr><th>SKU / barcode</th><th>Sebab</th><th class="n">Keluar</th></tr>';
+      ov.forEach(function(r){h+='<tr class="over"><td class="sku">'+esc(r.k)+'</td><td>Lebih (label '+r.e+', scan '+r.g+')</td><td class="n"><b>'+r.d+'</b></td></tr>';});
+      t.extra.forEach(function(x){h+='<tr class="bad"><td class="sku">'+esc(x.k)+'</td><td>'+(x.u?'Tidak dikenali':'Bukan karton ini')+'</td><td class="n"><b>'+x.g+'</b></td></tr>';});
+      h+='</table></div>';}
     h+='<h2>Ikut label sorter</h2><div class="card"><table><tr><th>SKU</th><th class="n">Label</th><th class="n">Scan</th><th class="n">Beza</th></tr>';
     t.rows.slice().sort(function(a,b){return(a.d===0)-(b.d===0)||a.k.localeCompare(b.k);}).forEach(function(r){var cls=r.d===0?'ok':r.d>0?'over':'short';
       h+='<tr class="'+cls+'"><td class="sku">'+esc(r.k)+'</td><td class="n">'+r.e+'</td><td class="n"><b>'+r.g+'</b></td><td class="n">'+(r.d===0?'&#10003;':(r.d>0?'+':'')+r.d)+'</td></tr>';});
@@ -157,7 +162,7 @@ pre{white-space:pre-wrap;font-size:13px;background:#f8fafc;border:1px solid var(
     var cp=document.getElementById('copy');if(cp)cp.onclick=function(){var tx=report(c);(navigator.clipboard?navigator.clipboard.writeText(tx):Promise.reject()).then(function(){alert('Disalin');},function(){prompt('Salin:',tx);});};
   }
   function report(c){
-    var st=getS(c.id),t=tally(c,st),L=[D.wave+' SEMAK '+c.id+' ('+c.chute+')','Scan '+t.n+' / label '+t.exp];
+    var st=getS(c.id),t=tally(c,st),L=[D.wave+' SEMAK '+c.id+' ('+c.chute+')','Scan '+t.n+' / label '+t.exp,'Kurang '+t.short+' | Lebihan '+(t.over+t.wrong)];
     var sh=t.rows.filter(function(r){return r.d<0;}),ov=t.rows.filter(function(r){return r.d>0;});
     if(!sh.length&&!ov.length&&!t.extra.length)L.push('TEPAT - tiada beza');
     if(sh.length){L.push('KURANG:');sh.forEach(function(r){L.push(r.k+' '+r.d);});}
