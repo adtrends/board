@@ -65,7 +65,9 @@ pre{white-space:pre-wrap;font-size:13px;background:#f8fafc;border:1px solid var(
       });
     }).catch(function(){try{var c=localStorage.getItem(ck);if(c){D=JSON.parse(c);return start();}}catch(e){}app.innerHTML='<div class="msg">Tidak dapat buka senarai. Semak internet dan cuba lagi.</div>';});
   }
-  function sk(id){return 'ctnscan:'+D.wave+':'+D.ver+':'+id;}
+  function sk(id){return 'ctnscan:'+D.wave+':'+id;}   // scans are physical facts: kept when the expected list is refreshed
+  function migrate(){try{for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i),m=k&&k.match(/^ctnscan:([^:]+):[^:]+:(.+)$/);
+    if(m&&m[1]===D.wave&&!localStorage.getItem('ctnscan:'+m[1]+':'+m[2])){var o=JSON.parse(localStorage.getItem(k));if(o&&o.s&&o.s.length)localStorage.setItem('ctnscan:'+m[1]+':'+m[2],JSON.stringify(o));}}}catch(e){}}
   function getS(id){try{return JSON.parse(localStorage.getItem(sk(id))||'{"s":[],"done":false}');}catch(e){return{s:[],done:false};}}
   function putS(id,st){try{localStorage.setItem(sk(id),JSON.stringify(st));}catch(e){}}
   function lookup(code){
@@ -91,7 +93,7 @@ pre{white-space:pre-wrap;font-size:13px;background:#f8fafc;border:1px solid var(
     if(!st.done)return['t1','Sedang '+t.n+'/'+t.exp];
     return(t.short||t.over||t.wrong)?['t3','Beza: -'+t.short+' / +'+(t.over+t.wrong)]:['t2','Tepat '+t.n];}
   function start(){
-    D.ctnIdx={};D.cartons.forEach(function(c,i){D.ctnIdx[c.id]=i;});
+    D.ctnIdx={};D.cartons.forEach(function(c,i){D.ctnIdx[c.id]=i;});migrate();
     D.skuSet={};Object.keys(D.bc).forEach(function(b){D.skuSet[D.bc[b]]=1;});
     window.addEventListener('hashchange',function(){});
     list();
