@@ -99,20 +99,21 @@ pre{white-space:pre-wrap;font-size:13px;background:#f8fafc;border:1px solid var(
   function list(){
     stopCam();cur=null;backB.hidden=true;ttl.textContent='Semak Karton '+D.wave;
     var h='<div class="card"><b>Cara guna</b><div class="mute">1. Scan label karton (atau tekan karton di bawah).<br>2. Scan SETIAP helai dalam karton, satu demi satu.<br>3. Tekan <b>Siap</b>, kemudian <b>Hantar WhatsApp</b> ke group.</div>'+
-      '<input id="scanin" placeholder="Scan label karton..." autocomplete="off" inputmode="none" style="margin-top:10px"></div>';
+      '<input id="scanin" placeholder="Scan / taip label karton..." autocomplete="off" style="margin-top:10px"><div class="row"><button class="btn" id="cambtn">&#128247; Kamera</button></div><div id="cam"></div><div class="mute" id="dbg"></div></div>';
     D.cartons.forEach(function(c){var s=status(c);h+='<div class="card ctn" data-id="'+esc(c.id)+'"><div class="chute">'+esc(c.chute)+'</div><div class="nm">'+esc(c.id)+'<div class="mute">'+c.lines.reduce(function(a,l){return a+l[1];},0)+' pcs ikut sorter</div></div><span class="tag '+s[0]+'">'+esc(s[1])+'</span></div>';});
     h+='<div class="row"><button class="btn p" id="allrep">Hantar laporan SEMUA karton</button></div>';
     app.innerHTML=h;
     app.querySelectorAll('.ctn').forEach(function(e){e.onclick=function(){open(e.getAttribute('data-id'));};});
     document.getElementById('allrep').onclick=function(){share(reportAll());};
+    document.getElementById('cambtn').onclick=toggleCam;
     var inp=document.getElementById('scanin');
     inp.focus();inp.onkeydown=function(ev){if(ev.key==='Enter'||ev.key==='Tab'){ev.preventDefault();var r=lookup(inp.value);inp.value='';if(r&&r.ctn)open(r.ctn);else alert('Bukan label karton '+D.wave);}};
     var tl=null;inp.oninput=function(){clearTimeout(tl);tl=setTimeout(function(){var r=lookup(inp.value);if(r&&r.ctn){inp.value='';open(r.ctn);}},400);};
   }
   function open(id){
     var c=D.cartons[D.ctnIdx[id]];if(!c)return;cur=c;backB.hidden=false;ttl.textContent=c.chute+' · '+c.id;
-    app.innerHTML='<div class="card"><input id="scanin" placeholder="Scan barcode helai..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" inputmode="none">'+
-      '<div id="flash"></div><div class="row"><button class="btn" id="cambtn">&#128247; Kamera</button><button class="btn" id="undo">Undo</button><button class="btn" id="reset">Reset</button><button class="btn g" id="done">Siap</button></div><div id="cam"></div></div><div id="body"></div>';
+    app.innerHTML='<div class="card"><input id="scanin" placeholder="Scan barcode helai..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">'+
+      '<div id="flash"></div><div class="mute" id="dbg"></div><div class="row"><button class="btn" id="cambtn">&#128247; Kamera</button><button class="btn" id="undo">Undo</button><button class="btn" id="reset">Reset</button><button class="btn g" id="done">Siap</button></div><div id="cam"></div></div><div id="body"></div>';
     var inp=document.getElementById('scanin');
     var tm=null;inp.onkeydown=function(ev){if(ev.key==='Enter'||ev.key==='Tab'){ev.preventDefault();clearTimeout(tm);if(inp.value)add(inp.value);inp.value='';}};
     inp.oninput=function(){clearTimeout(tm);tm=setTimeout(function(){if(inp.value.length>=8){add(inp.value);inp.value='';}},400);};
@@ -124,8 +125,10 @@ pre{white-space:pre-wrap;font-size:13px;background:#f8fafc;border:1px solid var(
   }
   function beep(ok){try{var a=new(window.AudioContext||window.webkitAudioContext)(),o=a.createOscillator(),g=a.createGain();o.frequency.value=ok?1200:300;o.connect(g);g.connect(a.destination);g.gain.value=.2;o.start();o.stop(a.currentTime+(ok?.08:.35));}catch(e){} if(!ok&&navigator.vibrate)navigator.vibrate(300);}
   function flash(cls,txt){var f=document.getElementById('flash');if(!f)return;f.style.display='block';f.style.background=cls==='ok'?'var(--okbg)':cls==='warn'?'var(--warnbg)':'var(--badbg)';f.style.color=cls==='ok'?'var(--ok)':cls==='warn'?'var(--warn)':'var(--bad)';f.textContent=txt;}
+  function dbg(raw){var d=document.getElementById('dbg');if(d)d.textContent='Terima: '+raw;}
+  function onScan(raw){raw=String(raw||'').trim();if(!raw)return;dbg(raw);if(cur)return add(raw);var r=lookup(raw);if(r&&r.ctn)open(r.ctn);else alert('Bukan label karton '+D.wave+': '+raw);}
   function add(code){
-    var c=cur;if(!c)return;var r=lookup(code);if(!r)return;
+    var c=cur;if(!c)return;dbg(code);var r=lookup(code);if(!r)return;
     if(r.ctn){if(r.ctn!==c.id)open(r.ctn);return;}
     var st=getS(c.id);st.done=false;
     if(r.unk){st.s.push({u:r.unk,t:Date.now()});putS(c.id,st);beep(false);flash('bad','TIDAK DIKENALI: '+r.unk+' — asingkan');draw();return;}
@@ -176,12 +179,18 @@ pre{white-space:pre-wrap;font-size:13px;background:#f8fafc;border:1px solid var(
     if(scanner){stopCam();return;}
     var go=function(){
       scanner=new Html5Qrcode('cam');var last='',lt=0;
-      scanner.start({facingMode:'environment'},{fps:10,qrbox:{width:280,height:120}},function(txt){var n=Date.now();if(txt===last&&n-lt<1500)return;last=txt;lt=n;add(txt);},function(){}).catch(function(e){alert('Kamera tidak dapat dibuka: '+e);scanner=null;});
+      scanner.start({facingMode:'environment'},{fps:12,qrbox:{width:300,height:130},formatsToSupport:[9,5,14,10,3,0],experimentalFeatures:{useBarCodeDetectorIfSupported:true}},function(txt){var n=Date.now();if(txt===last&&n-lt<1500)return;last=txt;lt=n;onScan(txt);},function(){}).catch(function(e){alert('Kamera tidak dapat dibuka: '+e);scanner=null;});
     };
     if(window.Html5Qrcode)return go();
     var s=document.createElement('script');s.src='https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js';s.onload=go;s.onerror=function(){alert('Kamera tidak tersedia - guna scanner.');};document.head.appendChild(s);
   }
   function stopCam(){if(scanner){var s=scanner;scanner=null;s.stop().then(function(){s.clear();}).catch(function(){});}}
+  var kb='',kt=null;
+  document.addEventListener('keydown',function(e){
+    var a=document.activeElement;if(a&&a.id==='scanin')return;
+    if(e.key==='Enter'||e.key==='Tab'){if(kb){e.preventDefault();var v=kb;kb='';onScan(v);}return;}
+    if(e.key&&e.key.length===1){kb+=e.key;clearTimeout(kt);kt=setTimeout(function(){if(kb.length>=8){var v=kb;kb='';onScan(v);}else kb='';},300);}
+  },true);
   backB.onclick=list;
   document.addEventListener('click',function(e){var i=document.getElementById('scanin');if(i&&cur&&e.target.tagName!=='INPUT'&&e.target.tagName!=='BUTTON'&&!scanner)i.focus();});
   load();
