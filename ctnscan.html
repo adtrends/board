@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="ms">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#9989;</text></svg>">
+<style>[hidden]{display:none!important} img{max-width:100%}</style>
+</head>
+<body>
+<title>Semak Karton</title>
+<style>
+:root{--bg:#f4f5f7;--card:#fff;--ink:#16181d;--mute:#667085;--line:#e3e6ea;--ok:#127a3e;--okbg:#e5f5ec;--warn:#a85a00;--warnbg:#fff1dc;--bad:#b42318;--badbg:#fde8e6;--acc:#1d4ed8}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.35 -apple-system,Segoe UI,Roboto,Arial,sans-serif}
+header{position:sticky;top:0;z-index:5;background:#111827;color:#fff;padding:10px 16px;display:flex;align-items:center;gap:10px}
+header h1{font-size:17px;margin:0;flex:1}
+header button{background:#374151;color:#fff;border:0;border-radius:8px;padding:7px 10px;font-size:14px}
+main{max-width:720px;margin:0 auto;padding:12px 16px 90px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:10px}
+.mute{color:var(--mute);font-size:13px}
+.ctn{display:flex;align-items:center;gap:10px;cursor:pointer}
+.chute{background:#111827;color:#fff;font-weight:700;border-radius:8px;min-width:48px;text-align:center;padding:8px 4px;font-size:16px}
+.ctn .nm{flex:1;font-weight:600}
+.tag{font-size:12px;font-weight:700;border-radius:999px;padding:3px 9px;white-space:nowrap}
+.t0{background:#eef0f3;color:var(--mute)}.t1{background:var(--warnbg);color:var(--warn)}.t2{background:var(--okbg);color:var(--ok)}.t3{background:var(--badbg);color:var(--bad)}
+#scanin{width:100%;font-size:20px;padding:12px;border:2px solid var(--acc);border-radius:10px}
+.row{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
+.btn{border:1px solid var(--line);background:#fff;border-radius:9px;padding:10px 12px;font-size:14px;font-weight:600;color:var(--ink)}
+.btn.p{background:var(--acc);color:#fff;border-color:var(--acc)}
+.btn.g{background:var(--ok);color:#fff;border-color:var(--ok)}
+#flash{margin-top:8px;border-radius:10px;padding:10px;font-weight:700;font-size:16px;display:none}
+.prog{height:8px;background:#e5e7eb;border-radius:9px;overflow:hidden;margin-top:6px}.prog i{display:block;height:100%;background:var(--acc)}
+table{width:100%;border-collapse:collapse}
+td,th{padding:7px 4px;border-bottom:1px solid var(--line);text-align:left;font-size:14px}
+th{font-size:12px;color:var(--mute);font-weight:600}
+td.n,th.n{text-align:center;width:52px}
+tr.ok td{background:var(--okbg)}tr.short td{background:#fff}tr.over td{background:var(--warnbg)}tr.bad td{background:var(--badbg)}
+.sku{font-family:ui-monospace,Consolas,monospace;font-size:13.5px;word-break:break-all}
+h2{font-size:15px;margin:14px 0 6px}
+#cam{width:100%;margin-top:8px}
+pre{white-space:pre-wrap;font-size:13px;background:#f8fafc;border:1px solid var(--line);border-radius:8px;padding:8px}
+.msg{padding:30px 16px;text-align:center;color:var(--mute)}
+</style>
+<!--DOC-->
+<header><h1 id="ttl">Semak Karton</h1><button id="back" hidden>&larr; Senarai</button></header>
+<main id="app"><div class="msg">Memuatkan...</div></main>
+<script>
+(function(){
+  var D=null, KEY='', cur=null, scanner=null;
+  var app=document.getElementById('app'), ttl=document.getElementById('ttl'), backB=document.getElementById('back');
+  function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+  function hexToBytes(h){var a=new Uint8Array(h.length/2);for(var i=0;i<a.length;i++)a[i]=parseInt(h.substr(i*2,2),16);return a;}
+  function b64ToBytes(s){var b=atob(s),a=new Uint8Array(b.length);for(var i=0;i<b.length;i++)a[i]=b.charCodeAt(i);return a;}
+  function docIdFor(k){return crypto.subtle.digest('SHA-256',new TextEncoder().encode(k)).then(function(buf){var b=new Uint8Array(buf),s='';for(var i=0;i<8;i++)s+=(b[i]<16?'0':'')+b[i].toString(16);return s;});}
+  function load(){
+    if(window.__DOC){D=window.__DOC;return start();}
+    KEY=(location.hash||'').slice(1).toLowerCase();
+    if(!/^[0-9a-f]{64}$/.test(KEY)){app.innerHTML='<div class="msg">Link tidak lengkap. Buka semula link penuh dari WhatsApp.</div>';return;}
+    var ck='ctnscan-doc:'+KEY.slice(0,12);
+    Promise.all([docIdFor(KEY),crypto.subtle.importKey('raw',hexToBytes(KEY),{name:'AES-GCM'},false,['decrypt'])]).then(function(r){
+      return fetch('r/'+r[0]+'.json',{cache:'no-store'}).then(function(res){if(!res.ok)throw 0;return res.json();}).then(function(doc){
+        return crypto.subtle.decrypt({name:'AES-GCM',iv:b64ToBytes(doc.iv),tagLength:128},r[1],b64ToBytes(doc.ct)).then(function(buf){D=JSON.parse(new TextDecoder().decode(buf));try{localStorage.setItem(ck,JSON.stringify(D));}catch(e){}start();});
+      });
+    }).catch(function(){try{var c=localStorage.getItem(ck);if(c){D=JSON.parse(c);return start();}}catch(e){}app.innerHTML='<div class="msg">Tidak dapat buka senarai. Semak internet dan cuba lagi.</div>';});
+  }
+  function sk(id){return 'ctnscan:'+D.wave+':'+D.ver+':'+id;}
+  function getS(id){try{return JSON.parse(localStorage.getItem(sk(id))||'{"s":[],"done":false}');}catch(e){return{s:[],done:false};}}
+  function putS(id,st){try{localStorage.setItem(sk(id),JSON.stringify(st));}catch(e){}}
+  function lookup(code){
+    code=String(code).trim().toUpperCase().replace(/\s+/g,'');
+    if(!code)return null;
+    if(D.ctnIdx[code]!==undefined)return{ctn:code};
+    var c=code.replace(/^0+/,'');
+    var k=D.bc[code]||D.bc[c]||(c.length===13&&D.bc[c.slice(0,12)])||(code.length===13&&D.bc[code.slice(0,12)]);
+    if(k)return{sku:k};
+    if(D.skuSet[code])return{sku:code};
+    return{unk:code};
+  }
+  function tally(c,st){
+    var exp={},got={},unk={};c.lines.forEach(function(l){exp[l[0]]=l[1];});
+    st.s.forEach(function(x){if(x.u)unk[x.u]=(unk[x.u]||0)+1;else got[x.k]=(got[x.k]||0)+1;});
+    var rows=[],short=0,over=0,wrong=0,n=0;
+    c.lines.forEach(function(l){var g=got[l[0]]||0;n+=g;var d=g-l[1];if(d<0)short-=d;if(d>0)over+=d;rows.push({k:l[0],e:l[1],g:g,d:d});});
+    var extra=[];Object.keys(got).forEach(function(k){if(exp[k]===undefined){extra.push({k:k,g:got[k]});wrong+=got[k];n+=got[k];}});
+    Object.keys(unk).forEach(function(u){extra.push({k:u,g:unk[u],u:1});wrong+=unk[u];n+=unk[u];});
+    return{rows:rows,extra:extra,short:short,over:over,wrong:wrong,n:n,exp:c.lines.reduce(function(a,l){return a+l[1];},0)};
+  }
+  function status(c){var st=getS(c.id);if(!st.s.length)return['t0','Belum'];var t=tally(c,st);
+    if(!st.done)return['t1','Sedang '+t.n+'/'+t.exp];
+    return(t.short||t.over||t.wrong)?['t3','Beza: -'+t.short+' / +'+(t.over+t.wrong)]:['t2','Tepat '+t.n];}
+  function start(){
+    D.ctnIdx={};D.cartons.forEach(function(c,i){D.ctnIdx[c.id]=i;});
+    D.skuSet={};Object.keys(D.bc).forEach(function(b){D.skuSet[D.bc[b]]=1;});
+    window.addEventListener('hashchange',function(){});
+    list();
+  }
+  function list(){
+    stopCam();cur=null;backB.hidden=true;ttl.textContent='Semak Karton '+D.wave;
+    var h='<div class="card"><b>Cara guna</b><div class="mute">1. Scan label karton (atau tekan karton di bawah).<br>2. Scan SETIAP helai dalam karton, satu demi satu.<br>3. Tekan <b>Siap</b>, kemudian <b>Hantar WhatsApp</b> ke group.</div>'+
+      '<input id="scanin" placeholder="Scan label karton..." autocomplete="off" inputmode="none" style="margin-top:10px"></div>';
+    D.cartons.forEach(function(c){var s=status(c);h+='<div class="card ctn" data-id="'+esc(c.id)+'"><div class="chute">'+esc(c.chute)+'</div><div class="nm">'+esc(c.id)+'<div class="mute">'+c.lines.reduce(function(a,l){return a+l[1];},0)+' pcs ikut sorter</div></div><span class="tag '+s[0]+'">'+esc(s[1])+'</span></div>';});
+    h+='<div class="row"><button class="btn p" id="allrep">Hantar laporan SEMUA karton</button></div>';
+    app.innerHTML=h;
+    app.querySelectorAll('.ctn').forEach(function(e){e.onclick=function(){open(e.getAttribute('data-id'));};});
+    document.getElementById('allrep').onclick=function(){share(reportAll());};
+    var inp=document.getElementById('scanin');
+    inp.focus();inp.onkeydown=function(ev){if(ev.key==='Enter'||ev.key==='Tab'){ev.preventDefault();var r=lookup(inp.value);inp.value='';if(r&&r.ctn)open(r.ctn);else alert('Bukan label karton '+D.wave);}};
+    var tl=null;inp.oninput=function(){clearTimeout(tl);tl=setTimeout(function(){var r=lookup(inp.value);if(r&&r.ctn){inp.value='';open(r.ctn);}},400);};
+  }
+  function open(id){
+    var c=D.cartons[D.ctnIdx[id]];if(!c)return;cur=c;backB.hidden=false;ttl.textContent=c.chute+' · '+c.id;
+    app.innerHTML='<div class="card"><input id="scanin" placeholder="Scan barcode helai..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" inputmode="none">'+
+      '<div id="flash"></div><div class="row"><button class="btn" id="cambtn">&#128247; Kamera</button><button class="btn" id="undo">Undo</button><button class="btn" id="reset">Reset</button><button class="btn g" id="done">Siap</button></div><div id="cam"></div></div><div id="body"></div>';
+    var inp=document.getElementById('scanin');
+    var tm=null;inp.onkeydown=function(ev){if(ev.key==='Enter'||ev.key==='Tab'){ev.preventDefault();clearTimeout(tm);if(inp.value)add(inp.value);inp.value='';}};
+    inp.oninput=function(){clearTimeout(tm);tm=setTimeout(function(){if(inp.value.length>=8){add(inp.value);inp.value='';}},400);};
+    document.getElementById('undo').onclick=function(){var st=getS(c.id);st.s.pop();st.done=false;putS(c.id,st);draw();inp.focus();};
+    document.getElementById('reset').onclick=function(){if(confirm('Padam semua scan karton ini?')){putS(c.id,{s:[],done:false});draw();}};
+    document.getElementById('done').onclick=function(){var st=getS(c.id);st.done=true;st.at=new Date().toISOString();putS(c.id,st);draw();};
+    document.getElementById('cambtn').onclick=toggleCam;
+    draw();setTimeout(function(){inp.focus();},50);
+  }
+  function beep(ok){try{var a=new(window.AudioContext||window.webkitAudioContext)(),o=a.createOscillator(),g=a.createGain();o.frequency.value=ok?1200:300;o.connect(g);g.connect(a.destination);g.gain.value=.2;o.start();o.stop(a.currentTime+(ok?.08:.35));}catch(e){} if(!ok&&navigator.vibrate)navigator.vibrate(300);}
+  function flash(cls,txt){var f=document.getElementById('flash');if(!f)return;f.style.display='block';f.style.background=cls==='ok'?'var(--okbg)':cls==='warn'?'var(--warnbg)':'var(--badbg)';f.style.color=cls==='ok'?'var(--ok)':cls==='warn'?'var(--warn)':'var(--bad)';f.textContent=txt;}
+  function add(code){
+    var c=cur;if(!c)return;var r=lookup(code);if(!r)return;
+    if(r.ctn){if(r.ctn!==c.id)open(r.ctn);return;}
+    var st=getS(c.id);st.done=false;
+    if(r.unk){st.s.push({u:r.unk,t:Date.now()});putS(c.id,st);beep(false);flash('bad','TIDAK DIKENALI: '+r.unk+' — asingkan');draw();return;}
+    st.s.push({k:r.sku,t:Date.now()});putS(c.id,st);
+    var e=null;c.lines.forEach(function(l){if(l[0]===r.sku)e=l[1];});
+    var g=st.s.filter(function(x){return x.k===r.sku;}).length;
+    if(e===null){beep(false);flash('bad','BUKAN karton ini: '+r.sku+' — asingkan');}
+    else if(g>e){beep(false);flash('warn','LEBIH: '+r.sku+' ('+g+'/'+e+')');}
+    else{beep(true);flash('ok','OK '+r.sku+' ('+g+'/'+e+')');}
+    draw();
+  }
+  function draw(){
+    var c=cur,st=getS(c.id),t=tally(c,st),b=document.getElementById('body');if(!b)return;
+    var pct=Math.min(100,Math.round(100*t.n/Math.max(1,t.exp)));
+    var h='<div class="card"><b>'+t.n+'</b> discan · label sorter <b>'+t.exp+'</b>'+(st.done?' · <span class="tag '+((t.short||t.over||t.wrong)?'t3':'t2')+'">SIAP</span>':'')+
+      '<div class="prog"><i style="width:'+pct+'%"></i></div><div class="mute" style="margin-top:6px">Kurang '+t.short+' · Lebih '+t.over+' · Bukan karton ini '+t.wrong+'</div>'+
+      (st.done?'<div class="row"><button class="btn p" id="rep">Hantar WhatsApp</button><button class="btn" id="copy">Salin teks</button></div>':'')+'</div>';
+    if(t.extra.length){h+='<h2 style="color:var(--bad)">Bukan dalam karton ini (asingkan)</h2><div class="card"><table><tr><th>SKU / barcode</th><th class="n">Scan</th></tr>';
+      t.extra.forEach(function(x){h+='<tr class="bad"><td class="sku">'+esc(x.k)+(x.u?' <span class="mute">(tidak dikenali)</span>':'')+'</td><td class="n"><b>'+x.g+'</b></td></tr>';});h+='</table></div>';}
+    h+='<h2>Ikut label sorter</h2><div class="card"><table><tr><th>SKU</th><th class="n">Label</th><th class="n">Scan</th><th class="n">Beza</th></tr>';
+    t.rows.slice().sort(function(a,b){return(a.d===0)-(b.d===0)||a.k.localeCompare(b.k);}).forEach(function(r){var cls=r.d===0?'ok':r.d>0?'over':'short';
+      h+='<tr class="'+cls+'"><td class="sku">'+esc(r.k)+'</td><td class="n">'+r.e+'</td><td class="n"><b>'+r.g+'</b></td><td class="n">'+(r.d===0?'&#10003;':(r.d>0?'+':'')+r.d)+'</td></tr>';});
+    h+='</table></div>';
+    b.innerHTML=h;
+    var rp=document.getElementById('rep');if(rp)rp.onclick=function(){share(report(c));};
+    var cp=document.getElementById('copy');if(cp)cp.onclick=function(){var tx=report(c);(navigator.clipboard?navigator.clipboard.writeText(tx):Promise.reject()).then(function(){alert('Disalin');},function(){prompt('Salin:',tx);});};
+  }
+  function report(c){
+    var st=getS(c.id),t=tally(c,st),L=[D.wave+' SEMAK '+c.id+' ('+c.chute+')','Scan '+t.n+' / label '+t.exp];
+    var sh=t.rows.filter(function(r){return r.d<0;}),ov=t.rows.filter(function(r){return r.d>0;});
+    if(!sh.length&&!ov.length&&!t.extra.length)L.push('TEPAT - tiada beza');
+    if(sh.length){L.push('KURANG:');sh.forEach(function(r){L.push(r.k+' '+r.d);});}
+    if(ov.length){L.push('LEBIH:');ov.forEach(function(r){L.push(r.k+' +'+r.d);});}
+    if(t.extra.length){L.push('BUKAN KARTON INI:');t.extra.forEach(function(x){L.push(x.k+' +'+x.g);});}
+    L.push('ISI:'+t.rows.filter(function(r){return r.g;}).map(function(r){return r.k+'='+r.g;}).concat(t.extra.map(function(x){return x.k+'='+x.g;})).join(','));
+    return L.join('\n');
+  }
+  function reportAll(){
+    var out=[D.wave+' SEMAK KARTON - ringkasan'],dn=0;
+    D.cartons.forEach(function(c){var st=getS(c.id);if(!st.s.length)return;dn++;out.push('');out.push(report(c)+(st.done?'':'\n(BELUM SIAP)'));});
+    if(!dn)out.push('Belum ada karton discan.');return out.join('\n');
+  }
+  function share(tx){
+    if(navigator.share){navigator.share({text:tx}).catch(function(){});return;}
+    location.href='https://wa.me/?text='+encodeURIComponent(tx);
+  }
+  function toggleCam(){
+    if(scanner){stopCam();return;}
+    var go=function(){
+      scanner=new Html5Qrcode('cam');var last='',lt=0;
+      scanner.start({facingMode:'environment'},{fps:10,qrbox:{width:280,height:120}},function(txt){var n=Date.now();if(txt===last&&n-lt<1500)return;last=txt;lt=n;add(txt);},function(){}).catch(function(e){alert('Kamera tidak dapat dibuka: '+e);scanner=null;});
+    };
+    if(window.Html5Qrcode)return go();
+    var s=document.createElement('script');s.src='https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js';s.onload=go;s.onerror=function(){alert('Kamera tidak tersedia - guna scanner.');};document.head.appendChild(s);
+  }
+  function stopCam(){if(scanner){var s=scanner;scanner=null;s.stop().then(function(){s.clear();}).catch(function(){});}}
+  backB.onclick=list;
+  document.addEventListener('click',function(e){var i=document.getElementById('scanin');if(i&&cur&&e.target.tagName!=='INPUT'&&e.target.tagName!=='BUTTON'&&!scanner)i.focus();});
+  load();
+})();
+</script>
+
+</body>
+</html>
