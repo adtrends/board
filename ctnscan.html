@@ -124,7 +124,9 @@ pre{white-space:pre-wrap;font-size:13px;background:#f8fafc;border:1px solid var(
     inp.oninput=function(){clearTimeout(tm);tm=setTimeout(function(){if(inp.value.length>=8){add(inp.value);inp.value='';}},400);};
     document.getElementById('undo').onclick=function(){var st=getS(c.id);st.s.pop();st.done=false;putS(c.id,st);draw();inp.focus();};
     document.getElementById('reset').onclick=function(){if(confirm('Padam semua scan karton ini?')){putS(c.id,{s:[],done:false});draw();}};
-    document.getElementById('done').onclick=function(){var st=getS(c.id);st.done=true;st.at=new Date().toISOString();st.sent=false;putS(c.id,st);draw();send(c);};
+    document.getElementById('done').onclick=function(){var st=getS(c.id);
+      for(var i=0;i<st.s.length;i++){if(st.s[i].u&&!st.s[i].ok){alert('Ada barcode TIDAK ADA DALAM SISTEM yang belum disemak. Semak tag helai dulu sebelum Siap.');if(!checkUnk(c,i))return;st=getS(c.id);i=-1;}}
+      st.done=true;st.at=new Date().toISOString();st.sent=false;putS(c.id,st);draw();send(c);};
     document.getElementById('cambtn').onclick=toggleCam;
     draw();setTimeout(function(){inp.focus();},50);
   }
@@ -136,7 +138,10 @@ pre{white-space:pre-wrap;font-size:13px;background:#f8fafc;border:1px solid var(
     var c=cur;if(!c)return;dbg(code);var r=lookup(code);if(!r)return;
     if(r.ctn){if(r.ctn!==c.id)open(r.ctn);return;}
     var st=getS(c.id);st.done=false;
-    if(r.unk){st.s.push({u:r.unk,t:Date.now()});putS(c.id,st);beep(false);flash('bad','TIDAK DIKENALI: '+r.unk+' — asingkan');draw();return;}
+    // Tze 28 Oct: barcode "20..." = price tag, never a piece
+    if(r.unk&&/^20\d{11}$/.test(r.unk)){beep(false);flash('warn','TANDA HARGA ('+r.unk+') - tidak dikira. Scan barcode helai.');return;}
+    // Tze 28 Oct: a barcode not in the system must be CHECKED against the tag before Siap
+    if(r.unk){var x={u:r.unk,t:Date.now()};st.s.push(x);putS(c.id,st);beep(false);flash('bad','TIDAK ADA DALAM SISTEM: '+r.unk+' - semak tag helai');draw();checkUnk(c,st.s.length-1);return;}
     st.s.push({k:r.sku,t:Date.now()});putS(c.id,st);
     var e=null;c.lines.forEach(function(l){if(l[0]===r.sku)e=l[1];});
     var g=st.s.filter(function(x){return x.k===r.sku;}).length;
@@ -144,6 +149,19 @@ pre{white-space:pre-wrap;font-size:13px;background:#f8fafc;border:1px solid var(
     else if(g>e){beep(false);flash('warn','LEBIH '+(g-e)+': keluarkan '+r.sku+' (label '+e+', scan '+g+')');}
     else{beep(true);flash('ok','OK '+r.sku+' ('+g+'/'+e+')');}
     draw();
+  }
+  // unknown barcode: staff read the tag and type the code printed on it (barcode digits or 19SP SKU).
+  // Known -> counted as that SKU (raw code kept for HQ). "TIADA" -> confirmed not ours, stays as unknown.
+  function checkUnk(c,i){
+    var st=getS(c.id),x=st.s[i];if(!x||!x.u||x.ok)return true;
+    while(true){
+      var v=prompt('Barcode '+x.u+' TIDAK ADA dalam sistem.\nSemak tag helai ini. Taip nombor barcode (atau kod 19SP...) yang TERCETAK pada tag.\nTaip TIADA jika tiada tag / bukan barang kita.','');
+      if(v===null)return false;v=v.trim().toUpperCase();if(!v)continue;
+      if(v==='TIADA'){x.ok=1;break;}
+      var r=lookup(v);if(r&&r.sku){st.s[i]={k:r.sku,t:x.t,raw:x.u};break;}
+      alert(v+' juga tiada dalam sistem. Cuba lagi, atau taip TIADA.');
+    }
+    putS(c.id,st);draw();return true;
   }
   function draw(){
     var c=cur,st=getS(c.id),t=tally(c,st),b=document.getElementById('body');if(!b)return;
@@ -173,6 +191,8 @@ pre{white-space:pre-wrap;font-size:13px;background:#f8fafc;border:1px solid var(
     if(sh.length){L.push('KURANG:');sh.forEach(function(r){L.push(r.k+' '+r.d);});}
     if(ov.length){L.push('LEBIH:');ov.forEach(function(r){L.push(r.k+' +'+r.d);});}
     if(t.extra.length){L.push('BUKAN KARTON INI:');t.extra.forEach(function(x){L.push(x.k+' +'+x.g);});}
+    var tg=st.s.filter(function(x){return x.raw;});if(tg.length){L.push('SEMAK TAG (barcode salah baca):');tg.forEach(function(x){L.push(x.raw+' = '+x.k);});}
+    var un=st.s.filter(function(x){return x.u&&x.ok;});if(un.length){L.push('DISAHKAN TIADA TAG / BUKAN KITA:');un.forEach(function(x){L.push(x.u);});}
     L.push('ISI:'+t.rows.filter(function(r){return r.g;}).map(function(r){return r.k+'='+r.g;}).concat(t.extra.map(function(x){return x.k+'='+x.g;})).join(','));
     return L.join('\n');
   }
