@@ -66,7 +66,9 @@ pre{white-space:pre-wrap;font-size:13px;background:#f8fafc;border:1px solid var(
     }).catch(function(){try{var c=localStorage.getItem(ck);if(c){D=JSON.parse(c);return start();}}catch(e){}app.innerHTML='<div class="msg">Tidak dapat buka senarai. Semak internet dan cuba lagi.</div>';});
   }
   function wv(id){var c=D.cartons[D.ctnIdx[id]];return (c&&c.w)||D.wave;}
-  function sk(id){return 'ctnscan:'+wv(id)+':'+id;}   // scans are physical facts: kept when the expected list is refreshed
+  // scans are kept when the expected list is refreshed, EXCEPT a live mid-wave reload (D.runs[wave] = load stamp):
+  // Tze 28 Oct "just reload the page, to make sure there's no double count" -> every live load starts each carton empty
+  function sk(id){var w=wv(id),r=(D.runs||{})[w];return 'ctnscan:'+w+(r?'@'+r:'')+':'+id;}
   function migrate(){try{for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i),m=k&&k.match(/^ctnscan:([^:]+):[^:]+:(.+)$/);
     if(m&&(D.waves||[D.wave]).indexOf(m[1])>=0&&!localStorage.getItem('ctnscan:'+m[1]+':'+m[2])){var o=JSON.parse(localStorage.getItem(k));if(o&&o.s&&o.s.length)localStorage.setItem('ctnscan:'+m[1]+':'+m[2],JSON.stringify(o));}}}catch(e){}}
   function getS(id){try{return JSON.parse(localStorage.getItem(sk(id))||'{"s":[],"done":false}');}catch(e){return{s:[],done:false};}}
