@@ -55,18 +55,18 @@ footer{color:var(--mute);font-size:13px;margin-top:20px;text-align:center}
 <li data-ms="Masukkan bakul ERR" data-en="Feed the ERR basket">Masukkan bakul ERR</li>
 <li data-ms="Scan tangan yang tinggal" data-en="Hand scan what is left">Scan tangan yang tinggal</li>
 </ul>
-<span class="msg" data-ms='Post: "W06 siap"' data-en='Post: "W06 done"'>Post: "W06 siap"</span></div></div>
+<span class="msg" data-ms='Post: "W11 done"' data-en='Post: "W11 done"'>Post: "W11 done"</span></div></div>
 <div class="arrow">▼</div>
 
 <div class="step hq"><div class="num">2</div><div>
 <div class="who">AI</div><h2 data-ms="Label kiraan" data-en="Count labels">Label kiraan</h2>
-<p data-ms="AI hantar PDF label kiraan, satu label setiap karton." data-en="AI sends the count label PDF, one label per carton.">AI hantar PDF label kiraan, satu label setiap karton.</p></div></div>
+<p data-ms="AI hantar PDF label kiraan, satu label setiap karton, dan kemas kini link scan." data-en="AI sends the count label PDF, one label per carton, and updates the scan link.">AI hantar PDF label kiraan, satu label setiap karton, dan kemas kini link scan.</p></div></div>
 <div class="arrow">▼</div>
 
 <div class="step wh"><div class="num">3</div><div>
 <div class="who">Team WH</div><h2 data-ms="Kira" data-en="Count">Kira</h2>
-<p data-ms="Cetak, tampal, kira setiap karton. Tulis beza di label." data-en="Print, stick, count each carton. Write any difference on the label.">Cetak, tampal, kira setiap karton. Tulis beza di label.</p>
-<span class="msg" data-ms='Post: "W06 OK" atau gambar beza' data-en='Post: "W06 OK" or a photo of the differences'>Post: "W06 OK" atau gambar beza</span></div></div>
+<p data-ms="Cetak, tampal, kira setiap karton. Tulis beza di label. Untuk semak isi: scan karton di link scan, tekan Siap, post &quot;SEMAK W11&quot;." data-en="Print, stick, count each carton. Write any difference on the label. To check contents: scan the carton on the scan link, tap Siap, post &quot;SEMAK W11&quot;.">Cetak, tampal, kira setiap karton. Tulis beza di label. Untuk semak isi: scan karton di link scan, tekan Siap, post "SEMAK W11".</p>
+<span class="msg" data-ms='Post: "W11 OK" atau gambar beza' data-en='Post: "W11 OK" or a photo of the differences'>Post: "W11 OK" atau gambar beza</span></div></div>
 <div class="arrow">▼</div>
 
 <div class="step hq"><div class="num">4</div><div>
@@ -77,6 +77,20 @@ footer{color:var(--mute);font-size:13px;margin-top:20px;text-align:center}
 <div class="step wh"><div class="num">5</div><div>
 <div class="who">Team WH</div><h2 data-ms="Tutup karton" data-en="Seal">Tutup karton</h2>
 <p data-ms="Tampal label akhir, seal karton. Tamatkan wave di WIS, mula wave seterusnya." data-en="Stick the final label, seal the carton. End the wave in WIS, start the next wave.">Tampal label akhir, seal karton. Tamatkan wave di WIS, mula wave seterusnya.</p></div></div>
+
+<div class="box"><h3 data-ms="Kata kunci dalam group (tukar nombor wave)" data-en="Keywords in the group (change the wave number)">Kata kunci dalam group (tukar nombor wave)</h3><ul>
+<li data-ms="W11 done: wave habis di sorter (longgokan + Reject + bakul ERR kosong). AI hantar label kiraan." data-en="W11 done: the wave is finished on the sorter (pile + Reject + ERR basket empty). AI sends the count labels.">W11 done: wave habis di sorter (longgokan + Reject + bakul ERR kosong). AI hantar label kiraan.</li>
+<li data-ms="W11 OK: kiraan sama dengan label (beza: post gambar). AI hantar SO + label akhir." data-en="W11 OK: the count matches the label (differences: post a photo). AI sends the SO + final labels.">W11 OK: kiraan sama dengan label (beza: post gambar). AI hantar SO + label akhir.</li>
+<li data-ms="LOAD W11: nak scan test SEPARUH JALAN. Hentikan suapan dulu. AI muat isi karton ke link scan (2-3 minit) dan balas." data-en="LOAD W11: for a HALF-WAY scan test. Stop feeding first. AI loads the carton contents into the scan link (2-3 min) and replies.">LOAD W11: nak scan test SEPARUH JALAN. Hentikan suapan dulu. AI muat isi karton ke link scan (2-3 minit) dan balas.</li>
+<li data-ms="SEMAK W11: sudah scan karton dan tekan Siap. AI hantar PDF beza setiap karton." data-en="SEMAK W11: the cartons are scanned and Siap is tapped. AI sends a PDF of the differences per carton.">SEMAK W11: sudah scan karton dan tekan Siap. AI hantar PDF beza setiap karton.</li>
+<li data-ms="Jangan tulis siap/done bersama SEMAK atau LOAD." data-en="Never write siap/done together with SEMAK or LOAD.">Jangan tulis siap/done bersama SEMAK atau LOAD.</li>
+</ul></div>
+
+<div class="box"><h3 data-ms="Link scan karton" data-en="Carton scan link">Link scan karton</h3><ul>
+<li><a href="https://adtrends.github.io/board/scan">adtrends.github.io/board/scan</a></li>
+<li data-ms="Scan barcode helai sahaja. Barcode bermula 20 = tanda harga, tidak dikira." data-en="Scan the piece barcode only. A barcode starting with 20 is a price tag and is not counted.">Scan barcode helai sahaja. Barcode bermula 20 = tanda harga, tidak dikira.</li>
+<li data-ms="TIDAK ADA DALAM SISTEM: semak tag, taip nombor pada tag (atau TIADA). Siap dikunci sehingga semua disemak." data-en="NOT IN THE SYSTEM: check the tag, type the number on the tag (or TIADA). Siap is locked until all are checked.">TIDAK ADA DALAM SISTEM: semak tag, taip nombor pada tag (atau TIADA). Siap dikunci sehingga semua disemak.</li>
+</ul></div>
 
 <div class="box"><h3 data-ms="Ingat" data-en="Remember">Ingat</h3><ul>
 <li data-ms="Satu wave pada satu masa." data-en="One wave at a time.">Satu wave pada satu masa.</li>
