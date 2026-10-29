@@ -104,7 +104,11 @@ pre{white-space:pre-wrap;font-size:13px;background:#f8fafc;border:1px solid var(
   function list(){
     stopCam();cur=null;backB.hidden=true;var WS=D.waves||[D.wave],sel=WS[0];try{sel=localStorage.getItem('ctnscan-wave:'+D.wave)||sel;}catch(e){}if(WS.indexOf(sel)<0)sel=WS[0];
     ttl.textContent='Semak Karton '+(WS.length>1?sel:D.wave);
-    var h='<div class="card"><b>Cara guna</b><div class="mute">1. Scan label karton (atau tekan karton di bawah).<br>2. Scan SETIAP helai dalam karton, satu demi satu.<br>3. Tekan <b>Siap</b>. Keputusan terus dihantar ke HQ (tak perlu WhatsApp).</div>'+
+    // Tze 29 Oct: show WHICH load is on screen (time + total) so staff can match it with the LOAD message in the group
+    var tc=0,tp=0;D.cartons.forEach(function(c){if(c.w&&c.w!==sel)return;tc++;tp+=c.lines.reduce(function(a,l){return a+l[1];},0);});
+    var ld=(D.loads||{})[sel];
+    var h='<div class="card" style="background:#fff4c2;border:2px solid #e0a800;text-align:center"><div style="font-size:20px;font-weight:700">'+esc(sel)+(ld?' &middot; LOAD '+esc(ld):'')+'</div><div style="font-size:18px;font-weight:700;margin-top:4px">JUMLAH: '+tp+' pcs &middot; '+tc+' karton</div><div class="mute">Mesti sama dengan mesej LOAD dalam group. Kalau tak sama, refresh.</div></div>'+
+      '<div class="card"><b>Cara guna</b><div class="mute">1. Scan label karton (atau tekan karton di bawah).<br>2. Scan SETIAP helai dalam karton, satu demi satu.<br>3. Tekan <b>Siap</b>. Keputusan terus dihantar ke HQ (tak perlu WhatsApp).</div>'+
       (WS.length>1?'<div class="row" style="margin-top:10px">'+WS.map(function(w){return '<button class="btn'+(w===sel?' p':'')+' wsel" data-w="'+w+'">'+w+'</button>';}).join('')+'</div><div class="mute">Pilih wave, atau terus scan label mana-mana karton.</div>':'')+'<input id="scanin" placeholder="Scan / taip label karton..." autocomplete="off" style="margin-top:10px"><div class="row"><button class="btn" id="cambtn">&#128247; Kamera</button></div><div id="cam"></div><div class="mute" id="dbg"></div></div>';
     D.cartons.forEach(function(c){if(c.w&&c.w!==sel)return;var s=status(c);h+='<div class="card ctn" data-id="'+esc(c.id)+'"><div class="chute">'+esc(c.chute)+'</div><div class="nm">'+esc(c.id)+'<div class="mute">'+c.lines.reduce(function(a,l){return a+l[1];},0)+' pcs ikut sorter</div></div><span class="tag '+s[0]+'">'+esc(s[1])+'</span></div>';});
     h+='<div class="row"><button class="btn p" id="allrep">Hantar laporan SEMUA karton</button></div>';
