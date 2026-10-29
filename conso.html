@@ -452,15 +452,21 @@ function allocate(a){
        "it has to work together with the other buttons, so if an outlet wants out, it has to take stock from that outlet too".
        Pool = the SPREAD doors' own stock + whatever ALL OUT doors still hold after the GET doors are filled. Dealt size
        by size: 1 to each SPREAD door, best seller first, round after round, until the size runs out - even shares,
-       the best sellers get the odd pieces. ALL OUT stock is used first, then the SPREAD doors holding the most extra. */
+       the odd pieces stay where they already are when they can (fewest pieces moved), else go to the best sellers.
+       Tze, 29 Oct 2026: "you will try to use the least transfer method right?" - only surplus moves, and a receiver
+       takes from a door already sending it another size before a new From -> To pair is opened (fewest ITs).
+       Supply = demand, so every ALL OUT door still ends at zero. */
     if(spr.length>1||(spr.length&&allOut.length))sizesOf(a,c).forEach(function(z){
       var src=allOut.map(function(g){return {o:g.o,n:pool[g.o][z]||0,x:1};}).filter(function(s){return s.n>0;});
       var left=spr.reduce(function(t,r){return t+(r.q[z]||0);},0)+src.reduce(function(t,s){return t+s.n;},0),tgt={};if(!left)return;
-      spr.forEach(function(r){tgt[r.o]=0;});
-      while(left>0)for(var i=0;i<spr.length&&left>0;i++){tgt[spr[i].o]++;left--;}
+      var share=Math.floor(left/spr.length), odd=left-share*spr.length;
+      spr.forEach(function(r){tgt[r.o]=share;});
+      spr.filter(function(r){return (r.q[z]||0)>share;}).concat(spr.filter(function(r){return (r.q[z]||0)<=share;}))
+        .slice(0,odd).forEach(function(r){tgt[r.o]++;});
       spr.forEach(function(r){if((r.q[z]||0)>tgt[r.o])src.push({o:r.o,n:(r.q[z]||0)-tgt[r.o],x:0});});
       spr.forEach(function(r){for(var need=tgt[r.o]-(r.q[z]||0);need>0;need--){
-        var s=src.filter(function(v){return v.n>0;}).sort(function(p,q){return q.x-p.x||q.n-p.n;})[0];if(!s)return;
+        var pair=function(v){return moves.some(function(m){return m.c===c.c&&m.from===v.o&&m.to===r.o;})?1:0;};
+        var s=src.filter(function(v){return v.n>0;}).sort(function(p,q){return pair(q)-pair(p)||q.x-p.x||q.n-p.n;})[0];if(!s)return;
         s.n--;if(s.x){pool[s.o][z]--;recv(r,z);}add(s.o,r.o,c.c,z);}});
     });
     // pass 2: whatever an ALL OUT door still holds goes out too, every size, to the receiver
