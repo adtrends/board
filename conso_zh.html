@@ -428,18 +428,19 @@ function allocate(a){
     function have(r,z){return (r.q[z]||0)+((got[z]||{})[r.o]||0);}
     function recv(r,z){got[z]=got[z]||{};got[z][r.o]=(got[z][r.o]||0)+1;}
     function take(from,r,z){pool[from][z]--;recv(r,z);add(from,r.o,c.c,z);}
-    // pass 1: fill each receiver up to CAP per size held in the area; ALL OUT / TO WH doors are emptied first
+    // pass 1: fill each receiver up to CAP per size held in the area; ALL OUT / TO WH doors are emptied first.
+    /* Tze, 29 Oct 2026: "distribute best selling outlet first 1 size and move on to next" - filled level by level:
+       every GET door missing the size gets 1 (best seller first) before any door gets a 2nd, then 2nd before 3rd.
+       A short size now reaches the doors that have none instead of topping up a best seller that already holds it. */
     if(give.length&&get.length)liveSizes(a,c).forEach(function(z){
-      for(var guard=0;guard<60;guard++){
-        var moved=false;
+      for(var lvl=1;lvl<=cap;lvl++){
         for(var i=0;i<get.length;i++){
-          var r=get[i]; if(have(r,z)>=cap)continue;
+          var r=get[i]; if(have(r,z)>=lvl)continue;
           var best=null;give.forEach(function(g){var n=pool[g.o][z]||0;if(g.o===r.o||!n)return;
             var pri=role[g.o]==="x"||role[g.o]==="w"||role[g.o]==="o"?1:0;if(!best||pri>best.pri||(pri===best.pri&&n>best.n))best={o:g.o,pri:pri,n:n};});
           if(!best)return;
-          take(best.o,r,z);moved=true;
+          take(best.o,r,z);
         }
-        if(!moved)break;
       }
     });
     // pass 2: whatever an ALL OUT door still holds goes out too, every size, to the receiver
@@ -463,12 +464,11 @@ function allocate(a){
     if(sgReq.length){
       var sgc=sgCol(a.a,c.c), sp=Object.assign({},(sgc&&sgc[2])||{}), zs={};
       liveSizes(a,c).concat(Object.keys(sp)).forEach(function(z){zs[z]=1;});
-      Object.keys(zs).forEach(function(z){
-        for(var guard=0;guard<60;guard++){var moved=false;
+      Object.keys(zs).forEach(function(z){   // same level-by-level order as pass 1
+        for(var lvl=1;lvl<=cap;lvl++)
           for(var i=0;i<sgReq.length;i++){var r=sgReq[i];
-            if((sp[z]||0)<=0)break; if(have(r,z)>=cap)continue;
-            sp[z]--;recv(r,z);add(SG_CODE,r.o,c.c,z);moved=true;}
-          if(!moved)break;}
+            if((sp[z]||0)<=0)return; if(have(r,z)>=lvl)continue;
+            sp[z]--;recv(r,z);add(SG_CODE,r.o,c.c,z);}
       });
     }
   });
@@ -1086,7 +1086,7 @@ function boot(){
     '<div class="bar"><span class="lbl">销售期间</span><div class="seg" id="wins"></div><span class="status" id="winNote"></span></div>'+
     '<div class="legend"><b>使用方法：</b>1) <b>选货与分配</b>：按产品类别、年份、价格、上市日期或建议筛选；每个货号按分店一行显示各尺码库存；在那一行按收货 / 调出 / 全部调出，「调去哪里」一栏显示货调去哪里。不用另外勾选。'+
     '你点之前不会有任何选择：按<b>这个货号给建议</b>（或<b>全部给建议</b>）由页面建议，按<b>清除</b>清掉选择。<b>收货</b> = 有在卖的分店；<b>调出</b> = 有货但这段期间没卖的分店，只调出收货分店需要的件数；<b>全部调出</b> = 这间分店这个颜色全部调走，一件不留。'+
-    '点一下就可以更改。每间收货分店每个尺码预设最多补到 <b>'+CAP+' 件</b>，卖得最好的分店优先；每个颜色下面的<b>每个尺码调几件</b>按钮可以单独更改。'+
+    '点一下就可以更改。每间收货分店每个尺码预设最多补到 <b>'+CAP+' 件</b>：先让每间收货分店缺的尺码各补 1 件（卖得最好的优先），全部轮完再补第 2 件，依此类推；每个颜色下面的<b>每个尺码调几件</b>按钮可以单独更改。'+
     '2) 按最下面「所有调货」里的 <b>复制到 WhatsApp</b> 或 <b>分享我的选择</b>，对方就能打开同一份计划。3) <b>调货单</b>：每间分店一张拣货单，可打印或发送。4) <b>分店总结</b>：调货后每间分店各类别的库存搭配，对比它的销售。5) <b>按货号</b>：产品类别 &gt; 货号 &gt; 颜色，看每间分店的货调去哪里。'+
     '<span class="muted">勾选只保存在这个浏览器，分享后对方才看得到。'+(D.sg?" SG 网店库存 = SiteGiant（网店）"+esc(D.sg.asof)+" 的可用库存；/月 = 网店平均每月销量。":"")+'</span></div>'+
     '<div class="tabs noprint" role="tablist"><button id="tab_choose" data-view="choose" role="tab">1 选货与分配 <span class="n">0</span></button>'+
