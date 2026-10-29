@@ -399,7 +399,7 @@ var AUTO=false, SUGG=new Set();
 var SUG_TXT={on:"Suggestions: ON for all articles",off:"Suggestions: OFF - you pick",all:"Suggest for all",clearAll:"Clear all picks",
   one:"Suggest for this article",clearOne:"Clear this article",confAll:"Replace your GET/GIVE picks with suggestions for every ticked article?",
   confClear:"Clear every GET / GIVE / ALL OUT pick on every article?"};
-function roleOf(a,c,r){var k=rk(a.a,c.c,r.o),v=ROLES[k]!==undefined?ROLES[k]:((AUTO||SUGG.has(a.a)||SUGG.has(a.a+"|"+c.c))?suggest(a,c,r):"");return (v==="r"||v==="s")&&!sameBrand(a,r)?"":v;}
+function roleOf(a,c,r){var k=rk(a.a,c.c,r.o),v=ROLES[k]!==undefined?ROLES[k]:((AUTO||SUGG.has(a.a)||SUGG.has(a.a+"|"+c.c))?suggest(a,c,r):"");return (v==="r"||v==="s"||v==="d")&&!sameBrand(a,r)?"":v;}
 /* Roles: r = GET, g = GIVE (only what receivers need, up to CAP a size), x = ALL OUT (the door
    sends every piece of the art-colour - promoters often want nothing left behind). */
 var UNPLACED={};                                 // "art|col" -> pcs an ALL OUT door could not place
@@ -422,6 +422,19 @@ function allocate(a){
     var get=c.rows.filter(function(r){return role[r.o]==="r"||role[r.o]==="s";}).sort(function(x,y){return rowSold(y)-rowSold(x);});
     var sgReq=get.filter(function(r){return role[r.o]==="s";});
     var key=a.a+"|"+c.c, cap=capOf(a.a,c.c); delete UNPLACED[key];
+    /* Tze, 29 Oct 2026: "another option to redistribute the stock among the selected outlets". SPREAD doors (d) pool
+       their own stock of the colour and deal it back out among themselves, size by size: 1 to each door, best seller
+       first, round after round, until the size runs out. Each door ends with an even share; the best sellers get the
+       odd pieces. Only the surplus moves, from the door holding the most extra. Separate from GET / GIVE. */
+    var spr=c.rows.filter(function(r){return role[r.o]==="d";}).sort(function(x,y){return rowSold(y)-rowSold(x)||rowHeld(y)-rowHeld(x);});
+    if(spr.length>1)sizesOf(a,c).forEach(function(z){
+      var left=spr.reduce(function(t,r){return t+(r.q[z]||0);},0),tgt={};if(!left)return;
+      spr.forEach(function(r){tgt[r.o]=0;});
+      while(left>0)for(var i=0;i<spr.length&&left>0;i++){tgt[spr[i].o]++;left--;}
+      var src=spr.filter(function(r){return (r.q[z]||0)>tgt[r.o];}).map(function(r){return {o:r.o,n:(r.q[z]||0)-tgt[r.o]};});
+      spr.forEach(function(r){for(var need=tgt[r.o]-(r.q[z]||0);need>0;need--){
+        var s=src.slice().sort(function(x,y){return y.n-x.n;})[0];s.n--;add(s.o,r.o,c.c,z);}});
+    });
     if(!give.length&&!sgReq.length)return;
     var pool={};give.forEach(function(g){pool[g.o]=Object.assign({},g.q);});
     var got={};                                  // size -> outlet -> pcs received
@@ -554,6 +567,7 @@ var FLT_TXT={more:"More filters",hint:"Product type, year, price, sort, outlet a
 var GRID_TXT2={all:"All",anyPick:"Any pick",noPick:"No pick",get:"GET",give:"GIVE",allout:"ALL OUT"};
 var GRID_TXT3={io:"In / out",noGet:"Nothing moves: mark a GET outlet",full:"Nothing moves: the GET outlets already hold # a size - tap + to send more",zero:"0"};
 function ioTxt(inQ,outQ,role){
+  if(inQ&&outQ)return '<b class="inq">+'+inQ+'</b> <b class="outq">−'+outQ+"</b>";
   if(inQ)return '<b class="inq">+'+inQ+"</b>";
   if(outQ)return '<b class="outq">−'+outQ+"</b>";
   return role?'<span class="muted">'+GRID_TXT3.zero+"</span>":"";
@@ -576,6 +590,7 @@ var XR_TXT={wh:"TO WH",sg:"FROM SG",whT:"Send what the GET outlets need, everyth
 /* Tze, 20 Oct 2026: "add another action to transfer the item to other outlets not in the list" */
 var OT_TXT={ot:"TO OTHER",otT:"Send what the GET outlets need, everything left goes to an outlet outside this board",pick:"Pick outlet…",
   none:"Pick the outlet to send to",list:"TO OTHER rows go to outlets outside this board - the receiving outlet is named in the To column."};
+var SP_TXT={sp:"SPREAD",spT:"Pool this colour across every SPREAD outlet and share it out again: 1 of each size per outlet, best seller first, round after round"};
 /* Tze, 20 Oct 2026: "1 more action ... to transfer to outlets that currently don't carry this" - the picker lists
    the outlets with none of this art-colour first (this board's own empty doors, then every other outlet with
    0 today), and the outlets that already hold it after. */
@@ -594,7 +609,7 @@ function dstSelect(a,c,r,role){if(role!=="o")return "";var key=rk(a.a,c.c,r.o),c
   return '<select class="dst'+(cur?"":" need")+'" data-dst="'+esc(key)+'" title="'+OT_TXT.none+'">'+otherOpts(a,c,r.o,cur)+"</select>";}
 function extraRoles(a,r,d,role,c){
   var key=rk(a.a,c.c,r.o), cur=DEST[key]||"";
-  return '<button data-role="o"'+d+' aria-pressed="'+(role==="o")+'" title="'+OT_TXT.otT+'">'+OT_TXT.ot+"</button>"+
+  return (sameBrand(a,r)?'<button data-role="d"'+d+' aria-pressed="'+(role==="d")+'" title="'+SP_TXT.spT+'">'+SP_TXT.sp+"</button>":"")+'<button data-role="o"'+d+' aria-pressed="'+(role==="o")+'" title="'+OT_TXT.otT+'">'+OT_TXT.ot+"</button>"+
     '<button data-role="w"'+d+' aria-pressed="'+(role==="w")+'" title="'+XR_TXT.whT+' ('+WH_CODE+')">'+XR_TXT.wh+"</button>"+
     (D.sg&&sameBrand(a,r)?'<button data-role="s"'+d+' aria-pressed="'+(role==="s")+'" title="'+XR_TXT.sgT+' ('+SG_CODE+')">'+XR_TXT.sg+"</button>":"");
 }
@@ -617,7 +632,7 @@ function gridArticle(a,sizes){
       first=false;
       var meta=i===0?a.coll:i===1?a.cut:"";   // Tze, 20 Oct 2026: collection and cutting under each art-col
       html+='<tr class="'+(on?"on":"")+'"><td></td><td></td><td class="meta l" title="'+esc(meta||"")+'">'+esc(meta||"")+"</td><td></td><td></td>"+
-        '<td class="o'+(role==="r"||role==="s"?" get":role==="g"||role==="x"||role==="w"||role==="o"?" give":"")+'" title="'+esc(outletName(r.o))+'">'+esc(r.o)+"</td>"+cells+
+        '<td class="o'+(role==="r"||role==="s"||role==="d"?" get":role==="g"||role==="x"||role==="w"||role==="o"?" give":"")+'" title="'+esc(outletName(r.o))+'">'+esc(r.o)+"</td>"+cells+
         "<td><b>"+n+"</b></td><td>"+rowSold(r)+"</td><td>"+(cv==null?"–":cv+"w")+"</td>"+
         '<td class="pk">'+(sameBrand(a,r)?'<button data-role="r"'+d+' aria-pressed="'+(role==="r")+'">GET</button>':"")+
         '<button data-role="g"'+d+' aria-pressed="'+(role==="g")+'">GIVE</button><button data-role="x"'+d+' aria-pressed="'+(role==="x")+'" title="Send every piece of this colour out">ALL OUT</button>'+extraRoles(a,r,d,role,c)+'</td>'+
@@ -698,7 +713,7 @@ function renderChoose(){
       '<th><input type="search" class="hf hq" data-hf="q" placeholder="'+HB_TXT.q+'" value="'+esc(($("#q")||{}).value||"")+'"></th><th>'+
       hsel("fp",BANDS,($("#fp")||{}).value||"")+"</th><th></th><th>"+
       hsel("out",[["",GRID_TXT2.all]].concat(D.outlets.map(function(x){return [x.o,x.o];})),OUTF)+"</th>"+sizes.map(function(){return "<th></th>";}).join("")+
-      "<th></th><th></th><th></th><th>"+hsel("pick",[["",GRID_TXT2.all],["r",GRID_TXT2.get],["g",GRID_TXT2.give],["x",GRID_TXT2.allout],["o",OT_TXT.ot],["w",XR_TXT.wh],["s",XR_TXT.sg],["any",GRID_TXT2.anyPick],["none",GRID_TXT2.noPick]],PICKF)+
+      "<th></th><th></th><th></th><th>"+hsel("pick",[["",GRID_TXT2.all],["r",GRID_TXT2.get],["g",GRID_TXT2.give],["x",GRID_TXT2.allout],["o",OT_TXT.ot],["w",XR_TXT.wh],["s",XR_TXT.sg],["d",SP_TXT.sp],["any",GRID_TXT2.anyPick],["none",GRID_TXT2.noPick]],PICKF)+
       "</th><th></th><th></th></tr></thead><tbody>"+
       arts.map(function(a){return gridArticle(a,sizes);}).join("")+"</tbody></table></div>";
   }).join("")||emptyChoose();
@@ -992,7 +1007,7 @@ function baAllocTxt(x,html){
   var t=Object.keys(x.to).map(function(o){return (html?'<span class="to">→ ':"→ ")+o+" "+x.to[o]+(html?"</span>":"");}),
       f=Object.keys(x.from).map(function(o){return (html?'<span class="from">← ':"← ")+o+" "+x.from[o]+(html?"</span>":"");});
   return t.concat(f).join(html?"<br>":"; ");}
-function baRoleTxt(role){return role==="r"?"GET":role==="g"?"GIVE":role==="x"?"ALL OUT":role==="w"?XR_TXT.wh:role==="s"?XR_TXT.sg:role==="o"?OT_TXT.ot:"";}
+function baRoleTxt(role){return role==="r"?"GET":role==="g"?"GIVE":role==="x"?"ALL OUT":role==="w"?XR_TXT.wh:role==="s"?XR_TXT.sg:role==="o"?OT_TXT.ot:role==="d"?SP_TXT.sp:"";}
 function renderByArt(){
   if(BA_ALL===null)BA_ALL=!TICK.size;
   var moves=allMoves(), G=baGroups(), shown=0, blocks=0, html="";
@@ -1086,7 +1101,7 @@ function boot(){
     '<div class="bar"><span class="lbl">Sales window</span><div class="seg" id="wins"></div><span class="status" id="winNote"></span></div>'+
     '<div class="legend"><b>How to use.</b> 1) <b>Choose &amp; allocate</b>: filter by product type, year, price, sale start or verdict; every article shows one row per outlet with its stock by size; tap GET / GIVE / ALL OUT on the row and the Allocation column shows where the pieces go. No ticking needed. '+
     'Nothing is picked until you tap: <b>Suggest for this article</b> (or <b>Suggest for all</b>) lets the page propose, <b>Clear</b> wipes the picks. <b>GET</b> = a door that sells it; <b>GIVE</b> = a door holding it with no sales in the window, sending only what the GET doors need; <b>ALL OUT</b> = the door sends every piece of that colour so nothing is left. '+
-    'Tap to change. Each receiving door is filled up to <b>'+CAP+' pcs per size</b> by default: every GET door first gets 1 of each size it is missing (best seller first), then a 2nd, and so on; change it for any colour with the <b>Pcs per size to give</b> buttons under each colour. '+
+    'Tap to change. Each receiving door is filled up to <b>'+CAP+' pcs per size</b> by default: every GET door first gets 1 of each size it is missing (best seller first), then a 2nd, and so on; change it for any colour with the <b>Pcs per size to give</b> buttons under each colour. <b>SPREAD</b> = tap it on 2 or more outlets: their stock of that colour is pooled and shared out again among them only, 1 of each size per outlet, best seller first, round after round. '+
     '2) <b>Copy for WhatsApp</b> (under All moves at the bottom) or <b>Share my picks</b> so the other person opens the same plan. 3) <b>Transfer lists</b>: one pick list per outlet to print or send. 4) <b>Outlet summary</b>: each outlet&rsquo;s product-group mix after the plan, against what it sells. 5) <b>By article</b>: product group &gt; article &gt; colour with where each outlet&rsquo;s pieces go. '+
     '<span class="muted">Ticks are saved in this browser only, until you share them.'+(D.sg?" SG stock = SiteGiant (online) available stock on "+esc(D.sg.asof)+"; /mth = average online sales a month.":"")+'</span></div>'+
     '<div class="tabs noprint" role="tablist"><button id="tab_choose" data-view="choose" role="tab">1 Choose &amp; allocate <span class="n">0</span></button>'+
