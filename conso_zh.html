@@ -190,6 +190,10 @@ table.work td.al select.dst{display:block;width:100%;font:inherit;font-size:10.5
 table.work td.al select.dst.need{border-color:var(--bad);color:var(--bad)}
 table.work td.pk button[data-role="w"][aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--bg)}
 table.work td.pk button[data-role="s"][aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--on)}
+table.work td.pk button[data-role="d"][aria-pressed="true"]{background:#0f8b8d;border-color:#0f8b8d;color:#fff}
+table.work td.pk{white-space:nowrap}
+table.work td.pk select.dst{font:inherit;font-size:10.5px;padding:1px 3px;margin-left:2px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);max-width:150px}
+table.work td.pk select.dst.need{border-color:var(--bad);color:var(--bad)}
 table.work .capc{margin-right:3px;font-weight:600;color:var(--muted)}table.work .capc b{display:inline-block;min-width:14px;text-align:center;color:var(--ink)}
 table.work .capc.own b{color:var(--accent)}
 table.work .warnt{color:var(--bad);font-weight:700}
@@ -422,20 +426,8 @@ function allocate(a){
     var get=c.rows.filter(function(r){return role[r.o]==="r"||role[r.o]==="s";}).sort(function(x,y){return rowSold(y)-rowSold(x);});
     var sgReq=get.filter(function(r){return role[r.o]==="s";});
     var key=a.a+"|"+c.c, cap=capOf(a.a,c.c); delete UNPLACED[key];
-    /* Tze, 29 Oct 2026: "another option to redistribute the stock among the selected outlets". SPREAD doors (d) pool
-       their own stock of the colour and deal it back out among themselves, size by size: 1 to each door, best seller
-       first, round after round, until the size runs out. Each door ends with an even share; the best sellers get the
-       odd pieces. Only the surplus moves, from the door holding the most extra. Separate from GET / GIVE. */
     var spr=c.rows.filter(function(r){return role[r.o]==="d";}).sort(function(x,y){return rowSold(y)-rowSold(x)||rowHeld(y)-rowHeld(x);});
-    if(spr.length>1)sizesOf(a,c).forEach(function(z){
-      var left=spr.reduce(function(t,r){return t+(r.q[z]||0);},0),tgt={};if(!left)return;
-      spr.forEach(function(r){tgt[r.o]=0;});
-      while(left>0)for(var i=0;i<spr.length&&left>0;i++){tgt[spr[i].o]++;left--;}
-      var src=spr.filter(function(r){return (r.q[z]||0)>tgt[r.o];}).map(function(r){return {o:r.o,n:(r.q[z]||0)-tgt[r.o]};});
-      spr.forEach(function(r){for(var need=tgt[r.o]-(r.q[z]||0);need>0;need--){
-        var s=src.slice().sort(function(x,y){return y.n-x.n;})[0];s.n--;add(s.o,r.o,c.c,z);}});
-    });
-    if(!give.length&&!sgReq.length)return;
+    if(!give.length&&!sgReq.length&&!spr.length)return;
     var pool={};give.forEach(function(g){pool[g.o]=Object.assign({},g.q);});
     var got={};                                  // size -> outlet -> pcs received
     function have(r,z){return (r.q[z]||0)+((got[z]||{})[r.o]||0);}
@@ -455,6 +447,21 @@ function allocate(a){
           take(best.o,r,z);
         }
       }
+    });
+    /* pass 1b - SPREAD. Tze, 29 Oct 2026: "another option to redistribute the stock among the selected outlets" and
+       "it has to work together with the other buttons, so if an outlet wants out, it has to take stock from that outlet too".
+       Pool = the SPREAD doors' own stock + whatever ALL OUT doors still hold after the GET doors are filled. Dealt size
+       by size: 1 to each SPREAD door, best seller first, round after round, until the size runs out - even shares,
+       the best sellers get the odd pieces. ALL OUT stock is used first, then the SPREAD doors holding the most extra. */
+    if(spr.length>1||(spr.length&&allOut.length))sizesOf(a,c).forEach(function(z){
+      var src=allOut.map(function(g){return {o:g.o,n:pool[g.o][z]||0,x:1};}).filter(function(s){return s.n>0;});
+      var left=spr.reduce(function(t,r){return t+(r.q[z]||0);},0)+src.reduce(function(t,s){return t+s.n;},0),tgt={};if(!left)return;
+      spr.forEach(function(r){tgt[r.o]=0;});
+      while(left>0)for(var i=0;i<spr.length&&left>0;i++){tgt[spr[i].o]++;left--;}
+      spr.forEach(function(r){if((r.q[z]||0)>tgt[r.o])src.push({o:r.o,n:(r.q[z]||0)-tgt[r.o],x:0});});
+      spr.forEach(function(r){for(var need=tgt[r.o]-(r.q[z]||0);need>0;need--){
+        var s=src.filter(function(v){return v.n>0;}).sort(function(p,q){return q.x-p.x||q.n-p.n;})[0];if(!s)return;
+        s.n--;if(s.x){pool[s.o][z]--;recv(r,z);}add(s.o,r.o,c.c,z);}});
     });
     // pass 2: whatever an ALL OUT door still holds goes out too, every size, to the receiver
     // holding the least of that size (best seller first on a tie) - the cap no longer applies
@@ -635,25 +642,25 @@ function gridArticle(a,sizes){
         '<td class="o'+(role==="r"||role==="s"||role==="d"?" get":role==="g"||role==="x"||role==="w"||role==="o"?" give":"")+'" title="'+esc(outletName(r.o))+'">'+esc(r.o)+"</td>"+cells+
         "<td><b>"+n+"</b></td><td>"+rowSold(r)+"</td><td>"+(cv==null?"–":cv+"周")+"</td>"+
         '<td class="pk">'+(sameBrand(a,r)?'<button data-role="r"'+d+' aria-pressed="'+(role==="r")+'">收货</button>':"")+
-        '<button data-role="g"'+d+' aria-pressed="'+(role==="g")+'">调出</button><button data-role="x"'+d+' aria-pressed="'+(role==="x")+'" title="这个颜色全部调出">全部调出</button>'+extraRoles(a,r,d,role,c)+'</td>'+
+        '<button data-role="g"'+d+' aria-pressed="'+(role==="g")+'">调出</button><button data-role="x"'+d+' aria-pressed="'+(role==="x")+'" title="这个颜色全部调出">全部调出</button>'+extraRoles(a,r,d,role,c)+dstSelect(a,c,r,role)+'</td>'+
         /* Tze, 29 Oct 2026: the → / ← outlet lines made every row 2-3 lines tall - "not important information" here.
            The count stays; who sends to whom is on hover, and in full on Transfer lists and By article. */
-        '<td class="io" title="'+esc(Object.keys(to).map(function(o){return "→ "+o+" "+to[o];}).concat(Object.keys(from).map(function(o){return "← "+o+" "+from[o];})).join("\n"))+'">'+ioTxt(inQ,outQ,role)+'</td><td class="al">'+dstSelect(a,c,r,role)+"</td></tr>";
+        '<td class="io" title="'+esc(Object.keys(to).map(function(o){return "→ "+o+" "+to[o];}).concat(Object.keys(from).map(function(o){return "← "+o+" "+from[o];})).join("\n"))+'">'+ioTxt(inQ,outQ,role)+"</td></tr>";
     });
     var sgc=D.sg?sgCol(a.a,c.c):null;
     if(sgc&&sgc[0]){var by=sgc[2]||{};   // only when SiteGiant holds some - keeps the grid compact
       html+='<tr class="sgrow"><td></td><td></td><td></td><td></td><td></td><td class="o">'+GRID_TXT.sg+"</td>"+
-        sizes.map(function(z){return '<td class="sz">'+(by[z]||"")+"</td>";}).join("")+"<td>"+((sgc&&sgc[0])||0)+"</td><td>"+(sgc&&sgc[1]?sgc[1]+"/m":"")+"</td><td></td><td></td><td></td><td></td></tr>";}
+        sizes.map(function(z){return '<td class="sz">'+(by[z]||"")+"</td>";}).join("")+"<td>"+((sgc&&sgc[0])||0)+"</td><td>"+(sgc&&sgc[1]?sgc[1]+"/m":"")+"</td><td></td><td></td><td></td></tr>";}
     var cap=capOf(a.a,c.c), own=!!CAPS[key], un=UNPLACED[key];
     var mvIn=moves.filter(function(m){return m.c===c.c;}).reduce(function(t2,m){return t2+m.q;},0);
-    var givers=c.rows.some(function(r){var ro=roleOf(a,c,r);return ro==="g"||ro==="x";}), getters=c.rows.some(function(r){var ro=roleOf(a,c,r);return ro==="r"||ro==="s";});
+    var givers=c.rows.some(function(r){var ro=roleOf(a,c,r);return ro==="g"||ro==="x";}), getters=c.rows.some(function(r){var ro=roleOf(a,c,r);return ro==="r"||ro==="s"||ro==="d";});
     var note=givers&&!getters?'<span class="warnt">'+GRID_TXT3.noGet+"</span>":givers&&getters&&!mvIn?'<span class="warnt">'+GRID_TXT3.full.replace("#",cap)+"</span>":"";
     var totRow='<tr class="ctot'+(isFirst?" afirst":"")+'"><td class="l grp">'+(isFirst?esc(a.g||""):"")+'</td><td class="yr">'+(isFirst?"<b>"+esc(yearOf(a)||"–")+"</b>":"")+'</td><td class="l mono" title="'+esc(a.n)+'"><b>'+esc(a.a)+"</b></td>"+
       "<td>"+(isFirst&&price?Math.round(price):"")+'</td><td class="l mono"><b>'+esc(c.c)+"</b></td><td class=\"l\">"+GRID_TXT.colTot+"</td>"+
       tot.map(function(v){return "<td>"+(v||"")+"</td>";}).join("")+"<td>"+tq+"</td><td>"+ts+"</td><td></td>"+
       '<td class="pk"><span class="capc'+(own?" own":"")+'"><button data-capc="'+esc(key)+'" data-d="-1">−</button><b>'+cap+'</b><button data-capc="'+esc(key)+'" data-d="1">+</button> '+GRID_TXT.pcs+"</span>"+
       '<button data-sugc="'+esc(key)+'">'+GRID_TXT.sugC+'</button><button data-clrc="'+esc(key)+'">'+GRID_TXT.clrC+"</button></td>"+
-      '<td class="io">'+(mvIn?'<b>'+mvIn+"</b>":"")+'</td><td class="al">'+(un?'<span class="warnt">'+un+" "+GRID_TXT.nowhere+"</span>":note)+"</td></tr>";
+      '<td class="io">'+(mvIn?'<b>'+mvIn+"</b>":"")+(un?' <span class="warnt" title="'+esc(un+" "+GRID_TXT.nowhere)+'">⚠ '+un+"</span>":note?' <span class="warnt" title="'+esc(note.replace(/<[^>]+>/g,""))+'">⚠</span>':"")+"</td></tr>";
     html=html.slice(0,mark)+totRow+html.slice(mark);
   });
   return html;
@@ -708,13 +715,13 @@ function renderChoose(){
     return '<h4 class="sgrp">'+esc(gTitle)+' <span class="muted">· '+arts.length+" "+GRID_TXT.arts+"</span></h4>"+
       '<div class="scroll gscroll" data-g="'+esc(g)+'"><table class="grid work"><thead><tr>'+hd(HB_TXT.grp,"g","l")+hd(GRID_TXT.year,"yr")+hd(GRID_TXT.art,"a","l")+hd("RM","price")+
       '<th class="l">'+GRID_TXT.col+'</th><th class="l">'+GRID_TXT.outlet+"</th>"+sizes.map(function(z){return "<th>"+esc(z)+"</th>";}).join("")+
-      hd(GRID_TXT.tot,"held")+hd(GRID_TXT.sold+" "+W+"m","sold")+hd(GRID_TXT.cover,"cover")+'<th class="l">'+GRID_TXT.pick+'</th><th>'+GRID_TXT3.io+'</th><th class="l">'+GRID_TXT.alloc+"</th></tr>"+
+      hd(GRID_TXT.tot,"held")+hd(GRID_TXT.sold+" "+W+"m","sold")+hd(GRID_TXT.cover,"cover")+'<th class="l">'+GRID_TXT.pick+'</th><th>'+GRID_TXT3.io+"</th></tr>"+
       '<tr class="flt"><th>'+hsel("fg",grpOpts(),($("#fg")||{}).value||"")+"</th><th>"+hsel("fy",yearOpts(),($("#fy")||{}).value||"")+"</th>"+
       '<th><input type="search" class="hf hq" data-hf="q" placeholder="'+HB_TXT.q+'" value="'+esc(($("#q")||{}).value||"")+'"></th><th>'+
       hsel("fp",BANDS,($("#fp")||{}).value||"")+"</th><th></th><th>"+
       hsel("out",[["",GRID_TXT2.all]].concat(D.outlets.map(function(x){return [x.o,x.o];})),OUTF)+"</th>"+sizes.map(function(){return "<th></th>";}).join("")+
       "<th></th><th></th><th></th><th>"+hsel("pick",[["",GRID_TXT2.all],["r",GRID_TXT2.get],["g",GRID_TXT2.give],["x",GRID_TXT2.allout],["o",OT_TXT.ot],["w",XR_TXT.wh],["s",XR_TXT.sg],["d",SP_TXT.sp],["any",GRID_TXT2.anyPick],["none",GRID_TXT2.noPick]],PICKF)+
-      "</th><th></th><th></th></tr></thead><tbody>"+
+      "</th><th></th></tr></thead><tbody>"+
       arts.map(function(a){return gridArticle(a,sizes);}).join("")+"</tbody></table></div>";
   }).join("")||emptyChoose();
   $("#cnt").textContent=list.length+" / "+D.arts.length+" 个货号"+(list.length>LIMIT?" · 显示 "+LIMIT:"");
@@ -1101,7 +1108,7 @@ function boot(){
     '<div class="bar"><span class="lbl">销售期间</span><div class="seg" id="wins"></div><span class="status" id="winNote"></span></div>'+
     '<div class="legend"><b>使用方法：</b>1) <b>选货与分配</b>：按产品类别、年份、价格、上市日期或建议筛选；每个货号按分店一行显示各尺码库存；在那一行按收货 / 调出 / 全部调出，「调去哪里」一栏显示货调去哪里。不用另外勾选。'+
     '你点之前不会有任何选择：按<b>这个货号给建议</b>（或<b>全部给建议</b>）由页面建议，按<b>清除</b>清掉选择。<b>收货</b> = 有在卖的分店；<b>调出</b> = 有货但这段期间没卖的分店，只调出收货分店需要的件数；<b>全部调出</b> = 这间分店这个颜色全部调走，一件不留。'+
-    '点一下就可以更改。每间收货分店每个尺码预设最多补到 <b>'+CAP+' 件</b>：先让每间收货分店缺的尺码各补 1 件（卖得最好的优先），全部轮完再补第 2 件，依此类推；每个颜色下面的<b>每个尺码调几件</b>按钮可以单独更改。<b>平分</b> = 在 2 间或以上分店按下：这几间分店这个颜色的货合在一起，再在它们之间重新分配，每个尺码每间先给 1 件，卖得最好的优先，一轮一轮分完。'+
+    '点一下就可以更改。每间收货分店每个尺码预设最多补到 <b>'+CAP+' 件</b>：先让每间收货分店缺的尺码各补 1 件（卖得最好的优先），全部轮完再补第 2 件，依此类推；每个颜色下面的<b>每个尺码调几件</b>按钮可以单独更改。<b>平分</b> = 在 2 间或以上分店按下：这几间分店这个颜色的货，加上全部调出分店的货，合在一起，再在它们之间重新分配，每个尺码每间先给 1 件，卖得最好的优先，一轮一轮分完。'+
     '2) 按最下面「所有调货」里的 <b>复制到 WhatsApp</b> 或 <b>分享我的选择</b>，对方就能打开同一份计划。3) <b>调货单</b>：每间分店一张拣货单，可打印或发送。4) <b>分店总结</b>：调货后每间分店各类别的库存搭配，对比它的销售。5) <b>按货号</b>：产品类别 &gt; 货号 &gt; 颜色，看每间分店的货调去哪里。'+
     '<span class="muted">勾选只保存在这个浏览器，分享后对方才看得到。'+(D.sg?" SG 网店库存 = SiteGiant（网店）"+esc(D.sg.asof)+" 的可用库存；/月 = 网店平均每月销量。":"")+'</span></div>'+
     '<div class="tabs noprint" role="tablist"><button id="tab_choose" data-view="choose" role="tab">1 选货与分配 <span class="n">0</span></button>'+
