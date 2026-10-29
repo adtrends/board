@@ -621,7 +621,9 @@ function gridArticle(a,sizes){
         "<td><b>"+n+"</b></td><td>"+rowSold(r)+"</td><td>"+(cv==null?"–":cv+"周")+"</td>"+
         '<td class="pk">'+(sameBrand(a,r)?'<button data-role="r"'+d+' aria-pressed="'+(role==="r")+'">收货</button>':"")+
         '<button data-role="g"'+d+' aria-pressed="'+(role==="g")+'">调出</button><button data-role="x"'+d+' aria-pressed="'+(role==="x")+'" title="这个颜色全部调出">全部调出</button>'+extraRoles(a,r,d,role,c)+'</td>'+
-        '<td class="io">'+ioTxt(inQ,outQ,role)+'</td><td class="al">'+dstSelect(a,c,r,role)+baAllocTxt({to:to,from:from},true)+"</td></tr>";
+        /* Tze, 29 Oct 2026: the → / ← outlet lines made every row 2-3 lines tall - "not important information" here.
+           The count stays; who sends to whom is on hover, and in full on Transfer lists and By article. */
+        '<td class="io" title="'+esc(Object.keys(to).map(function(o){return "→ "+o+" "+to[o];}).concat(Object.keys(from).map(function(o){return "← "+o+" "+from[o];})).join("\n"))+'">'+ioTxt(inQ,outQ,role)+'</td><td class="al">'+dstSelect(a,c,r,role)+"</td></tr>";
     });
     var sgc=D.sg?sgCol(a.a,c.c):null;
     if(sgc&&sgc[0]){var by=sgc[2]||{};   // only when SiteGiant holds some - keeps the grid compact
