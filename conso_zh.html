@@ -399,7 +399,7 @@ var AUTO=false, SUGG=new Set();
 var SUG_TXT={on:"建议：全部货号已开启",off:"建议：关闭 - 由你选择",all:"全部给建议",clearAll:"清除全部选择",
   one:"这个货号给建议",clearOne:"清除这个货号",confAll:"用页面的建议替换所有已勾选货号的收货 / 调出选择？",
   confClear:"清除所有货号的收货 / 调出 / 全部调出选择？"};
-function roleOf(a,c,r){var k=rk(a.a,c.c,r.o),v=ROLES[k]!==undefined?ROLES[k]:((AUTO||SUGG.has(a.a)||SUGG.has(a.a+"|"+c.c))?suggest(a,c,r):"");return (v==="r"||v==="s")&&!sameBrand(a,r)?"":v;}
+function roleOf(a,c,r){var k=rk(a.a,c.c,r.o),v=ROLES[k]!==undefined?ROLES[k]:((AUTO||SUGG.has(a.a)||SUGG.has(a.a+"|"+c.c))?suggest(a,c,r):"");return (v==="r"||v==="s"||v==="d")&&!sameBrand(a,r)?"":v;}
 /* Roles: r = GET, g = GIVE (only what receivers need, up to CAP a size), x = ALL OUT (the door
    sends every piece of the art-colour - promoters often want nothing left behind). */
 var UNPLACED={};                                 // "art|col" -> pcs an ALL OUT door could not place
@@ -422,6 +422,19 @@ function allocate(a){
     var get=c.rows.filter(function(r){return role[r.o]==="r"||role[r.o]==="s";}).sort(function(x,y){return rowSold(y)-rowSold(x);});
     var sgReq=get.filter(function(r){return role[r.o]==="s";});
     var key=a.a+"|"+c.c, cap=capOf(a.a,c.c); delete UNPLACED[key];
+    /* Tze, 29 Oct 2026: "another option to redistribute the stock among the selected outlets". SPREAD doors (d) pool
+       their own stock of the colour and deal it back out among themselves, size by size: 1 to each door, best seller
+       first, round after round, until the size runs out. Each door ends with an even share; the best sellers get the
+       odd pieces. Only the surplus moves, from the door holding the most extra. Separate from GET / GIVE. */
+    var spr=c.rows.filter(function(r){return role[r.o]==="d";}).sort(function(x,y){return rowSold(y)-rowSold(x)||rowHeld(y)-rowHeld(x);});
+    if(spr.length>1)sizesOf(a,c).forEach(function(z){
+      var left=spr.reduce(function(t,r){return t+(r.q[z]||0);},0),tgt={};if(!left)return;
+      spr.forEach(function(r){tgt[r.o]=0;});
+      while(left>0)for(var i=0;i<spr.length&&left>0;i++){tgt[spr[i].o]++;left--;}
+      var src=spr.filter(function(r){return (r.q[z]||0)>tgt[r.o];}).map(function(r){return {o:r.o,n:(r.q[z]||0)-tgt[r.o]};});
+      spr.forEach(function(r){for(var need=tgt[r.o]-(r.q[z]||0);need>0;need--){
+        var s=src.slice().sort(function(x,y){return y.n-x.n;})[0];s.n--;add(s.o,r.o,c.c,z);}});
+    });
     if(!give.length&&!sgReq.length)return;
     var pool={};give.forEach(function(g){pool[g.o]=Object.assign({},g.q);});
     var got={};                                  // size -> outlet -> pcs received
@@ -554,6 +567,7 @@ var FLT_TXT={more:"更多筛选",hint:"产品类别、年份、价格、排序�
 var GRID_TXT2={all:"全部",anyPick:"有选择",noPick:"没选择",get:"收货",give:"调出",allout:"全部调出"};
 var GRID_TXT3={io:"收 / 调",noGet:"没有调动：请标一间收货分店",full:"没有调动：收货分店每个尺码已有 # 件 - 按 + 调多一些",zero:"0"};
 function ioTxt(inQ,outQ,role){
+  if(inQ&&outQ)return '<b class="inq">+'+inQ+'</b> <b class="outq">−'+outQ+"</b>";
   if(inQ)return '<b class="inq">+'+inQ+"</b>";
   if(outQ)return '<b class="outq">−'+outQ+"</b>";
   return role?'<span class="muted">'+GRID_TXT3.zero+"</span>":"";
@@ -576,6 +590,7 @@ var XR_TXT={wh:"退仓",sg:"SG补货",whT:"先给收货的分店，剩下的全�
 /* Tze, 20 Oct 2026: "add another action to transfer the item to other outlets not in the list" */
 var OT_TXT={ot:"调去他店",otT:"先给收货的分店，剩下的全部调去本表以外的分店",pick:"选择分店…",
   none:"请选择要调去的分店",list:"调去他店 = 调去本表以外的分店，收货分店写在「To」栏。"};
+var SP_TXT={sp:"平分",spT:"把所有按了平分的分店这个颜色的货合在一起重新分：每个尺码每间先给 1 件，卖得最好的优先，一轮一轮分完"};
 /* Tze, 20 Oct 2026: "1 more action ... to transfer to outlets that currently don't carry this" - the picker lists
    the outlets with none of this art-colour first (this board's own empty doors, then every other outlet with
    0 today), and the outlets that already hold it after. */
@@ -594,7 +609,7 @@ function dstSelect(a,c,r,role){if(role!=="o")return "";var key=rk(a.a,c.c,r.o),c
   return '<select class="dst'+(cur?"":" need")+'" data-dst="'+esc(key)+'" title="'+OT_TXT.none+'">'+otherOpts(a,c,r.o,cur)+"</select>";}
 function extraRoles(a,r,d,role,c){
   var key=rk(a.a,c.c,r.o), cur=DEST[key]||"";
-  return '<button data-role="o"'+d+' aria-pressed="'+(role==="o")+'" title="'+OT_TXT.otT+'">'+OT_TXT.ot+"</button>"+
+  return (sameBrand(a,r)?'<button data-role="d"'+d+' aria-pressed="'+(role==="d")+'" title="'+SP_TXT.spT+'">'+SP_TXT.sp+"</button>":"")+'<button data-role="o"'+d+' aria-pressed="'+(role==="o")+'" title="'+OT_TXT.otT+'">'+OT_TXT.ot+"</button>"+
     '<button data-role="w"'+d+' aria-pressed="'+(role==="w")+'" title="'+XR_TXT.whT+' ('+WH_CODE+')">'+XR_TXT.wh+"</button>"+
     (D.sg&&sameBrand(a,r)?'<button data-role="s"'+d+' aria-pressed="'+(role==="s")+'" title="'+XR_TXT.sgT+' ('+SG_CODE+')">'+XR_TXT.sg+"</button>":"");
 }
@@ -617,7 +632,7 @@ function gridArticle(a,sizes){
       first=false;
       var meta=i===0?a.coll:i===1?a.cut:"";   // Tze, 20 Oct 2026: collection and cutting under each art-col
       html+='<tr class="'+(on?"on":"")+'"><td></td><td></td><td class="meta l" title="'+esc(meta||"")+'">'+esc(meta||"")+"</td><td></td><td></td>"+
-        '<td class="o'+(role==="r"||role==="s"?" get":role==="g"||role==="x"||role==="w"||role==="o"?" give":"")+'" title="'+esc(outletName(r.o))+'">'+esc(r.o)+"</td>"+cells+
+        '<td class="o'+(role==="r"||role==="s"||role==="d"?" get":role==="g"||role==="x"||role==="w"||role==="o"?" give":"")+'" title="'+esc(outletName(r.o))+'">'+esc(r.o)+"</td>"+cells+
         "<td><b>"+n+"</b></td><td>"+rowSold(r)+"</td><td>"+(cv==null?"–":cv+"周")+"</td>"+
         '<td class="pk">'+(sameBrand(a,r)?'<button data-role="r"'+d+' aria-pressed="'+(role==="r")+'">收货</button>':"")+
         '<button data-role="g"'+d+' aria-pressed="'+(role==="g")+'">调出</button><button data-role="x"'+d+' aria-pressed="'+(role==="x")+'" title="这个颜色全部调出">全部调出</button>'+extraRoles(a,r,d,role,c)+'</td>'+
@@ -698,7 +713,7 @@ function renderChoose(){
       '<th><input type="search" class="hf hq" data-hf="q" placeholder="'+HB_TXT.q+'" value="'+esc(($("#q")||{}).value||"")+'"></th><th>'+
       hsel("fp",BANDS,($("#fp")||{}).value||"")+"</th><th></th><th>"+
       hsel("out",[["",GRID_TXT2.all]].concat(D.outlets.map(function(x){return [x.o,x.o];})),OUTF)+"</th>"+sizes.map(function(){return "<th></th>";}).join("")+
-      "<th></th><th></th><th></th><th>"+hsel("pick",[["",GRID_TXT2.all],["r",GRID_TXT2.get],["g",GRID_TXT2.give],["x",GRID_TXT2.allout],["o",OT_TXT.ot],["w",XR_TXT.wh],["s",XR_TXT.sg],["any",GRID_TXT2.anyPick],["none",GRID_TXT2.noPick]],PICKF)+
+      "<th></th><th></th><th></th><th>"+hsel("pick",[["",GRID_TXT2.all],["r",GRID_TXT2.get],["g",GRID_TXT2.give],["x",GRID_TXT2.allout],["o",OT_TXT.ot],["w",XR_TXT.wh],["s",XR_TXT.sg],["d",SP_TXT.sp],["any",GRID_TXT2.anyPick],["none",GRID_TXT2.noPick]],PICKF)+
       "</th><th></th><th></th></tr></thead><tbody>"+
       arts.map(function(a){return gridArticle(a,sizes);}).join("")+"</tbody></table></div>";
   }).join("")||emptyChoose();
@@ -992,7 +1007,7 @@ function baAllocTxt(x,html){
   var t=Object.keys(x.to).map(function(o){return (html?'<span class="to">→ ':"→ ")+o+" "+x.to[o]+(html?"</span>":"");}),
       f=Object.keys(x.from).map(function(o){return (html?'<span class="from">← ':"← ")+o+" "+x.from[o]+(html?"</span>":"");});
   return t.concat(f).join(html?"<br>":"; ");}
-function baRoleTxt(role){return role==="r"?"收货":role==="g"?"调出":role==="x"?"全部调出":role==="w"?XR_TXT.wh:role==="s"?XR_TXT.sg:role==="o"?OT_TXT.ot:"";}
+function baRoleTxt(role){return role==="r"?"收货":role==="g"?"调出":role==="x"?"全部调出":role==="w"?XR_TXT.wh:role==="s"?XR_TXT.sg:role==="o"?OT_TXT.ot:role==="d"?SP_TXT.sp:"";}
 function renderByArt(){
   if(BA_ALL===null)BA_ALL=!TICK.size;
   var moves=allMoves(), G=baGroups(), shown=0, blocks=0, html="";
@@ -1086,7 +1101,7 @@ function boot(){
     '<div class="bar"><span class="lbl">销售期间</span><div class="seg" id="wins"></div><span class="status" id="winNote"></span></div>'+
     '<div class="legend"><b>使用方法：</b>1) <b>选货与分配</b>：按产品类别、年份、价格、上市日期或建议筛选；每个货号按分店一行显示各尺码库存；在那一行按收货 / 调出 / 全部调出，「调去哪里」一栏显示货调去哪里。不用另外勾选。'+
     '你点之前不会有任何选择：按<b>这个货号给建议</b>（或<b>全部给建议</b>）由页面建议，按<b>清除</b>清掉选择。<b>收货</b> = 有在卖的分店；<b>调出</b> = 有货但这段期间没卖的分店，只调出收货分店需要的件数；<b>全部调出</b> = 这间分店这个颜色全部调走，一件不留。'+
-    '点一下就可以更改。每间收货分店每个尺码预设最多补到 <b>'+CAP+' 件</b>：先让每间收货分店缺的尺码各补 1 件（卖得最好的优先），全部轮完再补第 2 件，依此类推；每个颜色下面的<b>每个尺码调几件</b>按钮可以单独更改。'+
+    '点一下就可以更改。每间收货分店每个尺码预设最多补到 <b>'+CAP+' 件</b>：先让每间收货分店缺的尺码各补 1 件（卖得最好的优先），全部轮完再补第 2 件，依此类推；每个颜色下面的<b>每个尺码调几件</b>按钮可以单独更改。<b>平分</b> = 在 2 间或以上分店按下：这几间分店这个颜色的货合在一起，再在它们之间重新分配，每个尺码每间先给 1 件，卖得最好的优先，一轮一轮分完。'+
     '2) 按最下面「所有调货」里的 <b>复制到 WhatsApp</b> 或 <b>分享我的选择</b>，对方就能打开同一份计划。3) <b>调货单</b>：每间分店一张拣货单，可打印或发送。4) <b>分店总结</b>：调货后每间分店各类别的库存搭配，对比它的销售。5) <b>按货号</b>：产品类别 &gt; 货号 &gt; 颜色，看每间分店的货调去哪里。'+
     '<span class="muted">勾选只保存在这个浏览器，分享后对方才看得到。'+(D.sg?" SG 网店库存 = SiteGiant（网店）"+esc(D.sg.asof)+" 的可用库存；/月 = 网店平均每月销量。":"")+'</span></div>'+
     '<div class="tabs noprint" role="tablist"><button id="tab_choose" data-view="choose" role="tab">1 选货与分配 <span class="n">0</span></button>'+
