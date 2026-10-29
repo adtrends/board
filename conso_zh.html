@@ -649,6 +649,25 @@ function grpOpts(){var f=$("#fg");return f?[].map.call(f.options,function(o){ret
    left ... no need any filter above". Every filter sits in the filter row under its own column title, the
    titles sort, and Product type is the first column. Nothing above the table. */
 var HB_TXT={grp:"产品类别",q:"搜索"};
+/* Tze, 29 Oct 2026: "why the article code selection went missing" - the filters live in the table header, so a
+   search or filter that matched nothing drew no table and the box vanished mid-typing. Keep the search box, name
+   the filters that are on, and give one button that clears them. Ticks and picks are untouched. */
+var EMPTY_TXT={on:"已开的筛选：",clear:"清除筛选",pick:"选择",out:"分店",q:"搜索",fg:"产品类别",fy:"年份",fp:"价格",
+  hint:"本区有卖过但已经没有库存的货号不会列出。"};
+function activeFilters(){var f=[],v;
+  if((v=($("#q")||{}).value))f.push(EMPTY_TXT.q+" “"+v+"”");
+  ["fg","fy","fp"].forEach(function(id){var s=$("#"+id);if(s&&s.value)f.push(EMPTY_TXT[id]+": "+s.options[s.selectedIndex].textContent);});
+  if(OUTF)f.push(EMPTY_TXT.out+": "+OUTF);if(PICKF)f.push(EMPTY_TXT.pick+": "+PICKF);
+  ["fk","fd","ff","ft","fsg","fb"].forEach(function(id){var s=$("#"+id);if(s&&s.value)f.push(s.value);});
+  ["fs","ftk"].forEach(function(id){var s=$("#"+id);if(s&&s.checked)f.push(s.parentNode.textContent.trim());});
+  return f;}
+function emptyChoose(){var f=activeFilters();
+  return '<div class="empty"><p>'+GRID_TXT.none+'</p><p><input type="search" class="hf hq" data-hf="q" placeholder="'+HB_TXT.q+'" value="'+esc(($("#q")||{}).value||"")+'"> '+
+    (f.length?'<button class="ghost" id="clrFilters">'+EMPTY_TXT.clear+'</button></p><p class="muted">'+EMPTY_TXT.on+" "+esc(f.join(" · ")):"")+
+    '</p><p class="muted">'+EMPTY_TXT.hint+"</p></div>";}
+function clearFilters(){["q","fg","fy","fp","fk","fd","ff","ft","fsg","fb"].forEach(function(id){var s=$("#"+id);if(s)s.value="";});
+  ["fs","ftk"].forEach(function(id){var s=$("#"+id);if(s)s.checked=false;});OUTF="";PICKF="";LIMIT=40;renderChoose();}
+document.addEventListener("click",function(e){if(e.target.closest&&e.target.closest("#clrFilters"))clearFilters();});
 function yearOpts(){var f=$("#fy");return f?[].map.call(f.options,function(o){return [o.value,o.textContent];}):[["",""]];}
 function renderChoose(){
   var fs=$("#fsort");if(fs&&[].some.call(fs.options,function(o){return o.value===SORT.k;}))fs.value=SORT.k;
@@ -680,7 +699,7 @@ function renderChoose(){
       "<th></th><th></th><th></th><th>"+hsel("pick",[["",GRID_TXT2.all],["r",GRID_TXT2.get],["g",GRID_TXT2.give],["x",GRID_TXT2.allout],["o",OT_TXT.ot],["w",XR_TXT.wh],["s",XR_TXT.sg],["any",GRID_TXT2.anyPick],["none",GRID_TXT2.noPick]],PICKF)+
       "</th><th></th><th></th></tr></thead><tbody>"+
       arts.map(function(a){return gridArticle(a,sizes);}).join("")+"</tbody></table></div>";
-  }).join("")||'<p class="empty">'+GRID_TXT.none+"</p>";
+  }).join("")||emptyChoose();
   $("#cnt").textContent=list.length+" / "+D.arts.length+" 个货号"+(list.length>LIMIT?" · 显示 "+LIMIT:"");
   $("#more").innerHTML=list.length>LIMIT?'<button class="ghost" id="moreBtn">再显示 '+Math.min(40,list.length-LIMIT)+" 个</button>":"";
   CUR_LIST=list;
