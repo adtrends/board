@@ -447,7 +447,7 @@ function allocate(a){
        A TO WH door keeps KEEP pcs of every size (or half of each size, rounded up, for "h"); only the rest is
        offered to the GET doors and then sent back to the warehouse. */
     /* Tze, 30 Oct 2026: "allow me to do half transfer for transfer to other outlets, like the return to WH" - TO OTHER keeps the same way */
-    ret.concat(oth).forEach(function(g){var k=KEEP[rk(a.a,c.c,g.o)];if(!k)return;
+    ret.concat(oth).forEach(function(g){var k=KEEP[rk(a.a,c.c,g.o)];if(!k||k==="e")return;
       Object.keys(pool[g.o]).forEach(function(z){var n=pool[g.o][z]||0;pool[g.o][z]=n-(k==="h"?Math.ceil(n/2):Math.min(n,+k));});});
     var got={};                                  // size -> outlet -> pcs received
     function have(r,z){return (r.q[z]||0)+((got[z]||{})[r.o]||0);}
@@ -507,9 +507,12 @@ function allocate(a){
     /* Tze, 30 Oct 2026: "allow me to distribute evenly to a few other outlets too" - DEST holds one or more outlets
        ("A,B,C"); each size is dealt 1 piece at a time round the outlets, the turn carrying on to the next size so
        every outlet ends within 1 piece of the others. */
+    /* Tze, 30 Oct 2026: "distribute evenly even with the donor outlet" - KEEP "e" puts the giving door in the deal
+       too, so it keeps the same share as each outlet it sends to (its turn's piece just stays). */
     oth.forEach(function(g){var to=dests(rk(a.a,c.c,g.o));if(!to.length)return;var turn=0;
+      if(KEEP[rk(a.a,c.c,g.o)]==="e")to=[g.o].concat(to);
       sizesOf(a,c).concat(Object.keys(pool[g.o])).filter(function(z,i,l){return l.indexOf(z)===i;}).forEach(function(z){
-        for(var n=pool[g.o][z]||0;n>0;n--){pool[g.o][z]--;add(g.o,to[turn%to.length],c.c,z);turn++;}});});
+        for(var n=pool[g.o][z]||0;n>0;n--){var t=to[turn%to.length];turn++;if(t===g.o)continue;pool[g.o][z]--;add(g.o,t,c.c,z);}});});
     // pass 4: FROM SG doors top up each size to CAP from SG online stock, one piece at a time, best seller first
     if(sgReq.length){
       var sgc=sgCol(a.a,c.c), sp=Object.assign({},(sgc&&sgc[2])||{}), zs={};
@@ -644,9 +647,9 @@ function otherOpts(a,c,from,cur){
 }
 /* the destination picker sits in the Allocation cell so the table keeps its width (Tze, 20 Oct 2026) */
 var KEEP_TXT={t:"How much goes back to the warehouse",all:"All back",h:"Half back",k:"Keep # / size"};
-var KEEPO_TXT={t:"How much goes to the other outlet",all:"All go",h:"Half go"};
+var KEEPO_TXT={t:"How much goes to the other outlet",all:"All go",h:"Half go",e:"Even split incl. this outlet"};
 function keepSelect(a,c,r,o){var key=rk(a.a,c.c,r.o),cur=KEEP[key]||"",T=o?KEEPO_TXT:KEEP_TXT;
-  return '<select class="dst" data-keep="'+esc(key)+'" title="'+T.t+'">'+[["",T.all],["h",T.h]].concat([1,2,3,4].map(function(n){return [String(n),KEEP_TXT.k.replace("#",n)];}))
+  return '<select class="dst" data-keep="'+esc(key)+'" title="'+T.t+'">'+[["",T.all]].concat(o?[["e",T.e]]:[]).concat([["h",T.h]]).concat([1,2,3,4].map(function(n){return [String(n),KEEP_TXT.k.replace("#",n)];}))
     .map(function(o){return '<option value="'+o[0]+'"'+(o[0]===cur?" selected":"")+">"+esc(o[1])+"</option>";}).join("")+"</select>";}
 function dests(key){return (DEST[key]||"").split(",").filter(Boolean);}
 var MD_TXT={n:"# outlets",ok:"Done",even:"split evenly between # outlets"};
