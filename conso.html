@@ -967,7 +967,7 @@ function pdfFor(o,moves){
   var tot=function(v,SL){return SL.reduce(function(n,z){return n+(v[z]||0);},0);}, pdfTxt=function(t){return String(t).replace(/✎ /g,"Remark: ").replace(/[^\x20-\x7E]/g,"");};
   doc.setFont("helvetica","bold");doc.setFontSize(14);doc.text(o+"  "+pdfTxt(outletName(o)),10,12);
   doc.setFont("helvetica","normal");doc.setFontSize(8);
-  doc.text(doc.splitTextToSize(D.title+" conso - system stock "+fmtDate(D.built)+" - SEND "+sum(out)+" pcs in "+dl.length+" IT"+(dl.length===1?"":"s")+(inn.length?" - RECEIVE "+sum(inn)+" pcs from "+sl.join(", "):""),190),10,17);
+  doc.text(doc.splitTextToSize(D.title+" conso - system stock "+fmtDate(D.built)+" - SEND "+sum(out)+" pcs in "+dl.length+" IT"+(dl.length===1?"":"s")+"",190),10,17);
   var y=26;
   if(dl.length){doc.setFontSize(10);var key=dl.map(function(t){return bcTag([],t)+" = "+t+" ("+sum(out.filter(function(m){return m.to===t;}))+" pcs)";}).join("     ");
     var kl=doc.splitTextToSize("Receiving outlets:  "+key,190);doc.text(kl,10,y);y+=kl.length*4.5+2;}
@@ -987,11 +987,12 @@ function pdfFor(o,moves){
       styles:{fontSize:8,cellPadding:1.2,halign:"center",lineColor:[200,206,210],lineWidth:0.1},headStyles:{fillColor:[60,70,80],fontSize:7.5},columnStyles:cs,
       didParseCell:function(d){if(d.section!=="body")return;var k=sty[d.row.index];
         if(k==="now"){d.cell.styles.fillColor=[232,237,240];d.cell.styles.fontStyle="bold";}
-        if(k==="to"&&d.column.index===3){d.cell.styles.fontSize=11;d.cell.styles.fontStyle="bold";}
+        if(k==="to"&&d.column.index===3){d.cell.styles.fontStyle="bold";}
         if(k==="left"&&d.column.index!==NI){d.cell.styles.fontStyle="italic";d.cell.styles.textColor=[110,118,126];}},
       didDrawCell:function(d){if(d.section==="body"&&sty[d.row.index]==="to"&&d.column.index===OK){doc.rect(d.cell.x+d.cell.width/2-1.6,d.cell.y+d.cell.height/2-1.6,3.2,3.2);}}});
     y=doc.lastAutoTable.finalY+5;});
-  if(inn.length){if(y>260){doc.addPage();y=10;}doc.setFont("helvetica","bold");doc.setFontSize(11);doc.text("Incoming: "+sum(inn)+" pcs (check the IT when it arrives)",10,y+3);y+=5;
+  /* Tze, 30 Oct 2026: "in your zip dont show the incoming stock" */
+  if(false){if(y>260){doc.addPage();y=10;}doc.setFont("helvetica","bold");doc.setFontSize(11);doc.text("Incoming: "+sum(inn)+" pcs (check the IT when it arrives)",10,y+3);y+=5;
     bcGroups(o,inn,"from",moves).forEach(function(g){var body=[];
       g.items.forEach(function(it){Object.keys(it.by).sort().forEach(function(f){body.push([f,it.a,it.c,it.rm||""].concat(g.SL.map(function(z){return it.by[f][z]||"";})).concat([tot(it.by[f],g.SL),""]));});});
       if(y>265){doc.addPage();y=10;}
