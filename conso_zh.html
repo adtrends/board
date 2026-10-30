@@ -647,11 +647,11 @@ var REM_TXT={btn:"备注",ask:"# 的备注（例如：集中后降价）。留�
    Penang articles at once = 14,600 rows and 11 s per redraw (every GET/GIVE tap), so on the Penang board the
    next 40 load by themselves as you scroll near the end instead - no button to press. */
 function lim(){return LIMIT;}
-var MORE_IO=null;
-function autoMore(){if(!remOn()||!window.IntersectionObserver)return;var b=$("#moreBtn");if(MORE_IO)MORE_IO.disconnect();if(!b)return;
-  MORE_IO=new IntersectionObserver(function(es){if(!es.some(function(e){return e.isIntersecting;})||!$("#moreBtn"))return;
-    MORE_IO.disconnect();var y=window.scrollY;LIMIT+=40;renderChoose();window.scrollTo(0,y);},{rootMargin:"1200px"});
-  MORE_IO.observe(b);}
+var MORE_BUSY=false;
+function autoMore(){}
+window.addEventListener("scroll",function(){if(MORE_BUSY||!D||!remOn()||VIEW!=="choose")return;var b=$("#moreBtn");if(!b)return;
+  if(b.getBoundingClientRect().top>innerHeight+1200)return;
+  MORE_BUSY=true;setTimeout(function(){var y=window.scrollY;LIMIT+=40;renderChoose();window.scrollTo(0,y);MORE_BUSY=false;},0);},{passive:true});
 function remOn(){return D.scope==="EILEEN";}
 function remBtn(key){var v=REM[key]||"";
   return '<button class="rem'+(v?" on":"")+'" data-rem="'+esc(key)+'" title="'+esc(v||REM_TXT.btn)+'">✎</button>';}
