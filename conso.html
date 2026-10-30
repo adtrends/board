@@ -643,8 +643,15 @@ function extraRoles(a,r,d,role,c){
 /* Tze, 30 Oct 2026: "put a remark on the article code where i want to markdown after grouping ... maybe specific
    to a certain counter". REM[art] = for the whole article, REM[art|outlet] = for that counter only. Penang first. */
 var REM_TXT={btn:"Remark",ask:"Remark for #  (e.g. markdown after grouping). Leave empty to remove.",all:"all counters",has:"Has remark"};
-/* Tze, 30 Oct 2026: "can show everything always" - no "Show 40 more" on the Penang board */
-function lim(){return remOn()?1e9:LIMIT;}
+/* Tze, 30 Oct 2026: "i dont want to have to click this all the time, can show everything always". All 1,376
+   Penang articles at once = 14,600 rows and 11 s per redraw (every GET/GIVE tap), so on the Penang board the
+   next 40 load by themselves as you scroll near the end instead - no button to press. */
+function lim(){return LIMIT;}
+var MORE_IO=null;
+function autoMore(){if(!remOn()||!window.IntersectionObserver)return;var b=$("#moreBtn");if(MORE_IO)MORE_IO.disconnect();if(!b)return;
+  MORE_IO=new IntersectionObserver(function(es){if(!es.some(function(e){return e.isIntersecting;})||!$("#moreBtn"))return;
+    MORE_IO.disconnect();var y=window.scrollY;LIMIT+=40;renderChoose();window.scrollTo(0,y);},{rootMargin:"1200px"});
+  MORE_IO.observe(b);}
 function remOn(){return D.scope==="EILEEN";}
 function remBtn(key){var v=REM[key]||"";
   return '<button class="rem'+(v?" on":"")+'" data-rem="'+esc(key)+'" title="'+esc(v||REM_TXT.btn)+'">✎</button>';}
@@ -761,7 +768,7 @@ function renderChoose(){
       arts.map(function(a){return gridArticle(a,sizes);}).join("")+"</tbody></table></div>";
   }).join("")||emptyChoose();
   $("#cnt").textContent=list.length+" of "+D.arts.length+" articles"+(list.length>lim()?" · showing "+lim():"");
-  $("#more").innerHTML=list.length>lim()?'<button class="ghost" id="moreBtn">Show '+Math.min(40,list.length-lim())+" more</button>":"";
+  $("#more").innerHTML=list.length>lim()?'<button class="ghost" id="moreBtn">Show '+Math.min(40,list.length-lim())+" more</button>":"";autoMore();
   CUR_LIST=list;
   var mn=["fk","fd","fsg","fb","ff","ft"].filter(function(i){var x=$("#"+i);return x&&x.value;}).length+["fs","ftk"].filter(function(i){var x=$("#"+i);return x&&x.checked;}).length;
   if($("#moreN"))$("#moreN").textContent=mn?"("+mn+")":"";
