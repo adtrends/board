@@ -682,6 +682,10 @@ function gridArticle(a,sizes){
 }
 function hd(label,key,cls){var on=SORT.k===key;
   return '<th class="s'+(cls?" "+cls:"")+(on?" sorted":"")+'" data-sort="'+key+'">'+label+(on?(SORT.d<0?" ↓":" ↑"):" ↕")+"</th>";}
+/* Tze, 30 Oct 2026: "add a brand filter in the board for penang only first" - Eileen has 11 AD + 3 BF doors */
+var BR_TXT={all:"All brands"};
+function brandSel(){if(D.scope!=="EILEEN"||!$("#fb"))return "";
+  return hsel("fb",[["",BR_TXT.all],["AD","Alain Delon"],["BF","Byford"]],$("#fb").value||"");}
 function hsel(id,list,cur){return '<select class="hf" data-hf="'+id+'">'+opts(list,cur)+"</select>";}
 function grpOpts(){var f=$("#fg");return f?[].map.call(f.options,function(o){return [o.value,o.textContent];}):[["",""]];}
 /* Tze, 20 Oct 2026 (2nd round): "I just need the filter to be part of the header ... add one more column to the most
@@ -733,7 +737,7 @@ function renderChoose(){
       hd(GRID_TXT.tot,"held")+hd(GRID_TXT.sold+" "+W+"m","sold")+hd(GRID_TXT.cover,"cover")+'<th class="l">'+GRID_TXT.pick+'</th><th>'+GRID_TXT3.io+"</th></tr>"+
       '<tr class="flt"><th>'+hsel("fg",grpOpts(),($("#fg")||{}).value||"")+"</th><th>"+hsel("fy",yearOpts(),($("#fy")||{}).value||"")+"</th>"+
       '<th><input type="search" class="hf hq" data-hf="q" placeholder="'+HB_TXT.q+'" value="'+esc(($("#q")||{}).value||"")+'"></th><th>'+
-      hsel("fp",BANDS,($("#fp")||{}).value||"")+"</th><th></th><th>"+
+      hsel("fp",BANDS,($("#fp")||{}).value||"")+"</th><th>"+brandSel()+"</th><th>"+
       hsel("out",[["",GRID_TXT2.all]].concat(D.outlets.map(function(x){return [x.o,x.o];})),OUTF)+"</th>"+sizes.map(function(){return "<th></th>";}).join("")+
       "<th></th><th></th><th></th><th>"+hsel("pick",[["",GRID_TXT2.all],["r",GRID_TXT2.get],["g",GRID_TXT2.give],["x",GRID_TXT2.allout],["o",OT_TXT.ot],["w",XR_TXT.wh],["s",XR_TXT.sg],["d",SP_TXT.sp],["any",GRID_TXT2.anyPick],["none",GRID_TXT2.noPick]],PICKF)+
       "</th><th></th></tr></thead><tbody>"+
@@ -1247,7 +1251,7 @@ function onChange(e){
     if(e.target.id==="hideSea"){HIDE_SEA=e.target.checked;renderSummary();}
     if(e.target.id==="baGrp"){BA_GRP=e.target.value;BA_LIMIT=80;renderByArt();}
     if(e.target.dataset&&e.target.dataset.hf&&e.target.dataset.hf!=="q"){var hf=e.target.dataset.hf,hv=e.target.value;
-      if(hf==="fy"||hf==="fp"||hf==="fg"){$("#"+hf).value=hv;}else if(hf==="sort"){SORT={k:hv,d:hv==="a"?1:-1};$("#fsort").value=hv;}else if(hf==="out")OUTF=hv;else if(hf==="pick")PICKF=hv;
+      if(hf==="fy"||hf==="fp"||hf==="fg"||hf==="fb"){$("#"+hf).value=hv;}else if(hf==="sort"){SORT={k:hv,d:hv==="a"?1:-1};$("#fsort").value=hv;}else if(hf==="out")OUTF=hv;else if(hf==="pick")PICKF=hv;
       LIMIT=40;renderChoose();}
 
     if(e.target.dataset&&e.target.dataset.pick!==undefined){PICKED[e.target.dataset.pick]=e.target.checked;try{localStorage.setItem(STORE+":picked",JSON.stringify(PICKED));}catch(x){}}
