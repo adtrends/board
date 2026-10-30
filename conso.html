@@ -191,6 +191,10 @@ table.work td.al select.dst.need{border-color:var(--bad);color:var(--bad)}
 table.work td.pk button[data-role="w"][aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--bg)}
 table.work td.pk button[data-role="s"][aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--on)}
 table.work td.pk button[data-role="d"][aria-pressed="true"]{background:#0f8b8d;border-color:#0f8b8d;color:#fff}
+table.work button.rem{border:0;background:none;color:var(--muted);font-size:11px;padding:0 3px;margin-left:4px;cursor:pointer;min-height:0;min-width:0}
+table.work button.rem.on{background:#ffe08a;color:#5a3d00;border-radius:4px;font-weight:700}
+table.work tr.remrow td{background:#fff6d6;color:#5a3d00;font-size:12px;text-align:left;white-space:normal;padding:3px 8px}
+table.work tr.remrow span{margin-right:14px}
 table.work td.pk{white-space:nowrap}
 table.work td.pk select.dst{font:inherit;font-size:10.5px;padding:1px 3px;margin-left:2px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);max-width:150px}
 table.work td.pk select.dst.need{border-color:var(--bad);color:var(--bad)}
@@ -292,7 +296,7 @@ details.recvd summary{cursor:pointer;font-weight:600;font-size:13px;margin-botto
 (function(){
 "use strict";
 var D=null, W="6", CAP=3, VIEW="choose", SORT={k:"stuck",d:-1}, LIMIT=40;
-var TICK=new Set(), ROLES={}, CAPS={}, KEYHEX=null, STORE=null, DEST={}, KEEP={};
+var TICK=new Set(), ROLES={}, CAPS={}, KEYHEX=null, STORE=null, DEST={}, KEEP={}, REM={};
 /* language toggle (Tze, 18 Oct 2026): English by default, one tap to the other language; same link key, same ticks */
 var LANG_OTHER="conso_zh.html", LANG_LABEL="中文";
 var THEME_LBL={dark:"Dark",light:"Light"};
@@ -364,18 +368,18 @@ var KIND={move:["Move","k-move","Doors in the cluster sell it and have room — 
 var BANDS=[["","All prices"],["0-99","Below RM100"],["100-149","RM100–149"],["150-199","RM150–199"],["200-299","RM200–299"],["300-99999","RM300 and up"]];
 
 /* ---------- state: this browser + shareable in the link ---------- */
-function saveState(){try{localStorage.setItem(STORE,JSON.stringify({t:[...TICK],r:ROLES,cap:CAP,caps:CAPS,w:W,auto:AUTO,sg:[...SUGG],d:DEST,k:KEEP}));}catch(e){}}
+function saveState(){try{localStorage.setItem(STORE,JSON.stringify({t:[...TICK],r:ROLES,cap:CAP,caps:CAPS,w:W,auto:AUTO,sg:[...SUGG],d:DEST,k:KEEP,m:REM}));}catch(e){}}
 function loadState(){
   var s=null; var m=(location.hash||"").match(/[&]s=([A-Za-z0-9_\-]+)/);
   if(m){try{s=JSON.parse(decodeURIComponent(escape(atob(m[1].replace(/-/g,"+").replace(/_/g,"/")))));}catch(e){}}
   var fromLink=!!s;
   if(!s){try{s=JSON.parse(localStorage.getItem(STORE)||"null");}catch(e){}}
   if(s){TICK=new Set(s.t||[]);ROLES=s.r||{};CAP=s.cap||3;CAPS=s.caps||{};if(s.w&&D.windows.indexOf(s.w)>=0)W=s.w;
-    AUTO=s.auto===undefined?fromLink:!!s.auto;SUGG=new Set(s.sg||[]);DEST=s.d||{};KEEP=s.k||{};}   // a plan shared before 19 Oct relied on suggestions
+    AUTO=s.auto===undefined?fromLink:!!s.auto;SUGG=new Set(s.sg||[]);DEST=s.d||{};KEEP=s.k||{};REM=s.m||{};}   // a plan shared before 19 Oct relied on suggestions
   else if(D.pretick&&D.pretick.length){TICK=new Set(D.pretick);}   // board built for a short list: start with all of it ticked
 }
 function shareLink(){
-  var raw=JSON.stringify({t:[...TICK],r:ROLES,cap:CAP,caps:CAPS,w:W,auto:AUTO,sg:[...SUGG],d:DEST,k:KEEP});
+  var raw=JSON.stringify({t:[...TICK],r:ROLES,cap:CAP,caps:CAPS,w:W,auto:AUTO,sg:[...SUGG],d:DEST,k:KEEP,m:REM});
   var b=btoa(unescape(encodeURIComponent(raw))).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
   return location.origin+location.pathname+"#"+KEYHEX+"&s="+b;
 }
@@ -593,6 +597,7 @@ function ioTxt(inQ,outQ,role){
 function rowShown(a,c,r){
   if(OUTF&&r.o!==OUTF)return false;
   if(!PICKF)return true;
+  if(PICKF==="rem")return hasRem(a,r.o);
   var ro=roleOf(a,c,r);
   return PICKF==="any"?!!ro:PICKF==="none"?!ro:ro===PICKF;
 }
@@ -635,6 +640,16 @@ function extraRoles(a,r,d,role,c){
     '<button data-role="w"'+d+' aria-pressed="'+(role==="w")+'" title="'+XR_TXT.whT+' ('+WH_CODE+')">'+XR_TXT.wh+"</button>"+
     (D.sg&&sameBrand(a,r)?'<button data-role="s"'+d+' aria-pressed="'+(role==="s")+'" title="'+XR_TXT.sgT+' ('+SG_CODE+')">'+XR_TXT.sg+"</button>":"");
 }
+/* Tze, 30 Oct 2026: "put a remark on the article code where i want to markdown after grouping ... maybe specific
+   to a certain counter". REM[art] = for the whole article, REM[art|outlet] = for that counter only. Penang first. */
+var REM_TXT={btn:"Remark",ask:"Remark for #  (e.g. markdown after grouping). Leave empty to remove.",all:"all counters",has:"Has remark"};
+function remOn(){return D.scope==="EILEEN";}
+function remBtn(key){var v=REM[key]||"";
+  return '<button class="rem'+(v?" on":"")+'" data-rem="'+esc(key)+'" title="'+esc(v||REM_TXT.btn)+'">✎</button>';}
+function hasRem(a,o){return !!(REM[a.a]||REM[a.a+"|"+o]);}
+function remRow(a,sizes){var ks=Object.keys(REM).filter(function(k){return k===a.a||k.indexOf(a.a+"|")===0;}).sort();if(!ks.length)return "";
+  return '<tr class="remrow"><td></td><td colspan="'+(sizes.length+10)+'">'+ks.map(function(k){var o=k.split("|")[1];
+    return "<span><b>✎ "+esc(o||REM_TXT.all)+":</b> "+esc(REM[k])+"</span>";}).join("")+"</td></tr>";}
 function gridArticle(a,sizes){
   var moves=TICK.has(a.a)?allocate(a):[], on=TICK.has(a.a), price=priceNow(a), html="", first=true;
   a.cols.filter(colHeld).forEach(function(c){
@@ -654,7 +669,7 @@ function gridArticle(a,sizes){
       first=false;
       var meta=i===0?a.coll:i===1?a.cut:"";   // Tze, 20 Oct 2026: collection and cutting under each art-col
       html+='<tr class="'+(on?"on":"")+'"><td></td><td></td><td class="meta l" title="'+esc(meta||"")+'">'+esc(meta||"")+"</td><td></td><td></td>"+
-        '<td class="o'+(role==="r"||role==="s"||role==="d"?" get":role==="g"||role==="x"||role==="w"||role==="o"?" give":"")+'" title="'+esc(outletName(r.o))+'">'+esc(r.o)+"</td>"+cells+
+        '<td class="o'+(role==="r"||role==="s"||role==="d"?" get":role==="g"||role==="x"||role==="w"||role==="o"?" give":"")+'" title="'+esc(outletName(r.o))+'">'+esc(r.o)+(remOn()?remBtn(a.a+"|"+r.o):"")+"</td>"+cells+
         "<td><b>"+n+"</b></td><td>"+rowSold(r)+"</td><td>"+(cv==null?"–":cv+"w")+"</td>"+
         '<td class="pk">'+(sameBrand(a,r)?'<button data-role="r"'+d+' aria-pressed="'+(role==="r")+'">GET</button>':"")+
         '<button data-role="g"'+d+' aria-pressed="'+(role==="g")+'">GIVE</button><button data-role="x"'+d+' aria-pressed="'+(role==="x")+'" title="Send every piece of this colour out">ALL OUT</button>'+extraRoles(a,r,d,role,c)+dstSelect(a,c,r,role)+'</td>'+
@@ -670,13 +685,13 @@ function gridArticle(a,sizes){
     var mvIn=moves.filter(function(m){return m.c===c.c;}).reduce(function(t2,m){return t2+m.q;},0);
     var givers=c.rows.some(function(r){var ro=roleOf(a,c,r);return ro==="g"||ro==="x";}), getters=c.rows.some(function(r){var ro=roleOf(a,c,r);return ro==="r"||ro==="s"||ro==="d";});
     var note=givers&&!getters?'<span class="warnt">'+GRID_TXT3.noGet+"</span>":givers&&getters&&!mvIn?'<span class="warnt">'+GRID_TXT3.full.replace("#",cap)+"</span>":"";
-    var totRow='<tr class="ctot'+(isFirst?" afirst":"")+'"><td class="l grp">'+(isFirst?esc(a.g||""):"")+'</td><td class="yr">'+(isFirst?"<b>"+esc(yearOf(a)||"–")+"</b>":"")+'</td><td class="l mono" title="'+esc(a.n)+'"><b>'+esc(a.a)+"</b></td>"+
+    var totRow='<tr class="ctot'+(isFirst?" afirst":"")+'"><td class="l grp">'+(isFirst?esc(a.g||""):"")+'</td><td class="yr">'+(isFirst?"<b>"+esc(yearOf(a)||"–")+"</b>":"")+'</td><td class="l mono" title="'+esc(a.n)+'"><b>'+esc(a.a)+"</b>"+(isFirst&&remOn()?remBtn(a.a):"")+"</td>"+
       "<td>"+(isFirst&&price?Math.round(price):"")+'</td><td class="l mono"><b>'+esc(c.c)+"</b></td><td class=\"l\">"+GRID_TXT.colTot+"</td>"+
       tot.map(function(v){return "<td>"+(v||"")+"</td>";}).join("")+"<td>"+tq+"</td><td>"+ts+"</td><td></td>"+
       '<td class="pk"><span class="capc'+(own?" own":"")+'"><button data-capc="'+esc(key)+'" data-d="-1">−</button><b>'+cap+'</b><button data-capc="'+esc(key)+'" data-d="1">+</button> '+GRID_TXT.pcs+"</span>"+
       '<button data-sugc="'+esc(key)+'">'+GRID_TXT.sugC+'</button><button data-clrc="'+esc(key)+'">'+GRID_TXT.clrC+"</button></td>"+
       '<td class="io">'+(mvIn?'<b>'+mvIn+"</b>":"")+(un?' <span class="warnt" title="'+esc(un+" "+GRID_TXT.nowhere)+'">⚠ '+un+"</span>":note?' <span class="warnt" title="'+esc(note.replace(/<[^>]+>/g,""))+'">⚠</span>':"")+"</td></tr>";
-    html=html.slice(0,mark)+totRow+html.slice(mark);
+    html=html.slice(0,mark)+totRow+(isFirst&&remOn()?remRow(a,sizes):"")+html.slice(mark);
   });
   return html;
 }
@@ -739,7 +754,7 @@ function renderChoose(){
       '<th><input type="search" class="hf hq" data-hf="q" placeholder="'+HB_TXT.q+'" value="'+esc(($("#q")||{}).value||"")+'"></th><th>'+
       hsel("fp",BANDS,($("#fp")||{}).value||"")+"</th><th>"+brandSel()+"</th><th>"+
       hsel("out",[["",GRID_TXT2.all]].concat(D.outlets.map(function(x){return [x.o,x.o];})),OUTF)+"</th>"+sizes.map(function(){return "<th></th>";}).join("")+
-      "<th></th><th></th><th></th><th>"+hsel("pick",[["",GRID_TXT2.all],["r",GRID_TXT2.get],["g",GRID_TXT2.give],["x",GRID_TXT2.allout],["o",OT_TXT.ot],["w",XR_TXT.wh],["s",XR_TXT.sg],["d",SP_TXT.sp],["any",GRID_TXT2.anyPick],["none",GRID_TXT2.noPick]],PICKF)+
+      "<th></th><th></th><th></th><th>"+hsel("pick",[["",GRID_TXT2.all],["r",GRID_TXT2.get],["g",GRID_TXT2.give],["x",GRID_TXT2.allout],["o",OT_TXT.ot],["w",XR_TXT.wh],["s",XR_TXT.sg],["d",SP_TXT.sp],["any",GRID_TXT2.anyPick],["none",GRID_TXT2.noPick]].concat(remOn()?[["rem",REM_TXT.has]]:[]),PICKF)+
       "</th><th></th></tr></thead><tbody>"+
       arts.map(function(a){return gridArticle(a,sizes);}).join("")+"</tbody></table></div>";
   }).join("")||emptyChoose();
@@ -1187,6 +1202,8 @@ function onClick(e,t){
     if(t.dataset.sort){var k=t.dataset.sort;SORT=SORT.k===k?{k:k,d:-SORT.d}:{k:k,d:(k==="a"||k==="g"||k==="kind"||k==="n")?1:-1};LIMIT=40;renderChoose();return;}
     if(t.dataset.capc){var cpk=t.dataset.capc,cpa=cpk.split("|");CAPS[cpk]=Math.max(1,Math.min(6,capOf(cpa[0],cpa[1])+(+t.dataset.d)));
       if(CAPS[cpk]===CAP)delete CAPS[cpk];saveState();render();return;}
+    if(t.dataset.rem){var rkk=t.dataset.rem,rv=prompt(REM_TXT.ask.replace("#",rkk.replace("|"," @ ")),REM[rkk]||"");
+      if(rv!==null){rv=rv.trim();if(rv)REM[rkk]=rv;else delete REM[rkk];saveState();renderChoose();}return;}
     if(t.dataset.sugc){var sk=t.dataset.sugc,sp=sk.split("|");SUGG.add(sk);TICK.add(sp[0]);
       Object.keys(ROLES).forEach(function(k){var kp=k.split("|");if(kp[0]===sp[0]&&kp[1]===sp[1])delete ROLES[k];});saveState();render();return;}
     if(t.dataset.clrc){var ck2=t.dataset.clrc,cp=ck2.split("|"),art2=D.arts.find(function(x){return x.a===cp[0];}),col2=art2&&art2.cols.find(function(x){return x.c===cp[1];});
