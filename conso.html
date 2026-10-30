@@ -923,6 +923,21 @@ function mdRows(){
     a.cols.forEach(function(c){c.rows.forEach(function(r){if(!p[1]||r.o===p[1])n+=leftAfter(r,c,mv);});});
     out.push({a:a.a,n:a.n||"",o:p[1]||"",rem:REM[k],pcs:n,rm:Math.round(priceNow(a)||0)});});
   return out;}
+/* Tze, 30 Oct 2026: "you forgot about the remark for the markdown ... include one tab for those for me too in the excel export".
+   Penang: one .xlsx - tab 1 every transfer with its remark (ALL OUT / ✎), tab 2 the markdown list. SheetJS loads only when asked. */
+var XL_TXT={btn:"Download Excel (transfers + markdown list)",t1:"Transfers",t2:"Markdown list",fail:"Could not load the Excel maker - check the internet and try again."};
+function loadXLSX(cb){if(window.XLSX)return cb();var sc=document.createElement("script");
+  sc.src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js";sc.onload=cb;sc.onerror=function(){alert(XL_TXT.fail);};document.head.appendChild(sc);}
+function xlsxExport(){loadXLSX(function(){
+  var mv=allMoves(), t=[["From","FromName","To","ToName","Article","Description","Colour","Size","Qty","RM now","Remark"]].concat(mv.map(function(m){var a=artOf(m.a)||{};
+    return [m.from,outletName(m.from),m.to,outletName(m.to),m.a,a.n||"",m.c,m.z,m.q,Math.round(priceNow(a)||0)||"",moveNote(m.from,m.a,m.c,mv)];}));
+  var md=[[MDL_TXT.art,"Description",MDL_TXT.ctr,MDL_TXT.rem,MDL_TXT.pcs,MDL_TXT.rm]].concat(mdRows().map(function(x){return [x.a,x.n,x.o||REM_TXT.all,x.rem,x.pcs,x.rm];}));
+  if(md.length===1)md.push([MDL_TXT.none]);
+  var wb=XLSX.utils.book_new(), s1=XLSX.utils.aoa_to_sheet(t), s2=XLSX.utils.aoa_to_sheet(md);
+  s1["!cols"]=[12,26,12,26,10,36,7,6,5,7,40].map(function(w){return {wch:w};});s1["!autofilter"]={ref:"A1:K"+t.length};
+  s2["!cols"]=[10,36,14,40,12,8].map(function(w){return {wch:w};});
+  XLSX.utils.book_append_sheet(wb,s1,XL_TXT.t1);XLSX.utils.book_append_sheet(wb,s2,XL_TXT.t2);
+  XLSX.writeFile(wb,D.title.replace(/\W+/g,"_")+"_transfers_"+D.built+".xlsx");});}
 function mdListHTML(){var rows=mdRows();
   return '<div class="legend" style="margin-top:14px"><b>✎ '+MDL_TXT.h+'</b> <span class="muted">· '+MDL_TXT.sub+"</span>"+
     (rows.length?'<div class="scroll" style="margin-top:8px"><table><thead><tr><th class="l">'+MDL_TXT.art+'</th><th class="l">'+MDL_TXT.ctr+'</th><th class="l">'+MDL_TXT.rem+"</th><th>"+MDL_TXT.pcs+"</th><th>"+MDL_TXT.rm+"</th></tr></thead><tbody>"+
@@ -1059,7 +1074,7 @@ function renderLists(){
           inn=moves.filter(function(m){return m.to===o;}).reduce(function(n,m){return n+m.q;},0);
       return [o,o+" · send "+out+" · receive "+inn];})),LIST_OUTLET)+'</select>'+
     '<button class="act" id="printList">Print / save PDF</button><button class="ghost" id="copyList">Copy for WhatsApp</button>'+
-    '<button class="ghost" id="csvList">Download CSV (all outlets)</button><span class="status" id="listStatus"></span></div>'+
+    '<button class="ghost" id="csvList">Download CSV (all outlets)</button>'+(remOn()?'<button class="act" id="xlsList">'+XL_TXT.btn+"</button>":"")+'<span class="status" id="listStatus"></span></div>'+
     '<p class="note noprint">Promoters pick from the list and raise one IT per destination (the "To" column). ALL OUT = send every piece of that colour. Rows are grouped by size type (shirts, tops, pants, suits, kids), each with its own size columns. Check the shelf first: stock is the system balance on '+fmtDate(D.built)+'.</p>'+
     '<p class="note noprint">'+XR_TXT.list+" "+OT_TXT.list+"</p>"+show.map(function(o){return outletList(o,moves);}).join("");
 }
@@ -1349,6 +1364,7 @@ function onClick(e,t){
       case "baCsv":baCsv();break;
       case "copyList":var mv=allMoves(),os=LIST_OUTLET==="ALL"?D.outlets.map(function(x){return x.o;}).filter(function(o){return mv.some(function(m){return m.from===o;});}):[LIST_OUTLET];
         copy(os.map(function(o){return listText(o,mv);}).join("\n\n"),"#listStatus");break;
+      case "xlsList":xlsxExport();break;
       case "csvList":var rows2=[["From","FromName","To","ToName","Article","Description","Colour","Size","Qty","Remark"]].concat(allMoves().map(function(m,i,all){
           return [m.from,outletName(m.from),m.to,outletName(m.to),m.a,(artOf(m.a)||{}).n||"",m.c,m.z,m.q,moveNote(m.from,m.a,m.c,all)];}));
         var blob2=new Blob(["﻿"+rows2.map(function(r){return r.map(function(v){v=String(v);return /[",]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;}).join(",");}).join("\n")],{type:"text/csv"});
