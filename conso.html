@@ -292,7 +292,7 @@ details.recvd summary{cursor:pointer;font-weight:600;font-size:13px;margin-botto
 (function(){
 "use strict";
 var D=null, W="6", CAP=3, VIEW="choose", SORT={k:"stuck",d:-1}, LIMIT=40;
-var TICK=new Set(), ROLES={}, CAPS={}, KEYHEX=null, STORE=null, DEST={};
+var TICK=new Set(), ROLES={}, CAPS={}, KEYHEX=null, STORE=null, DEST={}, KEEP={};
 /* language toggle (Tze, 18 Oct 2026): English by default, one tap to the other language; same link key, same ticks */
 var LANG_OTHER="conso_zh.html", LANG_LABEL="中文";
 var THEME_LBL={dark:"Dark",light:"Light"};
@@ -364,18 +364,18 @@ var KIND={move:["Move","k-move","Doors in the cluster sell it and have room — 
 var BANDS=[["","All prices"],["0-99","Below RM100"],["100-149","RM100–149"],["150-199","RM150–199"],["200-299","RM200–299"],["300-99999","RM300 and up"]];
 
 /* ---------- state: this browser + shareable in the link ---------- */
-function saveState(){try{localStorage.setItem(STORE,JSON.stringify({t:[...TICK],r:ROLES,cap:CAP,caps:CAPS,w:W,auto:AUTO,sg:[...SUGG],d:DEST}));}catch(e){}}
+function saveState(){try{localStorage.setItem(STORE,JSON.stringify({t:[...TICK],r:ROLES,cap:CAP,caps:CAPS,w:W,auto:AUTO,sg:[...SUGG],d:DEST,k:KEEP}));}catch(e){}}
 function loadState(){
   var s=null; var m=(location.hash||"").match(/[&]s=([A-Za-z0-9_\-]+)/);
   if(m){try{s=JSON.parse(decodeURIComponent(escape(atob(m[1].replace(/-/g,"+").replace(/_/g,"/")))));}catch(e){}}
   var fromLink=!!s;
   if(!s){try{s=JSON.parse(localStorage.getItem(STORE)||"null");}catch(e){}}
   if(s){TICK=new Set(s.t||[]);ROLES=s.r||{};CAP=s.cap||3;CAPS=s.caps||{};if(s.w&&D.windows.indexOf(s.w)>=0)W=s.w;
-    AUTO=s.auto===undefined?fromLink:!!s.auto;SUGG=new Set(s.sg||[]);DEST=s.d||{};}   // a plan shared before 19 Oct relied on suggestions
+    AUTO=s.auto===undefined?fromLink:!!s.auto;SUGG=new Set(s.sg||[]);DEST=s.d||{};KEEP=s.k||{};}   // a plan shared before 19 Oct relied on suggestions
   else if(D.pretick&&D.pretick.length){TICK=new Set(D.pretick);}   // board built for a short list: start with all of it ticked
 }
 function shareLink(){
-  var raw=JSON.stringify({t:[...TICK],r:ROLES,cap:CAP,caps:CAPS,w:W,auto:AUTO,sg:[...SUGG],d:DEST});
+  var raw=JSON.stringify({t:[...TICK],r:ROLES,cap:CAP,caps:CAPS,w:W,auto:AUTO,sg:[...SUGG],d:DEST,k:KEEP});
   var b=btoa(unescape(encodeURIComponent(raw))).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
   return location.origin+location.pathname+"#"+KEYHEX+"&s="+b;
 }
@@ -429,6 +429,11 @@ function allocate(a){
     var spr=c.rows.filter(function(r){return role[r.o]==="d";}).sort(function(x,y){return rowSold(y)-rowSold(x)||rowHeld(y)-rowHeld(x);});
     if(!give.length&&!sgReq.length&&!spr.length)return;
     var pool={};give.forEach(function(g){pool[g.o]=Object.assign({},g.q);});
+    /* Tze, 30 Oct 2026: "for the return to WH, allow return of half qty or choose to leave maybe just 3-4 pcs per size".
+       A TO WH door keeps KEEP pcs of every size (or half of each size, rounded up, for "h"); only the rest is
+       offered to the GET doors and then sent back to the warehouse. */
+    ret.forEach(function(g){var k=KEEP[rk(a.a,c.c,g.o)];if(!k)return;
+      Object.keys(pool[g.o]).forEach(function(z){var n=pool[g.o][z]||0;pool[g.o][z]=n-(k==="h"?Math.ceil(n/2):Math.min(n,+k));});});
     var got={};                                  // size -> outlet -> pcs received
     function have(r,z){return (r.q[z]||0)+((got[z]||{})[r.o]||0);}
     function recv(r,z){got[z]=got[z]||{};got[z][r.o]=(got[z][r.o]||0)+1;}
@@ -618,7 +623,11 @@ function otherOpts(a,c,from,cur){
     (yes.length?'<optgroup label="'+OTG_TXT.yes+" ("+yes.length+')">'+yes.join("")+"</optgroup>":"");
 }
 /* the destination picker sits in the Allocation cell so the table keeps its width (Tze, 20 Oct 2026) */
-function dstSelect(a,c,r,role){if(role!=="o")return "";var key=rk(a.a,c.c,r.o),cur=DEST[key]||"";
+var KEEP_TXT={t:"How much goes back to the warehouse",all:"All back",h:"Half back",k:"Keep # / size"};
+function keepSelect(a,c,r){var key=rk(a.a,c.c,r.o),cur=KEEP[key]||"";
+  return '<select class="dst" data-keep="'+esc(key)+'" title="'+KEEP_TXT.t+'">'+[["",KEEP_TXT.all],["h",KEEP_TXT.h]].concat([1,2,3,4].map(function(n){return [String(n),KEEP_TXT.k.replace("#",n)];}))
+    .map(function(o){return '<option value="'+o[0]+'"'+(o[0]===cur?" selected":"")+">"+esc(o[1])+"</option>";}).join("")+"</select>";}
+function dstSelect(a,c,r,role){if(role==="w")return keepSelect(a,c,r);if(role!=="o")return "";var key=rk(a.a,c.c,r.o),cur=DEST[key]||"";
   return '<select class="dst'+(cur?"":" need")+'" data-dst="'+esc(key)+'" title="'+OT_TXT.none+'">'+otherOpts(a,c,r.o,cur)+"</select>";}
 function extraRoles(a,r,d,role,c){
   var key=rk(a.a,c.c,r.o), cur=DEST[key]||"";
@@ -1232,6 +1241,7 @@ document.addEventListener("input",function(e){var t=e.target;if(!t.dataset||t.da
     var n=document.querySelector('.gscroll[data-g="'+(window.CSS&&CSS.escape?CSS.escape(g||""):g)+'"] input[data-hf="q"]')||document.querySelector('input[data-hf="q"]');
     if(n){n.focus({preventScroll:true});try{n.setSelectionRange(v.length,v.length);}catch(x){}}},350);});
 function onChange(e){
+    if(e.target.dataset&&e.target.dataset.keep){var kk=e.target.dataset.keep;if(e.target.value)KEEP[kk]=e.target.value;else delete KEEP[kk];saveState();render();return;}
     if(e.target.dataset&&e.target.dataset.dst){var dk=e.target.dataset.dst;if(e.target.value)DEST[dk]=e.target.value;else delete DEST[dk];saveState();render();return;}
     if(e.target.id==="listSel"){LIST_OUTLET=e.target.value;renderLists();}
     if(e.target.id==="hideSea"){HIDE_SEA=e.target.checked;renderSummary();}
