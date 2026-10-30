@@ -970,13 +970,13 @@ function pdfFor(o,moves){
   var sum=function(ms){return ms.reduce(function(n,m){return n+m.q;},0);}, num=function(t){return parseInt(bcTag([],t));};
   var dl=[...new Set(out.map(function(m){return m.to;}))].sort(function(x,y){return num(x)-num(y);}), sl=[...new Set(inn.map(function(m){return m.from;}))];
   var tot=function(v,SL){return SL.reduce(function(n,z){return n+(v[z]||0);},0);}, pdfTxt=function(t){return String(t).replace(AO_TXT.ao,"ALL OUT").replace(/✎ /g,"").replace(/[^\x20-\x7E]/g,"");};
-  doc.setFont("helvetica","bold");doc.setFontSize(12);doc.text(o+"  "+pdfTxt(outletName(o)),10,12);
+  doc.setFont("helvetica","bold");doc.setFontSize(12);doc.text(o+"  "+pdfTxt(outletName(o)),6,9);
   doc.setFont("helvetica","normal");doc.setFontSize(8);
-  doc.text(doc.splitTextToSize(D.title+" conso - system stock "+fmtDate(D.built)+" - SEND "+sum(out)+" pcs in "+dl.length+" IT"+(dl.length===1?"":"s")+"",190),10,17);
-  var y=26;
+  doc.text(doc.splitTextToSize(D.title+" conso - system stock "+fmtDate(D.built)+" - SEND "+sum(out)+" pcs in "+dl.length+" IT"+(dl.length===1?"":"s")+"",198),6,17);
+  var y=19;
   if(dl.length){doc.setFontSize(9);var key=dl.map(function(t){return bcTag([],t)+" = "+t+" ("+sum(out.filter(function(m){return m.to===t;}))+" pcs)";}).join("     ");
-    var kl=doc.splitTextToSize("Receiving outlets:  "+key,190);doc.text(kl,10,y);y+=kl.length*4+2;}
-  else{doc.setFontSize(10);doc.text("Nothing to send.",10,y);y+=6;}
+    var kl=doc.splitTextToSize("Receiving outlets:  "+key,198);doc.text(kl,6,y);y+=kl.length*4+2;}
+  else{doc.setFontSize(10);doc.text("Nothing to send.",6,y);y+=6;}
   bcGroups(o,out,"to",moves).forEach(function(g){
     var body=[], sty=[], NI=g.SL.length+4, OK=g.SL.length+6;
     g.items.forEach(function(it){
@@ -985,10 +985,10 @@ function pdfFor(o,moves){
         body.push(["","","",bcTag([],t)].concat(g.SL.map(function(z){return it.by[t][z]||"";})).concat(["",tot(it.by[t],g.SL),""]));sty.push("to");});
       body.push(["","","","Left after"].concat(g.SL.map(function(z){return it.left[z]||(it.q[z]?0:"");})).concat([pdfTxt(it.note),tot(it.left,g.SL),""]));sty.push("left");});
     if(y>260){doc.addPage();y=10;}
-    doc.setFont("helvetica","bold");doc.setFontSize(10);doc.text(g.name+" - send "+g.pcs+" pcs",10,y+3);
+    doc.setFont("helvetica","bold");doc.setFontSize(10);doc.text(g.name+" - send "+g.pcs+" pcs",6,y+3);
     var cs={0:{halign:"left",cellWidth:18},1:{cellWidth:10},2:{cellWidth:10},3:{halign:"left",cellWidth:30}};
     cs[NI]={halign:"left",cellWidth:22,fontSize:7.5,overflow:"ellipsize",textColor:[198,40,40]};cs[OK]={cellWidth:9};
-    doc.autoTable({startY:y+4.5,margin:{left:10,right:10,top:8,bottom:8},head:[["Art no","Col","RM","To"].concat(g.SL).concat(["Note","Total","OK"])],body:body,theme:"grid",
+    doc.autoTable({startY:y+4.5,margin:{left:6,right:6,top:6,bottom:6},head:[["Art no","Col","RM","To"].concat(g.SL).concat(["Note","Total","OK"])],body:body,theme:"grid",
       styles:{fontSize:10,cellPadding:{top:0.5,bottom:0.5,left:1.2,right:1.2},minCellHeight:0,halign:"center",textColor:[20,24,28],lineColor:[200,206,210],lineWidth:0.1},headStyles:{fillColor:[60,70,80],textColor:[255,255,255],fontSize:10},columnStyles:cs,
       didParseCell:function(d){if(d.section!=="body")return;var k=sty[d.row.index];
         if(k==="now"){d.cell.styles.fillColor=[232,237,240];d.cell.styles.fontStyle="bold";}
@@ -997,12 +997,12 @@ function pdfFor(o,moves){
       didDrawCell:function(d){if(d.section==="body"&&sty[d.row.index]==="to"&&d.column.index===OK){doc.rect(d.cell.x+d.cell.width/2-1.6,d.cell.y+d.cell.height/2-1.6,3.2,3.2);}}});
     y=doc.lastAutoTable.finalY+3;});
   /* Tze, 30 Oct 2026: "in your zip dont show the incoming stock" */
-  if(false){if(y>260){doc.addPage();y=10;}doc.setFont("helvetica","bold");doc.setFontSize(11);doc.text("Incoming: "+sum(inn)+" pcs (check the IT when it arrives)",10,y+3);y+=5;
+  if(false){if(y>260){doc.addPage();y=10;}doc.setFont("helvetica","bold");doc.setFontSize(11);doc.text("Incoming: "+sum(inn)+" pcs (check the IT when it arrives)",6,y+3);y+=5;
     bcGroups(o,inn,"from",moves).forEach(function(g){var body=[];
       g.items.forEach(function(it){Object.keys(it.by).sort().forEach(function(f){body.push([f,it.a,it.c,it.rm||""].concat(g.SL.map(function(z){return it.by[f][z]||"";})).concat([tot(it.by[f],g.SL),""]));});});
       if(y>265){doc.addPage();y=10;}
-      doc.setFont("helvetica","bold");doc.setFontSize(9);doc.text(g.name+" - "+g.pcs+" pcs",10,y+3);
-      doc.autoTable({startY:y+4,margin:{left:10,right:10},head:[["From","Art no","Col","RM"].concat(g.SL).concat(["Total","OK"])],body:body,theme:"grid",
+      doc.setFont("helvetica","bold");doc.setFontSize(9);doc.text(g.name+" - "+g.pcs+" pcs",6,y+3);
+      doc.autoTable({startY:y+4,margin:{left:6,right:6,top:6,bottom:6},head:[["From","Art no","Col","RM"].concat(g.SL).concat(["Total","OK"])],body:body,theme:"grid",
         styles:{fontSize:8,cellPadding:1.2,halign:"center",lineColor:[200,206,210],lineWidth:0.1},headStyles:{fillColor:[110,118,126],fontSize:7.5},
         columnStyles:{0:{halign:"left",cellWidth:24},1:{halign:"left",cellWidth:18}}});
       y=doc.lastAutoTable.finalY+5;});}
