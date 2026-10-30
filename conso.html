@@ -219,7 +219,7 @@ table.byart tr.ctot td{background:var(--soft);font-weight:700}
 table.byart tr.cfirst td{border-top:2px solid var(--line)}
 table.byart td.al{text-align:left;white-space:nowrap;font-size:11px}
 table.byart td.al .to{color:var(--warn)}table.byart td.al .from{color:var(--good)}
-.ao{font-size:9px;font-weight:700;color:var(--bad)}
+.ao{font-size:11px;font-weight:700;color:var(--bad)}
 details.recvd{margin-top:10px}
 details.recvd summary{cursor:pointer;font-weight:600;font-size:13px;margin-bottom:6px}
 .olist h3{font-size:14px;margin:14px 0 6px}
@@ -530,6 +530,13 @@ function allocate(a){
 /* pieces an outlet ends with, per art-colour, after the plan */
 function leftAfter(r,c,moves){
   var n=rowHeld(r);moves.forEach(function(m){if(m.c!==c.c)return;if(m.from===r.o)n-=m.q;if(m.to===r.o)n+=m.q;});return n;}
+/* Tze, 30 Oct 2026: "mention in the remark that it's all out when transfer all out from certain outlet" -
+   every transfer row from a door left with 0 of that art-colour says ALL OUT, in the printed list, WhatsApp text and CSV. */
+var AO_TXT={ao:"ALL OUT - send every piece, 0 left"};
+function moveNote(o,art,col,moves){var a=artOf(art),c=a&&a.cols.find(function(x){return x.c===col;}),r=c&&c.rows.find(function(x){return x.o===o;}),n=[];
+  if(r&&rowHeld(r)>0&&leftAfter(r,c,moves.filter(function(m){return m.a===art;}))===0)n.push(AO_TXT.ao);
+  if(remOn()){if(REM[art])n.push("✎ "+REM[art]);if(REM[art+"|"+o])n.push("✎ "+REM[art+"|"+o]);}
+  return n.join(" · ");}
 function allMoves(){var m=[];D.arts.forEach(function(a){if(TICK.has(a.a))m=m.concat(allocate(a));});return m;}
 
 /* ---------- render: choose ---------- */
@@ -964,7 +971,7 @@ function gridRows(ms,other,allOutOf){
     row.forEach(function(v,i){sub.v[i]+=v;tot[i]+=v;});sub.v[SLOTS.length+1]+=n;tot[SLOTS.length+1]+=n;
     var price=a?(a.nett&&a.nett<a.p?a.nett:a.p):0, ao=allOutOf&&allOutOf(p[1],p[2]);
     html+='<tr><td class="l mono">'+esc(p[0])+'</td><td class="l mono">'+esc(p[1])+'</td><td class="l mono">'+esc(p[2])+"</td><td>"+(price?Math.round(price):"")+"</td>"+
-      row.map(function(v){return "<td>"+(v||"")+"</td>";}).join("")+'<td class="l">'+esc(odd.join(" "))+(ao?' <span class="ao">ALL OUT</span>':"")+"</td><td><b>"+n+'</b></td><td class="tk">☐</td></tr>';
+      row.map(function(v){return "<td>"+(v||"")+"</td>";}).join("")+'<td class="l">'+esc(odd.join(" "))+(ao?' <span class="ao">'+esc(ao)+"</span>":"")+"</td><td><b>"+n+'</b></td><td class="tk">☐</td></tr>';
   });
   html+=subRow();
   return {html:html,tot:tot};
@@ -989,8 +996,7 @@ function outletList(o,moves){
   var out=moves.filter(function(m){return m.from===o;}), inn=moves.filter(function(m){return m.to===o;});
   var sum=function(ms){return ms.reduce(function(n,m){return n+m.q;},0);};
   var dests=[...new Set(out.map(function(m){return m.to;}))], srcs=[...new Set(inn.map(function(m){return m.from;}))];
-  function allOutOf(art,col){var a=artOf(art),c=a&&a.cols.find(function(x){return x.c===col;}),r=c&&c.rows.find(function(x){return x.o===o;});
-    return r&&leftAfter(r,c,moves.filter(function(m){return m.a===art;}))===0;}
+  function allOutOf(art,col){return moveNote(o,art,col,moves);}
   return '<section class="olist"><h2>'+esc(o)+' <span class="muted">'+esc(outletName(o))+'</span></h2>'+
     '<p class="note">'+esc(D.title)+" conso · system stock "+fmtDate(D.built)+" · <b>send "+sum(out)+" pcs</b> in "+dests.length+" IT"+(dests.length===1?"":"s")+
     " ("+dests.map(esc).join(", ")+")"+(inn.length?" · will receive "+sum(inn)+" pcs from "+srcs.map(esc).join(", "):"")+"</p>"+
@@ -1022,8 +1028,8 @@ function listText(o,moves){
   Object.keys(by).sort().forEach(function(t){
     var ms=by[t].sort(function(x,y){return x.a<y.a?-1:x.a>y.a?1:(x.c<y.c?-1:x.c>y.c?1:sizeCmp(x.z,y.z));});
     lines.push("*SEND to "+t+"* ("+ms.reduce(function(n,m){return n+m.q;},0)+" pcs, one IT)");
-    var g={};ms.forEach(function(m){var k=m.a+" col "+m.c;(g[k]=g[k]||[]).push(m.z+"×"+m.q);});
-    Object.keys(g).forEach(function(k){lines.push("  "+k+": "+g[k].join(", "));});
+    var g={},nt={};ms.forEach(function(m){var k=m.a+" col "+m.c;(g[k]=g[k]||[]).push(m.z+"×"+m.q);nt[k]=moveNote(o,m.a,m.c,moves);});
+    Object.keys(g).forEach(function(k){lines.push("  "+k+": "+g[k].join(", ")+(nt[k]?"  *"+nt[k]+"*":""));});
     lines.push("");
   });
   if(inn.length)lines.push("Will receive "+inn.reduce(function(n,m){return n+m.q;},0)+" pcs from "+[...new Set(inn.map(function(m){return m.from;}))].join(", ")+".");
@@ -1301,8 +1307,8 @@ function onClick(e,t){
       case "baCsv":baCsv();break;
       case "copyList":var mv=allMoves(),os=LIST_OUTLET==="ALL"?D.outlets.map(function(x){return x.o;}).filter(function(o){return mv.some(function(m){return m.from===o;});}):[LIST_OUTLET];
         copy(os.map(function(o){return listText(o,mv);}).join("\n\n"),"#listStatus");break;
-      case "csvList":var rows2=[["From","FromName","To","ToName","Article","Description","Colour","Size","Qty"]].concat(allMoves().map(function(m){
-          return [m.from,outletName(m.from),m.to,outletName(m.to),m.a,(artOf(m.a)||{}).n||"",m.c,m.z,m.q];}));
+      case "csvList":var rows2=[["From","FromName","To","ToName","Article","Description","Colour","Size","Qty","Remark"]].concat(allMoves().map(function(m,i,all){
+          return [m.from,outletName(m.from),m.to,outletName(m.to),m.a,(artOf(m.a)||{}).n||"",m.c,m.z,m.q,moveNote(m.from,m.a,m.c,all)];}));
         var blob2=new Blob([rows2.map(function(r){return r.map(function(v){v=String(v);return /[",]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;}).join(",");}).join("\n")],{type:"text/csv"});
         var a2=document.createElement("a");a2.href=URL.createObjectURL(blob2);a2.download=D.title.replace(/\W+/g,"_")+"_transfer_lists_"+D.built+".csv";a2.click();break;
       case "goDesk":VIEW=VIEW==="lists"?"choose":"lists";render();window.scrollTo(0,0);break;
