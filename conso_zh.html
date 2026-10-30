@@ -188,6 +188,7 @@ table.work td.pk button[data-role="x"][aria-pressed="true"]{background:var(--bad
 table.work td.pk button[data-role="o"][aria-pressed="true"]{background:#7a4fb5;border-color:#7a4fb5;color:#fff}
 table.work td.al select.dst{display:block;width:100%;font:inherit;font-size:10.5px;padding:1px 3px;margin:0 0 2px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);max-width:150px}
 table.work td.al select.dst.need{border-color:var(--bad);color:var(--bad)}
+table.work small.even{display:inline-block;font-size:10.5px;color:var(--muted);margin:0 4px}
 table.work td.pk button[data-role="w"][aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--bg)}
 table.work td.pk button[data-role="s"][aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--on)}
 table.work td.pk button[data-role="d"][aria-pressed="true"]{background:#0f8b8d;border-color:#0f8b8d;color:#fff}
@@ -494,8 +495,12 @@ function allocate(a){
     // pass 3: TO WH doors send every piece still left back to the warehouse
     ret.forEach(function(g){Object.keys(pool[g.o]).forEach(function(z){var n=pool[g.o][z]||0;if(n>0){pool[g.o][z]=0;add(g.o,WH_CODE,c.c,z,n);}});});
     // pass 3b: TO OTHER doors send every piece still left to the outlet chosen for that row (outside this board)
-    oth.forEach(function(g){var to=DEST[rk(a.a,c.c,g.o)];if(!to)return;
-      Object.keys(pool[g.o]).forEach(function(z){var n=pool[g.o][z]||0;if(n>0){pool[g.o][z]=0;add(g.o,to,c.c,z,n);}});});
+    /* Tze, 30 Oct 2026: "allow me to distribute evenly to a few other outlets too" - DEST holds one or more outlets
+       ("A,B,C"); each size is dealt 1 piece at a time round the outlets, the turn carrying on to the next size so
+       every outlet ends within 1 piece of the others. */
+    oth.forEach(function(g){var to=dests(rk(a.a,c.c,g.o));if(!to.length)return;var turn=0;
+      sizesOf(a,c).concat(Object.keys(pool[g.o])).filter(function(z,i,l){return l.indexOf(z)===i;}).forEach(function(z){
+        for(var n=pool[g.o][z]||0;n>0;n--){pool[g.o][z]--;add(g.o,to[turn%to.length],c.c,z);turn++;}});});
     // pass 4: FROM SG doors top up each size to CAP from SG online stock, one piece at a time, best seller first
     if(sgReq.length){
       var sgc=sgCol(a.a,c.c), sp=Object.assign({},(sgc&&sgc[2])||{}), zs={};
@@ -634,8 +639,15 @@ var KEEPO_TXT={t:"调给其他柜台多少",all:"全部调出",h:"调一半"};
 function keepSelect(a,c,r,o){var key=rk(a.a,c.c,r.o),cur=KEEP[key]||"",T=o?KEEPO_TXT:KEEP_TXT;
   return '<select class="dst" data-keep="'+esc(key)+'" title="'+T.t+'">'+[["",T.all],["h",T.h]].concat([1,2,3,4].map(function(n){return [String(n),KEEP_TXT.k.replace("#",n)];}))
     .map(function(o){return '<option value="'+o[0]+'"'+(o[0]===cur?" selected":"")+">"+esc(o[1])+"</option>";}).join("")+"</select>";}
+function dests(key){return (DEST[key]||"").split(",").filter(Boolean);}
+var MD_TXT={add:"+ 再加一个柜台…",even:"平分给 # 个柜台"};
 function dstSelect(a,c,r,role){if(role==="w")return keepSelect(a,c,r);if(role!=="o")return "";var key=rk(a.a,c.c,r.o),cur=DEST[key]||"";
-  return '<select class="dst'+(cur?"":" need")+'" data-dst="'+esc(key)+'" title="'+OT_TXT.none+'">'+otherOpts(a,c,r.o,cur)+"</select>"+(remOn()?keepSelect(a,c,r,1):"");}
+  if(!remOn())return '<select class="dst'+(cur?"":" need")+'" data-dst="'+esc(key)+'" title="'+OT_TXT.none+'">'+otherOpts(a,c,r.o,cur)+"</select>";
+  var ds=dests(key);
+  return ds.concat(ds.length?[""]:[""]).map(function(o,i){var add=i===ds.length&&i>0;
+      return '<select class="dst'+(ds.length?"":" need")+'" data-dst="'+esc(key)+'" data-i="'+i+'" title="'+OT_TXT.none+'">'+
+        otherOpts(a,c,r.o,o).replace(">"+OT_TXT.pick+"<",">"+(add?MD_TXT.add:OT_TXT.pick)+"<")+"</select>";}).join("")+
+    (ds.length>1?'<small class="even">÷ '+MD_TXT.even.replace("#",ds.length)+"</small>":"")+keepSelect(a,c,r,1);}
 function extraRoles(a,r,d,role,c){
   var key=rk(a.a,c.c,r.o), cur=DEST[key]||"";
   return (sameBrand(a,r)?'<button data-role="d"'+d+' aria-pressed="'+(role==="d")+'" title="'+SP_TXT.spT+'">'+SP_TXT.sp+"</button>":"")+'<button data-role="o"'+d+' aria-pressed="'+(role==="o")+'" title="'+OT_TXT.otT+'">'+OT_TXT.ot+"</button>"+
@@ -1295,7 +1307,10 @@ document.addEventListener("input",function(e){var t=e.target;if(!t.dataset||t.da
     if(n){n.focus({preventScroll:true});try{n.setSelectionRange(v.length,v.length);}catch(x){}}},350);});
 function onChange(e){
     if(e.target.dataset&&e.target.dataset.keep){var kk=e.target.dataset.keep;if(e.target.value)KEEP[kk]=e.target.value;else delete KEEP[kk];saveState();render();return;}
-    if(e.target.dataset&&e.target.dataset.dst){var dk=e.target.dataset.dst;if(e.target.value)DEST[dk]=e.target.value;else delete DEST[dk];saveState();render();return;}
+    if(e.target.dataset&&e.target.dataset.dst){var dk=e.target.dataset.dst,di=e.target.dataset.i;
+      if(di===undefined){if(e.target.value)DEST[dk]=e.target.value;else delete DEST[dk];}
+      else{var dl=dests(dk);dl[+di]=e.target.value;dl=dl.filter(function(o,i){return o&&dl.indexOf(o)===i;});if(dl.length)DEST[dk]=dl.join(",");else delete DEST[dk];}
+      saveState();render();return;}
     if(e.target.id==="listSel"){LIST_OUTLET=e.target.value;renderLists();}
     if(e.target.id==="hideSea"){HIDE_SEA=e.target.checked;renderSummary();}
     if(e.target.id==="baGrp"){BA_GRP=e.target.value;BA_LIMIT=80;renderByArt();}
