@@ -929,12 +929,12 @@ var XL_TXT={btn:"Download Excel (transfers + markdown list)",t1:"Transfers",t2:"
 function loadXLSX(cb){if(window.XLSX)return cb();var sc=document.createElement("script");
   sc.src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js";sc.onload=cb;sc.onerror=function(){alert(XL_TXT.fail);};document.head.appendChild(sc);}
 function xlsxExport(){loadXLSX(function(){
-  var mv=allMoves(), t=[["From","FromName","To","ToName","Article","Description","Colour","Size","Qty","RM now","Remark","Size group"]].concat(mv.map(function(m){var a=artOf(m.a)||{},sg=SIZE_GROUPS.find(function(g){return g[0]===sizeGroup(m.z);});
-    return [m.from,outletName(m.from),m.to,outletName(m.to),m.a,a.n||"",m.c,m.z,m.q,Math.round(priceNow(a)||0)||"",moveNote(m.from,m.a,m.c,mv),sg?sg[1]:""];}));
+  var mv=allMoves(), t=[["From","FromName","To","ToName","Article","Description","Colour","Size","Qty","RM now","Remark","Size group","To no."]].concat(mv.map(function(m){var a=artOf(m.a)||{},sg=SIZE_GROUPS.find(function(g){return g[0]===sizeGroup(m.z);});
+    return [m.from,outletName(m.from),m.to,outletName(m.to),m.a,a.n||"",m.c,m.z,m.q,Math.round(priceNow(a)||0)||"",moveNote(m.from,m.a,m.c,mv),sg?sg[1]:"",parseInt(bcTag([],m.to))];}));
   var md=[[MDL_TXT.art,"Description",MDL_TXT.ctr,MDL_TXT.rem,MDL_TXT.pcs,MDL_TXT.rm]].concat(mdRows().map(function(x){return [x.a,x.n,x.o||REM_TXT.all,x.rem,x.pcs,x.rm];}));
   if(md.length===1)md.push([MDL_TXT.none]);
   var wb=XLSX.utils.book_new(), s1=XLSX.utils.aoa_to_sheet(t), s2=XLSX.utils.aoa_to_sheet(md);
-  s1["!cols"]=[12,26,12,26,10,36,7,6,5,7,40,18].map(function(w){return {wch:w};});s1["!autofilter"]={ref:"A1:L"+t.length};
+  s1["!cols"]=[12,26,12,26,10,36,7,6,5,7,40,18,6].map(function(w){return {wch:w};});s1["!autofilter"]={ref:"A1:M"+t.length};
   s2["!cols"]=[10,36,14,40,12,8].map(function(w){return {wch:w};});
   /* Tze, 30 Oct 2026: "group the item by size group, it's not showing a lot of irrelevant sizes" - one tab per size group,
      laid out like the send list: per From outlet and art-colour, Stock now, one row per receiving outlet, Left after. */
@@ -944,17 +944,17 @@ function xlsxExport(){loadXLSX(function(){
     var keys=grp[g[0]].sort(), set={};
     keys.forEach(function(k){var p=k.split("|"),a=artOf(p[1]),c=a&&a.cols.find(function(x){return x.c===p[2];}),r=c&&c.rows.find(function(x){return x.o===p[0];});
       byCol[k].forEach(function(m){set[String(m.z)]=1;});if(r)Object.keys(r.q).forEach(function(z){if(r.q[z])set[String(z)]=1;});});
-    var SL=Object.keys(set).sort(groupSizeCmp), rows=[["From","Article","Colour","RM now","To"].concat(SL).concat(["Total","Remark"])];
+    var SL=Object.keys(set).sort(groupSizeCmp), rows=[["From","Article","Colour","RM now","No.","To"].concat(SL).concat(["Total","Remark"])];
     keys.forEach(function(k){var p=k.split("|"),o=p[0],a=artOf(p[1]),c=a&&a.cols.find(function(x){return x.c===p[2];}),r=c&&c.rows.find(function(x){return x.o===o;}),
         q=(r&&r.q)||{},rm=Math.round(priceNow(a||{})||0)||"",left={};
       SL.forEach(function(z){left[z]=q[z]||0;});
       mv.forEach(function(m){if(m.a!==p[1]||m.c!==p[2])return;if(m.from===o)left[m.z]=(left[m.z]||0)-m.q;if(m.to===o)left[m.z]=(left[m.z]||0)+m.q;});
-      function line(to,v,note){var t=0;return [o,p[1],p[2],rm,to].concat(SL.map(function(z){t+=v[z]||0;return v[z]||"";})).concat([t,note||""]);}
+      function line(to,v,note,no){var t=0;return [o,p[1],p[2],rm,no||"",to].concat(SL.map(function(z){t+=v[z]||0;return v[z]||"";})).concat([t,note||""]);}
       rows.push(line(BC_TXT.now,q));
       var byTo={};byCol[k].forEach(function(m){(byTo[m.to]=byTo[m.to]||{})[m.z]=((byTo[m.to]||{})[m.z]||0)+m.q;});
-      Object.keys(byTo).sort().forEach(function(t){rows.push(line(t,byTo[t]));});
-      var lr=line(BC_TXT.left,left,moveNote(o,p[1],p[2],mv));SL.forEach(function(z,i){if(q[z]&&!left[z])lr[5+i]=0;});rows.push(lr);rows.push([]);});
-    var ws=XLSX.utils.aoa_to_sheet(rows);ws["!cols"]=[12,10,7,7,14].map(function(w){return {wch:w};}).concat(SL.map(function(){return {wch:5};})).concat([{wch:6},{wch:44}]);
+      Object.keys(byTo).sort(function(x,y){return parseInt(bcTag([],x))-parseInt(bcTag([],y));}).forEach(function(t){rows.push(line(bcTag([],t)+"  ("+t+")",byTo[t],"",parseInt(bcTag([],t))));});
+      var lr=line(BC_TXT.left,left,moveNote(o,p[1],p[2],mv));SL.forEach(function(z,i){if(q[z]&&!left[z])lr[6+i]=0;});rows.push(lr);rows.push([]);});
+    var ws=XLSX.utils.aoa_to_sheet(rows);ws["!cols"]=[12,10,7,7,5,26].map(function(w){return {wch:w};}).concat(SL.map(function(){return {wch:5};})).concat([{wch:6},{wch:44}]);
     return [g[1].replace(/[\\/\?\*\[\]:]/g," ").slice(0,31),ws];});
   XLSX.utils.book_append_sheet(wb,s1,XL_TXT.t1);gTabs.forEach(function(t){XLSX.utils.book_append_sheet(wb,t[1],t[0]);});XLSX.utils.book_append_sheet(wb,s2,XL_TXT.t2);
   XLSX.writeFile(wb,D.title.replace(/\W+/g,"_")+"_transfers_"+D.built+".xlsx");});}
@@ -1040,7 +1040,13 @@ var BC_PAL=["#e8f1ff","#ffeede","#e5f7e9","#fbe7f3","#fff7cc","#e9e5ff","#dff6f7
     BC_INK=["#1f5fbf","#c25a00","#1e8a3c","#b0307a","#8a6d00","#5a43c9","#0f7f86","#c62828","#5f7a12","#7a5530","#2f6b8f","#8e3cc0"];
 function bcIdx(list,o){var i=list.indexOf(o);return i<0?0:i%BC_PAL.length;}
 /* Tze, 30 Oct 2026: "the colour code is a bit too cluttered ... number the outlet like 1_NOPGGP, 2_NOPGBW" */
-function bcTag(list,o){return (list.indexOf(o)+1)+"_"+o.replace(/^(AD|BF)/,"").replace(/-C$/,"");}
+/* Tze, 30 Oct 2026: "the number should be consistent for the same outlet ... it should stay 1_ forever" - one fixed
+   number per outlet for the whole board: this board's doors A-Z first, then every other outlet A-Z, then WH and SG. */
+var BC_NUM=null;
+function bcTag(list,o){if(!BC_NUM){BC_NUM={};var mine=D.outlets.map(function(x){return x.o;}).sort(),oth=(D.others||[]).map(function(x){return x.o;}).sort();
+    mine.concat(oth,[WH_CODE,SG_CODE]).forEach(function(x){if(!BC_NUM[x])BC_NUM[x]=Object.keys(BC_NUM).length+1;});}
+  if(!BC_NUM[o])BC_NUM[o]=Object.keys(BC_NUM).length+1;
+  return BC_NUM[o]+"_"+o.replace(/^(AD|BF)/,"").replace(/-C$/,"");}
 function byColTable(o,out,moves,dl){
   var byCol={};out.forEach(function(m){var k=m.a+"|"+m.c;(byCol[k]=byCol[k]||[]).push(m);});
   var inGroup={};Object.keys(byCol).forEach(function(k){var g=colourGroup(byCol[k]);(inGroup[g]=inGroup[g]||[]).push(k);});
@@ -1057,7 +1063,7 @@ function byColTable(o,out,moves,dl){
       SL.forEach(function(z){lt+=left[z]||0;});
       html+='<tr class="bcnow"><td class="l mono"><b>'+esc(p[0])+'</b></td><td class="l mono"><b>'+esc(p[1])+"</b></td><td>"+(price?Math.round(price):"")+'</td><td class="l">'+BC_TXT.now+"</td>"+cells(q)+'<td class="l"></td><td><b>'+st+'</b></td><td class="tk"></td></tr>';
       var byTo={};byCol[k].forEach(function(m){(byTo[m.to]=byTo[m.to]||{})[m.z]=((byTo[m.to]||{})[m.z]||0)+m.q;});
-      Object.keys(byTo).sort(function(x,y){return dl.indexOf(x)-dl.indexOf(y);}).forEach(function(t){var v=byTo[t],n=0,i=bcIdx(dl,t);Object.keys(v).forEach(function(z){n+=v[z];});
+      Object.keys(byTo).sort(function(x,y){return parseInt(bcTag(dl,x))-parseInt(bcTag(dl,y));}).forEach(function(t){var v=byTo[t],n=0,i=bcIdx(dl,t);Object.keys(v).forEach(function(z){n+=v[z];});
         html+='<tr class="bcto"><td></td><td></td><td></td><td class="l mono"><b>→ '+esc(bcTag(dl,t))+"</b></td>"+
           cells(v)+'<td class="l"></td><td><b>'+n+'</b></td><td class="tk">☐</td></tr>';});
       var nt=moveNote(o,p[0],p[1],moves);
@@ -1077,7 +1083,7 @@ function outletList(o,moves){
   return '<section class="olist"><h2>'+esc(o)+' <span class="muted">'+esc(outletName(o))+'</span></h2>'+
     '<p class="note">'+esc(D.title)+" conso · system stock "+fmtDate(D.built)+" · <b>send "+sum(out)+" pcs</b> in "+dests.length+" IT"+(dests.length===1?"":"s")+
     " ("+dests.map(esc).join(", ")+")"+(inn.length?" · will receive "+sum(inn)+" pcs from "+srcs.map(esc).join(", "):"")+"</p>"+
-    (out.length&&remOn()?'<p class="bckey">'+BC_TXT.key+": "+dests.map(function(t){return '<span><b>'+esc(bcTag(dests,t))+"</b> = "+esc(t)+" · "+out.filter(function(m){return m.to===t;}).reduce(function(n,m){return n+m.q;},0)+" pcs</span>";}).join(" ")+"</p>"+
+    (out.length&&remOn()?'<p class="bckey">'+BC_TXT.key+": "+dests.slice().sort(function(x,y){return parseInt(bcTag(dests,x))-parseInt(bcTag(dests,y));}).map(function(t){return '<span><b>'+esc(bcTag(dests,t))+"</b> = "+esc(t)+" · "+out.filter(function(m){return m.to===t;}).reduce(function(n,m){return n+m.q;},0)+" pcs</span>";}).join(" ")+"</p>"+
       '<div class="scroll">'+byColTable(o,out,moves,dests)+"</div>":
      out.length?'<div class="scroll">'+gridTable(out,"to","To",allOutOf)+"</div>":'<p class="empty">Nothing to send.</p>')+
     (inn.length?'<details class="recvd"'+(out.length?"":" open")+'><summary>Incoming: '+sum(inn)+' pcs (for checking the IT when it arrives)</summary><div class="scroll">'+gridTable(inn,"from","From")+"</div></details>":"")+"</section>";
