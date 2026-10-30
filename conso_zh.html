@@ -231,7 +231,7 @@ table.bycol tr.bcnow td{border-top:2px solid var(--ink);background:var(--soft)}
 table.bycol tr.bcleft td{color:var(--muted)}
 table.bycol tr.bcto td{color:#16202b}
 p.bckey span{display:inline-block;padding:2px 8px;margin:2px 4px 2px 0;border:1px solid var(--line);border-radius:4px;font-size:11px}
-@media print{table.grid.bycol td,table.grid.bycol th{font-size:10px}table.bycol tr,p.bckey span{-webkit-print-color-adjust:exact;print-color-adjust:exact}table.bycol tr.bcnow td{border-top:1.5px solid #000}}
+@media print{table.grid.bycol td,table.grid.bycol th{font-size:10px;padding:1px 4px;line-height:1.2}table.bycol tr,p.bckey span{-webkit-print-color-adjust:exact;print-color-adjust:exact}table.bycol tr.bcnow td{border-top:1.5px solid #000}}
 details.recvd{margin-top:10px}
 details.recvd summary{cursor:pointer;font-weight:600;font-size:13px;margin-bottom:6px}
 .olist h3{font-size:14px;margin:14px 0 6px}
@@ -985,17 +985,17 @@ function pdfFor(o,moves){
         body.push(["","","",bcTag([],t)].concat(g.SL.map(function(z){return it.by[t][z]||"";})).concat(["",tot(it.by[t],g.SL),""]));sty.push("to");});
       body.push(["","","","Left after"].concat(g.SL.map(function(z){return it.left[z]||(it.q[z]?0:"");})).concat([pdfTxt(it.note),tot(it.left,g.SL),""]));sty.push("left");});
     if(y>260){doc.addPage();y=10;}
-    doc.setFont("helvetica","bold");doc.setFontSize(10);doc.text(g.name+" - send "+g.pcs+" pcs",10,y+4);
+    doc.setFont("helvetica","bold");doc.setFontSize(10);doc.text(g.name+" - send "+g.pcs+" pcs",10,y+3);
     var cs={0:{halign:"left",cellWidth:18},1:{cellWidth:10},2:{cellWidth:10},3:{halign:"left",cellWidth:30}};
     cs[NI]={halign:"left",cellWidth:22,fontSize:7.5,overflow:"ellipsize",textColor:[198,40,40]};cs[OK]={cellWidth:9};
-    doc.autoTable({startY:y+6,margin:{left:10,right:10},head:[["Art no","Col","RM","To"].concat(g.SL).concat(["Note","Total","OK"])],body:body,theme:"grid",
-      styles:{fontSize:10,cellPadding:1.4,halign:"center",textColor:[20,24,28],lineColor:[200,206,210],lineWidth:0.1},headStyles:{fillColor:[60,70,80],textColor:[255,255,255],fontSize:10},columnStyles:cs,
+    doc.autoTable({startY:y+4.5,margin:{left:10,right:10,top:8,bottom:8},head:[["Art no","Col","RM","To"].concat(g.SL).concat(["Note","Total","OK"])],body:body,theme:"grid",
+      styles:{fontSize:10,cellPadding:{top:0.5,bottom:0.5,left:1.2,right:1.2},minCellHeight:0,halign:"center",textColor:[20,24,28],lineColor:[200,206,210],lineWidth:0.1},headStyles:{fillColor:[60,70,80],textColor:[255,255,255],fontSize:10},columnStyles:cs,
       didParseCell:function(d){if(d.section!=="body")return;var k=sty[d.row.index];
         if(k==="now"){d.cell.styles.fillColor=[232,237,240];d.cell.styles.fontStyle="bold";}
         if(k==="to"&&d.column.index!==NI){d.cell.styles.fontStyle="bold";}
         if(k==="left"&&d.column.index!==NI){d.cell.styles.textColor=[120,128,136];}},
       didDrawCell:function(d){if(d.section==="body"&&sty[d.row.index]==="to"&&d.column.index===OK){doc.rect(d.cell.x+d.cell.width/2-1.6,d.cell.y+d.cell.height/2-1.6,3.2,3.2);}}});
-    y=doc.lastAutoTable.finalY+5;});
+    y=doc.lastAutoTable.finalY+3;});
   /* Tze, 30 Oct 2026: "in your zip dont show the incoming stock" */
   if(false){if(y>260){doc.addPage();y=10;}doc.setFont("helvetica","bold");doc.setFontSize(11);doc.text("Incoming: "+sum(inn)+" pcs (check the IT when it arrives)",10,y+3);y+=5;
     bcGroups(o,inn,"from",moves).forEach(function(g){var body=[];
