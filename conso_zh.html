@@ -221,7 +221,7 @@ table.byart td.al{text-align:left;white-space:nowrap;font-size:11px}
 table.byart td.al .to{color:var(--warn)}table.byart td.al .from{color:var(--good)}
 .ao{font-size:11px;font-weight:700;color:var(--bad)}
 table.bycol{width:auto}
-table.bycol td.nt{max-width:200px;white-space:normal;line-height:1.25}
+table.bycol td.nt{white-space:nowrap}
 /* Tze, 30 Oct 2026: "too many different font size ... why still so unbalanced" - one size, one font, send rows bold */
 table.grid.bycol td{font-size:13px;font-family:inherit}
 table.bycol .ao{font-size:inherit;font-weight:600;font-style:normal}
@@ -549,7 +549,10 @@ function leftAfter(r,c,moves){
   var n=rowHeld(r);moves.forEach(function(m){if(m.c!==c.c)return;if(m.from===r.o)n-=m.q;if(m.to===r.o)n+=m.q;});return n;}
 /* Tze, 30 Oct 2026: "mention in the remark that it's all out when transfer all out from certain outlet" -
    every transfer row from a door left with 0 of that art-colour says ALL OUT, in the printed list, WhatsApp text and CSV. */
-var AO_TXT={ao:"全部调出 ALL OUT - 一件不留"};
+var AO_TXT={ao:"全部调出 ALL OUT - 一件不留",s:"全部调出, 0 剩"};
+/* Tze, 30 Oct 2026: "the remark just make it simple, all out, 0 left is enough, the markdown no need mention" - the
+   transfer lists (page, outlet PDFs, WhatsApp text) say only ALL OUT; the ✎ remarks stay in the Excel / CSV. */
+function listNote(o,art,col,moves){return moveNote(o,art,col,moves).indexOf(AO_TXT.ao)===0?AO_TXT.s:"";}
 function moveNote(o,art,col,moves){var a=artOf(art),c=a&&a.cols.find(function(x){return x.c===col;}),r=c&&c.rows.find(function(x){return x.o===o;}),n=[];
   if(r&&rowHeld(r)>0&&leftAfter(r,c,moves.filter(function(m){return m.a===art;}))===0)n.push(AO_TXT.ao);
   if(remOn()){if(REM[art])n.push("✎ "+REM[art]);if(REM[art+"|"+o])n.push("✎ "+REM[art+"|"+o]);}
@@ -959,7 +962,7 @@ function bcGroups(o,ms,side,moves){   // side "to": what o sends (with stock now
       byCol[k].forEach(function(m){var t=m[side];(by[t]=by[t]||{})[m.z]=((by[t]||{})[m.z]||0)+m.q;});
       SL.forEach(function(z){left[z]=q[z]||0;});
       moves.forEach(function(m){if(m.a!==p[0]||m.c!==p[1])return;if(m.from===o)left[m.z]=(left[m.z]||0)-m.q;if(m.to===o)left[m.z]=(left[m.z]||0)+m.q;});
-      items.push({a:p[0],c:p[1],rm:a?Math.round(priceNow(a)||0):0,q:q,by:by,left:left,note:side==="to"?moveNote(o,p[0],p[1],moves):""});});
+      items.push({a:p[0],c:p[1],rm:a?Math.round(priceNow(a)||0):0,q:q,by:by,left:left,note:side==="to"?listNote(o,p[0],p[1],moves):""});});
     return {name:g[1],SL:SL,pcs:pcs,items:items};});
 }
 function pdfFor(o,moves){
@@ -984,7 +987,7 @@ function pdfFor(o,moves){
     if(y>260){doc.addPage();y=10;}
     doc.setFont("helvetica","bold");doc.setFontSize(10);doc.text(g.name+" - send "+g.pcs+" pcs",10,y+4);
     var cs={0:{halign:"left",cellWidth:18},1:{cellWidth:10},2:{cellWidth:10},3:{halign:"left",cellWidth:30}};
-    cs[NI]={halign:"left",cellWidth:34,fontSize:7.5,overflow:"ellipsize",textColor:[198,40,40]};cs[OK]={cellWidth:9};
+    cs[NI]={halign:"left",cellWidth:22,fontSize:7.5,overflow:"ellipsize",textColor:[198,40,40]};cs[OK]={cellWidth:9};
     doc.autoTable({startY:y+6,margin:{left:10,right:10},head:[["Art no","Col","RM","To"].concat(g.SL).concat(["Note","Total","OK"])],body:body,theme:"grid",
       styles:{fontSize:10,cellPadding:1.4,halign:"center",textColor:[20,24,28],lineColor:[200,206,210],lineWidth:0.1},headStyles:{fillColor:[60,70,80],textColor:[255,255,255],fontSize:10},columnStyles:cs,
       didParseCell:function(d){if(d.section!=="body")return;var k=sty[d.row.index];
@@ -1154,7 +1157,7 @@ function byColTable(o,out,moves,dl){
       Object.keys(byTo).sort(function(x,y){return parseInt(bcTag(dl,x))-parseInt(bcTag(dl,y));}).forEach(function(t){var v=byTo[t],n=0,i=bcIdx(dl,t);Object.keys(v).forEach(function(z){n+=v[z];});
         html+='<tr class="bcto"><td></td><td></td><td></td><td class="l mono"><b>→ '+esc(bcTag(dl,t))+"</b></td>"+
           cells(v)+'<td class="l"></td><td><b>'+n+'</b></td><td class="tk">☐</td></tr>';});
-      var nt=moveNote(o,p[0],p[1],moves);
+      var nt=listNote(o,p[0],p[1],moves);
       html+='<tr class="bcleft"><td></td><td></td><td></td><td class="l">'+BC_TXT.left+"</td>"+SL.map(function(z){return "<td>"+(left[z]||(q[z]?"0":""))+"</td>";}).join("")+
         '<td class="l nt">'+(nt?'<span class="ao">'+esc(nt)+"</span>":"")+"</td><td><b>"+lt+'</b></td><td class="tk"></td></tr>';
     });
@@ -1201,7 +1204,7 @@ function listText(o,moves){
   Object.keys(by).sort().forEach(function(t){
     var ms=by[t].sort(function(x,y){return x.a<y.a?-1:x.a>y.a?1:(x.c<y.c?-1:x.c>y.c?1:sizeCmp(x.z,y.z));});
     lines.push("*调往 "+t+"* ("+ms.reduce(function(n,m){return n+m.q;},0)+" 件，一张 IT)");
-    var g={},nt={};ms.forEach(function(m){var k=m.a+" 颜色 "+m.c;(g[k]=g[k]||[]).push(m.z+"×"+m.q);nt[k]=moveNote(o,m.a,m.c,moves);});
+    var g={},nt={};ms.forEach(function(m){var k=m.a+" 颜色 "+m.c;(g[k]=g[k]||[]).push(m.z+"×"+m.q);nt[k]=listNote(o,m.a,m.c,moves);});
     Object.keys(g).forEach(function(k){lines.push("  "+k+": "+g[k].join(", ")+(nt[k]?"  *"+nt[k]+"*":""));});
     lines.push("");
   });
