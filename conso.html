@@ -966,7 +966,7 @@ function pdfFor(o,moves){
   var J=window.jspdf.jsPDF, doc=new J({unit:"mm",format:"a4"}), out=moves.filter(function(m){return m.from===o;}), inn=moves.filter(function(m){return m.to===o;});
   var sum=function(ms){return ms.reduce(function(n,m){return n+m.q;},0);}, num=function(t){return parseInt(bcTag([],t));};
   var dl=[...new Set(out.map(function(m){return m.to;}))].sort(function(x,y){return num(x)-num(y);}), sl=[...new Set(inn.map(function(m){return m.from;}))];
-  var tot=function(v,SL){return SL.reduce(function(n,z){return n+(v[z]||0);},0);}, pdfTxt=function(t){return String(t).replace(/✎ /g,"Remark: ").replace(/[^\x20-\x7E]/g,"");};
+  var tot=function(v,SL){return SL.reduce(function(n,z){return n+(v[z]||0);},0);}, pdfTxt=function(t){return String(t).replace(AO_TXT.ao,"ALL OUT").replace(/✎ /g,"").replace(/[^\x20-\x7E]/g,"");};
   doc.setFont("helvetica","bold");doc.setFontSize(12);doc.text(o+"  "+pdfTxt(outletName(o)),10,12);
   doc.setFont("helvetica","normal");doc.setFontSize(8);
   doc.text(doc.splitTextToSize(D.title+" conso - system stock "+fmtDate(D.built)+" - SEND "+sum(out)+" pcs in "+dl.length+" IT"+(dl.length===1?"":"s")+"",190),10,17);
@@ -984,9 +984,9 @@ function pdfFor(o,moves){
     if(y>260){doc.addPage();y=10;}
     doc.setFont("helvetica","bold");doc.setFontSize(10);doc.text(g.name+" - send "+g.pcs+" pcs",10,y+4);
     var cs={0:{halign:"left",cellWidth:18},1:{cellWidth:10},2:{cellWidth:10},3:{halign:"left",cellWidth:30}};
-    cs[NI]={halign:"left",cellWidth:46,textColor:[198,40,40]};cs[OK]={cellWidth:9};
+    cs[NI]={halign:"left",cellWidth:34,fontSize:7.5,overflow:"ellipsize",textColor:[198,40,40]};cs[OK]={cellWidth:9};
     doc.autoTable({startY:y+6,margin:{left:10,right:10},head:[["Art no","Col","RM","To"].concat(g.SL).concat(["Note","Total","OK"])],body:body,theme:"grid",
-      styles:{fontSize:10,cellPadding:1.4,halign:"center",textColor:[20,24,28],lineColor:[200,206,210],lineWidth:0.1},headStyles:{fillColor:[60,70,80],fontSize:10},columnStyles:cs,
+      styles:{fontSize:10,cellPadding:1.4,halign:"center",textColor:[20,24,28],lineColor:[200,206,210],lineWidth:0.1},headStyles:{fillColor:[60,70,80],textColor:[255,255,255],fontSize:10},columnStyles:cs,
       didParseCell:function(d){if(d.section!=="body")return;var k=sty[d.row.index];
         if(k==="now"){d.cell.styles.fillColor=[232,237,240];d.cell.styles.fontStyle="bold";}
         if(k==="to"&&d.column.index!==NI){d.cell.styles.fontStyle="bold";}
