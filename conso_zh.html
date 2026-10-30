@@ -436,7 +436,8 @@ function allocate(a){
     /* Tze, 30 Oct 2026: "for the return to WH, allow return of half qty or choose to leave maybe just 3-4 pcs per size".
        A TO WH door keeps KEEP pcs of every size (or half of each size, rounded up, for "h"); only the rest is
        offered to the GET doors and then sent back to the warehouse. */
-    ret.forEach(function(g){var k=KEEP[rk(a.a,c.c,g.o)];if(!k)return;
+    /* Tze, 30 Oct 2026: "allow me to do half transfer for transfer to other outlets, like the return to WH" - TO OTHER keeps the same way */
+    ret.concat(oth).forEach(function(g){var k=KEEP[rk(a.a,c.c,g.o)];if(!k)return;
       Object.keys(pool[g.o]).forEach(function(z){var n=pool[g.o][z]||0;pool[g.o][z]=n-(k==="h"?Math.ceil(n/2):Math.min(n,+k));});});
     var got={};                                  // size -> outlet -> pcs received
     function have(r,z){return (r.q[z]||0)+((got[z]||{})[r.o]||0);}
@@ -629,11 +630,12 @@ function otherOpts(a,c,from,cur){
 }
 /* the destination picker sits in the Allocation cell so the table keeps its width (Tze, 20 Oct 2026) */
 var KEEP_TXT={t:"退回仓库多少",all:"全部退仓",h:"退一半",k:"每码留 # 件"};
-function keepSelect(a,c,r){var key=rk(a.a,c.c,r.o),cur=KEEP[key]||"";
-  return '<select class="dst" data-keep="'+esc(key)+'" title="'+KEEP_TXT.t+'">'+[["",KEEP_TXT.all],["h",KEEP_TXT.h]].concat([1,2,3,4].map(function(n){return [String(n),KEEP_TXT.k.replace("#",n)];}))
+var KEEPO_TXT={t:"调给其他柜台多少",all:"全部调出",h:"调一半"};
+function keepSelect(a,c,r,o){var key=rk(a.a,c.c,r.o),cur=KEEP[key]||"",T=o?KEEPO_TXT:KEEP_TXT;
+  return '<select class="dst" data-keep="'+esc(key)+'" title="'+T.t+'">'+[["",T.all],["h",T.h]].concat([1,2,3,4].map(function(n){return [String(n),KEEP_TXT.k.replace("#",n)];}))
     .map(function(o){return '<option value="'+o[0]+'"'+(o[0]===cur?" selected":"")+">"+esc(o[1])+"</option>";}).join("")+"</select>";}
 function dstSelect(a,c,r,role){if(role==="w")return keepSelect(a,c,r);if(role!=="o")return "";var key=rk(a.a,c.c,r.o),cur=DEST[key]||"";
-  return '<select class="dst'+(cur?"":" need")+'" data-dst="'+esc(key)+'" title="'+OT_TXT.none+'">'+otherOpts(a,c,r.o,cur)+"</select>";}
+  return '<select class="dst'+(cur?"":" need")+'" data-dst="'+esc(key)+'" title="'+OT_TXT.none+'">'+otherOpts(a,c,r.o,cur)+"</select>"+(remOn()?keepSelect(a,c,r,1):"");}
 function extraRoles(a,r,d,role,c){
   var key=rk(a.a,c.c,r.o), cur=DEST[key]||"";
   return (sameBrand(a,r)?'<button data-role="d"'+d+' aria-pressed="'+(role==="d")+'" title="'+SP_TXT.spT+'">'+SP_TXT.sp+"</button>":"")+'<button data-role="o"'+d+' aria-pressed="'+(role==="o")+'" title="'+OT_TXT.otT+'">'+OT_TXT.ot+"</button>"+
