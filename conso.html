@@ -1170,14 +1170,14 @@ function baCsv(){
   var all=[];keys.forEach(function(k){all=all.concat(G.g[k]);});
   var sizes=baSizes(all).sort(function(x,y){var gx=SIZE_GROUPS.findIndex(function(g){return g[0]===sizeGroup(x);}),gy=SIZE_GROUPS.findIndex(function(g){return g[0]===sizeGroup(y);});
     return gx-gy||groupSizeCmp(x,y);});
-  var out=[[BA_TXT.group,"Brand",BA_TXT.art,BA_TXT.desc,BA_TXT.col,"RM",BA_TXT.outlet,BA_TXT.name].concat(sizes).concat([BA_TXT.tot,BA_TXT.sold+" "+W+"m",BA_TXT.role,BA_TXT.alloc])];
+  var out=[[BA_TXT.group,"Brand",BA_TXT.art,BA_TXT.desc,BA_TXT.col,"RM",BA_TXT.outlet,BA_TXT.name].concat(sizes).concat([BA_TXT.tot,BA_TXT.sold+" "+W+"m",BA_TXT.role,BA_TXT.alloc,MDL_TXT.rem])];
   keys.forEach(function(k){var p=k.split("|");G.g[k].forEach(function(a){a.cols.forEach(function(c){
     var rows=baRows(a,c,moves).filter(function(x){return rowHeld(x.r)||rowSold(x.r)||Object.keys(x.from).length;});
     var tot=sizes.map(function(){return 0;}),tq=0,ts=0;
     rows.forEach(function(x){var r=x.r;tq+=rowHeld(r);ts+=rowSold(r);
       out.push([catLabel(p[0],p[1]),p[0],a.a,a.n,c.c,Math.round(priceNow(a)||0),r.o,outletName(r.o)].concat(sizes.map(function(z,j){var q=r.q[z]||0;tot[j]+=q;return q||"";}))
-        .concat([rowHeld(r),rowSold(r),baRoleTxt(x.role),baAllocTxt(x,false)]));});
-    if(rows.length)out.push([catLabel(p[0],p[1]),p[0],a.a,a.n,c.c,"",c.c+" "+BA_TXT.colTot,""].concat(tot.map(function(v){return v||"";})).concat([tq,ts,"",""]));
+        .concat([rowHeld(r),rowSold(r),baRoleTxt(x.role),baAllocTxt(x,false),moveNote(r.o,a.a,c.c,moves)]));});
+    if(rows.length)out.push([catLabel(p[0],p[1]),p[0],a.a,a.n,c.c,"",c.c+" "+BA_TXT.colTot,""].concat(tot.map(function(v){return v||"";})).concat([tq,ts,"","",""]));
   });});});
   var csv="﻿"+out.map(function(r){return r.map(function(v){v=String(v==null?"":v);return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;}).join(",");}).join("\r\n");
   var aEl=document.createElement("a");aEl.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"}));
@@ -1309,7 +1309,7 @@ function onClick(e,t){
         copy(os.map(function(o){return listText(o,mv);}).join("\n\n"),"#listStatus");break;
       case "csvList":var rows2=[["From","FromName","To","ToName","Article","Description","Colour","Size","Qty","Remark"]].concat(allMoves().map(function(m,i,all){
           return [m.from,outletName(m.from),m.to,outletName(m.to),m.a,(artOf(m.a)||{}).n||"",m.c,m.z,m.q,moveNote(m.from,m.a,m.c,all)];}));
-        var blob2=new Blob([rows2.map(function(r){return r.map(function(v){v=String(v);return /[",]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;}).join(",");}).join("\n")],{type:"text/csv"});
+        var blob2=new Blob(["﻿"+rows2.map(function(r){return r.map(function(v){v=String(v);return /[",]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;}).join(",");}).join("\n")],{type:"text/csv"});
         var a2=document.createElement("a");a2.href=URL.createObjectURL(blob2);a2.download=D.title.replace(/\W+/g,"_")+"_transfer_lists_"+D.built+".csv";a2.click();break;
       case "goDesk":VIEW=VIEW==="lists"?"choose":"lists";render();window.scrollTo(0,0);break;
       case "moreBtn":LIMIT+=40;renderChoose();break;
@@ -1331,8 +1331,8 @@ function onClick(e,t){
         if(navigator.share){navigator.share({title:D.title+" conso",text:D.title+" conso plan",url:SL}).catch(function(e){if(!e||e.name!=="AbortError"){copy(SL,"#dockTxt");alert(SHARE_MSG);}});}
         else{copy(SL,"#dockTxt");alert(SHARE_MSG);}
         break;
-      case "csv":var rows=[["From","To","Article","Colour","Size","Qty"]].concat(allMoves().map(function(m){return [m.from,m.to,m.a,m.c,m.z,m.q];}));
-        var blob=new Blob([rows.map(function(r){return r.join(",");}).join("\n")],{type:"text/csv"});
+      case "csv":var rows=[["From","To","Article","Colour","Size","Qty","Remark"]].concat(allMoves().map(function(m,i,all){return [m.from,m.to,m.a,m.c,m.z,m.q,moveNote(m.from,m.a,m.c,all)];}));
+        var blob=new Blob(["\ufeff"+rows.map(function(r){return r.map(function(v){v=String(v);return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;}).join(",");}).join("\n")],{type:"text/csv"});
         var aEl=document.createElement("a");aEl.href=URL.createObjectURL(blob);aEl.download=D.title.replace(/\W+/g,"_")+"_conso_plan_"+D.built+".csv";aEl.click();break;
     }
   })();
