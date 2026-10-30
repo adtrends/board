@@ -220,6 +220,11 @@ table.byart tr.cfirst td{border-top:2px solid var(--line)}
 table.byart td.al{text-align:left;white-space:nowrap;font-size:11px}
 table.byart td.al .to{color:var(--warn)}table.byart td.al .from{color:var(--good)}
 .ao{font-size:11px;font-weight:700;color:var(--bad)}
+table.bycol tr.bcnow td{border-top:2px solid var(--ink);background:var(--soft)}
+table.bycol tr.bcleft td{font-style:italic;color:var(--muted)}
+table.bycol tr.bcto td{color:#16202b}
+p.bckey span{display:inline-block;padding:2px 8px;margin:2px 4px 2px 0;border-radius:4px;font-size:11px;font-weight:700}
+@media print{table.bycol tr,p.bckey span{-webkit-print-color-adjust:exact;print-color-adjust:exact}table.bycol tr.bcnow td{border-top:1.5px solid #000}}
 details.recvd{margin-top:10px}
 details.recvd summary{cursor:pointer;font-weight:600;font-size:13px;margin-bottom:6px}
 .olist h3{font-size:14px;margin:14px 0 6px}
@@ -992,6 +997,41 @@ function gridTable(ms,other,label,allOutOf){
       "<td></td><td><b>"+pcs+'</b></td><td class="tk"></td></tr></tbody></table>';
   }).join("");
 }
+/* Tze, 30 Oct 2026: "show me by article-col and then what the outlet's existing stock, and how you are distributing them
+   to all the outlets ... colour code each of the outlet so they are not confused". Penang send list: one block per
+   art-colour - stock now, one coloured row per receiving outlet, what is left after. Same colour per outlet on the page. */
+var BC_TXT={now:"Stock now",left:"Left after",key:"Colour per receiving outlet",send:"send"};
+var BC_PAL=["#e8f1ff","#ffeede","#e5f7e9","#fbe7f3","#fff7cc","#e9e5ff","#dff6f7","#ffe3e3","#eef3d8","#f1e9dd","#e3eef5","#f6e6ff"],
+    BC_INK=["#1f5fbf","#c25a00","#1e8a3c","#b0307a","#8a6d00","#5a43c9","#0f7f86","#c62828","#5f7a12","#7a5530","#2f6b8f","#8e3cc0"];
+function bcIdx(list,o){var i=list.indexOf(o);return i<0?0:i%BC_PAL.length;}
+function byColTable(o,out,moves,dl){
+  var byCol={};out.forEach(function(m){var k=m.a+"|"+m.c;(byCol[k]=byCol[k]||[]).push(m);});
+  var inGroup={};Object.keys(byCol).forEach(function(k){var g=colourGroup(byCol[k]);(inGroup[g]=inGroup[g]||[]).push(k);});
+  return SIZE_GROUPS.filter(function(g){return inGroup[g[0]];}).map(function(g){
+    var keys=inGroup[g[0]].sort(), set={}, pcs=0;
+    keys.forEach(function(k){var p=k.split("|"),a=artOf(p[0]),c=a&&a.cols.find(function(x){return x.c===p[1];}),r=c&&c.rows.find(function(x){return x.o===o;});
+      byCol[k].forEach(function(m){set[String(m.z)]=1;pcs+=m.q;});if(r)Object.keys(r.q).forEach(function(z){if(r.q[z])set[String(z)]=1;});});
+    var SL=Object.keys(set).sort(groupSizeCmp), html="";
+    function cells(v){return SL.map(function(z){return "<td>"+(v[z]||"")+"</td>";}).join("");}
+    keys.forEach(function(k){var p=k.split("|"),a=artOf(p[0]),c=a&&a.cols.find(function(x){return x.c===p[1];}),r=c&&c.rows.find(function(x){return x.o===o;}),
+        q=(r&&r.q)||{},price=a?(a.nett&&a.nett<a.p?a.nett:a.p):0,am=moves.filter(function(m){return m.a===p[0]&&m.c===p[1];}),left={},lt=0,st=0;
+      SL.forEach(function(z){st+=q[z]||0;left[z]=(q[z]||0);});
+      am.forEach(function(m){if(m.from===o)left[m.z]=(left[m.z]||0)-m.q;if(m.to===o)left[m.z]=(left[m.z]||0)+m.q;});
+      SL.forEach(function(z){lt+=left[z]||0;});
+      html+='<tr class="bcnow"><td class="l mono"><b>'+esc(p[0])+'</b></td><td class="l mono"><b>'+esc(p[1])+"</b></td><td>"+(price?Math.round(price):"")+'</td><td class="l">'+BC_TXT.now+"</td>"+cells(q)+'<td class="l"></td><td><b>'+st+'</b></td><td class="tk"></td></tr>';
+      var byTo={};byCol[k].forEach(function(m){(byTo[m.to]=byTo[m.to]||{})[m.z]=((byTo[m.to]||{})[m.z]||0)+m.q;});
+      Object.keys(byTo).sort(function(x,y){return dl.indexOf(x)-dl.indexOf(y);}).forEach(function(t){var v=byTo[t],n=0,i=bcIdx(dl,t);Object.keys(v).forEach(function(z){n+=v[z];});
+        html+='<tr class="bcto" style="background:'+BC_PAL[i]+'"><td></td><td></td><td></td><td class="l mono" style="border-left:5px solid '+BC_INK[i]+';color:'+BC_INK[i]+'"><b>→ '+esc(t)+"</b></td>"+
+          cells(v)+'<td class="l"></td><td><b>'+n+'</b></td><td class="tk">☐</td></tr>';});
+      var nt=moveNote(o,p[0],p[1],moves);
+      html+='<tr class="bcleft"><td></td><td></td><td></td><td class="l">'+BC_TXT.left+"</td>"+SL.map(function(z){return "<td>"+(left[z]||(q[z]?"0":""))+"</td>";}).join("")+
+        '<td class="l">'+(nt?'<span class="ao">'+esc(nt)+"</span>":"")+"</td><td><b>"+lt+'</b></td><td class="tk"></td></tr>';
+    });
+    return '<h4 class="sgrp">'+esc(g[1])+' <span class="muted">· '+BC_TXT.send+" "+pcs+' pcs</span></h4>'+
+      '<table class="grid bycol"><thead><tr><th class="l">Art no</th><th class="l">Col</th><th>RM</th><th class="l">To</th>'+
+      SL.map(function(h){return "<th>"+esc(h)+"</th>";}).join("")+'<th class="l">Other / note</th><th>Total</th><th class="tk">✓</th></tr></thead><tbody>'+html+"</tbody></table>";
+  }).join("");
+}
 function outletList(o,moves){
   var out=moves.filter(function(m){return m.from===o;}), inn=moves.filter(function(m){return m.to===o;});
   var sum=function(ms){return ms.reduce(function(n,m){return n+m.q;},0);};
@@ -1000,7 +1040,9 @@ function outletList(o,moves){
   return '<section class="olist"><h2>'+esc(o)+' <span class="muted">'+esc(outletName(o))+'</span></h2>'+
     '<p class="note">'+esc(D.title)+" conso · system stock "+fmtDate(D.built)+" · <b>send "+sum(out)+" pcs</b> in "+dests.length+" IT"+(dests.length===1?"":"s")+
     " ("+dests.map(esc).join(", ")+")"+(inn.length?" · will receive "+sum(inn)+" pcs from "+srcs.map(esc).join(", "):"")+"</p>"+
-    (out.length?'<div class="scroll">'+gridTable(out,"to","To",allOutOf)+"</div>":'<p class="empty">Nothing to send.</p>')+
+    (out.length&&remOn()?'<p class="bckey">'+BC_TXT.key+": "+dests.map(function(t){var i=bcIdx(dests,t);return '<span style="background:'+BC_PAL[i]+';border-left:5px solid '+BC_INK[i]+';color:'+BC_INK[i]+'">'+esc(t)+" · "+out.filter(function(m){return m.to===t;}).reduce(function(n,m){return n+m.q;},0)+" pcs</span>";}).join(" ")+"</p>"+
+      '<div class="scroll">'+byColTable(o,out,moves,dests)+"</div>":
+     out.length?'<div class="scroll">'+gridTable(out,"to","To",allOutOf)+"</div>":'<p class="empty">Nothing to send.</p>')+
     (inn.length?'<details class="recvd"'+(out.length?"":" open")+'><summary>Incoming: '+sum(inn)+' pcs (for checking the IT when it arrives)</summary><div class="scroll">'+gridTable(inn,"from","From")+"</div></details>":"")+"</section>";
 }
 function renderLists(){
