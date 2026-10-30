@@ -643,6 +643,8 @@ function extraRoles(a,r,d,role,c){
 /* Tze, 30 Oct 2026: "put a remark on the article code where i want to markdown after grouping ... maybe specific
    to a certain counter". REM[art] = for the whole article, REM[art|outlet] = for that counter only. Penang first. */
 var REM_TXT={btn:"Remark",ask:"Remark for #  (e.g. markdown after grouping). Leave empty to remove.",all:"all counters",has:"Has remark"};
+/* Tze, 30 Oct 2026: "can show everything always" - no "Show 40 more" on the Penang board */
+function lim(){return remOn()?1e9:LIMIT;}
 function remOn(){return D.scope==="EILEEN";}
 function remBtn(key){var v=REM[key]||"";
   return '<button class="rem'+(v?" on":"")+'" data-rem="'+esc(key)+'" title="'+esc(v||REM_TXT.btn)+'">✎</button>';}
@@ -729,10 +731,10 @@ document.addEventListener("click",function(e){if(e.target.closest&&e.target.clos
 function yearOpts(){var f=$("#fy");return f?[].map.call(f.options,function(o){return [o.value,o.textContent];}):[["",""]];}
 function renderChoose(){
   var fs=$("#fsort");if(fs&&[].some.call(fs.options,function(o){return o.value===SORT.k;}))fs.value=SORT.k;
-  var list=filtered(), shown=list.slice(0,LIMIT);
+  var list=filtered(), shown=list.slice(0,lim());
   MOVED={};D.arts.forEach(function(a){if(TICK.has(a.a))MOVED[a.a]=allocate(a).reduce(function(t,m){return t+m.q;},0);});
   $("#capBar").innerHTML=capBarHTML();
-  $("#allMovesBox").innerHTML=TICK.size?allMovesHTML():"";
+  $("#allMovesBox").innerHTML=(remOn()?mdListHTML():"")+(TICK.size?allMovesHTML():"");
   if(TICK.size)$("#allplan").innerHTML=planTable(allMoves());
   var order=[], groups={};
   /* Tze, 20 Oct 2026: "group the article of certain size group together, so the size group isn't too long" -
@@ -758,8 +760,8 @@ function renderChoose(){
       "</th><th></th></tr></thead><tbody>"+
       arts.map(function(a){return gridArticle(a,sizes);}).join("")+"</tbody></table></div>";
   }).join("")||emptyChoose();
-  $("#cnt").textContent=list.length+" of "+D.arts.length+" articles"+(list.length>LIMIT?" · showing "+LIMIT:"");
-  $("#more").innerHTML=list.length>LIMIT?'<button class="ghost" id="moreBtn">Show '+Math.min(40,list.length-LIMIT)+" more</button>":"";
+  $("#cnt").textContent=list.length+" of "+D.arts.length+" articles"+(list.length>lim()?" · showing "+lim():"");
+  $("#more").innerHTML=list.length>lim()?'<button class="ghost" id="moreBtn">Show '+Math.min(40,list.length-lim())+" more</button>":"";
   CUR_LIST=list;
   var mn=["fk","fd","fsg","fb","ff","ft"].filter(function(i){var x=$("#"+i);return x&&x.value;}).length+["fs","ftk"].filter(function(i){var x=$("#"+i);return x&&x.checked;}).length;
   if($("#moreN"))$("#moreN").textContent=mn?"("+mn+")":"";
@@ -847,6 +849,23 @@ function allocPanel(a){
     '<button class="ghost" data-clr="'+esc(a.a)+'">'+SUG_TXT.clearOne+"</button></div>"+a.cols.filter(colHeld).map(function(c){return colourTable(a,c,moves);}).join("")+
     outletSummary(a,moves)+'<div class="plan"><h4>Moves for '+esc(a.a)+"</h4>"+planTable(moves)+"</div></div>";
 }
+/* Tze, 30 Oct 2026: "compile the remark for me at the final report, or give me like a markdown list".
+   One row per remark: whole article (all counters) or one counter, with the pieces left there after the plan. */
+var MDL_TXT={h:"Markdown list",sub:"every remark, with the pieces left after the plan",art:"Article",ctr:"Counter",rem:"Remark",pcs:"Pcs after plan",rm:"RM now",copy:"Copy markdown list",csv:"Download CSV",none:"No remarks yet: tap ✎ next to an article code or a counter."};
+function mdRows(){
+  var out=[];Object.keys(REM).sort().forEach(function(k){var p=k.split("|"),a=artOf(p[0]);if(!a)return;
+    var mv=TICK.has(a.a)?allocate(a):[],n=0;
+    a.cols.forEach(function(c){c.rows.forEach(function(r){if(!p[1]||r.o===p[1])n+=leftAfter(r,c,mv);});});
+    out.push({a:a.a,n:a.n||"",o:p[1]||"",rem:REM[k],pcs:n,rm:Math.round(priceNow(a)||0)});});
+  return out;}
+function mdListHTML(){var rows=mdRows();
+  return '<div class="legend" style="margin-top:14px"><b>✎ '+MDL_TXT.h+'</b> <span class="muted">· '+MDL_TXT.sub+"</span>"+
+    (rows.length?'<div class="scroll" style="margin-top:8px"><table><thead><tr><th class="l">'+MDL_TXT.art+'</th><th class="l">'+MDL_TXT.ctr+'</th><th class="l">'+MDL_TXT.rem+"</th><th>"+MDL_TXT.pcs+"</th><th>"+MDL_TXT.rm+"</th></tr></thead><tbody>"+
+      rows.map(function(x){return '<tr><td class="l mono" title="'+esc(x.n)+'"><b>'+esc(x.a)+'</b></td><td class="l mono">'+esc(x.o||REM_TXT.all)+'</td><td class="l">'+esc(x.rem)+"</td><td>"+x.pcs+"</td><td>"+(x.rm||"")+"</td></tr>";}).join("")+
+      '</tbody></table></div><div class="bar" style="margin-top:10px"><button class="act" id="copyMd">'+MDL_TXT.copy+'</button><button class="ghost" id="csvMd">'+MDL_TXT.csv+'</button><span class="status" id="mdStatus"></span></div>'
+     :'<p class="muted" style="margin:6px 0 0">'+MDL_TXT.none+"</p>")+"</div>";}
+function mdText(){return "*"+D.title+" - "+MDL_TXT.h+"* ("+fmtDate(D.built)+")\n"+mdRows().map(function(x,i){
+  return (i+1)+". "+x.a+" · "+(x.o||REM_TXT.all)+" · "+x.pcs+" pcs"+(x.rm?" · RM"+x.rm:"")+"\n   ✎ "+x.rem;}).join("\n");}
 function allMovesHTML(){
   return '<div class="legend" style="margin-top:14px"><b>All moves</b> — one transfer (IT) per From → To.<div id="allplan" style="margin-top:8px"></div>'+
     '<div class="bar" style="margin-top:10px"><button class="act" id="copyWa">Copy for WhatsApp</button><button class="ghost" id="csv">Download CSV</button>'+
@@ -1235,7 +1254,7 @@ function onClick(e,t){
         var a2=document.createElement("a");a2.href=URL.createObjectURL(blob2);a2.download=D.title.replace(/\W+/g,"_")+"_transfer_lists_"+D.built+".csv";a2.click();break;
       case "goDesk":VIEW=VIEW==="lists"?"choose":"lists";render();window.scrollTo(0,0);break;
       case "moreBtn":LIMIT+=40;renderChoose();break;
-      case "tickAll":CUR_LIST.slice(0,LIMIT).forEach(function(a){TICK.add(a.a);});saveState();render();break;
+      case "tickAll":CUR_LIST.slice(0,lim()).forEach(function(a){TICK.add(a.a);});saveState();render();break;
       case "untick":TICK.clear();saveState();render();break;
       case "allOut":D.arts.forEach(function(a){if(!TICK.has(a.a))return;a.cols.forEach(function(c){c.rows.forEach(function(r){
           if(roleOf(a,c,r)==="g")ROLES[rk(a.a,c.c,r.o)]="x";});});});saveState();render();break;
@@ -1243,6 +1262,10 @@ function onClick(e,t){
       case "sugAll":if(!Object.keys(ROLES).length||confirm(SUG_TXT.confAll)){AUTO=true;ROLES={};SUGG.clear();CUR_LIST.forEach(function(a){TICK.add(a.a);});saveState();render();}break;
       case "clearAll":if(confirm(SUG_TXT.confClear)){AUTO=false;ROLES={};SUGG.clear();saveState();render();}break;
       case "copyWa":copy(waText(),"#copyStatus");break;
+      case "copyMd":copy(mdText(),"#mdStatus");break;
+      case "csvMd":var mr=[[MDL_TXT.art,"Name",MDL_TXT.ctr,MDL_TXT.rem,MDL_TXT.pcs,MDL_TXT.rm]].concat(mdRows().map(function(x){return [x.a,x.n,x.o||REM_TXT.all,x.rem,x.pcs,x.rm];}));
+        var mcsv=mr.map(function(r){return r.map(function(v){v=String(v);return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;}).join(",");}).join("\n");
+        var mb=new Blob(["\ufeff"+mcsv],{type:"text/csv"}),ml=document.createElement("a");ml.href=URL.createObjectURL(mb);ml.download=D.title+" markdown list.csv";ml.click();break;
       /* Share my picks (Tze, 18 Oct 2026: supervisors miss the tiny "Copied" note): on a phone open the share sheet so
          WhatsApp is one tap; otherwise copy and say so in a box they cannot miss. */
       case "share":var SL=shareLink();
