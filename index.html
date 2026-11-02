@@ -426,9 +426,14 @@
   .stamp .c .back { transform: rotateY(180deg); font-size: 11px; line-height: 1.15; color: var(--ink); background: var(--surface); border: 2px solid var(--line); }
   .stamp.flip .c { transform: rotateY(180deg); }
   .stamp.done.flip .c { transform: rotateY(180deg); }
-  .season { position: relative; margin: 0 16px 12px; padding: 14px; border-radius: 14px; background: var(--chrome-grad); color: var(--chrome-ink); overflow: hidden; text-align: center; box-shadow: var(--shadow); }
+  .season { position: relative; margin: 12px 16px 12px; padding: 14px; border-radius: 14px; background: var(--chrome-grad); color: var(--chrome-ink); overflow: hidden; text-align: center; box-shadow: var(--shadow); }
   .season .txt { position: relative; font-size: 24px; animation: pop .7s cubic-bezier(.2,1.4,.4,1) both; }
-  .season .bits i { position: absolute; top: -20px; width: 8px; height: 16px; border-radius: 2px; opacity: .9; animation: drift 3.2s linear infinite; }
+  .season .bits i { position: absolute; top: -24px; font-style: normal; font-size: 16px; opacity: .9; animation: drift 4.2s linear infinite; }
+  .season .txt { color: #FFF6DC; text-shadow: 0 1px 6px rgba(0,0,0,.35); }
+  .garland { position: absolute; top: -9px; left: 14px; right: 14px; display: flex; justify-content: space-between; pointer-events: none; }
+  .garland::before { content: ""; position: absolute; top: 9px; left: 0; right: 0; height: 10px; border-bottom: 1.5px solid rgba(255,214,120,.7); border-radius: 0 0 50% 50%; }
+  .garland span { position: relative; font-size: 17px; transform-origin: 50% 0; animation: swing 2.4s ease-in-out infinite alternate; filter: drop-shadow(0 0 4px rgba(255,200,90,.6)); }
+  @keyframes swing { from { transform: rotate(-9deg); } to { transform: rotate(9deg); } }
   @keyframes drift { to { transform: translateY(120px) rotate(360deg); opacity: 0; } }
   .card.sales { margin: 6px 16px 26px; }
   .langsw { position: absolute; right: 16px; bottom: 14px; display: inline-flex; border: 1px solid var(--chrome-soft); border-radius: 999px; overflow: hidden; }
@@ -483,7 +488,7 @@
   .news .top .nm { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .news .top .q { color: var(--muted); font-size: 13px; }
   .news .mv { font-size: 11px; font-weight: 700; padding: 1px 6px; border-radius: 999px; } .news .mv.up { color: var(--done); background: var(--done-bg); } .news .mv.down { color: var(--pending); background: var(--pending-bg); } .news .mv.new { color: var(--amber); background: var(--amber-bg); }
   @keyframes slidein { from { transform: translateX(14px); opacity: 0; } to { transform: none; opacity: 1; } }
-  @media (prefers-reduced-motion: reduce) { .season .bits i, .sales .spark i, .news .note, .news .top li, .streak .dots i { animation: none; } }
+  @media (prefers-reduced-motion: reduce) { .garland span, .season .bits i,.sales .spark i, .news .note, .news .top li, .streak .dots i { animation: none; } }
   .sales .tline { display: flex; justify-content: space-between; font-size: 14px; color: var(--muted); margin-bottom: 6px; } .sales .tline b { color: var(--ink); } .sales .tline .togo { color: var(--amber); font-weight: 700; }
   .sales .pace-bar.tgt .fill { background: linear-gradient(90deg, var(--amber), #E3A85A); }
   .sales .need { margin-top: 8px; font-size: 16px; font-weight: 700; color: var(--ink); }
@@ -938,26 +943,38 @@
     if (!pending && rows.length) out += confettiHtml(sp.month);
     return out;
   }
-  /* seasonal greetings: [mm-dd from, mm-dd to, ms, en, emoji, colours] - Malaysian public days, greetings only */
+  /* festive decor (Tze, 2 Nov 2026): starts 2 weeks before each festival; full dates because the festivals move every year - add next year's rows before they are due.
+     key, from, to (yyyy-mm-dd, inclusive), ms, en, motifs (garland on the header + falling in the banner), banner gradient */
   var SEASONS = [
-    ['09-14', '09-17', 'Selamat Hari Malaysia! 🇲🇾', 'Happy Malaysia Day! 🇲🇾', '🇲🇾', ['#0032A0', '#FFCC00', '#CC0001', '#FFFFFF']],
-    ['08-29', '08-31', 'Selamat Hari Merdeka! 🇲🇾', 'Happy Merdeka Day! 🇲🇾', '🇲🇾', ['#0032A0', '#FFCC00', '#CC0001', '#FFFFFF']],
-    ['12-20', '12-26', 'Selamat Hari Krismas! 🎄', 'Merry Christmas! 🎄', '🎄', ['#2A7549', '#B93A30', '#F6E7B4']],
-    ['12-30', '01-02', 'Selamat Tahun Baru! 🎉', 'Happy New Year! 🎉', '🎉', ['#B8741A', '#3E4E62', '#F6E7B4']],
-    ['11-06', '11-09', 'Selamat Hari Deepavali! 🪔', 'Happy Deepavali! 🪔', '🪔', ['#B8741A', '#B93A30', '#F6E7B4']],
-    ['02-04', '02-08', 'Gong Xi Fa Cai! 🧧', 'Gong Xi Fa Cai! 🧧', '🏮', ['#B93A30', '#F6E7B4', '#B8741A']],
-    ['03-19', '03-22', 'Selamat Hari Raya Aidilfitri! ✨', 'Selamat Hari Raya Aidilfitri! ✨', '✨', ['#2A7549', '#F6E7B4', '#3E4E62']]
+    ['deepavali', '2026-10-25', '2026-11-10', 'Selamat Hari Deepavali!', 'Happy Deepavali!', ['🪔', '✨', '🌼'], 'linear-gradient(120deg, #6E1E3A 0%, #A3471F 55%, #C98A1C 100%)'],
+    ['krismas', '2026-12-11', '2026-12-27', 'Selamat Hari Krismas!', 'Merry Christmas!', ['🎄', '⭐', '❄️', '🎁'], 'linear-gradient(120deg, #1F5138 0%, #2A7549 50%, #8E2A2A 100%)'],
+    ['tahunbaru', '2026-12-30', '2027-01-02', 'Selamat Tahun Baru!', 'Happy New Year!', ['🎉', '✨', '🎆'], 'linear-gradient(120deg, #2B3446 0%, #3E4E62 60%, #B8741A 100%)'],
+    ['cny', '2027-01-23', '2027-02-20', 'Gong Xi Fa Cai!', 'Gong Xi Fa Cai!', ['🏮', '🧧', '🍊'], 'linear-gradient(120deg, #7A1414 0%, #B5221F 60%, #D4A017 100%)'],
+    /* Raya 2027 = 10 Mar (expected, subject to moon sighting) - move the window if the date shifts */
+    ['raya', '2027-02-24', '2027-03-24', 'Selamat Hari Raya Aidilfitri!', 'Selamat Hari Raya Aidilfitri!', ['🌙', '✨', '🕌'], 'linear-gradient(120deg, #154A36 0%, #2A7549 60%, #C9A227 100%)'],
+    ['merdeka', '2027-08-17', '2027-08-31', 'Selamat Hari Merdeka!', 'Happy Merdeka Day!', ['🇲🇾', '⭐'], 'linear-gradient(120deg, #0032A0 0%, #2A4FB0 60%, #CC0001 100%)'],
+    ['malaysia', '2027-09-02', '2027-09-16', 'Selamat Hari Malaysia!', 'Happy Malaysia Day!', ['🇲🇾', '⭐'], 'linear-gradient(120deg, #0032A0 0%, #2A4FB0 60%, #CC0001 100%)']
   ];
-  function seasonHtml(lang) {
-    var now = new Date(); var md = String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
+  function seasonNow() {
+    var now = new Date(), ymd = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
     for (var i = 0; i < SEASONS.length; i++) {
-      var sn = SEASONS[i], inRange = sn[0] <= sn[1] ? (md >= sn[0] && md <= sn[1]) : (md >= sn[0] || md <= sn[1]);
-      if (!inRange) continue;
-      var bits = '';
-      for (var k = 0; k < 14; k++) bits += '<i style="left:' + (k * 7 + 2) + '%;background:' + sn[5][k % sn[5].length] + ';animation-delay:' + (k * 0.25) + 's"></i>';
-      return '<div class="season"><div class="bits" aria-hidden="true">' + bits + '</div><div class="txt display">' + (lang === 'en' ? sn[3] : sn[2]) + '</div></div>';
+      var sn = SEASONS[i];
+      if (ymd >= sn[1] && ymd <= sn[2]) return sn;
     }
-    return '';
+    return null;
+  }
+  function garlandHtml() {
+    var sn = seasonNow(); if (!sn) return '';
+    var g = '';
+    for (var k = 0; k < 9; k++) g += '<span style="animation-delay:' + (k * 0.3) + 's">' + sn[5][k % sn[5].length] + '</span>';
+    return '<div class="garland" aria-hidden="true">' + g + '</div>';
+  }
+  function seasonHtml(lang) {
+    var sn = seasonNow(); if (!sn) return '';
+    var bits = '';
+    for (var k = 0; k < 12; k++) bits += '<i style="left:' + (k * 8 + 2) + '%;animation-delay:' + (k * 0.35) + 's">' + sn[5][k % sn[5].length] + '</i>';
+    return '<div class="season" style="background:' + sn[6] + '"><div class="bits" aria-hidden="true">' + bits + '</div>' +
+      '<div class="txt display">' + sn[5][0] + ' ' + (lang === 'en' ? sn[4] : sn[3]) + ' ' + sn[5][0] + '</div></div>';
   }
   function fmtRM(v) { v = Math.round(v || 0); return 'RM ' + String(v).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
   function salesHtml(sl, lang) {
@@ -1063,7 +1080,7 @@
 
     var html = '';
     if (demo) html += '<div class="banner">' + T.demo + '<small>' + T.demoSub + '</small></div>';
-    html += '<div class="head' + (brand ? ' brand-' + esc(brand) : '') + '">' +
+    html += '<div class="head' + (brand ? ' brand-' + esc(brand) : '') + '">' + garlandHtml() +
       '<div class="head-row"><div class="head-main">' +
         '<div class="code display">' + esc(pickText(board.outlet, 'Outlet')) + '</div>' +
         (board.name ? '<div class="name">' + esc(board.name) + '</div>' : '') +
