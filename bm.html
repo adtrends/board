@@ -76,7 +76,7 @@ function fmt(n){return (Math.round(n)||0).toLocaleString("en-US");}
 var GL={nonew:"no 2027 sets",missed:"skipped in v2",topup:"has 2027 sets",out:"out"};
 var O={},C=[];
 function boot(){
-  D.o.forEach(function(r){O[r[0]]={code:r[0],name:r[1],brand:r[2],sup:r[3],sold:r[4],st:r[5],nw:r[6],floor:r[7],grp:r[8],sA:r[9],sK:r[10],nA:r[11],nK:r[12]};});
+  D.o.forEach(function(r){O[r[0]]={code:r[0],name:r[1],brand:r[2],sup:r[3],sold:r[4],st:r[5],nw:r[6],floor:r[7],grp:r[8],sA:r[9],sK:r[10],nA:r[11],nK:r[12],fA:r[13],fK:r[14]};});
   C=D.c.map(function(r){return {ic:r[0],brand:r[1],pcs:r[2],kids:r[3],orig:r[4],arts:r[5],L:r[5].split(";").map(function(x){
     var p=x.split(":"),i=p[0].indexOf("-"),a=p[0].slice(0,i);return {a:a,col:p[0].slice(i+1),q:+p[1],y:yearOf(a),k:isKid(a)};})};});
   var ys={};C.forEach(function(c){c.L.forEach(function(l){ys[l.y]=1;});});YEARS=Object.keys(ys).sort();
@@ -100,8 +100,8 @@ function changes(){
   return {n:n,t:t,m:m};
 }
 function render(){
-  var T=tallies(),TA=tallies(true),N27={t:0,a:0,k:0},FL=0,placedAll=0,kidAll=0;
-  Object.keys(O).forEach(function(k){var o=O[k];if(o.grp==='out'&&!o.nw)return;N27.t+=o.nw;N27.a+=o.nA;N27.k+=o.nK;if(o.grp!=='out'&&!NOBM[o.code])FL+=o.floor;});
+  var T=tallies(),TA=tallies(true),N27={t:0,a:0,k:0},FL=0,FA=0,FK=0,placedAll=0,kidAll=0;
+  Object.keys(O).forEach(function(k){var o=O[k];if(o.grp==='out'&&!o.nw)return;N27.t+=o.nw;N27.a+=o.nA;N27.k+=o.nK;if(o.grp!=='out'&&!NOBM[o.code]){FL+=o.floor;FA+=o.fA||0;FK+=o.fK||0;}});
   Object.keys(TA.now).forEach(function(k){placedAll+=TA.now[k];kidAll+=TA.kid[k]||0;});
   var ch=changes(),pool=0,placed=0,un=[];
   C.forEach(function(c){var q=fq(c);if(!q)return;pool+=q;var d=dest(c);if(d)placed+=q;else un.push(c);});
@@ -109,7 +109,7 @@ function render(){
   var nch=ch.n.length+ch.t.length+ch.m.length;
   var h='<h1>BM 2027 old stock: reallocate</h1><div class="muted small">Plan '+esc(D.ver)+' · built '+esc(D.built)+' · '+esc(D.src)+'</div>';
   h+='<div class="bar"><div class="stats"><div class="stat">Pool <b>'+fmt(pool)+'</b> pcs</div><div class="stat">At outlets <b>'+fmt(placed)+'</b></div>'+
-     '<div class="stat'+(unp?" warn":"")+'">Not placed <b>'+fmt(unp)+'</b> pcs / '+un.length+' ctns</div><div class="stat">2027 total <b>'+fmt(N27.t+placedAll+FL)+'</b> = new '+fmt(N27.t)+' + old '+fmt(placedAll)+' + floor '+fmt(FL)+'<span class="ak">new+old: A '+fmt(N27.a+placedAll-kidAll)+' · K '+fmt(N27.k+kidAll)+' · floor = counter BM on 22 Oct, not split</span></div><div class="stat">Changes <b>'+nch+'</b></div>'+(filt()?'<div class="stat warn">Showing only <b>'+esc([F.y?"BM "+F.y:"",F.a?"art "+F.a.toUpperCase()+"...":""].filter(Boolean).join(", "))+'</b></div>':"")+'</div>'+
+     '<div class="stat'+(unp?" warn":"")+'">Not placed <b>'+fmt(unp)+'</b> pcs / '+un.length+' ctns</div><div class="stat">2027 total <b>'+fmt(N27.t+placedAll+FL)+'</b> = new '+fmt(N27.t)+' + old '+fmt(placedAll)+' + floor '+fmt(FL)+'<span class="ak">A '+fmt(N27.a+placedAll-kidAll+FA)+' · K '+fmt(N27.k+kidAll+FK)+' · floor = BM on the counter '+esc(D.fdate)+'</span></div><div class="stat">Changes <b>'+nch+'</b></div>'+(filt()?'<div class="stat warn">Showing only <b>'+esc([F.y?"BM "+F.y:"",F.a?"art "+F.a.toUpperCase()+"...":""].filter(Boolean).join(", "))+'</b></div>':"")+'</div>'+
      '<div class="ctl" style="margin-bottom:6px"><button id="vo" class="'+(VIEW==="o"?"pri":"")+'">By outlet</button><button id="va" class="'+(VIEW==="a"?"pri":"")+'">By article</button>'+
      '<select id="fy"><option value="">All years</option>'+YEARS.map(function(y){return '<option value="'+y+'"'+(F.y===y?" selected":"")+'>BM '+y+'</option>';}).join("")+'</select>'+
      '<input type="search" id="fa" placeholder="Article code e.g. 19026001" value="'+esc(F.a)+'" style="max-width:190px"></div>'+
@@ -132,7 +132,7 @@ function render(){
   list.sort(function(a,b){var oa=T.now[a.code]||0,ob=T.now[b.code]||0;
     if(F.s==="code")return a.code<b.code?-1:1;if(F.s==="sold")return b.sold-a.sold;
     if(F.s==="x")return (cover(b,TA.now[b.code]||0)||0)-(cover(a,TA.now[a.code]||0)||0);return ob-oa||b.sold-a.sold;});
-  h+='<div class="panel"><div class="row head"><div class="c-o">Outlet</div><div class="num c-s">Sold 26</div><div class="num c-n">New 27</div><div class="num c-st">Old 27'+(filt()?" (filtered)":"")+'</div><div class="num c-f">Floor 22 Oct</div><div class="num c-t">Total 27<br>new + old + floor</div><div class="num c-x">Cover x</div><div class="acts">No BM / target pcs</div></div>';
+  h+='<div class="panel"><div class="row head"><div class="c-o">Outlet</div><div class="num c-s">Sold 26</div><div class="num c-n">New 27</div><div class="num c-st">Old 27'+(filt()?" (filtered)":"")+'</div><div class="num c-f">Floor '+esc(D.fdate)+'</div><div class="num c-t">Total 27<br>new + old + floor</div><div class="num c-x">Cover x</div><div class="acts">No BM / target pcs</div></div>';
   h+=list.map(function(o){
     var now=T.now[o.code]||0,org=T.orig[o.code]||0,oldAll=(o.code in TARGET)?TARGET[o.code]:(TA.now[o.code]||0),x=cover(o,oldAll),out=o.grp==="out";
     var oldc=now===org?'<b>'+fmt(now)+'</b>':'<span class="muted">'+fmt(org)+'</span> → <span class="chg">'+fmt(now)+'</span>';
@@ -142,8 +142,8 @@ function render(){
       '<div class="num c-s"><span class="ph small muted">Sold 26 </span>'+fmt(o.sold)+ak(o.sA,o.sK)+'</div>'+
       '<div class="num c-n"><span class="ph small muted">New 27 </span>'+fmt(o.nw)+ak(o.nA,o.nK)+'</div>'+
       '<div class="num c-st"><span class="ph small muted">Old 27 </span>'+oldc+ak(now-(T.kid[o.code]||0),T.kid[o.code]||0)+'</div>'+
-      '<div class="num c-f"><span class="ph small muted">Floor 22 Oct</span>'+fmt(o.floor)+'<span class="ak">no A/K split</span></div>'+
-      '<div class="num c-t"><span class="tot"><span class="ph small muted">Total 27 </span><b>'+fmt(o.nw+oldAll+o.floor)+'</b></span><span class="ak">new+old A '+fmt(o.nA+oldAll-(TA.kid[o.code]||0))+' · K '+fmt(o.nK+(TA.kid[o.code]||0))+'</span></div>'+
+      '<div class="num c-f"><span class="ph small muted">Floor '+esc(D.fdate)+'</span>'+fmt(o.floor)+(o.fA==null?'<span class="ak">no split</span>':ak(o.fA,o.fK))+'</div>'+
+      '<div class="num c-t"><span class="tot"><span class="ph small muted">Total 27 </span><b>'+fmt(o.nw+oldAll+o.floor)+'</b></span>'+ak(o.nA+oldAll-(TA.kid[o.code]||0)+(o.fA||0),o.nK+(TA.kid[o.code]||0)+(o.fK||0))+'</div>'+
       '<div class="num c-x"><span class="ph small muted">cover x</span>'+(x==null?"–":x.toFixed(1))+'</div>';
     r+='<div class="acts">'+(out?'<span class="muted small">closed / paused / Brunei</span>':
       '<button data-nobm="'+o.code+'" class="'+(NOBM[o.code]?"on":"")+'">'+(NOBM[o.code]?"No BM ✓":"No BM")+'</button>'+
