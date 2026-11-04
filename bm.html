@@ -72,12 +72,15 @@ input[type=search]{min-width:150px;flex:1}
 .dacts input{width:70px}.dacts button{padding:3px 7px;font-size:12px}.dacts button.on{background:var(--bad);color:var(--card);border-color:var(--bad)}
 .scroll{overflow-x:auto}
 .dgrid{display:grid;grid-template-columns:270px 1fr;gap:12px;align-items:start}
-.dr .mt td,.dr .mt th{text-align:right}.dr .mt td:nth-child(2),.dr .mt td:nth-child(5),.dr .mt th:nth-child(2),.dr .mt th:nth-child(5){text-align:left}
+.dr .mt td,.dr .mt th{text-align:right}.dr .gt td:first-child,.dr .gt th:first-child{text-align:left;white-space:normal}
 .mt td.hc{background:var(--warns);color:var(--warn)}
 .dr .scroll{max-height:420px;overflow:auto}
 .dr .mt th{position:sticky;top:0;background:var(--card)}
 .mt tr.s td{color:var(--bad)}
 .mt tr.fo td{color:var(--mut)}
+.gt tr.ga td{background:var(--accs);border-top:2px solid var(--line)}.gt tr.gc td:first-child{padding-left:16px}
+.abtns{display:flex;flex-wrap:wrap;gap:4px}.ab{display:flex;flex-direction:column;align-items:flex-start;padding:3px 6px;font-weight:400;min-width:118px;text-align:left}
+.ab .ad{font-size:10px;color:var(--mut)}.ab.on{background:var(--ok);border-color:var(--ok);color:var(--card)}.ab.on .ad{color:var(--card)}
 .yr button{padding:1px 6px;font-size:11px}
 .yt{min-width:220px}.yt tr.yrow{cursor:pointer}.yt tr.yrow:hover td{background:var(--accs)}.yt tr.sel td{background:var(--acc);color:var(--card)}
 .ytk{display:flex;gap:10px;align-items:center;margin-top:6px;font-size:12px}.ytk label{display:flex;gap:3px;align-items:center}
@@ -114,7 +117,7 @@ input[type=search]{min-width:150px;flex:1}
 <script>
 (function(){
 "use strict";
-var D,KEYHEX,STORE,MOVES={},NOBM={},TARGET={},YRS={},DY={},OPEN={},F={b:"",g:"",q:"",s:"old",y:"",a:""},VIEW="o",YEARS=[];
+var D,KEYHEX,STORE,MOVES={},NOBM={},TARGET={},YRS={},ADDS={},AY={},DY={},OPEN={},F={b:"",g:"",q:"",s:"old",y:"",a:""},VIEW="o",YEARS=[];
 function $(s){return document.querySelector(s);}
 function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
 function fmt(n){return (Math.round(n)||0).toLocaleString("en-US");}
@@ -128,7 +131,7 @@ function boot(){
   FAC={};Object.keys(D.fac||{}).forEach(function(code){FAC[code]=D.fac[code].split(";").filter(Boolean).map(function(x){
     var p=x.split(":"),i=p[0].lastIndexOf("-"),a=p[0].slice(0,i);return {a:a,col:p[0].slice(i+1),q:+p[1],y:yearOf(a),k:isKid(a)};});});
   STORE="bm2027:"+D.ver;
-  try{var s=JSON.parse(localStorage.getItem(STORE)||"{}");MOVES=s.m||{};NOBM=s.n||{};TARGET=s.t||{};YRS=s.y||{};}catch(e){}
+  try{var s=JSON.parse(localStorage.getItem(STORE)||"{}");MOVES=s.m||{};NOBM=s.n||{};TARGET=s.t||{};YRS=s.y||{};ADDS=s.a||{};}catch(e){}
   render();
 }
 /* year = the 2 digits in the article code: 19026001 / 3926001A = BM 2026, 3925001A = BM 2025 */
@@ -137,14 +140,14 @@ function yearOf(a){return a.indexOf("19")===0?"20"+a.substr(3,2):a.indexOf("39")
 function lineOk(l){return (!F.y||l.y===F.y)&&(!F.a||l.a.indexOf(F.a.toUpperCase())===0);}
 function filt(){return !!(F.y||F.a);}
 function fq(c){if(!filt())return c.pcs;var n=0;c.L.forEach(function(l){if(lineOk(l))n+=l.q;});return n;}
-function save(){try{localStorage.setItem(STORE,JSON.stringify({m:MOVES,n:NOBM,t:TARGET,y:YRS}));}catch(e){}}
+function save(){try{localStorage.setItem(STORE,JSON.stringify({m:MOVES,n:NOBM,t:TARGET,y:YRS,a:ADDS}));}catch(e){}}
 function dest(c){var d=(c.ic in MOVES)?MOVES[c.ic]:c.orig;return (d&&!NOBM[d]&&O[d]&&O[d].grp!=="out")?d:"";}
 function tallies(all){var t={},orig={},k={};C.forEach(function(c){var q=all?c.pcs:fq(c);if(!q)return;var d=dest(c);if(d){t[d]=(t[d]||0)+q;c.L.forEach(function(l){if(l.k&&(all||lineOk(l)))k[d]=(k[d]||0)+l.q;});}if(c.orig)orig[c.orig]=(orig[c.orig]||0)+q;});return {now:t,orig:orig,kid:k};}
 function ak(a,k){return '<span class="ak">A '+fmt(a)+" · K "+fmt(k)+"</span>";}
 function cover(o,old){return o.sold?((o.nw+o.floor+old)/o.sold):null;}
 function changes(){
-  var y=Object.keys(YRS),n=Object.keys(NOBM).filter(function(k){return NOBM[k];}),t=Object.keys(TARGET),m=C.filter(function(c){return (c.ic in MOVES)&&MOVES[c.ic]!==c.orig;});
-  return {n:n,t:t,m:m,y:y};
+  var ad=Object.keys(ADDS).filter(function(k){return Object.keys(ADDS[k]).length;}),y=Object.keys(YRS),n=Object.keys(NOBM).filter(function(k){return NOBM[k];}),t=Object.keys(TARGET),m=C.filter(function(c){return (c.ic in MOVES)&&MOVES[c.ic]!==c.orig;});
+  return {n:n,t:t,m:m,y:y,ad:ad};
 }
 function render(){
   var T=tallies(),TA=tallies(true),N27={t:0,a:0,k:0},FL=0,FA=0,FK=0,placedAll=0,kidAll=0;
@@ -153,7 +156,7 @@ function render(){
   var ch=changes(),pool=0,placed=0,un=[];
   C.forEach(function(c){var q=fq(c);if(!q)return;pool+=q;var d=dest(c);if(d)placed+=q;else un.push(c);});
   var unp=un.reduce(function(a,c){return a+fq(c);},0);
-  var nch=ch.n.length+ch.t.length+ch.m.length+ch.y.length;
+  var nch=ch.n.length+ch.t.length+ch.m.length+ch.y.length+ch.ad.length;
   var h='<h1>BM 2027 old stock: reallocate</h1><div class="muted small">Plan '+esc(D.ver)+' · built '+esc(D.built)+' · '+esc(D.src)+'</div>';
   h+='<div class="bar"><div class="stats"><div class="stat">Pool <b>'+fmt(pool)+'</b> pcs</div><div class="stat">At outlets <b>'+fmt(placed)+'</b></div>'+
      '<div class="stat'+(unp?" warn":"")+'">Not placed <b>'+fmt(unp)+'</b> pcs / '+un.length+' ctns</div><div class="stat">2027 total <b>'+fmt(N27.t+placedAll+FL)+'</b> = new '+fmt(N27.t)+' + old '+fmt(placedAll)+' + floor '+fmt(FL)+'<span class="ak">A '+fmt(N27.a+placedAll-kidAll+FA)+' · K '+fmt(N27.k+kidAll+FK)+' · floor = BM on the counter '+esc(D.fdate)+'</span></div><div class="stat">Changes <b>'+nch+'</b></div>'+(filt()?'<div class="stat warn">Showing only <b>'+esc([F.y?"BM "+F.y:"",F.a?"art "+F.a.toUpperCase()+"...":""].filter(Boolean).join(", "))+'</b></div>':"")+'</div>'+
@@ -235,18 +238,37 @@ function detail(o,T,TA,m,oldAll){
   var R='<div class="dr"><h3 style="margin-top:0">Art-cols after the drop'+(dy?" · BM "+dy:"")+' · counter '+fmt(tf)+' + old '+fmt(to)+' = '+fmt(tf+to)+'</h3>'+
     '<div class="muted small" style="margin-bottom:2px">Cnt = on the counter '+esc(D.fdate)+' · Old = this plan · bold rows get old stock · amber = old art-col ≥ '+Math.round(HEAVY*100)+'% of old &amp; &gt;'+HEAVY_MIN+' · red = set split</div>';
   if(rows.length){
-    R+='<div class="scroll"><table class="mt ft"><tr><th>Yr</th><th>Adult art-col</th><th>Cnt</th><th>Old</th><th>Kids art-col</th><th>Cnt</th><th>Old</th><th>Total</th></tr>'+
-      rows.map(function(r){var sp=setSplit(r),kc=r.kd||(r.f.replace("x","5")),ac=r.ad||(r.f.replace("x","0")),ha=r.a+r.fa,hk=r.k+r.fk,got=r.a+r.k;
-        return '<tr class="'+(sp?"s ":"")+(got?"":"fo")+'"><td>'+r.y.slice(2)+'</td>'+
-          '<td title="'+esc(D.desc[ac]||"")+'">'+(ha?(got?'<b>':'')+esc(ac)+'-'+esc(r.col)+(got?'</b>':''):'<span class="muted">'+(sp?"adult elsewhere":"–")+'</span>')+'</td>'+n(r.fa)+n(r.a,hv(r.a)?"hc":"")+
-          '<td>'+(hk?(got?'<b>':'')+esc(kc)+'-'+esc(r.col)+(got?'</b>':''):'<span class="muted">'+(sp?"kids elsewhere":"–")+'</span>')+'</td>'+n(r.fk)+n(r.k,hv(r.k)?"hc":"")+
-          '<td><b>'+fmt(ha+hk)+'</b></td></tr>';}).join("")+"</table></div>";
+    /* grouped by art (adult art + its kids art = one family), a subtotal line, then its colours */
+    var G={};rows.forEach(function(r){var g=G[r.f]||(G[r.f]={f:r.f,y:r.y,rs:[],fa:0,a:0,fk:0,k:0});g.rs.push(r);g.fa+=r.fa;g.a+=r.a;g.fk+=r.fk;g.k+=r.k;});
+    var gs=Object.keys(G).map(function(k){return G[k];}).sort(function(a,b){return a.y<b.y?1:a.y>b.y?-1:(b.a+b.k)-(a.a+a.k)||(b.fa+b.fk)-(a.fa+a.fk);});
+    R+='<div class="scroll"><table class="mt ft gt"><tr><th>Art · colour</th><th>A cnt</th><th>A old</th><th>K cnt</th><th>K old</th><th>Total</th></tr>'+
+      gs.map(function(g){var ac=g.f.replace("x","0"),kc=g.f.replace("x","5"),got=g.a+g.k;
+        var h='<tr class="ga'+(got?"":" fo")+'"><td><b>'+esc(ac)+'</b>'+(g.fk+g.k?' + '+esc(kc):'')+' <span class="muted">BM '+g.y+' · '+esc(D.desc[ac]||D.desc[kc]||"")+'</span></td>'+n(g.fa)+n(g.a)+n(g.fk)+n(g.k)+'<td><b>'+fmt(g.fa+g.a+g.fk+g.k)+'</b></td></tr>';
+        return h+g.rs.sort(function(a,b){return (b.a+b.k+b.fa+b.fk)-(a.a+a.k+a.fa+a.fk);}).map(function(r){var sp=setSplit(r),got2=r.a+r.k;
+          return '<tr class="gc'+(sp?" s":"")+(got2?"":" fo")+'"><td>col '+esc(r.col)+(sp?' <span class="small">('+(sp==="adult only"?"kids went elsewhere":"adult went elsewhere")+')</span>':"")+'</td>'+
+            n(r.fa)+n(r.a,hv(r.a)?"hc":"")+n(r.fk)+n(r.k,hv(r.k)?"hc":"")+'<td>'+fmt(r.a+r.fa+r.k+r.fk)+'</td></tr>';}).join("");}).join("")+"</table></div>";
   }else R+='<div class="muted">Nothing on the counter or coming'+(dy?" for BM "+dy:"")+'.</div>';
+  R+=addArts(o,m);
   R+="</div>";
   var h='<div class="det"><div class="dgrid">'+L+R+"</div>";
   if(OPEN["C:"+o.code]){var cs=C.filter(function(c){return fq(c)&&(dest(c)===o.code||(c.orig===o.code&&dest(c)!==o.code));});
     h+='<div class="ctns" style="margin-top:8px">'+(cs.length?cs.map(ctRow).join(""):'<span class="muted small">No old cartons.</span>')+"</div>";}
   return h+"</div>";
+}
+/* add an art to an outlet: year tabs + one button per art in the old pool (same brand) */
+var POOLART=null;
+function poolArt(){if(POOLART)return POOLART;POOLART={};C.forEach(function(c){c.L.forEach(function(l){var p=POOLART[l.a]||(POOLART[l.a]={a:l.a,y:l.y,b:c.brand,k:l.k,q:0,outs:{}});p.q+=l.q;var d=dest(c);if(d)p.outs[d]=1;});});return POOLART;}
+function addArts(o,m){
+  var P=poolArt(),mine={},cnt={};Object.keys(m).forEach(function(k){var r=m[k];if(r.ad){mine[r.ad]=(mine[r.ad]||0)+r.a;cnt[r.ad]=(cnt[r.ad]||0)+r.fa;}if(r.kd){mine[r.kd]=(mine[r.kd]||0)+r.k;cnt[r.kd]=(cnt[r.kd]||0)+r.fk;}});
+  var arts=Object.keys(P).map(function(a){return P[a];}).filter(function(p){return p.b===o.brand;});
+  var ys=[];arts.forEach(function(p){if(ys.indexOf(p.y)<0)ys.push(p.y);});ys.sort().reverse();
+  var y=AY[o.code]||ys[0],sel=ADDS[o.code]||{};
+  var h='<h3>Add an art to this outlet · tap to pick, picks go into Copy changes</h3><div class="yr" style="margin-bottom:4px">'+ys.map(function(x){return '<button class="'+(x===y?"pri":"")+'" data-ay="'+o.code+'|'+x+'">BM '+x+'</button>';}).join("")+
+    (Object.keys(sel).length?'<span class="chg small" style="align-self:center">Picked: '+Object.keys(sel).join(", ")+'</span>':"")+'</div><div class="abtns">'+
+    arts.filter(function(p){return p.y===y;}).sort(function(a,b){return a.a<b.a?-1:1;}).map(function(p){var g=mine[p.a]||0,c=cnt[p.a]||0;
+      return '<button class="ab'+(sel[p.a]?" on":"")+'" data-add="'+o.code+'|'+p.a+'" title="'+esc(D.desc[p.a]||"")+'"><b>'+esc(p.a)+'</b>'+(p.k?' <span class="tag">kids</span>':"")+'<span class="ad">'+esc((D.desc[p.a]||"").slice(0,24))+'</span>'+
+        '<span class="ad">pool '+fmt(p.q)+(g?' · gets '+g:'')+(c?' · cnt '+c:'')+'</span></button>';}).join("")+'</div>';
+  return h;
 }
 var AG='style="grid-template-columns:minmax(150px,2fr) 64px 70px 74px 60px 84px"';
 function renderArts(){
@@ -278,6 +300,7 @@ function text(){
   if(ch.n.length)L.push("NO BM: "+ch.n.join(", "));
   ch.t.forEach(function(k){L.push("TARGET: "+k+" "+TARGET[k]+" pcs (plan "+(T.orig[k]||0)+")");});
   ch.y.forEach(function(k){L.push("YEARS: "+k+" BM "+YRS[k].join(" + ")+" only");});
+  ch.ad.forEach(function(k){L.push("ADD: "+k+" "+Object.keys(ADDS[k]).map(function(a){return a+" (BM "+yearOf(a)+")";}).join(", "));});
   ch.m.forEach(function(c){L.push("MOVE: "+c.ic+" ("+c.pcs+" pcs) "+(c.orig||"WH")+" -> "+(MOVES[c.ic]||"not placed"));});
   var un=C.filter(function(c){return !dest(c);});
   if(un.length)L.push("NOT PLACED: "+un.length+" ctns / "+un.reduce(function(a,c){return a+c.pcs;},0)+" pcs - spread on rerun");
@@ -295,7 +318,9 @@ document.addEventListener("click",function(e){var t=e.target;
     var a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="BM2027 old stock "+D.ver+" reallocated.csv";a.click();}
   else if(t.id==="vo"||t.id==="va"){VIEW=t.id==="va"?"a":"o";render();}
   else if(t.closest&&t.closest("[data-dy]")){var p=t.closest("[data-dy]").dataset.dy.split("|");if(p[1])DY[p[0]]=p[1];else delete DY[p[0]];render();}
-  else if(t.id==="reset"){if(confirm("Clear all your changes on this device?")){MOVES={};NOBM={};TARGET={};YRS={};save();render();}}
+  else if(t.closest&&t.closest("[data-add]")){var p=t.closest("[data-add]").dataset.add.split("|"),m=ADDS[p[0]]||(ADDS[p[0]]={});if(m[p[1]])delete m[p[1]];else m[p[1]]=1;if(!Object.keys(m).length)delete ADDS[p[0]];save();render();}
+  else if(t.closest&&t.closest("[data-ay]")){var p=t.closest("[data-ay]").dataset.ay.split("|");AY[p[0]]=p[1];render();}
+  else if(t.id==="reset"){if(confirm("Clear all your changes on this device?")){MOVES={};NOBM={};TARGET={};YRS={};ADDS={};save();render();}}
 });
 document.addEventListener("change",function(e){var t=e.target;
   if(t.dataset.mv){var c=C.filter(function(x){return x.ic===t.dataset.mv;})[0];if(t.value===c.orig)delete MOVES[c.ic];else MOVES[c.ic]=t.value;save();render();}
