@@ -46,6 +46,30 @@ input[type=search]{min-width:150px;flex:1}
 .tot{background:var(--accs);border-radius:6px;padding:2px 4px}
 .ct.ao{grid-template-columns:120px 50px 1fr}
 .msg{padding:40px 16px;text-align:center}
+.orow{display:grid;grid-template-columns:minmax(180px,1.7fr) repeat(6,minmax(54px,.5fr)) 74px;gap:6px;align-items:center;padding:6px 10px;border-bottom:1px solid var(--line);font-size:13px;cursor:pointer}
+.orow:hover{background:var(--accs)}
+.orow.head{cursor:default;font-size:11px;color:var(--mut);font-weight:600;background:var(--accs);position:sticky;top:0}
+.orow.open{background:var(--accs);border-bottom-color:transparent}
+.orow.nobm{background:var(--bads)}.orow.out{opacity:.55;cursor:default}
+.orow .nm{color:var(--mut);font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
+.orow .num b{font-weight:700}
+.orow .tt{font-weight:700;background:var(--accs);border-radius:5px;padding:1px 4px}
+.flag{display:inline-block;font-size:10px;font-weight:700;border-radius:4px;padding:0 4px;margin-left:3px;vertical-align:1px}
+.flag.h{background:var(--warns);color:var(--warn)}.flag.s{background:var(--bads);color:var(--bad)}.flag.c{background:var(--accs);color:var(--acc)}
+.chev{color:var(--mut);font-size:12px;text-align:right}
+.det{padding:8px 12px 12px;background:var(--accs);border-bottom:1px solid var(--line);font-size:13px}
+.det h3{font-size:12px;margin:10px 0 4px;color:var(--mut);text-transform:uppercase;letter-spacing:.03em}
+.mt{border-collapse:collapse;font-variant-numeric:tabular-nums;background:var(--card);border-radius:8px;overflow:hidden}
+.mt th,.mt td{padding:3px 8px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
+.mt th:first-child,.mt td:first-child{text-align:left}
+.mt th{font-size:11px;color:var(--mut);font-weight:600}
+.mt tr.h td{background:var(--warns)}.mt tr.s td:last-child{color:var(--bad);font-weight:600}
+.mt tr.tot td{font-weight:700}
+.ft{width:100%}.dsc{display:block;color:var(--mut);font-size:11px}.ft td.w{white-space:normal;color:var(--mut);font-size:12px;text-align:left}
+.yr{display:flex;gap:6px;flex-wrap:wrap}.yr span{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:2px 8px}
+.dacts{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:10px}
+.dacts input{width:90px}.dacts button{padding:5px 9px;font-size:12px}.dacts button.on{background:var(--bad);color:var(--card);border-color:var(--bad)}
+.scroll{overflow-x:auto}
 @media (max-width:760px){
  .row{grid-template-columns:repeat(5,1fr);grid-template-areas:"o o o o x" "s n d f t" "a a a a a"}
  .row>.c-o{grid-area:o}.row>.c-s{grid-area:s}.row>.c-n{grid-area:n}.row>.c-st{grid-area:d}.row>.c-t{grid-area:t}.row>.c-x{grid-area:x}.row>.acts{grid-area:a;justify-content:flex-start}
@@ -57,6 +81,12 @@ input[type=search]{min-width:150px;flex:1}
  .ct>.i{grid-area:i}.ct>.p{grid-area:p}.ct>.arts{grid-area:r}.ct>select{grid-area:m}
  .ctns{padding-left:12px}.ph{display:inline}
  .bar{position:static}
+ .orow{grid-template-columns:repeat(5,1fr) 44px;grid-template-areas:"o o o o o x" "s n d f t c";gap:2px 6px;padding:6px 10px}
+ .orow>.c-o{grid-area:o}.orow>.c-s{grid-area:s}.orow>.c-n{grid-area:n}.orow>.c-st{grid-area:d}.orow>.c-f{grid-area:f}.orow>.c-t{grid-area:t}.orow>.c-x{grid-area:x}.orow>.chev{grid-area:c}
+ .orow.head{display:none}
+ .orow .num:before{content:attr(data-l);display:block;font-size:10px;color:var(--mut)}
+ .det{padding:8px 10px 12px}
+ .dsc{display:none}.mt th,.mt td{padding:3px 5px}
  .row.art,.row.head[style]{grid-template-columns:1fr 56px 60px!important;grid-template-areas:none}
  .row.art>div:nth-child(2),.row.art>div:nth-child(5),.row.head[style]>div:nth-child(2),.row.head[style]>div:nth-child(5),.row.head[style]>div:nth-child(6){display:none}
  .row.art>div:nth-child(6){grid-column:1/-1}
@@ -132,28 +162,53 @@ function render(){
   list.sort(function(a,b){var oa=T.now[a.code]||0,ob=T.now[b.code]||0;
     if(F.s==="code")return a.code<b.code?-1:1;if(F.s==="sold")return b.sold-a.sold;
     if(F.s==="x")return (cover(b,TA.now[b.code]||0)||0)-(cover(a,TA.now[a.code]||0)||0);return ob-oa||b.sold-a.sold;});
-  h+='<div class="panel"><div class="row head"><div class="c-o">Outlet</div><div class="num c-s">Sold 26</div><div class="num c-n">New 27</div><div class="num c-st">Old 27'+(filt()?" (filtered)":"")+'</div><div class="num c-f">Floor '+esc(D.fdate)+'</div><div class="num c-t">Total 27<br>new + old + floor</div><div class="num c-x">Cover x</div><div class="acts">No BM / target pcs</div></div>';
+  var FAM=famBy();
+  h+='<div class="panel"><div class="orow head"><div class="c-o">Outlet · tap a row for codes / years / family sets</div><div class="num c-s">Sold 26</div><div class="num c-n">New 27</div><div class="num c-st">Old 27'+(filt()?"*":"")+'</div><div class="num c-f">Floor '+esc(D.fdate)+'</div><div class="num c-t">Total 27</div><div class="num c-x">Cover x</div><div></div></div>';
   h+=list.map(function(o){
-    var now=T.now[o.code]||0,org=T.orig[o.code]||0,oldAll=(o.code in TARGET)?TARGET[o.code]:(TA.now[o.code]||0),x=cover(o,oldAll),out=o.grp==="out";
-    var oldc=now===org?'<b>'+fmt(now)+'</b>':'<span class="muted">'+fmt(org)+'</span> → <span class="chg">'+fmt(now)+'</span>';
-    if(o.code in TARGET)oldc+='<br><span class="chg small">target '+fmt(TARGET[o.code])+'</span>';
-    var r='<div class="row'+(NOBM[o.code]?" nobm":"")+(out?" out":"")+'"><div class="c-o"><span class="code">'+esc(o.code)+'</span><span class="tag '+o.grp+'">'+GL[o.grp]+'</span><br><span class="muted small">'+esc(o.name)+(o.sup?" · "+esc(o.sup):"")+'</span>'+
-'</div>'+
-      '<div class="num c-s"><span class="ph small muted">Sold 26 </span>'+fmt(o.sold)+ak(o.sA,o.sK)+'</div>'+
-      '<div class="num c-n"><span class="ph small muted">New 27 </span>'+fmt(o.nw)+ak(o.nA,o.nK)+'</div>'+
-      '<div class="num c-st"><span class="ph small muted">Old 27 </span>'+oldc+ak(now-(T.kid[o.code]||0),T.kid[o.code]||0)+'</div>'+
-      '<div class="num c-f"><span class="ph small muted">Floor '+esc(D.fdate)+'</span>'+fmt(o.floor)+(o.fA==null?'<span class="ak">no split</span>':ak(o.fA,o.fK))+'</div>'+
-      '<div class="num c-t"><span class="tot"><span class="ph small muted">Total 27 </span><b>'+fmt(o.nw+oldAll+o.floor)+'</b></span>'+ak(o.nA+oldAll-(TA.kid[o.code]||0)+(o.fA||0),o.nK+(TA.kid[o.code]||0)+(o.fK||0))+'</div>'+
-      '<div class="num c-x"><span class="ph small muted">cover x</span>'+(x==null?"–":x.toFixed(1))+'</div>';
-    r+='<div class="acts">'+(out?'<span class="muted small">closed / paused / Brunei</span>':
-      '<button data-nobm="'+o.code+'" class="'+(NOBM[o.code]?"on":"")+'">'+(NOBM[o.code]?"No BM ✓":"No BM")+'</button>'+
-      '<input type="number" min="0" step="10" placeholder="target" data-tg="'+o.code+'" value="'+((o.code in TARGET)?TARGET[o.code]:"")+'">'+
-      '<button data-open="'+o.code+'">'+(OPEN[o.code]?"Hide":"Cartons")+'</button>')+'</div></div>';
-    if(OPEN[o.code]&&!out){var cs=C.filter(function(c){return fq(c)&&(dest(c)===o.code||(c.orig===o.code&&dest(c)!==o.code));});
-      r+='<div class="ctns">'+(cs.length?cs.map(ctRow).join(""):'<span class="muted small">No old cartons.</span>')+"</div>";}
+    var now=T.now[o.code]||0,org=T.orig[o.code]||0,oldAll=(o.code in TARGET)?TARGET[o.code]:(TA.now[o.code]||0),x=cover(o,oldAll),out=o.grp==="out",op=OPEN[o.code]&&!out;
+    var fl=flags(FAM[o.code],TA.now[o.code]||0);
+    var oldc=(o.code in TARGET)?'<span class="chg">'+fmt(TARGET[o.code])+'</span>':now===org?'<b>'+fmt(now)+'</b>':'<span class="chg">'+fmt(now)+'</span>';
+    var r='<div class="orow'+(NOBM[o.code]?" nobm":"")+(out?" out":"")+(op?" open":"")+'"'+(out?"":' data-row="'+o.code+'"')+'>'+
+      '<div class="c-o"><span class="code">'+esc(o.code)+'</span><span class="tag '+o.grp+'">'+GL[o.grp]+'</span>'+(NOBM[o.code]?'<span class="flag s">NO BM</span>':"")+
+      (fl.h?'<span class="flag h" title="single art-col heavy">'+fl.h+' heavy</span>':"")+(fl.s?'<span class="flag s" title="adult without kids (or kids without adult) of a colour, 10+ pcs">'+fl.s+' set split</span>':"")+
+      '<span class="nm">'+esc(o.name)+(o.sup?" · "+esc(o.sup):"")+'</span></div>'+
+      '<div class="num c-s" data-l="Sold 26">'+fmt(o.sold)+'</div><div class="num c-n" data-l="New 27">'+fmt(o.nw)+'</div>'+
+      '<div class="num c-st" data-l="Old 27">'+oldc+'</div><div class="num c-f" data-l="Floor">'+fmt(o.floor)+'</div>'+
+      '<div class="num c-t" data-l="Total 27"><span class="tt">'+fmt(o.nw+oldAll+o.floor)+'</span></div>'+
+      '<div class="num c-x" data-l="Cover x">'+(x==null?"–":x.toFixed(1))+'</div><div class="chev">'+(out?"":op?"▲":"▼")+'</div></div>';
+    if(op)r+=detail(o,T,TA,FAM[o.code]||{},oldAll);
     return r;}).join("");
   h+="</div>";
   $("#app").innerHTML=h;
+}
+/* family set = adult + kids of the same design and colour: AD 19026001 + 19026501, BF 3926001A + 3926501A */
+function famOf(a){return a.indexOf("19")===0?a.slice(0,5)+"x"+a.slice(6):a.indexOf("39")===0?a.slice(0,4)+"x"+a.slice(5):a;}
+var HEAVY=0.15,HEAVY_MIN=30,SPLIT_MIN=10,POOLFAM=null;
+function poolFam(){if(POOLFAM)return POOLFAM;POOLFAM={};C.forEach(function(c){c.L.forEach(function(l){var k=famOf(l.a)+"|"+l.col,p=POOLFAM[k]||(POOLFAM[k]={a:0,k:0});if(l.k)p.k+=l.q;else p.a+=l.q;});});return POOLFAM;}
+function famBy(){var M={};C.forEach(function(c){var d=dest(c);if(!d)return;var m=M[d]||(M[d]={});c.L.forEach(function(l){var k=famOf(l.a)+"|"+l.col,r=m[k]||(m[k]={f:famOf(l.a),col:l.col,y:l.y,ad:"",kd:"",a:0,k:0});
+  if(l.k){r.k+=l.q;r.kd=l.a;}else{r.a+=l.q;r.ad=l.a;}});});return M;}
+function setSplit(r){var p=poolFam()[r.f+"|"+r.col]||{a:0,k:0};return (r.a&&!r.k&&p.k>0)?"adult only":(r.k&&!r.a&&p.a>0)?"kids only":"";}
+function flags(m,old){var h=0,sp=0;if(!m||!old)return {h:0,s:0};Object.keys(m).forEach(function(k){var r=m[k],t=r.a+r.k;if(t>=HEAVY_MIN&&t/old>=HEAVY)h++;if(setSplit(r)&&(r.a+r.k)>=SPLIT_MIN)sp++;});return {h:h,s:sp};}
+function detail(o,T,TA,m,oldAll){
+  var old=TA.now[o.code]||0,ok=TA.kid[o.code]||0,fA=o.fA==null?null:o.fA,fK=o.fK==null?null:o.fK;
+  function tr(lbl,t,a,k,cls){return '<tr'+(cls?' class="'+cls+'"':"")+'><td>'+lbl+'</td><td>'+fmt(t)+'</td><td>'+(a==null?"–":fmt(a))+'</td><td>'+(k==null?"–":fmt(k))+'</td></tr>';}
+  var h='<div class="det"><div class="scroll"><table class="mt"><tr><th></th><th>Total</th><th>Adult</th><th>Kids</th></tr>'+
+    tr("Sold 26",o.sold,o.sA,o.sK)+tr("New 27",o.nw,o.nA,o.nK)+tr("Old 27",old,old-ok,ok)+tr("Floor "+esc(D.fdate),o.floor,fA,fK)+
+    tr("Total 27",o.nw+old+o.floor,o.nA+old-ok+(fA||0),o.nK+ok+(fK||0),"tot")+"</table></div>";
+  var rows=Object.keys(m).map(function(k){return m[k];}).sort(function(a,b){return (b.a+b.k)-(a.a+a.k);});
+  var ys={};rows.forEach(function(r){ys[r.y]=(ys[r.y]||0)+r.a+r.k;});
+  h+='<h3>Old stock by year</h3><div class="yr">'+(rows.length?Object.keys(ys).sort().map(function(y){return '<span>BM '+y+' <b>'+fmt(ys[y])+'</b> ('+Math.round(ys[y]/old*100)+'%)</span>';}).join(""):'<span class="muted">No old stock</span>')+'</div>';
+  if(rows.length){
+    h+='<h3>Old stock by family set</h3><div class="muted small" style="margin-bottom:4px">Family 19026·01 = adult 19026001 + kids 19026501. Amber = one art-col ≥ '+Math.round(HEAVY*100)+'% of this outlet’s old. A only / K only = the other half exists in the pool but not here.</div><div class="scroll"><table class="mt ft"><tr><th>Family · colour · year</th><th>Adult</th><th>Kids</th><th>Total</th><th>%</th><th>Set</th></tr>'+
+      rows.map(function(r){var t=r.a+r.k,sh=t/old,sp=setSplit(r),hv=t>=HEAVY_MIN&&sh>=HEAVY;
+        return '<tr class="'+(hv?"h ":"")+(sp?"s":"")+'"><td><b>'+esc(r.f.replace("x","·"))+'</b> col <b>'+esc(r.col)+'</b> · '+r.y+'<span class="dsc">'+esc(D.desc[r.ad||r.kd]||"")+'</span></td><td>'+(r.a||"–")+'</td><td>'+(r.k||"–")+'</td><td><b>'+t+'</b></td><td>'+Math.round(sh*100)+'%</td><td>'+(sp?(sp==="adult only"?"A only":"K only"):(r.a&&r.k?"✓":"–"))+'</td></tr>';}).join("")+"</table></div>";
+  }
+  h+='<div class="dacts"><button data-nobm="'+o.code+'" class="'+(NOBM[o.code]?"on":"")+'">'+(NOBM[o.code]?"No BM ✓":"No BM")+'</button>'+
+    '<label class="small muted">Target old pcs <input type="number" min="0" step="10" data-tg="'+o.code+'" value="'+((o.code in TARGET)?TARGET[o.code]:"")+'"></label>'+
+    '<button data-open="C:'+o.code+'">'+(OPEN["C:"+o.code]?"Hide cartons":"Cartons")+'</button></div>';
+  if(OPEN["C:"+o.code]){var cs=C.filter(function(c){return fq(c)&&(dest(c)===o.code||(c.orig===o.code&&dest(c)!==o.code));});
+    h+='<div class="ctns" style="margin-top:8px">'+(cs.length?cs.map(ctRow).join(""):'<span class="muted small">No old cartons.</span>')+"</div>";}
+  return h+"</div>";
 }
 var AG='style="grid-template-columns:minmax(150px,2fr) 64px 70px 74px 60px 84px"';
 function renderArts(){
@@ -191,6 +246,8 @@ function text(){
   return L.join("\n");
 }
 document.addEventListener("click",function(e){var t=e.target;
+  var rw=t.closest&&t.closest("[data-row]");
+  if(rw&&!t.closest("button,input,select,label")){OPEN[rw.dataset.row]=!OPEN[rw.dataset.row];render();return;}
   if(t.dataset.nobm){var k=t.dataset.nobm;if(NOBM[k])delete NOBM[k];else NOBM[k]=1;save();render();}
   else if(t.dataset.open){OPEN[t.dataset.open]=!OPEN[t.dataset.open];render();}
   else if(t.id==="copy"){var s=text();(navigator.clipboard?navigator.clipboard.writeText(s):Promise.reject()).then(function(){t.textContent="Copied ✓";setTimeout(render,1500);},function(){window.prompt("Copy this:",s);});}
