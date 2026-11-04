@@ -72,11 +72,12 @@ input[type=search]{min-width:150px;flex:1}
 .dacts input{width:70px}.dacts button{padding:3px 7px;font-size:12px}.dacts button.on{background:var(--bad);color:var(--card);border-color:var(--bad)}
 .scroll{overflow-x:auto}
 .dgrid{display:grid;grid-template-columns:270px 1fr;gap:12px;align-items:start}
-.dr .mt td,.dr .mt th{text-align:right}.dr .mt td:nth-child(2),.dr .mt td:nth-child(4),.dr .mt th:nth-child(2),.dr .mt th:nth-child(4){text-align:left}
+.dr .mt td,.dr .mt th{text-align:right}.dr .mt td:nth-child(2),.dr .mt td:nth-child(5),.dr .mt th:nth-child(2),.dr .mt th:nth-child(5){text-align:left}
 .mt td.hc{background:var(--warns);color:var(--warn)}
 .dr .scroll{max-height:420px;overflow:auto}
 .dr .mt th{position:sticky;top:0;background:var(--card)}
 .mt tr.s td{color:var(--bad)}
+.mt tr.fo td{color:var(--mut)}
 .yr button{padding:1px 6px;font-size:11px}.yck{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:1px 6px;font-size:11px}
 @media (max-width:760px){
  .row{grid-template-columns:repeat(5,1fr);grid-template-areas:"o o o o x" "s n d f t" "a a a a a"}
@@ -116,12 +117,14 @@ function $(s){return document.querySelector(s);}
 function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
 function fmt(n){return (Math.round(n)||0).toLocaleString("en-US");}
 var GL={nonew:"no 2027 sets",missed:"skipped in v2",topup:"has 2027 sets",out:"out"};
-var O={},C=[];
+var O={},C=[],FAC={};
 function boot(){
   D.o.forEach(function(r){O[r[0]]={code:r[0],name:r[1],brand:r[2],sup:r[3],sold:r[4],st:r[5],nw:r[6],floor:r[7],grp:r[8],sA:r[9],sK:r[10],nA:r[11],nK:r[12],fA:r[13],fK:r[14]};});
   C=D.c.map(function(r){return {ic:r[0],brand:r[1],pcs:r[2],kids:r[3],orig:r[4],arts:r[5],L:r[5].split(";").map(function(x){
     var p=x.split(":"),i=p[0].indexOf("-"),a=p[0].slice(0,i);return {a:a,col:p[0].slice(i+1),q:+p[1],y:yearOf(a),k:isKid(a)};})};});
   var ys={};C.forEach(function(c){c.L.forEach(function(l){ys[l.y]=1;});});YEARS=Object.keys(ys).sort();
+  FAC={};Object.keys(D.fac||{}).forEach(function(code){FAC[code]=D.fac[code].split(";").map(function(x){
+    var p=x.split(":"),i=p[0].lastIndexOf("-"),a=p[0].slice(0,i);return {a:a,col:p[0].slice(i+1),q:+p[1],y:yearOf(a),k:isKid(a)};});});
   STORE="bm2027:"+D.ver;
   try{var s=JSON.parse(localStorage.getItem(STORE)||"{}");MOVES=s.m||{};NOBM=s.n||{};TARGET=s.t||{};YRS=s.y||{};}catch(e){}
   render();
@@ -197,39 +200,44 @@ function render(){
 function famOf(a){return a.indexOf("19")===0?a.slice(0,5)+"x"+a.slice(6):a.indexOf("39")===0?a.slice(0,4)+"x"+a.slice(5):a;}
 var HEAVY=0.15,HEAVY_MIN=40,SPLIT_MIN=10,POOLFAM=null;
 function poolFam(){if(POOLFAM)return POOLFAM;POOLFAM={};C.forEach(function(c){c.L.forEach(function(l){var k=famOf(l.a)+"|"+l.col,p=POOLFAM[k]||(POOLFAM[k]={a:0,k:0});if(l.k)p.k+=l.q;else p.a+=l.q;});});return POOLFAM;}
-function famBy(){var M={};C.forEach(function(c){var d=dest(c);if(!d)return;var m=M[d]||(M[d]={});c.L.forEach(function(l){var k=famOf(l.a)+"|"+l.col,r=m[k]||(m[k]={f:famOf(l.a),col:l.col,y:l.y,ad:"",kd:"",a:0,k:0});
-  if(l.k){r.k+=l.q;r.kd=l.a;}else{r.a+=l.q;r.ad=l.a;}});});return M;}
-function setSplit(r){var p=poolFam()[r.f+"|"+r.col]||{a:0,k:0};return (r.a&&!r.k&&p.k>0)?"adult only":(r.k&&!r.a&&p.a>0)?"kids only":"";}
-function flags(m,old){var h=0,sp=0;if(!m||!old)return {h:0,s:0};Object.keys(m).forEach(function(k){var r=m[k],t=r.a+r.k;if((r.a>HEAVY_MIN&&r.a/old>=HEAVY)||(r.k>HEAVY_MIN&&r.k/old>=HEAVY))h++;if(setSplit(r)&&(r.a+r.k)>=SPLIT_MIN)sp++;});return {h:h,s:sp};}
+function famRow(m,l){var k=famOf(l.a)+"|"+l.col;return m[k]||(m[k]={f:famOf(l.a),col:l.col,y:l.y,ad:"",kd:"",a:0,k:0,fa:0,fk:0});}
+function famBy(){var M={};C.forEach(function(c){var d=dest(c);if(!d)return;var m=M[d]||(M[d]={});c.L.forEach(function(l){var r=famRow(m,l);
+  if(l.k){r.k+=l.q;r.kd=l.a;}else{r.a+=l.q;r.ad=l.a;}});});
+  Object.keys(FAC).forEach(function(d){var m=M[d]||(M[d]={});FAC[d].forEach(function(l){var r=famRow(m,l);if(l.k){r.fk+=l.q;r.kd=r.kd||l.a;}else{r.fa+=l.q;r.ad=r.ad||l.a;}});});
+  return M;}
+function setSplit(r){var p=poolFam()[r.f+"|"+r.col]||{a:0,k:0};return (r.a&&!(r.k+r.fk)&&p.k>0)?"adult only":(r.k&&!(r.a+r.fa)&&p.a>0)?"kids only":"";}
+function flags(m,old){var h=0,sp=0;if(!m||!old)return {h:0,s:0};m=Object.keys(m).reduce(function(o,k){if(m[k].a+m[k].k)o[k]=m[k];return o;},{});Object.keys(m).forEach(function(k){var r=m[k],t=r.a+r.k;if((r.a>HEAVY_MIN&&r.a/old>=HEAVY)||(r.k>HEAVY_MIN&&r.k/old>=HEAVY))h++;if(setSplit(r)&&(r.a+r.k)>=SPLIT_MIN)sp++;});return {h:h,s:sp};}
 function detail(o,T,TA,m,oldAll){
   var old=TA.now[o.code]||0,ok=TA.kid[o.code]||0,fA=o.fA==null?null:o.fA,fK=o.fK==null?null:o.fK,dy=DY[o.code]||"";
   function tr(lbl,t,a,k,cls){return '<tr'+(cls?' class="'+cls+'"':"")+'><td>'+lbl+'</td><td>'+fmt(t)+'</td><td>'+(a==null?"–":fmt(a))+'</td><td>'+(k==null?"–":fmt(k))+'</td></tr>';}
   var all=Object.keys(m).map(function(k){return m[k];});
-  var ys={};all.forEach(function(r){ys[r.y]=(ys[r.y]||0)+r.a+r.k;});
+  var ys={},yo={};all.forEach(function(r){ys[r.y]=(ys[r.y]||0)+r.a+r.k+r.fa+r.fk;yo[r.y]=(yo[r.y]||0)+r.a+r.k;});
+  var fl=all.reduce(function(s,r){return s+r.fa+r.fk;},0);
   var L='<div class="dl"><table class="mt"><tr><th></th><th>Total</th><th>Adult</th><th>Kids</th></tr>'+
     tr("Sold 26",o.sold,o.sA,o.sK)+tr("New 27",o.nw,o.nA,o.nK)+tr("Old 27",old,old-ok,ok)+tr("Floor "+esc(D.fdate),o.floor,fA,fK)+
     tr("Total 27",o.nw+old+o.floor,o.nA+old-ok+(fA||0),o.nK+ok+(fK||0),"tot")+"</table>";
-  L+='<h3>Old by year · tap to filter</h3><div class="yr"><button class="'+(dy?"":"pri")+'" data-dy="'+o.code+'|">All '+fmt(old)+'</button>'+
-    Object.keys(ys).sort().map(function(y){return '<button class="'+(dy===y?"pri":"")+'" data-dy="'+o.code+'|'+y+'">BM '+y+' '+fmt(ys[y])+' ('+Math.round(ys[y]/Math.max(old,1)*100)+'%)</button>';}).join("")+'</div>';
+  L+='<h3>Counter + old by year · tap to filter</h3><div class="yr"><button class="'+(dy?"":"pri")+'" data-dy="'+o.code+'|">All '+fmt(fl+old)+'</button>'+
+    Object.keys(ys).sort().reverse().map(function(y){return '<button class="'+(dy===y?"pri":"")+'" data-dy="'+o.code+'|'+y+'">BM '+y+' '+fmt(ys[y])+(yo[y]?' <span class="small">(old '+fmt(yo[y])+')</span>':"")+'</button>';}).join("")+'</div>';
   var yr=YRS[o.code];
   L+='<h3>Years it takes (rerun)</h3><div class="yr">'+YEARS.map(function(y){var on=!yr||yr.indexOf(y)>=0;
     return '<label class="yck"><input type="checkbox" data-yr="'+o.code+'|'+y+'"'+(on?" checked":"")+'> BM '+y+'</label>';}).join("")+(yr?'<span class="chg small">BM '+yr.join(" + ")+' only</span>':"")+'</div>';
   L+='<div class="dacts"><button data-nobm="'+o.code+'" class="'+(NOBM[o.code]?"on":"")+'">'+(NOBM[o.code]?"No BM ✓":"No BM")+'</button>'+
     '<label class="small muted">Target old pcs <input type="number" min="0" step="10" data-tg="'+o.code+'" value="'+((o.code in TARGET)?TARGET[o.code]:"")+'"></label>'+
     '<button data-open="C:'+o.code+'">'+(OPEN["C:"+o.code]?"Hide cartons":"Cartons")+'</button></div></div>';
-  var rows=all.filter(function(r){return !dy||r.y===dy;}).sort(function(a,b){return a.y<b.y?1:a.y>b.y?-1:(b.a+b.k)-(a.a+a.k);});
-  var tot=rows.reduce(function(s,r){return s+r.a+r.k;},0);
+  var rows=all.filter(function(r){return !dy||r.y===dy;}).sort(function(a,b){return a.y<b.y?1:a.y>b.y?-1:(b.a+b.k)-(a.a+a.k)||(b.fa+b.fk)-(a.fa+a.fk);});
+  var tf=0,to=0;rows.forEach(function(r){tf+=r.fa+r.fk;to+=r.a+r.k;});
   function hv(q){return q>HEAVY_MIN&&q/Math.max(old,1)>=HEAVY;}
-  var R='<div class="dr"><h3 style="margin-top:0">Art-cols it will stock'+(dy?" · BM "+dy:"")+' · '+fmt(tot)+' pcs</h3>'+
-    '<div class="muted small" style="margin-bottom:2px">Amber = art-col ≥ '+Math.round(HEAVY*100)+'% of old &amp; &gt;'+HEAVY_MIN+' pcs · red = set split</div>';
+  function n(q,cls){return '<td class="'+(cls||"")+'">'+(q?fmt(q):'<span class="muted">·</span>')+'</td>';}
+  var R='<div class="dr"><h3 style="margin-top:0">Art-cols after the drop'+(dy?" · BM "+dy:"")+' · counter '+fmt(tf)+' + old '+fmt(to)+' = '+fmt(tf+to)+'</h3>'+
+    '<div class="muted small" style="margin-bottom:2px">Cnt = on the counter '+esc(D.fdate)+' · Old = this plan · bold rows get old stock · amber = old art-col ≥ '+Math.round(HEAVY*100)+'% of old &amp; &gt;'+HEAVY_MIN+' · red = set split</div>';
   if(rows.length){
-    R+='<div class="scroll"><table class="mt ft"><tr><th>Year</th><th>Adult art-col</th><th>pcs</th><th>Kids art-col</th><th>pcs</th><th>Total</th></tr>'+
-      rows.map(function(r){var sp=setSplit(r),kc=r.kd||(r.f.replace("x","5")),ac=r.ad||(r.f.replace("x","0"));
-        return '<tr class="'+(sp?"s":"")+'"><td>'+r.y+'</td>'+
-          '<td class="'+(hv(r.a)?"hc":"")+'" title="'+esc(D.desc[ac]||"")+'">'+(r.a?'<b>'+esc(ac)+'-'+esc(r.col)+'</b>':'<span class="muted">'+(sp?"adult went elsewhere":"–")+'</span>')+'</td><td class="'+(hv(r.a)?"hc":"")+'">'+(r.a||"–")+'</td>'+
-          '<td class="'+(hv(r.k)?"hc":"")+'">'+(r.k?'<b>'+esc(kc)+'-'+esc(r.col)+'</b>':'<span class="muted">'+(sp?"kids went elsewhere":"no kids in pool")+'</span>')+'</td><td class="'+(hv(r.k)?"hc":"")+'">'+(r.k||"–")+'</td>'+
-          '<td><b>'+(r.a+r.k)+'</b></td></tr>';}).join("")+"</table></div>";
-  }else R+='<div class="muted">No old stock'+(dy?" for BM "+dy:"")+'.</div>';
+    R+='<div class="scroll"><table class="mt ft"><tr><th>Yr</th><th>Adult art-col</th><th>Cnt</th><th>Old</th><th>Kids art-col</th><th>Cnt</th><th>Old</th><th>Total</th></tr>'+
+      rows.map(function(r){var sp=setSplit(r),kc=r.kd||(r.f.replace("x","5")),ac=r.ad||(r.f.replace("x","0")),ha=r.a+r.fa,hk=r.k+r.fk,got=r.a+r.k;
+        return '<tr class="'+(sp?"s ":"")+(got?"":"fo")+'"><td>'+r.y.slice(2)+'</td>'+
+          '<td title="'+esc(D.desc[ac]||"")+'">'+(ha?(got?'<b>':'')+esc(ac)+'-'+esc(r.col)+(got?'</b>':''):'<span class="muted">'+(sp?"adult elsewhere":"–")+'</span>')+'</td>'+n(r.fa)+n(r.a,hv(r.a)?"hc":"")+
+          '<td>'+(hk?(got?'<b>':'')+esc(kc)+'-'+esc(r.col)+(got?'</b>':''):'<span class="muted">'+(sp?"kids elsewhere":"–")+'</span>')+'</td>'+n(r.fk)+n(r.k,hv(r.k)?"hc":"")+
+          '<td><b>'+fmt(ha+hk)+'</b></td></tr>';}).join("")+"</table></div>";
+  }else R+='<div class="muted">Nothing on the counter or coming'+(dy?" for BM "+dy:"")+'.</div>';
   R+="</div>";
   var h='<div class="det"><div class="dgrid">'+L+R+"</div>";
   if(OPEN["C:"+o.code]){var cs=C.filter(function(c){return fq(c)&&(dest(c)===o.code||(c.orig===o.code&&dest(c)!==o.code));});
