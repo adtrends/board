@@ -25,7 +25,7 @@ button.pri{background:var(--acc);color:var(--card)}
 input[type=search]{min-width:150px;flex:1}
 .panel{background:var(--card);border:1px solid var(--line);border-radius:10px;margin-top:10px;overflow:hidden}
 .panel h2{font-size:15px;margin:0;padding:9px 12px;border-bottom:1px solid var(--line)}
-.row{display:grid;grid-template-columns:minmax(150px,1.6fr) repeat(5,minmax(52px,.55fr)) minmax(190px,1.4fr);gap:6px;align-items:center;padding:8px 12px;border-bottom:1px solid var(--line)}
+.row{display:grid;grid-template-columns:minmax(150px,1.5fr) repeat(6,minmax(60px,.6fr)) minmax(190px,1.3fr);gap:6px;align-items:center;padding:8px 12px;border-bottom:1px solid var(--line)}
 .row.head{font-size:12px;color:var(--mut);font-weight:600;background:var(--accs)}
 .num{text-align:right;font-variant-numeric:tabular-nums}
 .code{font-weight:700}
@@ -42,16 +42,25 @@ input[type=search]{min-width:150px;flex:1}
 .ct .arts{color:var(--mut);font-size:12px;overflow-wrap:anywhere}
 .ct.moved{background:var(--warns)}
 .ph{display:none}
+.ak{display:block;font-size:11px;color:var(--mut);font-weight:400;white-space:nowrap}
+.tot{background:var(--accs);border-radius:6px;padding:2px 4px}
+.ct.ao{grid-template-columns:120px 50px 1fr}
 .msg{padding:40px 16px;text-align:center}
 @media (max-width:760px){
- .row{grid-template-columns:1fr repeat(3,48px);grid-template-areas:"o s n x" "a a a a"}
- .row>.c-o{grid-area:o}.row>.c-s{grid-area:s}.row>.c-n{grid-area:n}.row>.c-x{grid-area:x}.row>.acts{grid-area:a;justify-content:flex-start}
- .row>.c-f,.row>.c-st{display:none}
+ .row{grid-template-columns:repeat(4,1fr);grid-template-areas:"o o o x" "s n d t" "a a a a"}
+ .row>.c-o{grid-area:o}.row>.c-s{grid-area:s}.row>.c-n{grid-area:n}.row>.c-st{grid-area:d}.row>.c-t{grid-area:t}.row>.c-x{grid-area:x}.row>.acts{grid-area:a;justify-content:flex-start}
+ .row>.c-f{display:none}
+ .row.head:not([style]){display:none}
+ .num>.ph,.num .tot>.ph{display:block;font-size:11px}
  .row.head>.acts{display:none}
  .ct{grid-template-columns:1fr 40px;grid-template-areas:"i p" "r r" "m m"}
  .ct>.i{grid-area:i}.ct>.p{grid-area:p}.ct>.arts{grid-area:r}.ct>select{grid-area:m}
  .ctns{padding-left:12px}.ph{display:inline}
  .bar{position:static}
+ .row.art,.row.head[style]{grid-template-columns:1fr 56px 60px!important;grid-template-areas:none}
+ .row.art>div:nth-child(2),.row.art>div:nth-child(5),.row.head[style]>div:nth-child(2),.row.head[style]>div:nth-child(5),.row.head[style]>div:nth-child(6){display:none}
+ .row.art>div:nth-child(6){grid-column:1/-1}
+ .ct.ao{grid-template-columns:1fr 44px;grid-template-areas:none}.ct.ao>.i,.ct.ao>.p{grid-area:auto}.ct.ao>.arts{grid-area:auto;grid-column:1/-1}
 }
 </style>
 </head>
@@ -60,35 +69,50 @@ input[type=search]{min-width:150px;flex:1}
 <script>
 (function(){
 "use strict";
-var D,KEYHEX,STORE,MOVES={},NOBM={},TARGET={},OPEN={},F={b:"",g:"",q:"",s:"old"};
+var D,KEYHEX,STORE,MOVES={},NOBM={},TARGET={},OPEN={},F={b:"",g:"",q:"",s:"old",y:"",a:""},VIEW="o",YEARS=[];
 function $(s){return document.querySelector(s);}
 function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
 function fmt(n){return (Math.round(n)||0).toLocaleString("en-US");}
 var GL={nonew:"no 2027 sets",missed:"skipped in v2",topup:"has 2027 sets",out:"out"};
 var O={},C=[];
 function boot(){
-  D.o.forEach(function(r){O[r[0]]={code:r[0],name:r[1],brand:r[2],sup:r[3],sold:r[4],st:r[5],nw:r[6],floor:r[7],grp:r[8]};});
-  C=D.c.map(function(r){return {ic:r[0],brand:r[1],pcs:r[2],kids:r[3],orig:r[4],arts:r[5]};});
+  D.o.forEach(function(r){O[r[0]]={code:r[0],name:r[1],brand:r[2],sup:r[3],sold:r[4],st:r[5],nw:r[6],floor:r[7],grp:r[8],sA:r[9],sK:r[10],nA:r[11],nK:r[12]};});
+  C=D.c.map(function(r){return {ic:r[0],brand:r[1],pcs:r[2],kids:r[3],orig:r[4],arts:r[5],L:r[5].split(";").map(function(x){
+    var p=x.split(":"),i=p[0].indexOf("-"),a=p[0].slice(0,i);return {a:a,col:p[0].slice(i+1),q:+p[1],y:yearOf(a),k:isKid(a)};})};});
+  var ys={};C.forEach(function(c){c.L.forEach(function(l){ys[l.y]=1;});});YEARS=Object.keys(ys).sort();
   STORE="bm2027:"+D.ver;
   try{var s=JSON.parse(localStorage.getItem(STORE)||"{}");MOVES=s.m||{};NOBM=s.n||{};TARGET=s.t||{};}catch(e){}
   render();
 }
+/* year = the 2 digits in the article code: 19026001 / 3926001A = BM 2026, 3925001A = BM 2025 */
+function isKid(a){return (a.indexOf("1902")===0&&a.charAt(5)==="5")||(a.indexOf("392")===0&&a.charAt(4)==="5");}
+function yearOf(a){return a.indexOf("19")===0?"20"+a.substr(3,2):a.indexOf("39")===0?"20"+a.substr(2,2):"?";}
+function lineOk(l){return (!F.y||l.y===F.y)&&(!F.a||l.a.indexOf(F.a.toUpperCase())===0);}
+function filt(){return !!(F.y||F.a);}
+function fq(c){if(!filt())return c.pcs;var n=0;c.L.forEach(function(l){if(lineOk(l))n+=l.q;});return n;}
 function save(){try{localStorage.setItem(STORE,JSON.stringify({m:MOVES,n:NOBM,t:TARGET}));}catch(e){}}
 function dest(c){var d=(c.ic in MOVES)?MOVES[c.ic]:c.orig;return (d&&!NOBM[d]&&O[d]&&O[d].grp!=="out")?d:"";}
-function tallies(){var t={},orig={};C.forEach(function(c){var d=dest(c);if(d)t[d]=(t[d]||0)+c.pcs;if(c.orig)orig[c.orig]=(orig[c.orig]||0)+c.pcs;});return {now:t,orig:orig};}
+function tallies(all){var t={},orig={},k={};C.forEach(function(c){var q=all?c.pcs:fq(c);if(!q)return;var d=dest(c);if(d){t[d]=(t[d]||0)+q;c.L.forEach(function(l){if(l.k&&(all||lineOk(l)))k[d]=(k[d]||0)+l.q;});}if(c.orig)orig[c.orig]=(orig[c.orig]||0)+q;});return {now:t,orig:orig,kid:k};}
+function ak(a,k){return '<span class="ak">A '+fmt(a)+" · K "+fmt(k)+"</span>";}
 function cover(o,old){return o.sold?((o.nw+o.floor+old)/o.sold):null;}
 function changes(){
   var n=Object.keys(NOBM).filter(function(k){return NOBM[k];}),t=Object.keys(TARGET),m=C.filter(function(c){return (c.ic in MOVES)&&MOVES[c.ic]!==c.orig;});
   return {n:n,t:t,m:m};
 }
 function render(){
-  var T=tallies(),ch=changes(),pool=0,placed=0,un=[];
-  C.forEach(function(c){pool+=c.pcs;var d=dest(c);if(d)placed+=c.pcs;else un.push(c);});
-  var unp=un.reduce(function(a,c){return a+c.pcs;},0);
+  var T=tallies(),TA=tallies(true),N27={t:0,a:0,k:0},placedAll=0,kidAll=0;
+  Object.keys(O).forEach(function(k){var o=O[k];if(o.grp==='out'&&!o.nw)return;N27.t+=o.nw;N27.a+=o.nA;N27.k+=o.nK;});
+  Object.keys(TA.now).forEach(function(k){placedAll+=TA.now[k];kidAll+=TA.kid[k]||0;});
+  var ch=changes(),pool=0,placed=0,un=[];
+  C.forEach(function(c){var q=fq(c);if(!q)return;pool+=q;var d=dest(c);if(d)placed+=q;else un.push(c);});
+  var unp=un.reduce(function(a,c){return a+fq(c);},0);
   var nch=ch.n.length+ch.t.length+ch.m.length;
   var h='<h1>BM 2027 old stock: reallocate</h1><div class="muted small">Plan '+esc(D.ver)+' · built '+esc(D.built)+' · '+esc(D.src)+'</div>';
   h+='<div class="bar"><div class="stats"><div class="stat">Pool <b>'+fmt(pool)+'</b> pcs</div><div class="stat">At outlets <b>'+fmt(placed)+'</b></div>'+
-     '<div class="stat'+(unp?" warn":"")+'">Not placed <b>'+fmt(unp)+'</b> pcs / '+un.length+' ctns</div><div class="stat">Changes <b>'+nch+'</b></div></div>'+
+     '<div class="stat'+(unp?" warn":"")+'">Not placed <b>'+fmt(unp)+'</b> pcs / '+un.length+' ctns</div><div class="stat">2027 total <b>'+fmt(N27.t+placedAll)+'</b> = new '+fmt(N27.t)+' + old '+fmt(placedAll)+'<span class="ak">A '+fmt(N27.a+placedAll-kidAll)+' · K '+fmt(N27.k+kidAll)+'</span></div><div class="stat">Changes <b>'+nch+'</b></div>'+(filt()?'<div class="stat warn">Showing only <b>'+esc([F.y?"BM "+F.y:"",F.a?"art "+F.a.toUpperCase()+"...":""].filter(Boolean).join(", "))+'</b></div>':"")+'</div>'+
+     '<div class="ctl" style="margin-bottom:6px"><button id="vo" class="'+(VIEW==="o"?"pri":"")+'">By outlet</button><button id="va" class="'+(VIEW==="a"?"pri":"")+'">By article</button>'+
+     '<select id="fy"><option value="">All years</option>'+YEARS.map(function(y){return '<option value="'+y+'"'+(F.y===y?" selected":"")+'>BM '+y+'</option>';}).join("")+'</select>'+
+     '<input type="search" id="fa" placeholder="Article code e.g. 19026001" value="'+esc(F.a)+'" style="max-width:190px"></div>'+
      '<div class="ctl"><select id="fb"><option value="">AD + BF</option><option'+(F.b==="AD"?" selected":"")+'>AD</option><option'+(F.b==="BF"?" selected":"")+'>BF</option></select>'+
      '<select id="fg"><option value="">All outlets</option>'+["nonew","missed","topup","out","chg"].map(function(g){return '<option value="'+g+'"'+(F.g===g?" selected":"")+'>'+(g==="chg"?"Changed only":GL[g])+"</option>";}).join("")+'</select>'+
      '<select id="fs"><option value="old"'+(F.s==="old"?" selected":"")+'>Most old first</option><option value="x"'+(F.s==="x"?" selected":"")+'>Highest cover first</option><option value="code"'+(F.s==="code"?" selected":"")+'>Outlet code</option><option value="sold"'+(F.s==="sold"?" selected":"")+'>2026 sold</option></select>'+
@@ -97,32 +121,55 @@ function render(){
   if(un.length){
     h+='<div class="panel"><h2>Not placed: '+fmt(unp)+' pcs in '+un.length+' cartons <button data-open="__UN">'+(OPEN.__UN?"Hide":"Show cartons")+'</button><br><span class="muted small">From No BM outlets / cartons moved out. Pick an outlet for each, or leave them and the rerun spreads them.</span></h2>'+(OPEN.__UN?'<div class="ctns">'+un.map(ctRow).join("")+"</div>":"")+"</div>";
   }
+  if(VIEW==="a"){$("#app").innerHTML=h+renderArts();return;}
   var list=Object.keys(O).map(function(k){return O[k];}).filter(function(o){
     if(F.b&&o.brand!==F.b)return false;
     var now=T.now[o.code]||0,org=T.orig[o.code]||0;
     if(F.g==="chg"){if(!(NOBM[o.code]||(o.code in TARGET)||now!==org))return false;}else if(F.g&&o.grp!==F.g)return false;
     if(F.q){var q=F.q.toLowerCase();if((o.code+" "+o.name+" "+o.sup).toLowerCase().indexOf(q)<0)return false;}
+    if(filt()&&!now&&!org)return false;
     return true;});
   list.sort(function(a,b){var oa=T.now[a.code]||0,ob=T.now[b.code]||0;
     if(F.s==="code")return a.code<b.code?-1:1;if(F.s==="sold")return b.sold-a.sold;
-    if(F.s==="x")return (cover(b,ob)||0)-(cover(a,oa)||0);return ob-oa||b.sold-a.sold;});
-  h+='<div class="panel"><div class="row head"><div class="c-o">Outlet</div><div class="num c-s">Sold 26</div><div class="num c-n">New 27</div><div class="num c-f">Floor</div><div class="num c-st">Old (plan→now)</div><div class="num c-x">Cover x</div><div class="acts">No BM / target pcs</div></div>';
+    if(F.s==="x")return (cover(b,TA.now[b.code]||0)||0)-(cover(a,TA.now[a.code]||0)||0);return ob-oa||b.sold-a.sold;});
+  h+='<div class="panel"><div class="row head"><div class="c-o">Outlet</div><div class="num c-s">Sold 26</div><div class="num c-n">New 27</div><div class="num c-st">Old 27'+(filt()?" (filtered)":"")+'</div><div class="num c-t">Total 27<br>new + old</div><div class="num c-f">Floor now</div><div class="num c-x">Cover x</div><div class="acts">No BM / target pcs</div></div>';
   h+=list.map(function(o){
-    var now=T.now[o.code]||0,org=T.orig[o.code]||0,x=cover(o,(o.code in TARGET)?TARGET[o.code]:now),out=o.grp==="out";
+    var now=T.now[o.code]||0,org=T.orig[o.code]||0,oldAll=(o.code in TARGET)?TARGET[o.code]:(TA.now[o.code]||0),x=cover(o,oldAll),out=o.grp==="out";
     var oldc=now===org?'<b>'+fmt(now)+'</b>':'<span class="muted">'+fmt(org)+'</span> → <span class="chg">'+fmt(now)+'</span>';
     if(o.code in TARGET)oldc+='<br><span class="chg small">target '+fmt(TARGET[o.code])+'</span>';
     var r='<div class="row'+(NOBM[o.code]?" nobm":"")+(out?" out":"")+'"><div class="c-o"><span class="code">'+esc(o.code)+'</span><span class="tag '+o.grp+'">'+GL[o.grp]+'</span><br><span class="muted small">'+esc(o.name)+(o.sup?" · "+esc(o.sup):"")+'</span>'+
-      '<span class="ph small muted"><br>floor '+fmt(o.floor)+' · old '+(now===org?fmt(now):fmt(org)+" → "+fmt(now))+'</span></div>'+
-      '<div class="num c-s">'+fmt(o.sold)+'</div><div class="num c-n">'+fmt(o.nw)+'</div><div class="num c-f">'+fmt(o.floor)+'</div><div class="num c-st">'+oldc+'</div><div class="num c-x">'+(x==null?"–":x.toFixed(1))+'</div>';
+      '<span class="ph small muted"><br>floor now '+fmt(o.floor)+'</span></div>'+
+      '<div class="num c-s"><span class="ph small muted">Sold 26 </span>'+fmt(o.sold)+ak(o.sA,o.sK)+'</div>'+
+      '<div class="num c-n"><span class="ph small muted">New 27 </span>'+fmt(o.nw)+ak(o.nA,o.nK)+'</div>'+
+      '<div class="num c-st"><span class="ph small muted">Old 27 </span>'+oldc+ak(now-(T.kid[o.code]||0),T.kid[o.code]||0)+'</div>'+
+      '<div class="num c-t"><span class="tot"><span class="ph small muted">Total 27 </span><b>'+fmt(o.nw+oldAll)+'</b></span>'+ak(o.nA+oldAll-(TA.kid[o.code]||0),o.nK+(TA.kid[o.code]||0))+'</div>'+
+      '<div class="num c-f">'+fmt(o.floor)+'</div><div class="num c-x"><span class="ph small muted">cover x</span>'+(x==null?"–":x.toFixed(1))+'</div>';
     r+='<div class="acts">'+(out?'<span class="muted small">closed / paused / Brunei</span>':
       '<button data-nobm="'+o.code+'" class="'+(NOBM[o.code]?"on":"")+'">'+(NOBM[o.code]?"No BM ✓":"No BM")+'</button>'+
       '<input type="number" min="0" step="10" placeholder="target" data-tg="'+o.code+'" value="'+((o.code in TARGET)?TARGET[o.code]:"")+'">'+
       '<button data-open="'+o.code+'">'+(OPEN[o.code]?"Hide":"Cartons")+'</button>')+'</div></div>';
-    if(OPEN[o.code]&&!out){var cs=C.filter(function(c){return dest(c)===o.code||(c.orig===o.code&&dest(c)!==o.code);});
+    if(OPEN[o.code]&&!out){var cs=C.filter(function(c){return fq(c)&&(dest(c)===o.code||(c.orig===o.code&&dest(c)!==o.code));});
       r+='<div class="ctns">'+(cs.length?cs.map(ctRow).join(""):'<span class="muted small">No old cartons.</span>')+"</div>";}
     return r;}).join("");
   h+="</div>";
   $("#app").innerHTML=h;
+}
+var AG='style="grid-template-columns:minmax(150px,2fr) 64px 70px 74px 60px 84px"';
+function renderArts(){
+  var A={};
+  C.forEach(function(c){if(F.b&&c.brand!==F.b)return;var d=dest(c);c.L.forEach(function(l){if(!lineOk(l))return;
+    var r=A[l.a]||(A[l.a]={a:l.a,y:l.y,b:c.brand,pool:0,placed:0,out:{},cols:{}});r.pool+=l.q;r.cols[l.col]=(r.cols[l.col]||0)+l.q;
+    if(d){r.placed+=l.q;var x=r.out[d]||(r.out[d]={q:0,cols:{}});x.q+=l.q;x.cols[l.col]=(x.cols[l.col]||0)+l.q;}});});
+  var rows=Object.keys(A).map(function(k){return A[k];}).sort(function(a,b){return b.pool-a.pool;});
+  function cl(m){return Object.keys(m).map(function(c){return c+" ×"+m[c];}).join(", ");}
+  var h='<div class="panel"><div class="row head" '+AG+'><div>Article</div><div>Year</div><div class="num">Pool</div><div class="num">At outlets</div><div class="num">Outlets</div><div></div></div>';
+  h+=rows.map(function(r){var n=Object.keys(r.out).length,k="A:"+r.a;
+    var s='<div class="row art" '+AG+'><div><span class="code">'+esc(r.a)+'</span> <span class="tag">'+r.b+'</span><br><span class="muted small">'+esc(D.desc[r.a]||"")+'</span><br><span class="muted small">colours: '+esc(cl(r.cols))+'</span></div><div>BM '+r.y+'</div><div class="num">'+fmt(r.pool)+'</div><div class="num">'+fmt(r.placed)+'</div><div class="num">'+n+'</div><div><button data-open="'+k+'">'+(OPEN[k]?"Hide":"Outlets")+'</button></div></div>';
+    if(OPEN[k]){var os=Object.keys(r.out).sort(function(a,b){return r.out[b].q-r.out[a].q;});
+      s+='<div class="ctns">'+os.map(function(o){var x=r.out[o];return '<div class="ct ao"><span class="i code">'+esc(o)+'</span><span class="p num">'+x.q+'</span><span class="arts">'+esc(cl(x.cols))+'</span></div>';}).join("")+
+        (r.pool>r.placed?'<div class="ct ao"><span class="i muted">Not placed</span><span class="p num">'+(r.pool-r.placed)+'</span><span></span></div>':"")+"</div>";}
+    return s;}).join("");
+  return h+(rows.length?"":'<div class="msg muted">No article matches.</div>')+"</div>";
 }
 function opts(brand,sel){
   var os=Object.keys(O).map(function(k){return O[k];}).filter(function(o){return o.brand===brand&&o.grp!=="out"&&!NOBM[o.code];}).sort(function(a,b){return a.code<b.code?-1:1;});
@@ -149,14 +196,15 @@ document.addEventListener("click",function(e){var t=e.target;
   else if(t.id==="csv"){var rows=[["IC","Brand","Pcs","Plan outlet","Now outlet","Arts"]];C.forEach(function(c){rows.push([c.ic,c.brand,c.pcs,c.orig,dest(c),c.arts]);});
     var b=new Blob([rows.map(function(r){return r.map(function(v){return '"'+String(v).replace(/"/g,'""')+'"';}).join(",");}).join("\n")],{type:"text/csv"});
     var a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="BM2027 old stock "+D.ver+" reallocated.csv";a.click();}
+  else if(t.id==="vo"||t.id==="va"){VIEW=t.id==="va"?"a":"o";render();}
   else if(t.id==="reset"){if(confirm("Clear all your changes on this device?")){MOVES={};NOBM={};TARGET={};save();render();}}
 });
 document.addEventListener("change",function(e){var t=e.target;
   if(t.dataset.mv){var c=C.filter(function(x){return x.ic===t.dataset.mv;})[0];if(t.value===c.orig)delete MOVES[c.ic];else MOVES[c.ic]=t.value;save();render();}
   else if(t.dataset.tg){var k=t.dataset.tg;if(t.value==="")delete TARGET[k];else TARGET[k]=Math.max(0,+t.value);save();render();}
-  else if(t.id==="fb"){F.b=t.value;render();}else if(t.id==="fg"){F.g=t.value;render();}else if(t.id==="fs"){F.s=t.value;render();}
+  else if(t.id==="fb"){F.b=t.value;render();}else if(t.id==="fy"){F.y=t.value;render();}else if(t.id==="fg"){F.g=t.value;render();}else if(t.id==="fs"){F.s=t.value;render();}
 });
-var qt;document.addEventListener("input",function(e){if(e.target.id==="fq"){F.q=e.target.value;clearTimeout(qt);qt=setTimeout(function(){var p=e.target.selectionStart;render();var f=$("#fq");f.focus();f.setSelectionRange(p,p);},250);}});
+var qt;document.addEventListener("input",function(e){var id=e.target.id;if(id==="fq"||id==="fa"){if(id==="fq")F.q=e.target.value;else F.a=e.target.value.trim();clearTimeout(qt);qt=setTimeout(function(){var p=e.target.selectionStart;render();var f=$("#"+id);f.focus();f.setSelectionRange(p,p);},250);}});
 
 /* ---------- crypto (same contract as push_board.py) ---------- */
 function readKey(){var h=(location.hash||"").replace(/^#/,"").split("&")[0].trim();return /^[0-9a-fA-F]{64}$/.test(h)?h.toLowerCase():null;}
