@@ -123,7 +123,7 @@ function boot(){
   C=D.c.map(function(r){return {ic:r[0],brand:r[1],pcs:r[2],kids:r[3],orig:r[4],arts:r[5],L:r[5].split(";").map(function(x){
     var p=x.split(":"),i=p[0].indexOf("-"),a=p[0].slice(0,i);return {a:a,col:p[0].slice(i+1),q:+p[1],y:yearOf(a),k:isKid(a)};})};});
   var ys={};C.forEach(function(c){c.L.forEach(function(l){ys[l.y]=1;});});YEARS=Object.keys(ys).sort();
-  FAC={};Object.keys(D.fac||{}).forEach(function(code){FAC[code]=D.fac[code].split(";").map(function(x){
+  FAC={};Object.keys(D.fac||{}).forEach(function(code){FAC[code]=D.fac[code].split(";").filter(Boolean).map(function(x){
     var p=x.split(":"),i=p[0].lastIndexOf("-"),a=p[0].slice(0,i);return {a:a,col:p[0].slice(i+1),q:+p[1],y:yearOf(a),k:isKid(a)};});});
   STORE="bm2027:"+D.ver;
   try{var s=JSON.parse(localStorage.getItem(STORE)||"{}");MOVES=s.m||{};NOBM=s.n||{};TARGET=s.t||{};YRS=s.y||{};}catch(e){}
