@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>BM 2027 Old Stock</title>
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--ink:#16202c;--mut:#5d6b7a;--line:#dde2e8;--acc:#1f3864;--accs:#e7ecf5;--warn:#b54708;--warns:#fdf0e3;--ok:#067647;--oks:#e5f4ec;--bad:#b42318;--bads:#fbeaea}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f141a;--card:#18202a;--ink:#e6ebf1;--mut:#97a3b0;--line:#2a3542;--acc:#8fb0e8;--accs:#1f2b3d;--warn:#f3a35c;--warns:#3a2817;--ok:#5fd39a;--oks:#14301f;--bad:#f28b82;--bads:#3a1c1c}}
+:root[data-theme="dark"]{--bg:#0f141a;--card:#18202a;--ink:#e6ebf1;--mut:#97a3b0;--line:#2a3542;--acc:#8fb0e8;--accs:#1f2b3d;--warn:#f3a35c;--warns:#3a2817;--ok:#5fd39a;--oks:#14301f;--bad:#f28b82;--bads:#3a1c1c}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:1100px;margin:0 auto;padding:12px 16px 60px}
+h1{font-size:19px;margin:4px 0 2px}
+.muted{color:var(--mut)}.small{font-size:12px}
+.bar{position:sticky;top:0;z-index:5;background:var(--bg);padding:8px 0;border-bottom:1px solid var(--line)}
+.stats{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:5px 9px}
+.stat b{font-size:15px}.stat.warn{background:var(--warns);border-color:var(--warn)}
+.ctl{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+select,input,button{font:inherit;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:7px;padding:6px 8px}
+button{cursor:pointer;background:var(--accs);border-color:var(--acc);color:var(--acc);font-weight:600}
+button.pri{background:var(--acc);color:var(--card)}
+input[type=search]{min-width:150px;flex:1}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:10px;margin-top:10px;overflow:hidden}
+.panel h2{font-size:15px;margin:0;padding:9px 12px;border-bottom:1px solid var(--line)}
+.row{display:grid;grid-template-columns:minmax(150px,1.6fr) repeat(5,minmax(52px,.55fr)) minmax(190px,1.4fr);gap:6px;align-items:center;padding:8px 12px;border-bottom:1px solid var(--line)}
+.row.head{font-size:12px;color:var(--mut);font-weight:600;background:var(--accs)}
+.num{text-align:right;font-variant-numeric:tabular-nums}
+.code{font-weight:700}
+.tag{display:inline-block;font-size:11px;border-radius:5px;padding:0 5px;margin-left:4px;border:1px solid var(--line);color:var(--mut)}
+.tag.nonew{color:var(--ok);border-color:var(--ok)}.tag.missed{color:var(--acc);border-color:var(--acc)}.tag.out{color:var(--bad);border-color:var(--bad)}
+.chg{color:var(--warn);font-weight:700}
+.row.nobm{background:var(--bads)}.row.out{opacity:.55}
+.acts{display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end}
+.acts input{width:84px}
+.acts button{padding:5px 8px;font-size:12px}
+.acts button.on{background:var(--bad);color:var(--card);border-color:var(--bad)}
+.ctns{padding:4px 12px 10px 24px;background:var(--bg);border-bottom:1px solid var(--line)}
+.ct{display:grid;grid-template-columns:110px 44px 1fr minmax(150px,220px);gap:6px;align-items:center;padding:4px 0;border-bottom:1px dashed var(--line);font-size:13px}
+.ct .arts{color:var(--mut);font-size:12px;overflow-wrap:anywhere}
+.ct.moved{background:var(--warns)}
+.ph{display:none}
+.msg{padding:40px 16px;text-align:center}
+@media (max-width:760px){
+ .row{grid-template-columns:1fr repeat(3,48px);grid-template-areas:"o s n x" "a a a a"}
+ .row>.c-o{grid-area:o}.row>.c-s{grid-area:s}.row>.c-n{grid-area:n}.row>.c-x{grid-area:x}.row>.acts{grid-area:a;justify-content:flex-start}
+ .row>.c-f,.row>.c-st{display:none}
+ .row.head>.acts{display:none}
+ .ct{grid-template-columns:1fr 40px;grid-template-areas:"i p" "r r" "m m"}
+ .ct>.i{grid-area:i}.ct>.p{grid-area:p}.ct>.arts{grid-area:r}.ct>select{grid-area:m}
+ .ctns{padding-left:12px}.ph{display:inline}
+ .bar{position:static}
+}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"><div class="msg muted">Opening…</div></div>
+<script>
+(function(){
+"use strict";
+var D,KEYHEX,STORE,MOVES={},NOBM={},TARGET={},OPEN={},F={b:"",g:"",q:"",s:"old"};
+function $(s){return document.querySelector(s);}
+function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
+function fmt(n){return (Math.round(n)||0).toLocaleString("en-US");}
+var GL={nonew:"no 2027 sets",missed:"skipped in v2",topup:"has 2027 sets",out:"out"};
+var O={},C=[];
+function boot(){
+  D.o.forEach(function(r){O[r[0]]={code:r[0],name:r[1],brand:r[2],sup:r[3],sold:r[4],st:r[5],nw:r[6],floor:r[7],grp:r[8]};});
+  C=D.c.map(function(r){return {ic:r[0],brand:r[1],pcs:r[2],kids:r[3],orig:r[4],arts:r[5]};});
+  STORE="bm2027:"+D.ver;
+  try{var s=JSON.parse(localStorage.getItem(STORE)||"{}");MOVES=s.m||{};NOBM=s.n||{};TARGET=s.t||{};}catch(e){}
+  render();
+}
+function save(){try{localStorage.setItem(STORE,JSON.stringify({m:MOVES,n:NOBM,t:TARGET}));}catch(e){}}
+function dest(c){var d=(c.ic in MOVES)?MOVES[c.ic]:c.orig;return (d&&!NOBM[d]&&O[d]&&O[d].grp!=="out")?d:"";}
+function tallies(){var t={},orig={};C.forEach(function(c){var d=dest(c);if(d)t[d]=(t[d]||0)+c.pcs;if(c.orig)orig[c.orig]=(orig[c.orig]||0)+c.pcs;});return {now:t,orig:orig};}
+function cover(o,old){return o.sold?((o.nw+o.floor+old)/o.sold):null;}
+function changes(){
+  var n=Object.keys(NOBM).filter(function(k){return NOBM[k];}),t=Object.keys(TARGET),m=C.filter(function(c){return (c.ic in MOVES)&&MOVES[c.ic]!==c.orig;});
+  return {n:n,t:t,m:m};
+}
+function render(){
+  var T=tallies(),ch=changes(),pool=0,placed=0,un=[];
+  C.forEach(function(c){pool+=c.pcs;var d=dest(c);if(d)placed+=c.pcs;else un.push(c);});
+  var unp=un.reduce(function(a,c){return a+c.pcs;},0);
+  var nch=ch.n.length+ch.t.length+ch.m.length;
+  var h='<h1>BM 2027 old stock: reallocate</h1><div class="muted small">Plan '+esc(D.ver)+' · built '+esc(D.built)+' · '+esc(D.src)+'</div>';
+  h+='<div class="bar"><div class="stats"><div class="stat">Pool <b>'+fmt(pool)+'</b> pcs</div><div class="stat">At outlets <b>'+fmt(placed)+'</b></div>'+
+     '<div class="stat'+(unp?" warn":"")+'">Not placed <b>'+fmt(unp)+'</b> pcs / '+un.length+' ctns</div><div class="stat">Changes <b>'+nch+'</b></div></div>'+
+     '<div class="ctl"><select id="fb"><option value="">AD + BF</option><option'+(F.b==="AD"?" selected":"")+'>AD</option><option'+(F.b==="BF"?" selected":"")+'>BF</option></select>'+
+     '<select id="fg"><option value="">All outlets</option>'+["nonew","missed","topup","out","chg"].map(function(g){return '<option value="'+g+'"'+(F.g===g?" selected":"")+'>'+(g==="chg"?"Changed only":GL[g])+"</option>";}).join("")+'</select>'+
+     '<select id="fs"><option value="old"'+(F.s==="old"?" selected":"")+'>Most old first</option><option value="x"'+(F.s==="x"?" selected":"")+'>Highest cover first</option><option value="code"'+(F.s==="code"?" selected":"")+'>Outlet code</option><option value="sold"'+(F.s==="sold"?" selected":"")+'>2026 sold</option></select>'+
+     '<input type="search" id="fq" placeholder="Outlet code / name / supervisor" value="'+esc(F.q)+'">'+
+     '<button class="pri" id="copy">Copy changes</button><button id="csv">Download CSV</button><button id="reset">Reset</button></div></div>';
+  if(un.length){
+    h+='<div class="panel"><h2>Not placed: '+fmt(unp)+' pcs in '+un.length+' cartons <button data-open="__UN">'+(OPEN.__UN?"Hide":"Show cartons")+'</button><br><span class="muted small">From No BM outlets / cartons moved out. Pick an outlet for each, or leave them and the rerun spreads them.</span></h2>'+(OPEN.__UN?'<div class="ctns">'+un.map(ctRow).join("")+"</div>":"")+"</div>";
+  }
+  var list=Object.keys(O).map(function(k){return O[k];}).filter(function(o){
+    if(F.b&&o.brand!==F.b)return false;
+    var now=T.now[o.code]||0,org=T.orig[o.code]||0;
+    if(F.g==="chg"){if(!(NOBM[o.code]||(o.code in TARGET)||now!==org))return false;}else if(F.g&&o.grp!==F.g)return false;
+    if(F.q){var q=F.q.toLowerCase();if((o.code+" "+o.name+" "+o.sup).toLowerCase().indexOf(q)<0)return false;}
+    return true;});
+  list.sort(function(a,b){var oa=T.now[a.code]||0,ob=T.now[b.code]||0;
+    if(F.s==="code")return a.code<b.code?-1:1;if(F.s==="sold")return b.sold-a.sold;
+    if(F.s==="x")return (cover(b,ob)||0)-(cover(a,oa)||0);return ob-oa||b.sold-a.sold;});
+  h+='<div class="panel"><div class="row head"><div class="c-o">Outlet</div><div class="num c-s">Sold 26</div><div class="num c-n">New 27</div><div class="num c-f">Floor</div><div class="num c-st">Old (plan→now)</div><div class="num c-x">Cover x</div><div class="acts">No BM / target pcs</div></div>';
+  h+=list.map(function(o){
+    var now=T.now[o.code]||0,org=T.orig[o.code]||0,x=cover(o,(o.code in TARGET)?TARGET[o.code]:now),out=o.grp==="out";
+    var oldc=now===org?'<b>'+fmt(now)+'</b>':'<span class="muted">'+fmt(org)+'</span> → <span class="chg">'+fmt(now)+'</span>';
+    if(o.code in TARGET)oldc+='<br><span class="chg small">target '+fmt(TARGET[o.code])+'</span>';
+    var r='<div class="row'+(NOBM[o.code]?" nobm":"")+(out?" out":"")+'"><div class="c-o"><span class="code">'+esc(o.code)+'</span><span class="tag '+o.grp+'">'+GL[o.grp]+'</span><br><span class="muted small">'+esc(o.name)+(o.sup?" · "+esc(o.sup):"")+'</span>'+
+      '<span class="ph small muted"><br>floor '+fmt(o.floor)+' · old '+(now===org?fmt(now):fmt(org)+" → "+fmt(now))+'</span></div>'+
+      '<div class="num c-s">'+fmt(o.sold)+'</div><div class="num c-n">'+fmt(o.nw)+'</div><div class="num c-f">'+fmt(o.floor)+'</div><div class="num c-st">'+oldc+'</div><div class="num c-x">'+(x==null?"–":x.toFixed(1))+'</div>';
+    r+='<div class="acts">'+(out?'<span class="muted small">closed / paused / Brunei</span>':
+      '<button data-nobm="'+o.code+'" class="'+(NOBM[o.code]?"on":"")+'">'+(NOBM[o.code]?"No BM ✓":"No BM")+'</button>'+
+      '<input type="number" min="0" step="10" placeholder="target" data-tg="'+o.code+'" value="'+((o.code in TARGET)?TARGET[o.code]:"")+'">'+
+      '<button data-open="'+o.code+'">'+(OPEN[o.code]?"Hide":"Cartons")+'</button>')+'</div></div>';
+    if(OPEN[o.code]&&!out){var cs=C.filter(function(c){return dest(c)===o.code||(c.orig===o.code&&dest(c)!==o.code);});
+      r+='<div class="ctns">'+(cs.length?cs.map(ctRow).join(""):'<span class="muted small">No old cartons.</span>')+"</div>";}
+    return r;}).join("");
+  h+="</div>";
+  $("#app").innerHTML=h;
+}
+function opts(brand,sel){
+  var os=Object.keys(O).map(function(k){return O[k];}).filter(function(o){return o.brand===brand&&o.grp!=="out"&&!NOBM[o.code];}).sort(function(a,b){return a.code<b.code?-1:1;});
+  return '<option value="">Not placed (WH / spread on rerun)</option>'+os.map(function(o){return '<option value="'+o.code+'"'+(o.code===sel?" selected":"")+">"+o.code+"</option>";}).join("");
+}
+function ctRow(c){
+  var d=dest(c),moved=d!==c.orig,arts=c.arts.split(";").slice(0,4).map(function(a){var p=a.split(":");return p[0]+" ×"+p[1];}).join(", ")+(c.arts.split(";").length>4?" …":"");
+  return '<div class="ct'+(moved?" moved":"")+'"><span class="i">'+esc(c.ic)+(c.kids?' <span class="tag">kids '+c.kids+'</span>':"")+'</span><span class="p num">'+c.pcs+'</span><span class="arts">'+esc(arts)+(moved&&c.orig?' · <b>was '+esc(c.orig)+'</b>':"")+'</span><select data-mv="'+c.ic+'">'+opts(c.brand,d)+"</select></div>";
+}
+function text(){
+  var ch=changes(),T=tallies(),L=["BM 2027 old stock changes (from "+D.ver+")"];
+  if(ch.n.length)L.push("NO BM: "+ch.n.join(", "));
+  ch.t.forEach(function(k){L.push("TARGET: "+k+" "+TARGET[k]+" pcs (plan "+(T.orig[k]||0)+")");});
+  ch.m.forEach(function(c){L.push("MOVE: "+c.ic+" ("+c.pcs+" pcs) "+(c.orig||"WH")+" -> "+(MOVES[c.ic]||"not placed"));});
+  var un=C.filter(function(c){return !dest(c);});
+  if(un.length)L.push("NOT PLACED: "+un.length+" ctns / "+un.reduce(function(a,c){return a+c.pcs;},0)+" pcs - spread on rerun");
+  if(L.length===1)L.push("(no changes)");
+  return L.join("\n");
+}
+document.addEventListener("click",function(e){var t=e.target;
+  if(t.dataset.nobm){var k=t.dataset.nobm;if(NOBM[k])delete NOBM[k];else NOBM[k]=1;save();render();}
+  else if(t.dataset.open){OPEN[t.dataset.open]=!OPEN[t.dataset.open];render();}
+  else if(t.id==="copy"){var s=text();(navigator.clipboard?navigator.clipboard.writeText(s):Promise.reject()).then(function(){t.textContent="Copied ✓";setTimeout(render,1500);},function(){window.prompt("Copy this:",s);});}
+  else if(t.id==="csv"){var rows=[["IC","Brand","Pcs","Plan outlet","Now outlet","Arts"]];C.forEach(function(c){rows.push([c.ic,c.brand,c.pcs,c.orig,dest(c),c.arts]);});
+    var b=new Blob([rows.map(function(r){return r.map(function(v){return '"'+String(v).replace(/"/g,'""')+'"';}).join(",");}).join("\n")],{type:"text/csv"});
+    var a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="BM2027 old stock "+D.ver+" reallocated.csv";a.click();}
+  else if(t.id==="reset"){if(confirm("Clear all your changes on this device?")){MOVES={};NOBM={};TARGET={};save();render();}}
+});
+document.addEventListener("change",function(e){var t=e.target;
+  if(t.dataset.mv){var c=C.filter(function(x){return x.ic===t.dataset.mv;})[0];if(t.value===c.orig)delete MOVES[c.ic];else MOVES[c.ic]=t.value;save();render();}
+  else if(t.dataset.tg){var k=t.dataset.tg;if(t.value==="")delete TARGET[k];else TARGET[k]=Math.max(0,+t.value);save();render();}
+  else if(t.id==="fb"){F.b=t.value;render();}else if(t.id==="fg"){F.g=t.value;render();}else if(t.id==="fs"){F.s=t.value;render();}
+});
+var qt;document.addEventListener("input",function(e){if(e.target.id==="fq"){F.q=e.target.value;clearTimeout(qt);qt=setTimeout(function(){var p=e.target.selectionStart;render();var f=$("#fq");f.focus();f.setSelectionRange(p,p);},250);}});
+
+/* ---------- crypto (same contract as push_board.py) ---------- */
+function readKey(){var h=(location.hash||"").replace(/^#/,"").split("&")[0].trim();return /^[0-9a-fA-F]{64}$/.test(h)?h.toLowerCase():null;}
+function hexToBytes(h){var o=new Uint8Array(h.length/2);for(var i=0;i<o.length;i++)o[i]=parseInt(h.substr(i*2,2),16);return o;}
+function b64(s){var b=atob(s),o=new Uint8Array(b.length);for(var i=0;i<b.length;i++)o[i]=b.charCodeAt(i);return o;}
+function fail(t){$("#app").innerHTML='<div class="msg"><h1>'+esc(t)+'</h1><p class="muted">Open the link exactly as it was sent. It must include everything after #.</p></div>';}
+KEYHEX=readKey();
+if(!KEYHEX||!window.crypto||!crypto.subtle){fail("This link is not complete.");return;}
+crypto.subtle.digest("SHA-256",new TextEncoder().encode(KEYHEX)).then(function(buf){
+  var b=new Uint8Array(buf),id="";for(var i=0;i<8;i++)id+=(b[i]<16?"0":"")+b[i].toString(16);
+  return Promise.all([fetch("k/"+id+".json",{cache:"no-store"}),crypto.subtle.importKey("raw",hexToBytes(KEYHEX),{name:"AES-GCM"},false,["decrypt"])]);
+}).then(function(r){if(!r[0].ok)throw new Error("missing");return r[0].json().then(function(doc){
+  return crypto.subtle.decrypt({name:"AES-GCM",iv:b64(doc.iv),tagLength:128},r[1],b64(doc.ct));});
+}).then(function(buf){D=JSON.parse(new TextDecoder().decode(buf));boot();},function(){fail("Couldn't open this page.");});
+window.addEventListener("hashchange",function(){location.reload();});
+})();
+</script>
+</body>
+</html>
