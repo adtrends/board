@@ -67,7 +67,7 @@ input[type=search]{min-width:150px;flex:1}
 .mt tr.h td{background:var(--warns)}.mt tr.s td:last-child{color:var(--bad);font-weight:600}
 .mt tr.tot td{font-weight:700}
 .ft{width:100%}.dsc{display:block;color:var(--mut);font-size:11px}.ft td.w{white-space:normal;color:var(--mut);font-size:12px;text-align:left}
-.yr{display:flex;gap:4px;flex-wrap:wrap}.yr span{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:2px 8px}
+.yr{display:flex;gap:4px;flex-wrap:wrap}
 .dacts{display:flex;gap:4px;flex-wrap:wrap;align-items:center;margin-top:6px}
 .dacts input{width:70px}.dacts button{padding:3px 7px;font-size:12px}.dacts button.on{background:var(--bad);color:var(--card);border-color:var(--bad)}
 .scroll{overflow-x:auto}
@@ -78,7 +78,9 @@ input[type=search]{min-width:150px;flex:1}
 .dr .mt th{position:sticky;top:0;background:var(--card)}
 .mt tr.s td{color:var(--bad)}
 .mt tr.fo td{color:var(--mut)}
-.yr button{padding:1px 6px;font-size:11px}.yck{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:1px 6px;font-size:11px}
+.yr button{padding:1px 6px;font-size:11px}
+.yt{min-width:220px}.yt tr.yrow{cursor:pointer}.yt tr.yrow:hover td{background:var(--accs)}.yt tr.sel td{background:var(--acc);color:var(--card)}
+.ytk{display:flex;gap:10px;align-items:center;margin-top:6px;font-size:12px}.ytk label{display:flex;gap:3px;align-items:center}
 @media (max-width:760px){
  .row{grid-template-columns:repeat(5,1fr);grid-template-areas:"o o o o x" "s n d f t" "a a a a a"}
  .row>.c-o{grid-area:o}.row>.c-s{grid-area:s}.row>.c-n{grid-area:n}.row>.c-st{grid-area:d}.row>.c-t{grid-area:t}.row>.c-x{grid-area:x}.row>.acts{grid-area:a;justify-content:flex-start}
@@ -216,11 +218,13 @@ function detail(o,T,TA,m,oldAll){
   var L='<div class="dl"><table class="mt"><tr><th></th><th>Total</th><th>Adult</th><th>Kids</th></tr>'+
     tr("Sold 26",o.sold,o.sA,o.sK)+tr("New 27",o.nw,o.nA,o.nK)+tr("Old 27",old,old-ok,ok)+tr("Floor "+esc(D.fdate),o.floor,fA,fK)+
     tr("Total 27",o.nw+old+o.floor,o.nA+old-ok+(fA||0),o.nK+ok+(fK||0),"tot")+"</table>";
-  L+='<h3>Counter + old by year · tap to filter</h3><div class="yr"><button class="'+(dy?"":"pri")+'" data-dy="'+o.code+'|">All '+fmt(fl+old)+'</button>'+
-    Object.keys(ys).sort().reverse().map(function(y){return '<button class="'+(dy===y?"pri":"")+'" data-dy="'+o.code+'|'+y+'">BM '+y+' '+fmt(ys[y])+(yo[y]?' <span class="small">(old '+fmt(yo[y])+')</span>':"")+'</button>';}).join("")+'</div>';
+  /* by year: one small table, tap a row to filter the art-col list */
+  function yrow(y,lbl,c,od){return '<tr class="yrow'+((dy||"")===y?" sel":"")+'" data-dy="'+o.code+'|'+y+'"><td>'+lbl+'</td><td>'+fmt(c)+'</td><td>'+fmt(od)+'</td><td><b>'+fmt(c+od)+'</b></td></tr>';}
+  L+='<h3>By year · tap a row to filter</h3><table class="mt yt"><tr><th>Year</th><th>Cnt</th><th>Old</th><th>Total</th></tr>'+yrow("","All",fl,old)+
+    Object.keys(ys).sort().reverse().map(function(y){return yrow(y,"BM "+y,ys[y]-(yo[y]||0),yo[y]||0);}).join("")+"</table>";
   var yr=YRS[o.code];
-  L+='<h3>Years it takes (rerun)</h3><div class="yr">'+YEARS.map(function(y){var on=!yr||yr.indexOf(y)>=0;
-    return '<label class="yck"><input type="checkbox" data-yr="'+o.code+'|'+y+'"'+(on?" checked":"")+'> BM '+y+'</label>';}).join("")+(yr?'<span class="chg small">BM '+yr.join(" + ")+' only</span>':"")+'</div>';
+  L+='<div class="ytk"><span class="muted small">Takes on rerun:</span>'+YEARS.map(function(y){var on=!yr||yr.indexOf(y)>=0;
+    return '<label><input type="checkbox" data-yr="'+o.code+'|'+y+'"'+(on?" checked":"")+'> '+y+'</label>';}).join("")+(yr?'<span class="chg small">'+yr.join(" + ")+' only</span>':"")+'</div>';
   L+='<div class="dacts"><button data-nobm="'+o.code+'" class="'+(NOBM[o.code]?"on":"")+'">'+(NOBM[o.code]?"No BM ✓":"No BM")+'</button>'+
     '<label class="small muted">Target old pcs <input type="number" min="0" step="10" data-tg="'+o.code+'" value="'+((o.code in TARGET)?TARGET[o.code]:"")+'"></label>'+
     '<button data-open="C:'+o.code+'">'+(OPEN["C:"+o.code]?"Hide cartons":"Cartons")+'</button></div></div>';
@@ -290,7 +294,7 @@ document.addEventListener("click",function(e){var t=e.target;
     var b=new Blob([rows.map(function(r){return r.map(function(v){return '"'+String(v).replace(/"/g,'""')+'"';}).join(",");}).join("\n")],{type:"text/csv"});
     var a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="BM2027 old stock "+D.ver+" reallocated.csv";a.click();}
   else if(t.id==="vo"||t.id==="va"){VIEW=t.id==="va"?"a":"o";render();}
-  else if(t.dataset.dy){var p=t.dataset.dy.split("|");if(p[1])DY[p[0]]=p[1];else delete DY[p[0]];render();}
+  else if(t.closest&&t.closest("[data-dy]")){var p=t.closest("[data-dy]").dataset.dy.split("|");if(p[1])DY[p[0]]=p[1];else delete DY[p[0]];render();}
   else if(t.id==="reset"){if(confirm("Clear all your changes on this device?")){MOVES={};NOBM={};TARGET={};YRS={};save();render();}}
 });
 document.addEventListener("change",function(e){var t=e.target;
