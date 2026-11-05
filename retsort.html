@@ -42,6 +42,7 @@ h2{font-size:15px;margin:4px 0 6px}
 </style>
 <!--DOC-->
 <header><h1>Return Sort - scan label IT</h1><div class="mute" id="sub"></div></header>
+<div style="max-width:720px;margin:0 auto;padding:12px 16px 0"><div id="cam"></div></div>
 <main id="app"><div class="msg">Memuatkan...</div></main>
 <script>
 (function(){
@@ -91,8 +92,9 @@ h2{font-size:15px;margin:4px 0 6px}
   function draw(){
     var l=getL(),f=l.filter(feedable),p=0,ctn=0;
     f.forEach(function(i){p+=info(i)[1];});
-    var h='<div class="card"><input id="scanin" placeholder="Scan barcode label IT" autocomplete="off" inputmode="none">'+
-      '<div id="flash"></div><div class="mute" style="margin-top:6px">Scan label setiap karton yang akan disuap. Label REJECT atau tiada dalam senarai = asingkan.</div></div>'+
+    var h='<div class="card"><input id="scanin" placeholder="Scan barcode label IT" autocomplete="off" inputmode="text" enterkeyhint="go">'+
+      '<div id="flash"></div><div class="row"><button class="btn" id="cambtn">&#128247; '+(scanner?'Tutup kamera':'Kamera')+'</button><button class="btn" id="typ">&#9000; Taip no IT</button></div>'+
+      '<div class="mute" style="margin-top:6px">Scan label setiap karton yang akan disuap (scanner, atau tekan Kamera untuk guna kamera telefon). Label REJECT atau tiada dalam senarai = asingkan.</div></div>'+
       '<div class="card tot"><div><b>'+f.length+'</b>IT untuk suap</div><div><b>'+p+'</b>pcs</div><div><b>'+(l.length-f.length)+'</b>asing</div></div>';
     if(l.length){
       h+='<div class="card"><h2>Senarai ('+l.length+')</h2>';
@@ -105,8 +107,11 @@ h2{font-size:15px;margin:4px 0 6px}
          '<div class="row"><button class="btn" id="clr">Kosongkan senarai</button></div>';
     }
     app.innerHTML=h;
-    var inp=document.getElementById('scanin');inp.focus();
+    var inp=document.getElementById('scanin');if(!scanner)inp.focus();
+    document.getElementById('cambtn').onclick=toggleCam;
+    document.getElementById('typ').onclick=function(){inp.setAttribute('inputmode','text');inp.placeholder='Taip no IT, contoh IT26101386, tekan Enter';inp.blur();setTimeout(function(){inp.focus();},50);};
     inp.addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();var v=inp.value;inp.value='';add(v);}});
+    inp.addEventListener('input',function(){var v=inp.value.toUpperCase().replace(/[^A-Z0-9]/g,'');if(/^IT\d{8}$/.test(v)){clearTimeout(inp.t);inp.t=setTimeout(function(){if(inp.value){var x=inp.value;inp.value='';add(x);}},300);}});
     app.querySelectorAll('[data-del]').forEach(function(b){b.onclick=function(){putL(getL().filter(function(i){return i!==b.getAttribute('data-del');}));draw();};});
     var s=document.getElementById('send');
     if(s)s.onclick=function(){var t=report(),b=new URLSearchParams();b.append(FIELD,'#RETSORT v1\n'+t);
@@ -115,6 +120,20 @@ h2{font-size:15px;margin:4px 0 6px}
     var c=document.getElementById('clr');
     if(c)c.onclick=function(){if(confirm('Kosongkan senarai? (buat selepas wave return siap)')){putL([]);draw();}};
   }
+  // Tze 5 Nov: "unable to scan the IT no" - staff use phones, page only took a USB/BT scanner. Camera like ctnscan.
+  var scanner=null;
+  function toggleCam(){
+    if(scanner){stopCam();return;}
+    function go(){
+      scanner=new Html5Qrcode('cam');var last='',lt=0;
+      scanner.start({facingMode:'environment'},{fps:12,qrbox:{width:300,height:130},formatsToSupport:[5,9,14,10,3,0],experimentalFeatures:{useBarCodeDetectorIfSupported:true}},
+        function(txt){var n=Date.now();if(txt===last&&n-lt<2500)return;last=txt;lt=n;if(navigator.vibrate)navigator.vibrate(80);add(txt);},function(){})
+        .then(function(){draw();}).catch(function(e){alert('Kamera tidak dapat dibuka: '+e);scanner=null;draw();});
+    }
+    if(window.Html5Qrcode)return go();
+    var s=document.createElement('script');s.src='https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js';s.onload=go;s.onerror=function(){alert('Kamera tidak tersedia - guna scanner.');};document.head.appendChild(s);
+  }
+  function stopCam(){if(scanner){var s=scanner;scanner=null;s.stop().then(function(){s.clear();draw();}).catch(function(){draw();});}}
   function start(){sub.textContent='Senarai IT dikemas kini '+D.updatedAt.replace('T',' ')+' · '+Object.keys(D.its).length+' IT return';draw();}
   load();
 })();
