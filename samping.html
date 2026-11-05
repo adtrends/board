@@ -1,0 +1,372 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Samping Raya 2027</title>
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--ink:#16202c;--mut:#5d6b7a;--line:#dde2e8;--acc:#1f3864;--accs:#e7ecf5;--warn:#b54708;--warns:#fdf0e3;--ok:#067647;--oks:#e5f4ec;--bad:#b42318;--bads:#fbeaea}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f141a;--card:#18202a;--ink:#e6ebf1;--mut:#97a3b0;--line:#2a3542;--acc:#8fb0e8;--accs:#1f2b3d;--warn:#f3a35c;--warns:#3a2817;--ok:#5fd39a;--oks:#14301f;--bad:#f28b82;--bads:#3a1c1c}}
+:root[data-theme="dark"]{--bg:#0f141a;--card:#18202a;--ink:#e6ebf1;--mut:#97a3b0;--line:#2a3542;--acc:#8fb0e8;--accs:#1f2b3d;--warn:#f3a35c;--warns:#3a2817;--ok:#5fd39a;--oks:#14301f;--bad:#f28b82;--bads:#3a1c1c}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:13px/1.3 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:1180px;margin:0 auto;padding:8px 16px 40px}
+h1{font-size:16px;margin:2px 0 0}
+.muted{color:var(--mut)}.small{font-size:12px}
+.bar{position:sticky;top:0;z-index:5;background:var(--bg);padding:5px 0;border-bottom:1px solid var(--line)}
+.stats{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:4px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:2px 7px}
+.stat b{font-size:13px}.stat.warn{background:var(--warns);border-color:var(--warn)}
+.ctl{display:flex;flex-wrap:wrap;gap:4px;align-items:center}
+select,input,button{font:inherit;font-size:12px;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:6px;padding:3px 7px}
+button{cursor:pointer;background:var(--accs);border-color:var(--acc);color:var(--acc);font-weight:600}
+button.pri{background:var(--acc);color:var(--card)}
+input[type=search]{min-width:150px;flex:1}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:8px;margin-top:6px;overflow:hidden}
+.panel h2{font-size:15px;margin:0;padding:9px 12px;border-bottom:1px solid var(--line)}
+.row{display:grid;grid-template-columns:minmax(150px,1.5fr) repeat(6,minmax(60px,.6fr)) minmax(190px,1.3fr);gap:6px;align-items:center;padding:8px 12px;border-bottom:1px solid var(--line)}
+.row.head{font-size:12px;color:var(--mut);font-weight:600;background:var(--accs)}
+.num{text-align:right;font-variant-numeric:tabular-nums}
+.code{font-weight:700}
+.tag{display:inline-block;font-size:10px;border-radius:4px;padding:0 4px;margin-left:3px;border:1px solid var(--line);color:var(--mut)}
+.tag.nonew{color:var(--ok);border-color:var(--ok)}.tag.missed{color:var(--acc);border-color:var(--acc)}.tag.out{color:var(--bad);border-color:var(--bad)}
+.chg{color:var(--warn);font-weight:700}
+.row.nobm{background:var(--bads)}.row.out{opacity:.55}
+.acts{display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end}
+.acts input{width:84px}
+.acts button{padding:5px 8px;font-size:12px}
+.acts button.on{background:var(--bad);color:var(--card);border-color:var(--bad)}
+.ctns{padding:4px 12px 10px 24px;background:var(--bg);border-bottom:1px solid var(--line)}
+.ct{display:grid;grid-template-columns:110px 44px 1fr minmax(150px,220px);gap:6px;align-items:center;padding:4px 0;border-bottom:1px dashed var(--line);font-size:13px}
+.ct .arts{color:var(--mut);font-size:12px;overflow-wrap:anywhere}
+.ct.moved{background:var(--warns)}
+.ph{display:none}
+.ak{display:block;font-size:11px;color:var(--mut);font-weight:400;white-space:nowrap}
+.tot{background:var(--accs);border-radius:6px;padding:2px 4px}
+.ct.ao{grid-template-columns:120px 50px 1fr}
+.msg{padding:40px 16px;text-align:center}
+.orow{display:grid;grid-template-columns:minmax(260px,2.4fr) repeat(6,minmax(50px,.45fr)) 24px;gap:6px;align-items:center;padding:3px 10px;border-bottom:1px solid var(--line);font-size:13px;cursor:pointer}
+.orow:hover{background:var(--accs)}
+.orow.head{cursor:default;font-size:11px;color:var(--mut);font-weight:600;background:var(--accs);position:sticky;top:0}
+.orow.open{background:var(--accs);border-bottom-color:transparent}
+.orow.nobm{background:var(--bads)}.orow.out{opacity:.55;cursor:default}
+.orow .nm{color:var(--mut);font-size:11px;display:inline;margin-left:6px}
+.orow .c-o{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.orow .num b{font-weight:700}
+.orow .tt{font-weight:700;background:var(--accs);border-radius:5px;padding:1px 4px}
+.flag{display:inline-block;font-size:10px;font-weight:700;border-radius:4px;padding:0 4px;margin-left:3px;vertical-align:1px}
+.flag.h{background:var(--warns);color:var(--warn)}.flag.s{background:var(--bads);color:var(--bad)}.flag.c{background:var(--accs);color:var(--acc)}
+.chev{color:var(--mut);font-size:12px;text-align:right}
+.det{padding:6px 10px 8px;background:var(--accs);border-bottom:1px solid var(--line);font-size:12px}
+.det h3{font-size:11px;margin:6px 0 3px;color:var(--mut);text-transform:uppercase;letter-spacing:.03em}
+.mt{border-collapse:collapse;font-variant-numeric:tabular-nums;background:var(--card);border-radius:8px;overflow:hidden}
+.mt th,.mt td{padding:1px 6px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap;line-height:1.35}
+.mt th:first-child,.mt td:first-child{text-align:left}
+.mt th{font-size:11px;color:var(--mut);font-weight:600}
+.mt tr.h td{background:var(--warns)}.mt tr.s td:last-child{color:var(--bad);font-weight:600}
+.mt tr.tot td{font-weight:700}
+.ft{width:100%}.dsc{display:block;color:var(--mut);font-size:11px}.ft td.w{white-space:normal;color:var(--mut);font-size:12px;text-align:left}
+.yr{display:flex;gap:4px;flex-wrap:wrap}
+.dacts{display:flex;gap:4px;flex-wrap:wrap;align-items:center;margin-top:6px}
+.dacts input{width:70px}.dacts button{padding:3px 7px;font-size:12px}.dacts button.on{background:var(--bad);color:var(--card);border-color:var(--bad)}
+.scroll{overflow-x:auto}
+.dgrid{display:grid;grid-template-columns:270px 1fr;gap:12px;align-items:start}
+.dr .mt td,.dr .mt th{text-align:right}.dr .gt td:first-child,.dr .gt th:first-child{text-align:left;white-space:normal}
+.mt td.hc{background:var(--warns);color:var(--warn)}
+.dr .scroll{max-height:420px;overflow:auto}
+.dr .mt th{position:sticky;top:0;background:var(--card)}
+.mt tr.s td{color:var(--bad)}
+.mt tr.fo td{color:var(--mut)}
+.gt tr.ga td{background:var(--accs);border-top:2px solid var(--line)}.gt tr.gc td:first-child{padding-left:16px}
+.abtns{display:flex;flex-wrap:wrap;gap:4px}.ab{display:flex;flex-direction:column;align-items:flex-start;gap:1px;padding:4px 6px;min-width:138px;background:var(--card);border:1px dashed var(--line);border-radius:6px}
+.ab.got{border-style:solid;border-color:var(--acc)}.ab .ad{font-size:10px;color:var(--mut)}.ab .st{font-size:11px}
+.ab.on{background:var(--oks,#e6f4ea);border-color:var(--ok);border-style:solid}.ab.off{background:var(--bads,#fdecea);border-color:var(--bad);border-style:solid}
+.ab .will{font-size:10px;font-weight:600}.ab .will.add{color:var(--ok)}.ab .will.rem{color:var(--bad)}
+.ab .abb{display:flex;gap:3px;margin-top:2px}.ab .abb button{padding:1px 6px;font-size:11px}
+.ab .abb button.on{background:var(--ok);border-color:var(--ok);color:var(--card)}.ab .abb button.rm{background:var(--bad);border-color:var(--bad);color:var(--card)}
+.pk{display:inline-block;font-size:10px;font-weight:700;border-radius:4px;padding:0 4px;color:var(--card)}.pk.add{background:var(--ok)}.pk.rem{background:var(--bad)}
+.yr button{padding:1px 6px;font-size:11px}
+.yt{min-width:220px}.yt tr.yrow{cursor:pointer}.yt tr.yrow:hover td{background:var(--accs)}.yt tr.sel td{background:var(--acc);color:var(--card)}
+.ytk{display:flex;gap:10px;align-items:center;margin-top:6px;font-size:12px}.ytk label{display:flex;gap:3px;align-items:center}
+@media (max-width:760px){
+ .row{grid-template-columns:repeat(5,1fr);grid-template-areas:"o o o o x" "s n d f t" "a a a a a"}
+ .row>.c-o{grid-area:o}.row>.c-s{grid-area:s}.row>.c-n{grid-area:n}.row>.c-st{grid-area:d}.row>.c-t{grid-area:t}.row>.c-x{grid-area:x}.row>.acts{grid-area:a;justify-content:flex-start}
+ .row>.c-f{grid-area:f}
+ .row.head:not([style]){display:none}
+ .num>.ph,.num .tot>.ph{display:block;font-size:11px}
+ .row.head>.acts{display:none}
+ .ct{grid-template-columns:1fr 40px;grid-template-areas:"i p" "r r" "m m"}
+ .ct>.i{grid-area:i}.ct>.p{grid-area:p}.ct>.arts{grid-area:r}.ct>select{grid-area:m}
+ .ctns{padding-left:12px}.ph{display:inline}
+ .bar{position:static}
+ .orow{grid-template-columns:repeat(5,1fr) 44px;grid-template-areas:"o o o o o x" "s n d f t c";gap:2px 6px;padding:6px 10px}
+ .orow>.c-o{grid-area:o}.orow>.c-s{grid-area:s}.orow>.c-n{grid-area:n}.orow>.c-st{grid-area:d}.orow>.c-f{grid-area:f}.orow>.c-t{grid-area:t}.orow>.c-x{grid-area:x}.orow>.chev{grid-area:c}
+ .orow.head{display:none}
+ .orow .num:before{content:attr(data-l);display:block;font-size:10px;color:var(--mut)}
+ .det{padding:8px 10px 12px}
+ .dsc{display:none}
+ .dgrid{grid-template-columns:1fr}
+ .dr .scroll{max-height:none}
+ .orow{padding:4px 10px}
+ .orow .nm{display:block;margin-left:0;overflow:hidden;text-overflow:ellipsis}.mt th,.mt td{padding:3px 5px}
+ .row.art,.row.head[style]{grid-template-columns:1fr 56px 60px!important;grid-template-areas:none}
+ .row.art>div:nth-child(2),.row.art>div:nth-child(5),.row.head[style]>div:nth-child(2),.row.head[style]>div:nth-child(5),.row.head[style]>div:nth-child(6){display:none}
+ .row.art>div:nth-child(6){grid-column:1/-1}
+ .ct.ao{grid-template-columns:1fr 44px;grid-template-areas:none}.ct.ao>.i,.ct.ao>.p{grid-area:auto}.ct.ao>.arts{grid-area:auto;grid-column:1/-1}
+}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"><div class="msg muted">Opening…</div></div>
+<script>
+(function(){
+"use strict";
+var D,KEYHEX,STORE,MOVES={},NOBM={},TARGET={},YRS={},ADDS={},AY={},DY={},OPEN={},F={b:"",g:"",q:"",s:"old",y:"",a:""},VIEW="o",YEARS=[];
+function $(s){return document.querySelector(s);}
+function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
+function fmt(n){return (Math.round(n)||0).toLocaleString("en-US");}
+var GL={nonew:"no 2027 sets",missed:"skipped in v2",topup:"has 2027 sets",out:"out"};
+var O={},C=[],FAC={};
+function boot(){
+  D.o.forEach(function(r){O[r[0]]={code:r[0],name:r[1],brand:r[2],sup:r[3],sold:r[4],st:r[5],nw:r[6],floor:r[7],grp:r[8],sA:r[9],sK:r[10],nA:r[11],nK:r[12],fA:r[13],fK:r[14]};});
+  C=D.c.map(function(r){return {ic:r[0],brand:r[1],pcs:r[2],kids:r[3],orig:r[4],arts:r[5],pair:r[6]||"",wave:r[7]||"",L:r[5].split(";").map(function(x){
+    var p=x.split(":"),i=p[0].indexOf("-"),a=p[0].slice(0,i);return {a:a,col:p[0].slice(i+1),q:+p[1],y:yearOf(a),k:isKid(a)};})};});
+  var ys={};C.forEach(function(c){c.L.forEach(function(l){ys[l.y]=1;});});YEARS=Object.keys(ys).sort();
+  FAC={};Object.keys(D.fac||{}).forEach(function(code){FAC[code]=D.fac[code].split(";").filter(Boolean).map(function(x){
+    var p=x.split(":"),i=p[0].lastIndexOf("-"),a=p[0].slice(0,i);return {a:a,col:p[0].slice(i+1),q:+p[1],y:yearOf(a),k:isKid(a)};});});
+  STORE="samping2027:"+D.ver;
+  try{var s=JSON.parse(localStorage.getItem(STORE)||"{}");MOVES=s.m||{};NOBM=s.n||{};TARGET=s.t||{};YRS=s.y||{};ADDS=s.a||{};}catch(e){}
+  render();
+}
+/* year = the 2 digits in the article code: 19026001 / 3926001A = BM 2026, 3925001A = BM 2025 */
+function isKid(a){return a.indexOf("19SP")===0&&a.charAt(6)==="5";}
+function yearOf(a){return a.indexOf("19SP")===0?"20"+a.substr(4,2):"?";}
+function lineOk(l){return (!F.y||l.y===F.y)&&(!F.a||l.a.indexOf(F.a.toUpperCase())===0);}
+function filt(){return !!(F.y||F.a);}
+function fq(c){if(!filt())return c.pcs;var n=0;c.L.forEach(function(l){if(lineOk(l))n+=l.q;});return n;}
+function save(){try{localStorage.setItem(STORE,JSON.stringify({m:MOVES,n:NOBM,t:TARGET,y:YRS,a:ADDS}));}catch(e){}}
+function dest(c){var d=(c.ic in MOVES)?MOVES[c.ic]:c.orig;return (d&&!NOBM[d]&&O[d]&&O[d].grp!=="out")?d:"";}
+function tallies(all){var t={},orig={},k={};C.forEach(function(c){var q=all?c.pcs:fq(c);if(!q)return;var d=dest(c);if(d){t[d]=(t[d]||0)+q;c.L.forEach(function(l){if(l.k&&(all||lineOk(l)))k[d]=(k[d]||0)+l.q;});}if(c.orig)orig[c.orig]=(orig[c.orig]||0)+q;});return {now:t,orig:orig,kid:k};}
+function ak(a,k){return '<span class="ak">A '+fmt(a)+" · K "+fmt(k)+"</span>";}
+function cover(o,old){return o.sold?((o.nw+o.floor+old)/o.sold):null;}
+function changes(){
+  var ad=Object.keys(ADDS).filter(function(k){return Object.keys(ADDS[k]).length;}),y=Object.keys(YRS),n=Object.keys(NOBM).filter(function(k){return NOBM[k];}),t=Object.keys(TARGET),m=C.filter(function(c){return (c.ic in MOVES)&&MOVES[c.ic]!==c.orig;});
+  return {n:n,t:t,m:m,y:y,ad:ad};
+}
+function render(){
+  var T=tallies(),TA=tallies(true),N27={t:0,a:0,k:0},FL=0,FA=0,FK=0,placedAll=0,kidAll=0;
+  Object.keys(O).forEach(function(k){var o=O[k];if(o.grp==='out'&&!o.nw)return;N27.t+=o.nw;N27.a+=o.nA;N27.k+=o.nK;if(o.grp!=='out'&&!NOBM[o.code]){FL+=o.floor;FA+=o.fA||0;FK+=o.fK||0;}});
+  Object.keys(TA.now).forEach(function(k){placedAll+=TA.now[k];kidAll+=TA.kid[k]||0;});
+  var ch=changes(),pool=0,placed=0,un=[];
+  C.forEach(function(c){var q=fq(c);if(!q)return;pool+=q;var d=dest(c);if(d)placed+=q;else un.push(c);});
+  var unp=un.reduce(function(a,c){return a+fq(c);},0);
+  var nch=ch.n.length+ch.t.length+ch.m.length+ch.y.length+ch.ad.length;
+  var h='<h1>Samping Raya 2027 (old stock): reallocate</h1><div class="muted small">Plan '+esc(D.ver)+' · built '+esc(D.built)+' · '+esc(D.src)+'</div>';
+  h+='<div class="bar"><div class="stats"><div class="stat">Pool <b>'+fmt(pool)+'</b> pcs</div><div class="stat">At outlets <b>'+fmt(placed)+'</b></div>'+
+     '<div class="stat'+(unp?" warn":"")+'">In WH <b>'+fmt(unp)+'</b> pcs / '+un.length+' ctns</div><div class="stat">Raya 2027 total <b>'+fmt(N27.t+placedAll+FL)+'</b> = new '+fmt(N27.t)+' + old '+fmt(placedAll)+' + floor '+fmt(FL)+'<span class="ak">A '+fmt(N27.a+placedAll-kidAll+FA)+' · K '+fmt(N27.k+kidAll+FK)+' · floor = old samping on the counter '+esc(D.fdate)+'</span></div><div class="stat">Changes <b>'+nch+'</b></div>'+(filt()?'<div class="stat warn">Showing only <b>'+esc([F.y?"SP "+F.y:"",F.a?"art "+F.a.toUpperCase()+"...":""].filter(Boolean).join(", "))+'</b></div>':"")+'</div>'+
+     '<div class="ctl" style="margin-bottom:4px"><button id="vo" class="'+(VIEW==="o"?"pri":"")+'">By outlet</button><button id="va" class="'+(VIEW==="a"?"pri":"")+'">By article</button>'+
+     '<select id="fy"><option value="">All years</option>'+YEARS.map(function(y){return '<option value="'+y+'"'+(F.y===y?" selected":"")+'>SP '+y+'</option>';}).join("")+'</select>'+
+     '<input type="search" id="fa" placeholder="Article code e.g. 19026001" value="'+esc(F.a)+'" style="max-width:190px"></div>'+
+     '<div class="ctl"><select id="fb"><option value="">AD + BF</option><option'+(F.b==="AD"?" selected":"")+'>AD</option><option'+(F.b==="BF"?" selected":"")+'>BF</option></select>'+
+     '<select id="fg"><option value="">All outlets</option>'+["nonew","missed","topup","out","chg"].map(function(g){return '<option value="'+g+'"'+(F.g===g?" selected":"")+'>'+(g==="chg"?"Changed only":GL[g])+"</option>";}).join("")+'</select>'+
+     '<select id="fs"><option value="old"'+(F.s==="old"?" selected":"")+'>Most old first</option><option value="x"'+(F.s==="x"?" selected":"")+'>Highest cover first</option><option value="code"'+(F.s==="code"?" selected":"")+'>Outlet code</option><option value="sold"'+(F.s==="sold"?" selected":"")+'>2026 sold</option></select>'+
+     '<input type="search" id="fq" placeholder="Outlet code / name / supervisor" value="'+esc(F.q)+'">'+
+     '<button class="pri" id="copy">Copy changes</button><button id="csv">Download CSV</button><button id="reset">Reset</button></div></div>';
+  if(un.length){
+    h+='<div class="panel"><h2>Stays in WH: '+fmt(unp)+' pcs in '+un.length+' cartons <button data-open="__UN">'+(OPEN.__UN?"Hide":"Show cartons")+'</button><br><span class="muted small">Cartons nobody needs (or moved out) stay in the WH. Pick an outlet for each, or leave them and the rerun spreads them.</span></h2>'+(OPEN.__UN?'<div class="ctns">'+un.map(ctRow).join("")+"</div>":"")+"</div>";
+  }
+  if(VIEW==="a"){$("#app").innerHTML=h+renderArts();return;}
+  var list=Object.keys(O).map(function(k){return O[k];}).filter(function(o){
+    if(F.b&&o.brand!==F.b)return false;
+    var now=T.now[o.code]||0,org=T.orig[o.code]||0;
+    if(F.g==="chg"){if(!(NOBM[o.code]||(o.code in TARGET)||now!==org))return false;}else if(F.g&&o.grp!==F.g)return false;
+    if(F.q){var q=F.q.toLowerCase();if((o.code+" "+o.name+" "+o.sup).toLowerCase().indexOf(q)<0)return false;}
+    if(filt()&&!now&&!org)return false;
+    return true;});
+  list.sort(function(a,b){var oa=T.now[a.code]||0,ob=T.now[b.code]||0;
+    if(F.s==="code")return a.code<b.code?-1:1;if(F.s==="sold")return b.sold-a.sold;
+    if(F.s==="x")return (cover(b,TA.now[b.code]||0)||0)-(cover(a,TA.now[a.code]||0)||0);return ob-oa||b.sold-a.sold;});
+  var FAM=famBy();
+  h+='<div class="panel"><div class="orow head"><div class="c-o">Outlet · tap a row for codes / years / family sets</div><div class="num c-s">Sold avg</div><div class="num c-n">New 2027</div><div class="num c-st">Old samping'+(filt()?"*":"")+'</div><div class="num c-f">Floor '+esc(D.fdate)+'</div><div class="num c-t">Total 27</div><div class="num c-x">Cover x</div><div></div></div>';
+  h+=list.map(function(o){
+    var now=T.now[o.code]||0,org=T.orig[o.code]||0,oldAll=(o.code in TARGET)?TARGET[o.code]:(TA.now[o.code]||0),x=cover(o,oldAll),out=o.grp==="out",op=OPEN[o.code]&&!out;
+    var fl=flags(FAM[o.code],TA.now[o.code]||0);
+    var oldc=(o.code in TARGET)?'<span class="chg">'+fmt(TARGET[o.code])+'</span>':now===org?'<b>'+fmt(now)+'</b>':'<span class="chg">'+fmt(now)+'</span>';
+    var r='<div class="orow'+(NOBM[o.code]?" nobm":"")+(out?" out":"")+(op?" open":"")+'"'+(out?"":' data-row="'+o.code+'"')+'>'+
+      '<div class="c-o"><span class="code">'+esc(o.code)+'</span><span class="tag '+o.grp+'">'+GL[o.grp]+'</span>'+(NOBM[o.code]?'<span class="flag s">NO SAMPING</span>':"")+
+      (fl.h?'<span class="flag h" title="single art-col heavy">'+fl.h+' heavy</span>':"")+(fl.s?'<span class="flag s" title="adult without kids (or kids without adult) of a colour, 10+ pcs">'+fl.s+' set split</span>':"")+
+      '<span class="nm">'+esc(o.name)+(o.sup?" · "+esc(o.sup):"")+'</span></div>'+
+      '<div class="num c-s" data-l="Sold avg">'+fmt(o.sold)+'</div><div class="num c-n" data-l="New 2027">'+fmt(o.nw)+'</div>'+
+      '<div class="num c-st" data-l="Old samping">'+oldc+'</div><div class="num c-f" data-l="Floor">'+fmt(o.floor)+'</div>'+
+      '<div class="num c-t" data-l="Total 27"><span class="tt">'+fmt(o.nw+oldAll+o.floor)+'</span></div>'+
+      '<div class="num c-x" data-l="Cover x">'+(x==null?"–":x.toFixed(1))+'</div><div class="chev">'+(out?"":op?"▲":"▼")+'</div></div>';
+    if(op)r+=detail(o,T,TA,FAM[o.code]||{},oldAll);
+    return r;}).join("");
+  h+="</div>";
+  $("#app").innerHTML=h;
+}
+/* family set = adult + kids of the same design and colour: AD 19026001 + 19026501, BF 3926001A + 3926501A */
+function famOf(a){return a.indexOf("19SP")===0?a.slice(0,6)+"x"+a.slice(7):a;}
+var HEAVY=0.15,HEAVY_MIN=40,SPLIT_MIN=10,POOLFAM=null;
+function poolFam(){if(POOLFAM)return POOLFAM;POOLFAM={};C.forEach(function(c){c.L.forEach(function(l){var k=famOf(l.a)+"|"+l.col,p=POOLFAM[k]||(POOLFAM[k]={a:0,k:0});if(l.k)p.k+=l.q;else p.a+=l.q;});});return POOLFAM;}
+function famRow(m,l){var k=famOf(l.a)+"|"+l.col;return m[k]||(m[k]={f:famOf(l.a),col:l.col,y:l.y,ad:"",kd:"",a:0,k:0,fa:0,fk:0});}
+function famBy(){var M={};C.forEach(function(c){var d=dest(c);if(!d)return;var m=M[d]||(M[d]={});c.L.forEach(function(l){var r=famRow(m,l);
+  if(l.k){r.k+=l.q;r.kd=l.a;}else{r.a+=l.q;r.ad=l.a;}});});
+  Object.keys(FAC).forEach(function(d){var m=M[d]||(M[d]={});FAC[d].forEach(function(l){var r=famRow(m,l);if(l.k){r.fk+=l.q;r.kd=r.kd||l.a;}else{r.fa+=l.q;r.ad=r.ad||l.a;}});});
+  return M;}
+function setSplit(r){var p=poolFam()[r.f+"|"+r.col]||{a:0,k:0};return (r.a&&!(r.k+r.fk)&&p.k>0)?"adult only":(r.k&&!(r.a+r.fa)&&p.a>0)?"kids only":"";}
+function flags(m,old){var h=0,sp=0;if(!m||!old)return {h:0,s:0};m=Object.keys(m).reduce(function(o,k){if(m[k].a+m[k].k)o[k]=m[k];return o;},{});Object.keys(m).forEach(function(k){var r=m[k],t=r.a+r.k;if((r.a>HEAVY_MIN&&r.a/old>=HEAVY)||(r.k>HEAVY_MIN&&r.k/old>=HEAVY))h++;if(setSplit(r)&&(r.a+r.k)>=SPLIT_MIN)sp++;});return {h:h,s:sp};}
+function detail(o,T,TA,m,oldAll){
+  var old=TA.now[o.code]||0,ok=TA.kid[o.code]||0,fA=o.fA==null?null:o.fA,fK=o.fK==null?null:o.fK,dy=DY[o.code]||"";
+  function tr(lbl,t,a,k,cls){return '<tr'+(cls?' class="'+cls+'"':"")+'><td>'+lbl+'</td><td>'+fmt(t)+'</td><td>'+(a==null?"–":fmt(a))+'</td><td>'+(k==null?"–":fmt(k))+'</td></tr>';}
+  var all=Object.keys(m).map(function(k){return m[k];});
+  var ys={},yo={};all.forEach(function(r){ys[r.y]=(ys[r.y]||0)+r.a+r.k+r.fa+r.fk;yo[r.y]=(yo[r.y]||0)+r.a+r.k;});
+  var fl=all.reduce(function(s,r){return s+r.fa+r.fk;},0);
+  var L='<div class="dl"><table class="mt"><tr><th></th><th>Total</th><th>Adult</th><th>Kids</th></tr>'+
+    tr("Sold avg",o.sold,o.sA,o.sK)+tr("New 2027",o.nw,o.nA,o.nK)+tr("Old samping",old,old-ok,ok)+tr("Floor "+esc(D.fdate),o.floor,fA,fK)+
+    tr("Total 27",o.nw+old+o.floor,o.nA+old-ok+(fA||0),o.nK+ok+(fK||0),"tot")+"</table>";
+  /* by year: one small table, tap a row to filter the art-col list */
+  function yrow(y,lbl,c,od){return '<tr class="yrow'+((dy||"")===y?" sel":"")+'" data-dy="'+o.code+'|'+y+'"><td>'+lbl+'</td><td>'+fmt(c)+'</td><td>'+fmt(od)+'</td><td><b>'+fmt(c+od)+'</b></td></tr>';}
+  L+='<h3>By year · tap a row to filter</h3><table class="mt yt"><tr><th>Year</th><th>Cnt</th><th>Old</th><th>Total</th></tr>'+yrow("","All",fl,old)+
+    Object.keys(ys).sort().reverse().map(function(y){return yrow(y,"SP "+y,ys[y]-(yo[y]||0),yo[y]||0);}).join("")+"</table>";
+  var yr=YRS[o.code];
+  L+='<div class="ytk"><span class="muted small">Takes on rerun:</span>'+YEARS.map(function(y){var on=!yr||yr.indexOf(y)>=0;
+    return '<label><input type="checkbox" data-yr="'+o.code+'|'+y+'"'+(on?" checked":"")+'> '+y+'</label>';}).join("")+(yr?'<span class="chg small">'+yr.join(" + ")+' only</span>':"")+'</div>';
+  L+='<div class="dacts"><button data-nobm="'+o.code+'" class="'+(NOBM[o.code]?"on":"")+'">'+(NOBM[o.code]?"No samping ✓":"No samping")+'</button>'+
+    '<label class="small muted">Target old pcs <input type="number" min="0" step="10" data-tg="'+o.code+'" value="'+((o.code in TARGET)?TARGET[o.code]:"")+'"></label>'+
+    '<button data-open="C:'+o.code+'">'+(OPEN["C:"+o.code]?"Hide cartons":"Cartons")+'</button></div></div>';
+  var rows=all.filter(function(r){return !dy||r.y===dy;}).sort(function(a,b){return a.y<b.y?1:a.y>b.y?-1:(b.a+b.k)-(a.a+a.k)||(b.fa+b.fk)-(a.fa+a.fk);});
+  var tf=0,to=0;rows.forEach(function(r){tf+=r.fa+r.fk;to+=r.a+r.k;});
+  function hv(q){return q>HEAVY_MIN&&q/Math.max(old,1)>=HEAVY;}
+  function n(q,cls){return '<td class="'+(cls||"")+'">'+(q?fmt(q):'<span class="muted">·</span>')+'</td>';}
+  var R='<div class="dr"><h3 style="margin-top:0">Art-cols after the drop'+(dy?" · SP "+dy:"")+' · counter '+fmt(tf)+' + old '+fmt(to)+' = '+fmt(tf+to)+'</h3>'+
+    '<div class="muted small" style="margin-bottom:2px">Cnt = on the counter '+esc(D.fdate)+' · Old = this plan · bold rows get old stock · amber = old art-col ≥ '+Math.round(HEAVY*100)+'% of old &amp; &gt;'+HEAVY_MIN+' · red = set split</div>';
+  if(rows.length){
+    /* grouped by art (adult art + its kids art = one family), a subtotal line, then its colours */
+    var G={};rows.forEach(function(r){var g=G[r.f]||(G[r.f]={f:r.f,y:r.y,rs:[],fa:0,a:0,fk:0,k:0});g.rs.push(r);g.fa+=r.fa;g.a+=r.a;g.fk+=r.fk;g.k+=r.k;});
+    var gs=Object.keys(G).map(function(k){return G[k];}).sort(function(a,b){return a.y<b.y?1:a.y>b.y?-1:(b.a+b.k)-(a.a+a.k)||(b.fa+b.fk)-(a.fa+a.fk);});
+    R+='<div class="scroll"><table class="mt ft gt"><tr><th>Art · colour</th><th>A cnt</th><th>A old</th><th>K cnt</th><th>K old</th><th>Total</th></tr>'+
+      gs.map(function(g){var ac=g.f.replace("x","0"),kc=g.f.replace("x","5"),got=g.a+g.k;
+        var h='<tr class="ga'+(got?"":" fo")+'"><td><b>'+esc(ac)+'</b>'+(g.fk+g.k?' + '+esc(kc):'')+' <span class="muted">SP '+g.y+' · '+esc(D.desc[ac]||D.desc[kc]||"")+'</span></td>'+n(g.fa)+n(g.a)+n(g.fk)+n(g.k)+'<td><b>'+fmt(g.fa+g.a+g.fk+g.k)+'</b></td></tr>';
+        return h+g.rs.sort(function(a,b){return (b.a+b.k+b.fa+b.fk)-(a.a+a.k+a.fa+a.fk);}).map(function(r){var sp=setSplit(r),got2=r.a+r.k;
+          return '<tr class="gc'+(sp?" s":"")+(got2?"":" fo")+'"><td>col '+esc(r.col)+(sp?' <span class="small">('+(sp==="adult only"?"kids went elsewhere":"adult went elsewhere")+')</span>':"")+'</td>'+
+            n(r.fa)+n(r.a,hv(r.a)?"hc":"")+n(r.fk)+n(r.k,hv(r.k)?"hc":"")+'<td>'+fmt(r.a+r.fa+r.k+r.fk)+'</td></tr>';}).join("");}).join("")+"</table></div>";
+  }else R+='<div class="muted">Nothing on the counter or coming'+(dy?" for SP "+dy:"")+'.</div>';
+  R+=addArts(o,m);
+  R+="</div>";
+  var h='<div class="det"><div class="dgrid">'+L+R+"</div>";
+  if(OPEN["C:"+o.code]){var cs=C.filter(function(c){return fq(c)&&(dest(c)===o.code||(c.orig===o.code&&dest(c)!==o.code));});
+    h+='<div class="ctns" style="margin-top:8px">'+(cs.length?cs.map(ctRow).join(""):'<span class="muted small">No old cartons.</span>')+"</div>";}
+  return h+"</div>";
+}
+/* add an art to an outlet: year tabs + one button per art in the old pool (same brand) */
+var POOLART=null;
+function poolArt(){if(POOLART)return POOLART;POOLART={};C.forEach(function(c){c.L.forEach(function(l){var p=POOLART[l.a]||(POOLART[l.a]={a:l.a,y:l.y,b:c.brand,k:l.k,q:0,outs:{}});p.q+=l.q;var d=dest(c);if(d)p.outs[d]=1;});});return POOLART;}
+function addArts(o,m){
+  var P=poolArt(),mine={},cnt={};Object.keys(m).forEach(function(k){var r=m[k];if(r.ad){mine[r.ad]=(mine[r.ad]||0)+r.a;cnt[r.ad]=(cnt[r.ad]||0)+r.fa;}if(r.kd){mine[r.kd]=(mine[r.kd]||0)+r.k;cnt[r.kd]=(cnt[r.kd]||0)+r.fk;}});
+  var arts=Object.keys(P).map(function(a){return P[a];}).filter(function(p){return p.b===o.brand;});
+  var ys=[];arts.forEach(function(p){if(ys.indexOf(p.y)<0)ys.push(p.y);});ys.sort().reverse();
+  var y=AY[o.code]||ys[0],sel=ADDS[o.code]||{};
+  var pa=Object.keys(sel).filter(function(a){return sel[a]>0;}),pr=Object.keys(sel).filter(function(a){return sel[a]<0;});
+  var h='<h3>Change the arts for this outlet</h3>'+
+    '<div class="small muted" style="margin-bottom:3px">Each card says what this outlet <b>gets now</b> in this plan and what is on its <b>counter</b>. '+
+    'Tap <b>+ Add more</b> to send it more of that art, or <b>− Remove</b> to stop sending it. Tap again to undo. '+
+    'Nothing moves on the page yet: your picks go into Copy changes and the numbers change when the plan is rerun.</div>'+
+    '<div class="yr" style="margin-bottom:4px">'+ys.map(function(x){return '<button class="'+(x===y?"pri":"")+'" data-ay="'+o.code+'|'+x+'">SP '+x+'</button>';}).join("")+'</div>'+
+    (pa.length?'<div class="small" style="margin-bottom:2px"><span class="pk add">ADD MORE</span> '+pa.join(", ")+'</div>':"")+
+    (pr.length?'<div class="small" style="margin-bottom:2px"><span class="pk rem">REMOVE</span> '+pr.join(", ")+'</div>':"")+
+    '<div class="abtns">'+
+    arts.filter(function(p){return p.y===y;}).sort(function(a,b){return a.a<b.a?-1:1;}).map(function(p){var g=mine[p.a]||0,c=cnt[p.a]||0,v=sel[p.a]||0;
+      return '<div class="ab'+(g?" got":"")+(v>0?" on":v<0?" off":"")+'" title="'+esc(D.desc[p.a]||"")+'"><div><b>'+esc(p.a)+'</b>'+(p.k?' <span class="tag">kids</span>':"")+'</div>'+
+        '<span class="ad">'+esc((D.desc[p.a]||"").slice(0,26))+'</span>'+
+        '<span class="st">'+(g?'Gets now: <b>'+fmt(g)+' pcs</b>':'Not in plan')+'</span>'+
+        '<span class="ad">Counter '+fmt(c)+' · pool '+fmt(p.q)+'</span>'+
+        (v>0?'<span class="will add">✓ Will add more on rerun</span>':v<0?'<span class="will rem">✓ Will remove on rerun</span>':"")+
+        '<div class="abb"><button data-add="'+o.code+'|'+p.a+'|1" class="'+(v>0?"on":"")+'">'+(v>0?"Undo add":(g?"+ Add more":"+ Add"))+'</button>'+
+        (g||v<0?'<button data-add="'+o.code+'|'+p.a+'|-1" class="'+(v<0?"rm":"")+'">'+(v<0?"Undo remove":"− Remove")+'</button>':"")+'</div></div>';}).join("")+'</div>';
+  return h;
+}
+var AG='style="grid-template-columns:minmax(150px,2fr) 64px 70px 74px 60px 84px"';
+function renderArts(){
+  var A={};
+  C.forEach(function(c){if(F.b&&c.brand!==F.b)return;var d=dest(c);c.L.forEach(function(l){if(!lineOk(l))return;
+    var r=A[l.a]||(A[l.a]={a:l.a,y:l.y,b:c.brand,pool:0,placed:0,out:{},cols:{}});r.pool+=l.q;r.cols[l.col]=(r.cols[l.col]||0)+l.q;
+    if(d){r.placed+=l.q;var x=r.out[d]||(r.out[d]={q:0,cols:{}});x.q+=l.q;x.cols[l.col]=(x.cols[l.col]||0)+l.q;}});});
+  var rows=Object.keys(A).map(function(k){return A[k];}).sort(function(a,b){return b.pool-a.pool;});
+  function cl(m){return Object.keys(m).map(function(c){return c+" ×"+m[c];}).join(", ");}
+  var h='<div class="panel"><div class="row head" '+AG+'><div>Article</div><div>Year</div><div class="num">Pool</div><div class="num">At outlets</div><div class="num">Outlets</div><div></div></div>';
+  h+=rows.map(function(r){var n=Object.keys(r.out).length,k="A:"+r.a;
+    var s='<div class="row art" '+AG+'><div><span class="code">'+esc(r.a)+'</span> <span class="tag">'+r.b+'</span><br><span class="muted small">'+esc(D.desc[r.a]||"")+'</span><br><span class="muted small">colours: '+esc(cl(r.cols))+'</span></div><div>SP '+r.y+'</div><div class="num">'+fmt(r.pool)+'</div><div class="num">'+fmt(r.placed)+'</div><div class="num">'+n+'</div><div><button data-open="'+k+'">'+(OPEN[k]?"Hide":"Outlets")+'</button></div></div>';
+    if(OPEN[k]){var os=Object.keys(r.out).sort(function(a,b){return r.out[b].q-r.out[a].q;});
+      s+='<div class="ctns">'+os.map(function(o){var x=r.out[o];return '<div class="ct ao"><span class="i code">'+esc(o)+'</span><span class="p num">'+x.q+'</span><span class="arts">'+esc(cl(x.cols))+'</span></div>';}).join("")+
+        (r.pool>r.placed?'<div class="ct ao"><span class="i muted">In WH</span><span class="p num">'+(r.pool-r.placed)+'</span><span></span></div>':"")+"</div>";}
+    return s;}).join("");
+  return h+(rows.length?"":'<div class="msg muted">No article matches.</div>')+"</div>";
+}
+function opts(brand,sel){
+  var os=Object.keys(O).map(function(k){return O[k];}).filter(function(o){return o.brand===brand&&o.grp!=="out"&&!NOBM[o.code];}).sort(function(a,b){return a.code<b.code?-1:1;});
+  return '<option value="">Stays in WH</option>'+os.map(function(o){return '<option value="'+o.code+'"'+(o.code===sel?" selected":"")+">"+o.code+"</option>";}).join("");
+}
+function ctRow(c){
+  var d=dest(c),moved=d!==c.orig,arts=c.arts.split(";").slice(0,4).map(function(a){var p=a.split(":");return p[0]+" ×"+p[1];}).join(", ")+(c.arts.split(";").length>4?" …":"");
+  return '<div class="ct'+(moved?" moved":"")+'"><span class="i">'+esc(c.ic)+(c.kids?' <span class="tag">kids '+c.kids+'</span>':"")+'</span><span class="p num">'+c.pcs+'</span><span class="arts">'+esc(arts)+(moved&&c.orig?' · <b>was '+esc(c.orig)+'</b>':"")+'</span><select data-mv="'+c.ic+'">'+opts(c.brand,d)+"</select></div>";
+}
+function text(){
+  var ch=changes(),T=tallies(),L=["Samping Raya 2027 changes (from "+D.ver+")"];
+  if(ch.n.length)L.push("NO SAMPING: "+ch.n.join(", "));
+  ch.t.forEach(function(k){L.push("TARGET: "+k+" "+TARGET[k]+" pcs (plan "+(T.orig[k]||0)+")");});
+  ch.y.forEach(function(k){L.push("YEARS: "+k+" SP "+YRS[k].join(" + ")+" only");});
+  ch.ad.forEach(function(k){function ls(v){return Object.keys(ADDS[k]).filter(function(a){return (ADDS[k][a]>0)===(v>0);}).map(function(a){return a+" (SP "+yearOf(a)+")";}).join(", ");}
+    var x=ls(1),r=ls(-1);if(x)L.push("ADD: "+k+" "+x);if(r)L.push("REMOVE: "+k+" "+r);});
+  ch.m.forEach(function(c){L.push("MOVE: "+c.ic+" ("+c.pcs+" pcs) "+(c.orig||"WH")+" -> "+(MOVES[c.ic]||"not placed"));});
+  var un=C.filter(function(c){return !dest(c);});
+  if(un.length)L.push("NOT PLACED: "+un.length+" ctns / "+un.reduce(function(a,c){return a+c.pcs;},0)+" pcs - stay in WH");
+  if(L.length===1)L.push("(no changes)");
+  return L.join("\n");
+}
+document.addEventListener("click",function(e){var t=e.target;
+  var rw=t.closest&&t.closest("[data-row]");
+  if(rw&&!t.closest("button,input,select,label")){OPEN[rw.dataset.row]=!OPEN[rw.dataset.row];render();return;}
+  if(t.dataset.nobm){var k=t.dataset.nobm;if(NOBM[k])delete NOBM[k];else NOBM[k]=1;save();render();}
+  else if(t.dataset.open){OPEN[t.dataset.open]=!OPEN[t.dataset.open];render();}
+  else if(t.id==="copy"){var s=text();(navigator.clipboard?navigator.clipboard.writeText(s):Promise.reject()).then(function(){t.textContent="Copied ✓";setTimeout(render,1500);},function(){window.prompt("Copy this:",s);});}
+  else if(t.id==="csv"){var rows=[["IC","Brand","Pcs","Plan outlet","Now outlet","Arts"]];C.forEach(function(c){rows.push([c.ic,c.brand,c.pcs,c.orig,dest(c),c.arts]);});
+    var b=new Blob([rows.map(function(r){return r.map(function(v){return '"'+String(v).replace(/"/g,'""')+'"';}).join(",");}).join("\n")],{type:"text/csv"});
+    var a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="Samping Raya2027 "+D.ver+" reallocated.csv";a.click();}
+  else if(t.id==="vo"||t.id==="va"){VIEW=t.id==="va"?"a":"o";render();}
+  else if(t.closest&&t.closest("[data-dy]")){var p=t.closest("[data-dy]").dataset.dy.split("|");if(p[1])DY[p[0]]=p[1];else delete DY[p[0]];render();}
+  else if(t.closest&&t.closest("[data-add]")){var p=t.closest("[data-add]").dataset.add.split("|"),m=ADDS[p[0]]||(ADDS[p[0]]={}),v=+(p[2]||1);if(m[p[1]]===v)delete m[p[1]];else m[p[1]]=v;if(!Object.keys(m).length)delete ADDS[p[0]];save();render();}
+  else if(t.closest&&t.closest("[data-ay]")){var p=t.closest("[data-ay]").dataset.ay.split("|");AY[p[0]]=p[1];render();}
+  else if(t.id==="reset"){if(confirm("Clear all your changes on this device?")){MOVES={};NOBM={};TARGET={};YRS={};ADDS={};save();render();}}
+});
+document.addEventListener("change",function(e){var t=e.target;
+  if(t.dataset.mv){var c=C.filter(function(x){return x.ic===t.dataset.mv;})[0];
+    var grp=C.filter(function(x){return x===c||(c.pair&&x.ic===c.pair)||x.pair===c.ic;});  // ERR pair cartons move together
+    grp.forEach(function(x){if(t.value===x.orig)delete MOVES[x.ic];else MOVES[x.ic]=t.value;});save();render();}
+  else if(t.dataset.yr){var p=t.dataset.yr.split("|"),cur=(YRS[p[0]]||YEARS.slice()).slice();
+    if(t.checked){if(cur.indexOf(p[1])<0)cur.push(p[1]);}else cur=cur.filter(function(x){return x!==p[1];});cur.sort();
+    if(!cur.length||cur.length===YEARS.length)delete YRS[p[0]];else YRS[p[0]]=cur;save();render();}
+  else if(t.dataset.tg){var k=t.dataset.tg;if(t.value==="")delete TARGET[k];else TARGET[k]=Math.max(0,+t.value);save();render();}
+  else if(t.id==="fb"){F.b=t.value;render();}else if(t.id==="fy"){F.y=t.value;render();}else if(t.id==="fg"){F.g=t.value;render();}else if(t.id==="fs"){F.s=t.value;render();}
+});
+var qt;document.addEventListener("input",function(e){var id=e.target.id;if(id==="fq"||id==="fa"){if(id==="fq")F.q=e.target.value;else F.a=e.target.value.trim();clearTimeout(qt);qt=setTimeout(function(){var p=e.target.selectionStart;render();var f=$("#"+id);f.focus();f.setSelectionRange(p,p);},250);}});
+
+/* ---------- crypto (same contract as push_board.py) ---------- */
+function readKey(){var h=(location.hash||"").replace(/^#/,"").split("&")[0].trim();return /^[0-9a-fA-F]{64}$/.test(h)?h.toLowerCase():null;}
+function hexToBytes(h){var o=new Uint8Array(h.length/2);for(var i=0;i<o.length;i++)o[i]=parseInt(h.substr(i*2,2),16);return o;}
+function b64(s){var b=atob(s),o=new Uint8Array(b.length);for(var i=0;i<b.length;i++)o[i]=b.charCodeAt(i);return o;}
+function fail(t){$("#app").innerHTML='<div class="msg"><h1>'+esc(t)+'</h1><p class="muted">Open the link exactly as it was sent. It must include everything after #.</p></div>';}
+KEYHEX=readKey();
+if(!KEYHEX||!window.crypto||!crypto.subtle){fail("This link is not complete.");return;}
+crypto.subtle.digest("SHA-256",new TextEncoder().encode(KEYHEX)).then(function(buf){
+  var b=new Uint8Array(buf),id="";for(var i=0;i<8;i++)id+=(b[i]<16?"0":"")+b[i].toString(16);
+  return Promise.all([fetch("k/"+id+".json",{cache:"no-store"}),crypto.subtle.importKey("raw",hexToBytes(KEYHEX),{name:"AES-GCM"},false,["decrypt"])]);
+}).then(function(r){if(!r[0].ok)throw new Error("missing");return r[0].json().then(function(doc){
+  return crypto.subtle.decrypt({name:"AES-GCM",iv:b64(doc.iv),tagLength:128},r[1],b64(doc.ct));});
+}).then(function(buf){D=JSON.parse(new TextDecoder().decode(buf));boot();},function(){fail("Couldn't open this page.");});
+window.addEventListener("hashchange",function(){location.reload();});
+})();
+</script>
+</body>
+</html>
