@@ -126,7 +126,7 @@ var D,KEYHEX,STORE,MOVES={},NOBM={},TARGET={},YRS={},ADDS={},AY={},DY={},OPEN={}
 function $(s){return document.querySelector(s);}
 function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
 function fmt(n){return (Math.round(n)||0).toLocaleString("en-US");}
-var GL={nonew:"no 2027 sets",missed:"skipped in v2",topup:"has 2027 sets",out:"out"};
+var GL={nonew:"no 2027 bundle",missed:"-",topup:"has 2027 bundle",out:"out"};
 var O={},C=[],FAC={};
 function boot(){
   D.o.forEach(function(r){O[r[0]]={code:r[0],name:r[1],brand:r[2],sup:r[3],sold:r[4],st:r[5],nw:r[6],floor:r[7],grp:r[8],sA:r[9],sK:r[10],nA:r[11],nK:r[12],fA:r[13],fK:r[14]};});
@@ -168,13 +168,13 @@ function render(){
      '<div class="ctl" style="margin-bottom:4px"><button id="vo" class="'+(VIEW==="o"?"pri":"")+'">By outlet</button><button id="va" class="'+(VIEW==="a"?"pri":"")+'">By article</button>'+
      '<select id="fy"><option value="">All years</option>'+YEARS.map(function(y){return '<option value="'+y+'"'+(F.y===y?" selected":"")+'>SP '+y+'</option>';}).join("")+'</select>'+
      '<input type="search" id="fa" placeholder="Article code e.g. 19026001" value="'+esc(F.a)+'" style="max-width:190px"></div>'+
-     '<div class="ctl"><select id="fb"><option value="">AD + BF</option><option'+(F.b==="AD"?" selected":"")+'>AD</option><option'+(F.b==="BF"?" selected":"")+'>BF</option></select>'+
-     '<select id="fg"><option value="">All outlets</option>'+["nonew","missed","topup","out","chg"].map(function(g){return '<option value="'+g+'"'+(F.g===g?" selected":"")+'>'+(g==="chg"?"Changed only":GL[g])+"</option>";}).join("")+'</select>'+
-     '<select id="fs"><option value="old"'+(F.s==="old"?" selected":"")+'>Most old first</option><option value="x"'+(F.s==="x"?" selected":"")+'>Highest cover first</option><option value="code"'+(F.s==="code"?" selected":"")+'>Outlet code</option><option value="sold"'+(F.s==="sold"?" selected":"")+'>2026 sold</option></select>'+
+     '<div class="ctl">'+
+     '<select id="fg"><option value="">All outlets</option>'+["nonew","topup","out","chg"].map(function(g){return '<option value="'+g+'"'+(F.g===g?" selected":"")+'>'+(g==="chg"?"Changed only":GL[g])+"</option>";}).join("")+'</select>'+
+     '<select id="fs"><option value="old"'+(F.s==="old"?" selected":"")+'>Most old first</option><option value="x"'+(F.s==="x"?" selected":"")+'>Highest cover first</option><option value="code"'+(F.s==="code"?" selected":"")+'>Outlet code</option><option value="sold"'+(F.s==="sold"?" selected":"")+'>Avg sold</option></select>'+
      '<input type="search" id="fq" placeholder="Outlet code / name / supervisor" value="'+esc(F.q)+'">'+
      '<button class="pri" id="copy">Copy changes</button><button id="csv">Download CSV</button><button id="reset">Reset</button></div></div>';
   if(un.length){
-    h+='<div class="panel"><h2>Stays in WH: '+fmt(unp)+' pcs in '+un.length+' cartons <button data-open="__UN">'+(OPEN.__UN?"Hide":"Show cartons")+'</button><br><span class="muted small">Cartons nobody needs (or moved out) stay in the WH. Pick an outlet for each, or leave them and the rerun spreads them.</span></h2>'+(OPEN.__UN?'<div class="ctns">'+un.map(ctRow).join("")+"</div>":"")+"</div>";
+    h+='<div class="panel"><h2>Stays in WH: '+fmt(unp)+' pcs in '+un.length+' cartons <button data-open="__UN">'+(OPEN.__UN?"Hide":"Show cartons")+'</button><br><span class="muted small">Cartons nobody needs (or moved out) stay in the WH. Pick an outlet for a carton to send it out, or leave it in the WH.</span></h2>'+(OPEN.__UN?'<div class="ctns">'+un.map(ctRow).join("")+"</div>":"")+"</div>";
   }
   if(VIEW==="a"){$("#app").innerHTML=h+renderArts();return;}
   var list=Object.keys(O).map(function(k){return O[k];}).filter(function(o){
