@@ -79,8 +79,13 @@ input[type=search]{min-width:150px;flex:1}
 .mt tr.s td{color:var(--bad)}
 .mt tr.fo td{color:var(--mut)}
 .gt tr.ga td{background:var(--accs);border-top:2px solid var(--line)}.gt tr.gc td:first-child{padding-left:16px}
-.abtns{display:flex;flex-wrap:wrap;gap:4px}.ab{display:flex;flex-direction:column;align-items:flex-start;padding:3px 6px;font-weight:400;min-width:118px;text-align:left}
-.ab .ad{font-size:10px;color:var(--mut)}.ab.on{background:var(--ok);border-color:var(--ok);color:var(--card)}.ab.on .ad{color:var(--card)}
+.abtns{display:flex;flex-wrap:wrap;gap:4px}.ab{display:flex;flex-direction:column;align-items:flex-start;gap:1px;padding:4px 6px;min-width:138px;background:var(--card);border:1px dashed var(--line);border-radius:6px}
+.ab.got{border-style:solid;border-color:var(--acc)}.ab .ad{font-size:10px;color:var(--mut)}.ab .st{font-size:11px}
+.ab.on{background:var(--oks,#e6f4ea);border-color:var(--ok);border-style:solid}.ab.off{background:var(--bads,#fdecea);border-color:var(--bad);border-style:solid}
+.ab .will{font-size:10px;font-weight:600}.ab .will.add{color:var(--ok)}.ab .will.rem{color:var(--bad)}
+.ab .abb{display:flex;gap:3px;margin-top:2px}.ab .abb button{padding:1px 6px;font-size:11px}
+.ab .abb button.on{background:var(--ok);border-color:var(--ok);color:var(--card)}.ab .abb button.rm{background:var(--bad);border-color:var(--bad);color:var(--card)}
+.pk{display:inline-block;font-size:10px;font-weight:700;border-radius:4px;padding:0 4px;color:var(--card)}.pk.add{background:var(--ok)}.pk.rem{background:var(--bad)}
 .yr button{padding:1px 6px;font-size:11px}
 .yt{min-width:220px}.yt tr.yrow{cursor:pointer}.yt tr.yrow:hover td{background:var(--accs)}.yt tr.sel td{background:var(--acc);color:var(--card)}
 .ytk{display:flex;gap:10px;align-items:center;margin-top:6px;font-size:12px}.ytk label{display:flex;gap:3px;align-items:center}
@@ -263,11 +268,23 @@ function addArts(o,m){
   var arts=Object.keys(P).map(function(a){return P[a];}).filter(function(p){return p.b===o.brand;});
   var ys=[];arts.forEach(function(p){if(ys.indexOf(p.y)<0)ys.push(p.y);});ys.sort().reverse();
   var y=AY[o.code]||ys[0],sel=ADDS[o.code]||{};
-  var h='<h3>Add an art to this outlet · tap to pick, picks go into Copy changes</h3><div class="yr" style="margin-bottom:4px">'+ys.map(function(x){return '<button class="'+(x===y?"pri":"")+'" data-ay="'+o.code+'|'+x+'">BM '+x+'</button>';}).join("")+
-    (Object.keys(sel).length?'<span class="chg small" style="align-self:center">Picked: '+Object.keys(sel).join(", ")+'</span>':"")+'</div><div class="abtns">'+
-    arts.filter(function(p){return p.y===y;}).sort(function(a,b){return a.a<b.a?-1:1;}).map(function(p){var g=mine[p.a]||0,c=cnt[p.a]||0;
-      return '<button class="ab'+(sel[p.a]?" on":"")+'" data-add="'+o.code+'|'+p.a+'" title="'+esc(D.desc[p.a]||"")+'"><b>'+esc(p.a)+'</b>'+(p.k?' <span class="tag">kids</span>':"")+'<span class="ad">'+esc((D.desc[p.a]||"").slice(0,24))+'</span>'+
-        '<span class="ad">pool '+fmt(p.q)+(g?' · gets '+g:'')+(c?' · cnt '+c:'')+'</span></button>';}).join("")+'</div>';
+  var pa=Object.keys(sel).filter(function(a){return sel[a]>0;}),pr=Object.keys(sel).filter(function(a){return sel[a]<0;});
+  var h='<h3>Change the arts for this outlet</h3>'+
+    '<div class="small muted" style="margin-bottom:3px">Each card says what this outlet <b>gets now</b> in this plan and what is on its <b>counter</b>. '+
+    'Tap <b>+ Add more</b> to send it more of that art, or <b>− Remove</b> to stop sending it. Tap again to undo. '+
+    'Nothing moves on the page yet: your picks go into Copy changes and the numbers change when the plan is rerun.</div>'+
+    '<div class="yr" style="margin-bottom:4px">'+ys.map(function(x){return '<button class="'+(x===y?"pri":"")+'" data-ay="'+o.code+'|'+x+'">BM '+x+'</button>';}).join("")+'</div>'+
+    (pa.length?'<div class="small" style="margin-bottom:2px"><span class="pk add">ADD MORE</span> '+pa.join(", ")+'</div>':"")+
+    (pr.length?'<div class="small" style="margin-bottom:2px"><span class="pk rem">REMOVE</span> '+pr.join(", ")+'</div>':"")+
+    '<div class="abtns">'+
+    arts.filter(function(p){return p.y===y;}).sort(function(a,b){return a.a<b.a?-1:1;}).map(function(p){var g=mine[p.a]||0,c=cnt[p.a]||0,v=sel[p.a]||0;
+      return '<div class="ab'+(g?" got":"")+(v>0?" on":v<0?" off":"")+'" title="'+esc(D.desc[p.a]||"")+'"><div><b>'+esc(p.a)+'</b>'+(p.k?' <span class="tag">kids</span>':"")+'</div>'+
+        '<span class="ad">'+esc((D.desc[p.a]||"").slice(0,26))+'</span>'+
+        '<span class="st">'+(g?'Gets now: <b>'+fmt(g)+' pcs</b>':'Not in plan')+'</span>'+
+        '<span class="ad">Counter '+fmt(c)+' · pool '+fmt(p.q)+'</span>'+
+        (v>0?'<span class="will add">✓ Will add more on rerun</span>':v<0?'<span class="will rem">✓ Will remove on rerun</span>':"")+
+        '<div class="abb"><button data-add="'+o.code+'|'+p.a+'|1" class="'+(v>0?"on":"")+'">'+(v>0?"Undo add":(g?"+ Add more":"+ Add"))+'</button>'+
+        (g||v<0?'<button data-add="'+o.code+'|'+p.a+'|-1" class="'+(v<0?"rm":"")+'">'+(v<0?"Undo remove":"− Remove")+'</button>':"")+'</div></div>';}).join("")+'</div>';
   return h;
 }
 var AG='style="grid-template-columns:minmax(150px,2fr) 64px 70px 74px 60px 84px"';
@@ -300,7 +317,8 @@ function text(){
   if(ch.n.length)L.push("NO BM: "+ch.n.join(", "));
   ch.t.forEach(function(k){L.push("TARGET: "+k+" "+TARGET[k]+" pcs (plan "+(T.orig[k]||0)+")");});
   ch.y.forEach(function(k){L.push("YEARS: "+k+" BM "+YRS[k].join(" + ")+" only");});
-  ch.ad.forEach(function(k){L.push("ADD: "+k+" "+Object.keys(ADDS[k]).map(function(a){return a+" (BM "+yearOf(a)+")";}).join(", "));});
+  ch.ad.forEach(function(k){function ls(v){return Object.keys(ADDS[k]).filter(function(a){return (ADDS[k][a]>0)===(v>0);}).map(function(a){return a+" (BM "+yearOf(a)+")";}).join(", ");}
+    var x=ls(1),r=ls(-1);if(x)L.push("ADD: "+k+" "+x);if(r)L.push("REMOVE: "+k+" "+r);});
   ch.m.forEach(function(c){L.push("MOVE: "+c.ic+" ("+c.pcs+" pcs) "+(c.orig||"WH")+" -> "+(MOVES[c.ic]||"not placed"));});
   var un=C.filter(function(c){return !dest(c);});
   if(un.length)L.push("NOT PLACED: "+un.length+" ctns / "+un.reduce(function(a,c){return a+c.pcs;},0)+" pcs - spread on rerun");
@@ -318,7 +336,7 @@ document.addEventListener("click",function(e){var t=e.target;
     var a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="BM2027 old stock "+D.ver+" reallocated.csv";a.click();}
   else if(t.id==="vo"||t.id==="va"){VIEW=t.id==="va"?"a":"o";render();}
   else if(t.closest&&t.closest("[data-dy]")){var p=t.closest("[data-dy]").dataset.dy.split("|");if(p[1])DY[p[0]]=p[1];else delete DY[p[0]];render();}
-  else if(t.closest&&t.closest("[data-add]")){var p=t.closest("[data-add]").dataset.add.split("|"),m=ADDS[p[0]]||(ADDS[p[0]]={});if(m[p[1]])delete m[p[1]];else m[p[1]]=1;if(!Object.keys(m).length)delete ADDS[p[0]];save();render();}
+  else if(t.closest&&t.closest("[data-add]")){var p=t.closest("[data-add]").dataset.add.split("|"),m=ADDS[p[0]]||(ADDS[p[0]]={}),v=+(p[2]||1);if(m[p[1]]===v)delete m[p[1]];else m[p[1]]=v;if(!Object.keys(m).length)delete ADDS[p[0]];save();render();}
   else if(t.closest&&t.closest("[data-ay]")){var p=t.closest("[data-ay]").dataset.ay.split("|");AY[p[0]]=p[1];render();}
   else if(t.id==="reset"){if(confirm("Clear all your changes on this device?")){MOVES={};NOBM={};TARGET={};YRS={};ADDS={};save();render();}}
 });
