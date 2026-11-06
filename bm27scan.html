@@ -134,8 +134,8 @@ main{max-width:720px;margin:0 auto;padding:12px 16px 80px}
     if(s==='circle')h+='<circle cx="50" cy="50" r="50" fill="#000"/>'+(t?'<text x="50" y="62" font-size="34" fill="#fff" '+F+'>'+t+'</text>':'');
     else if(s==='triangle')h+='<polygon points="50,0 0,100 100,100" fill="#000"/>'+(t?'<text x="50" y="88" font-size="26" fill="#fff" '+F+'>'+t+'</text>':'');
     else if(s==='square')h+='<rect x="4.25" y="4.25" width="91.5" height="91.5" fill="#fff" stroke="#000" stroke-width="8.5"/>'+(t?'<text x="50" y="62" font-size="34" fill="#000" '+F+'>'+t+'</text>':'');
-    else if(s==='star')h+='<polygon points="'+pts(D.star)+'" fill="#000"/>'+(t?'<text x="50" y="58" font-size="17" fill="#fff" '+F+'>'+t+'</text>':'');
-    else if(s==='moon')h+='<polygon points="'+pts(D.moon)+'" fill="#000"/>'+(t?'<text x="'+(D.moonTxt[0]*100)+'" y="'+(D.moonTxt[1]*100+7.5)+'" font-size="22" fill="#000" '+F+'>'+t+'</text>':'');
+    else if(s==='diamond')h+='<polygon points="50,0 100,50 50,100 0,50" fill="#000"/>'+(t?'<text x="50" y="58.5" font-size="24" fill="#fff" '+F+'>'+t+'</text>':'');
+    else if(s==='ring'){var rw=(D.ringW||.13)*100;h+='<circle cx="50" cy="50" r="'+(50-rw/2)+'" fill="#fff" stroke="#000" stroke-width="'+rw+'"/>'+(t?'<text x="50" y="60.5" font-size="30" fill="#000" '+F+'>'+t+'</text>':'');}
     return h+'</svg>';
   }
   function tallySVG(rg){var n=D.tally[rg],bw=33,g=22,w=n*bw+(n-1)*g,h='<svg class="tally" viewBox="0 0 '+w+' 100" xmlns="http://www.w3.org/2000/svg">';
