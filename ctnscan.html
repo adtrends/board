@@ -103,7 +103,7 @@ pre{white-space:pre-wrap;font-size:13px;background:#f8fafc;border:1px solid var(
     if(D.ctnIdx[id]===undefined){D.cartons.push({id:id,chute:'',lines:[]});D.ctnIdx[id]=D.cartons.length-1;}}
   function freeId(v){v=String(v||'').trim().toUpperCase().replace(/\s+/g,'');if(!v)return null;if(/^\d+$/.test(v))v=(D.prefix||'K')+'-'+('000'+v).slice(-3);return v;}
   function start(){
-    if(D.free){D.cartons=[];D.ctnIdx={};freeIds().forEach(function(id){D.cartons.push({id:id,chute:'',lines:[]});});}
+    if(D.free){var base={};D.cartons.forEach(function(c){base[c.id]=1;});freeIds().forEach(function(id){if(!base[id])D.cartons.push({id:id,chute:id.split('-').pop(),lines:[]});});fetchHQ();}
     D.ctnIdx={};D.cartons.forEach(function(c,i){D.ctnIdx[c.id]=i;});migrate();
     D.skuSet={};Object.keys(D.bc).forEach(function(b){D.skuSet[D.bc[b]]=1;});
     window.addEventListener('hashchange',function(){});
@@ -130,18 +130,27 @@ pre{white-space:pre-wrap;font-size:13px;background:#f8fafc;border:1px solid var(
     inp.focus();inp.onkeydown=function(ev){if(ev.key==='Enter'||ev.key==='Tab'){ev.preventDefault();var r=lookup(inp.value);inp.value='';if(r&&r.ctn)open(r.ctn);else alert('Bukan label karton');}};
     var tl=null;inp.oninput=function(){clearTimeout(tl);tl=setTimeout(function(){var r=lookup(inp.value);if(r&&r.ctn){inp.value='';open(r.ctn);}},400);};
   }
+  var HQ={},SHEET='https://docs.google.com/spreadsheets/d/1iDooagNQXRBkeoj5U0U9BcgvF-FuhSx79ovvsnqw-rs/gviz/tq?tqx=out:csv';
+  function fetchHQ(){fetch(SHEET+'&t='+Date.now()).then(function(r){return r.text();}).then(function(t){var re=new RegExp(D.wave+' SEMAK ('+(D.prefix||'K')+'-\\d+) \\(BARU\\)\\s*\\nScan (\\d+)','g'),m,h={};
+    while((m=re.exec(t)))h[m[1]]=+m[2];HQ=h;if(!cur)list();}).catch(function(){});}
+  function nextNo(){var mx=0;D.cartons.forEach(function(c){var n=+(c.id.split('-').pop());if(n>mx)mx=n;});Object.keys(HQ).forEach(function(id){var n=+(id.split('-').pop());if(n>mx)mx=n;});return mx+1;}
   function freeList(){
     ttl.textContent=D.title||('Scan Karton '+D.wave);var n=0,p=0;D.cartons.forEach(function(c){var st=getS(c.id);if(st.done){n++;p+=st.s.filter(function(x){return !x.u||x.raw;}).length;}});
     var h='<div class="card" style="background:#fff4c2;border:2px solid #e0a800"><div style="font-size:18px;font-weight:700">'+esc(D.title||D.wave)+'</div><div class="mute">Siap: '+n+' karton &middot; '+p+' pcs (di terminal ini)</div></div>'+
       '<div class="card"><b>Cara guna</b><div class="mute">1. Tulis nombor pada kotak (1, 2, 3...).<br>2. Taip nombor itu di bawah dan tekan <b>Karton baru</b>.<br>3. Scan SETIAP helai dalam kotak, satu demi satu.<br>4. Tekan <b>Siap</b>. Isi karton terus dihantar ke HQ. HQ akan beri label / SO untuk ditampal.</div>'+
-      '<input id="scanin" placeholder="Nombor kotak, cth 1" autocomplete="off" inputmode="numeric" style="margin-top:10px"><div class="row"><button class="btn p" id="newc">Karton baru</button></div></div>';
-    D.cartons.slice().reverse().forEach(function(c){var s=status(c);h+='<div class="card ctn" data-id="'+esc(c.id)+'"><div class="chute">'+esc(c.id.split('-').pop())+'</div><div class="nm">'+esc(c.id)+'</div><span class="tag '+s[0]+'">'+esc(s[1])+'</span></div>';});
+      '<input id="scanin" placeholder="Scan label / taip nombor kotak" autocomplete="off" style="margin-top:10px"><div class="row"><button class="btn p" id="newc">Buka</button><button class="btn" id="addc">+ Tambah karton '+nextNo()+'</button><button class="btn" id="hqr">&#8635; Status HQ</button></div>'+
+      '<div class="mute">Ramai boleh scan serentak: setiap orang ambil kotak lain. &#10003;HQ = sudah sampai HQ (dari mana-mana terminal).</div></div>';
+    D.cartons.forEach(function(c){var s=status(c);if(s[0]==='t0'&&HQ[c.id]!==undefined)s=['t2','Siap '+HQ[c.id]+' pcs ✓HQ (terminal lain)'];h+='<div class="card ctn" data-id="'+esc(c.id)+'"><div class="chute">'+esc(c.id.split('-').pop())+'</div><div class="nm">'+esc(c.id)+'</div><span class="tag '+s[0]+'">'+esc(s[1])+'</span></div>';});
     h+='<div class="row"><button class="btn p" id="allrep">Hantar laporan SEMUA karton</button></div>';
     app.innerHTML=h;
     app.querySelectorAll('.ctn').forEach(function(e){e.onclick=function(){open(e.getAttribute('data-id'));};});
     document.getElementById('allrep').onclick=function(){share(reportAll());};
     var inp=document.getElementById('scanin'),go=function(){var id=freeId(inp.value);if(!id)return alert('Taip nombor kotak dulu');
-      if(freeIds().indexOf(id)>=0&&!confirm(id+' sudah ada di terminal ini. Buka semula?'))return;freeAdd(id);open(id);};
+      if(D.ctnIdx[id]===undefined){if(!confirm(id+' belum ada dalam senarai. Tambah karton baru '+id+'?'))return;freeAdd(id);}
+      if(HQ[id]!==undefined&&!getS(id).s.length&&!confirm(id+' sudah dihantar ke HQ dari terminal lain ('+HQ[id]+' pcs). Scan semula?'))return;open(id);};
+    document.getElementById('addc').onclick=function(){var n=nextNo(),v=prompt('Nombor kotak baru (tulis pada kotak):',String(n));if(!v)return;var id=freeId(v);
+      if(D.ctnIdx[id]!==undefined||HQ[id]!==undefined){alert(id+' sudah ada. Guna nombor lain.');return;}freeAdd(id);open(id);};
+    document.getElementById('hqr').onclick=function(){fetchHQ();};
     document.getElementById('newc').onclick=go;inp.onkeydown=function(ev){if(ev.key==='Enter'){ev.preventDefault();go();}};inp.focus();
   }
   function open(id){
