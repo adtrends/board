@@ -96,7 +96,7 @@ input[type=search]{min-width:150px;flex:1}
 .pk{display:inline-block;font-size:10px;font-weight:700;border-radius:4px;padding:0 4px;color:var(--card)}.pk.add{background:var(--ok)}.pk.rem{background:var(--bad)}
 .yr button{padding:1px 6px;font-size:11px}
 .yt{min-width:220px}.yt tr.yrow{cursor:pointer}.yt tr.yrow:hover td{background:var(--accs)}.yt tr.sel td{background:var(--acc);color:var(--card)}
-.ytk{display:flex;gap:10px;align-items:center;margin-top:6px;font-size:12px}.ytk label{display:flex;gap:3px;align-items:center}
+.ytk{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:center;margin-top:6px;font-size:12px;max-width:100%}.ytk .chg{flex-basis:100%}.dgrid>*{min-width:0}.ytk label{display:flex;gap:3px;align-items:center}
 @media (max-width:760px){
  .row{grid-template-columns:repeat(5,1fr);grid-template-areas:"o o o o x" "s n d f t" "a a a a a"}
  .row>.c-o{grid-area:o}.row>.c-s{grid-area:s}.row>.c-n{grid-area:n}.row>.c-st{grid-area:d}.row>.c-t{grid-area:t}.row>.c-x{grid-area:x}.row>.acts{grid-area:a;justify-content:flex-start}
