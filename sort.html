@@ -80,7 +80,8 @@ main{max-width:720px;margin:0 auto;padding:12px 16px 90px}
   }
   var SHEET='https://docs.google.com/spreadsheets/d/1iDooagNQXRBkeoj5U0U9BcgvF-FuhSx79ovvsnqw-rs/gviz/tq?tqx=out:csv';
   function fetchHQ(){fetch(SHEET+'&t='+Date.now()).then(function(r){return r.text();}).then(function(t){
-    var re=new RegExp(D.wave+' SORT (\\S+) -> (\\S+)','g'),m,h={};while((m=re.exec(t)))h[m[1]]=m[2];HQ=h;
+    // rows in time order: an UNSORT (undo) clears the carton
+    var re=new RegExp(D.wave+' (UN)?SORT ([^\\s"]+)(?: -> ([^\\s"]+))?','g'),m,h={};while((m=re.exec(t))){if(m[1])delete h[m[2]];else h[m[2]]=m[3];}HQ=h;
     if(view==='lot')draw();else stats();}).catch(function(){});}
   var FORM='https://docs.google.com/forms/d/e/1FAIpQLScYDGCsuTz5QLuMjONq_6gfQXFx0hUB3bVL_WbiRG6W3AalNg/formResponse',FIELD='entry.1287064873';
   function send(id){var c=IDX[id],b=new URLSearchParams();b.append(FIELD,'#SORT v1\n'+D.wave+' SORT '+id+' -> '+c[1]+'\nLOT '+c[3]+' | '+c[2]+' pcs');
