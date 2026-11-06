@@ -132,7 +132,7 @@ input[type=search]{min-width:150px;flex:1}
 <script>
 (function(){
 "use strict";
-var D,KEYHEX,STORE,MOVES={},NOBM={},TARGET={},YRS={},ADDS={},AY={},DY={},OPEN={},F={b:"",g:"",q:"",s:"old",y:"",a:"",cf:{}},VIEW="o",YEARS=[];
+var RESTORED="",D,KEYHEX,STORE,MOVES={},NOBM={},TARGET={},YRS={},ADDS={},AY={},DY={},OPEN={},F={b:"",g:"",q:"",s:"old",y:"",a:"",cf:{}},VIEW="o",YEARS=[];
 function $(s){return document.querySelector(s);}
 function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
 function fmt(n){return (Math.round(n)||0).toLocaleString("en-US");}
@@ -146,7 +146,13 @@ function boot(){
   FAC={};Object.keys(D.fac||{}).forEach(function(code){FAC[code]=D.fac[code].split(";").filter(Boolean).map(function(x){
     var p=x.split(":"),i=p[0].lastIndexOf("-"),a=p[0].slice(0,i);return {a:a,col:p[0].slice(i+1),q:+p[1],y:yearOf(a),k:isKid(a)};});});
   STORE="samping2027:"+D.ver;
-  try{var s=JSON.parse(localStorage.getItem(STORE)||"{}");MOVES=s.m||{};NOBM=s.n||{};TARGET=s.t||{};YRS=s.y||{};ADDS=s.a||{};}catch(e){}
+  try{var raw=localStorage.getItem(STORE),from="",pre=STORE.split(":")[0]+":";
+    if(!raw){var ks=[];for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);if(k.indexOf(pre)===0&&k!==STORE)ks.push(k);}
+      ks.sort(function(a,b){return (+b.replace(/\D/g,""))-(+a.replace(/\D/g,""));});
+      for(var j=0;j<ks.length&&!from;j++){var v=localStorage.getItem(ks[j]),o=JSON.parse(v||"{}");
+        if(["m","n","t","y","a"].some(function(x){return o[x]&&Object.keys(o[x]).length;})){raw=v;from=ks[j].slice(pre.length);}}}
+    var s=JSON.parse(raw||"{}");MOVES=s.m||{};NOBM=s.n||{};TARGET=s.t||{};YRS=s.y||{};ADDS=s.a||{};
+    if(from){RESTORED=from;save();}}catch(e){}
   render();
 }
 /* year = the 2 digits in the article code: 19026001 / 3926001A = BM 2026, 3925001A = BM 2025 */
@@ -191,7 +197,7 @@ function render(){
   var nch=ch.n.length+ch.t.length+ch.m.length+ch.y.length+ch.ad.length;
   var h='<h1>Samping Raya 2027 (old stock): reallocate</h1><div class="muted small">Plan '+esc(D.ver)+' · built '+esc(D.built)+' · '+esc(D.src)+'</div>';
   h+='<div class="bar"><div class="stats"><div class="stat">Pool <b>'+fmt(pool)+'</b> pcs</div><div class="stat">At outlets <b>'+fmt(placed)+'</b></div>'+
-     '<div class="stat'+(unp?" warn":"")+'">In WH <b>'+fmt(unp)+'</b> pcs / '+un.length+' ctns</div><div class="stat">Raya 2027 total <b>'+fmt(N27.t+placedAll+FL)+'</b> = new '+fmt(N27.t)+' + old '+fmt(placedAll)+' + floor '+fmt(FL)+'<span class="ak">A '+fmt(N27.a+placedAll-kidAll+FA)+' · K '+fmt(N27.k+kidAll+FK)+' · floor = old samping on the counter '+esc(D.fdate)+'</span></div><div class="stat">Changes <b>'+nch+'</b></div>'+(filt()?'<div class="stat warn">Showing only <b>'+esc([F.y?"SP "+F.y:"",F.a?"art "+F.a.toUpperCase()+"...":""].filter(Boolean).join(", "))+'</b></div>':"")+'</div>'+
+     '<div class="stat'+(unp?" warn":"")+'">In WH <b>'+fmt(unp)+'</b> pcs / '+un.length+' ctns</div><div class="stat">Raya 2027 total <b>'+fmt(N27.t+placedAll+FL)+'</b> = new '+fmt(N27.t)+' + old '+fmt(placedAll)+' + floor '+fmt(FL)+'<span class="ak">A '+fmt(N27.a+placedAll-kidAll+FA)+' · K '+fmt(N27.k+kidAll+FK)+' · floor = old samping on the counter '+esc(D.fdate)+'</span></div><div class="stat">Changes <b>'+nch+'</b></div>'+(RESTORED?'<div class="stat warn">Your changes from plan <b>'+esc(RESTORED)+'</b> were brought over</div>':"")+(filt()?'<div class="stat warn">Showing only <b>'+esc([F.y?"SP "+F.y:"",F.a?"art "+F.a.toUpperCase()+"...":""].filter(Boolean).join(", "))+'</b></div>':"")+'</div>'+
      '<div class="ctl" style="margin-bottom:4px"><button id="vo" class="'+(VIEW==="o"?"pri":"")+'">By outlet</button><button id="va" class="'+(VIEW==="a"?"pri":"")+'">By article</button>'+
      '<select id="fy"><option value="">All years</option>'+YEARS.map(function(y){return '<option value="'+y+'"'+(F.y===y?" selected":"")+'>SP '+y+'</option>';}).join("")+'</select>'+
      '<input type="search" id="fa" placeholder="Article code e.g. 19SP26001" value="'+esc(F.a)+'" style="max-width:190px"></div>'+
