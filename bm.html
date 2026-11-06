@@ -32,6 +32,7 @@ input[type=search]{min-width:150px;flex:1}
 .tag{display:inline-block;font-size:10px;border-radius:4px;padding:0 4px;margin-left:3px;border:1px solid var(--line);color:var(--mut)}
 .tag.nonew{color:var(--ok);border-color:var(--ok)}.tag.missed{color:var(--acc);border-color:var(--acc)}.tag.out{color:var(--bad);border-color:var(--bad)}
 .chg{color:var(--warn);font-weight:700}
+.tgt{display:block;font-size:10px;color:var(--warn);font-weight:600;line-height:1.1}
 .row.nobm{background:var(--bads)}.row.out{opacity:.55}
 .acts{display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end}
 .acts input{width:84px}
@@ -171,8 +172,8 @@ function cfPass(v,e){e=(e||"").replace(/\s/g,"");if(!e)return true;if(v==null)re
   if(m)return v>=+m[1]&&v<=+m[2];m=e.match(/^(>=|<=|>|<|=)?(-?\d*\.?\d+)$/);if(!m)return true;var n=+m[2];
   return m[1]===">"?v>n:m[1]==="<"?v<n:m[1]===">="?v>=n:m[1]==="<="?v<=n:v===n;}
 var COLS=[["s","Sold 26"],["n","New 27"],["st","Old 27"],["f","Floor"],["t","Total 27"],["x","Cover x"]];
-function colVal(o,k,T,TA){var oldAll=(o.code in TARGET)?TARGET[o.code]:(TA.now[o.code]||0);
-  if(k==="s")return o.sold;if(k==="n")return o.nw;if(k==="st")return (o.code in TARGET)?TARGET[o.code]:(T.now[o.code]||0);if(k==="f")return o.floor;
+function colVal(o,k,T,TA){var oldAll=TA.now[o.code]||0;
+  if(k==="s")return o.sold;if(k==="n")return o.nw;if(k==="st")return T.now[o.code]||0;if(k==="f")return o.floor;
   if(k==="t")return o.nw+oldAll+o.floor;var x=cover(o,oldAll);return x==null?null:Math.round(x*10)/10;}
 function colHead(n){var sc=F.s.indexOf("c:")===0?F.s.split(":"):null;
   return '<div class="colhead orow head"><div class="c-o"><input type="search" id="fq" placeholder="Filter outlet code / name / supervisor" value="'+esc(F.q)+'"><span class="small muted"> '+n+' shown</span></div>'+
@@ -226,9 +227,9 @@ function render(){
   var FAM=famBy();
   h+=colHead(list.length)+'<div class="panel">';
   h+=list.map(function(o){
-    var now=T.now[o.code]||0,org=T.orig[o.code]||0,oldAll=(o.code in TARGET)?TARGET[o.code]:(TA.now[o.code]||0),x=cover(o,oldAll),out=o.grp==="out",op=OPEN[o.code]&&!out;
+    var now=T.now[o.code]||0,org=T.orig[o.code]||0,oldAll=TA.now[o.code]||0,x=cover(o,oldAll),out=o.grp==="out",op=OPEN[o.code]&&!out;
     var fl=flags(FAM[o.code],TA.now[o.code]||0);
-    var oldc=(o.code in TARGET)?'<span class="chg">'+fmt(TARGET[o.code])+'</span>':now===org?'<b>'+fmt(now)+'</b>':'<span class="chg">'+fmt(now)+'</span>';
+    var oldc=(now===org?'<b>'+fmt(now)+'</b>':'<span class="chg">'+fmt(now)+'</span>')+((o.code in TARGET)?'<span class="tgt" title="Target old pcs">target '+fmt(TARGET[o.code])+'</span>':"");
     var r='<div class="orow'+(NOBM[o.code]?" nobm":"")+(out?" out":"")+(op?" open":"")+'"'+(out?"":' data-row="'+o.code+'"')+'>'+
       '<div class="c-o"><span class="code">'+esc(o.code)+'</span><span class="tag '+o.grp+'">'+GL[o.grp]+'</span>'+(NOBM[o.code]?'<span class="flag s">NO BM</span>':"")+
       (fl.h?'<span class="flag h" title="single art-col heavy">'+fl.h+' heavy</span>':"")+(fl.s?'<span class="flag s" title="adult without kids (or kids without adult) of a colour, 10+ pcs">'+fl.s+' set split</span>':"")+
