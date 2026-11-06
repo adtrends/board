@@ -51,13 +51,16 @@ main{max-width:720px;margin:0 auto;padding:12px 16px 80px}
 /* full-screen answer */
 #ov{position:fixed;inset:0;z-index:20;background:#fff;color:#000;display:none;flex-direction:column;align-items:center;justify-content:space-between;text-align:center;padding:10px 12px calc(10px + env(safe-area-inset-bottom));overflow:hidden}
 #ov.show{display:flex}
-#ov.send{border:16px solid #000}
-#ov .top{width:100%;display:flex;justify-content:space-between;align-items:center;gap:8px;font:800 15px Arial,sans-serif}
+#ov.send{border:12px solid #000}
+#ov .top{width:100%;flex:none;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px;font:800 15px Arial,sans-serif}
 #ov .top .st{border:3px solid #000;border-radius:8px;padding:4px 10px}
 #ov .top .st.inv{background:#000;color:#fff}
 #ov .mid{flex:1;display:flex;overflow:hidden;padding:4px 0;flex-direction:column;align-items:center;justify-content:center;width:100%;min-height:0}
+#ov .mid>*{flex:none}
+#ov .mid>.mark{flex:0 1 auto;min-height:0;display:flex;justify-content:center}
 #ov .mark{width:min(62vw,40vh);height:min(62vw,40vh)}
-#ov .tally{height:min(9vw,6vh);margin-top:2vh}
+#ov .mark svg{width:100%;height:100%;display:block}
+#ov .tally{flex:none;height:min(9vw,6vh);margin-top:2vh}
 #ov .word{font:900 min(13vw,8vh) Arial,sans-serif;line-height:1;margin-top:1.5vh;letter-spacing:1px}
 #ov .word2{font-size:min(5vw,3.2vh);color:var(--mute);margin-top:.6vh}
 #ov .lane{font:900 min(27vw,20vh) Arial,sans-serif;line-height:.95;letter-spacing:-1px}
@@ -66,29 +69,34 @@ main{max-width:720px;margin:0 auto;padding:12px 16px 80px}
 #ov .loc{font:700 min(6vw,3.6vh) Consolas,ui-monospace,monospace;margin-top:1.4vh}
 #ov .oc{font:800 min(6.2vw,3.8vh) Consolas,ui-monospace,monospace;margin-top:1vh}
 #ov .on{font-size:min(4.2vw,2.6vh);color:var(--mute)}
-#ov .foot{width:100%;display:grid;grid-template-columns:1fr 1fr;gap:8px}
+#ov .foot{width:100%;flex:none;display:grid;grid-template-columns:1fr 1fr;gap:8px}
 #ov .foot>div{border:3px solid #000;border-radius:10px;padding:6px 4px}
-#ov .foot .k{font:700 12px Arial,sans-serif;letter-spacing:1.5px}
+#ov .foot .k{font:700 12px Arial,sans-serif;letter-spacing:1px;white-space:nowrap;overflow:hidden}
 #ov .foot .v{font:900 min(9vw,5.4vh) Arial,sans-serif;line-height:1.05}
 #ov .foot .v.full{background:#000;color:#fff;border-radius:6px}
 #ov .ic{font:700 13px Consolas,ui-monospace,monospace;margin-top:6px}
 #ov .next{margin-top:8px;width:100%;font:800 18px Arial,sans-serif;background:#000;color:#fff;border:0;border-radius:10px;padding:13px}
-#ov.dup .mark,#ov.send .mark{width:min(46vw,27vh);height:min(46vw,27vh)}
-#ov.dup .lane,#ov.send .lane{font-size:min(24vw,15vh)}
+#ov.dup .mark,#ov.send .mark{width:min(40vw,22vh);height:min(40vw,22vh)}
+#ov.dup .lane,#ov.send .lane{font-size:min(20vw,12vh)}
+#ov.dup .tally,#ov.send .tally{height:min(7vw,4.6vh);margin-top:1.2vh}
+#ov.dup .pal,#ov.send .pal{font-size:min(10vw,6vh)}
 #ov.dup .word,#ov.send .word{font-size:min(11vw,6.4vh)}
 #ov .word2{white-space:nowrap}
 #ov.dup .word2,#ov.send .word2{font-size:min(4.2vw,2.6vh)}
 #ov.dup .on,#ov.send .on{font-size:min(3.6vw,2.2vh)}
 #ov.dup .on,#ov.send .on{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:90%}
-#ov.dup .mid{outline:10px dashed #000;outline-offset:-10px;border-radius:14px}
-#ov.dup .dupw{font:900 min(11vw,7vh) Arial,sans-serif;background:#000;color:#fff;padding:2px 14px;border-radius:8px;margin-bottom:1vh}
+#ov.dup .mid{outline:8px dashed #000;outline-offset:-8px;border-radius:14px;padding:12px 12px}
+#ov.dup .lanel,#ov.send .lanel{font-size:min(4vw,2.4vh)}
 #ov.bad{background:#000;color:#fff}
 #ov.bad .q{font:900 min(70vw,42vh) Arial,sans-serif;line-height:.9}
 #ov.bad .bt{font:900 min(11vw,7vh) Arial,sans-serif}
 #ov.bad .bs{font-size:min(5.4vw,3.4vh);margin-top:1vh}
 #ov.bad .ic{color:#fff}
 #ov.bad .next{background:#fff;color:#000}
-#ov .sendb{font:900 min(8vw,5vh) Arial,sans-serif;background:#000;color:#fff;padding:4px 14px;border-radius:8px;margin-bottom:1vh}
+/* one slim strip in .top: SUDAH SCAN and/or HANTAR SEKARANG (never a block inside .mid, so the mark keeps its room) */
+#ov .strip{flex:0 0 100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font:900 min(4.6vw,3.2vh) Arial,sans-serif;background:#000;color:#fff;border-radius:8px;padding:3px 6px;margin-top:6px}
+#ov.dup.send .strip{font-size:min(4vw,2.8vh)}
+.offl{background:#000;color:#fff;font:700 13px Arial,sans-serif;padding:6px 12px;text-align:center}
 .msg{padding:30px 16px;text-align:center;color:var(--mute)}
 </style>
 <!--DOC-->
@@ -98,7 +106,7 @@ main{max-width:720px;margin:0 auto;padding:12px 16px 80px}
 <div id="ov"></div>
 <script>
 (function(){
-  var D=null,IDX={},NS={},SEND={},view='scan',mode='B',lastScan=null,cam=null;
+  var D=null,OFFLINE=false,IDX={},NS={},SEND={},view='scan',mode='B',lastScan=null,cam=null;
   var app=document.getElementById('app'),ov=document.getElementById('ov');
   function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
   function hexToBytes(h){var a=new Uint8Array(h.length/2);for(var i=0;i<a.length;i++)a[i]=parseInt(h.substr(i*2,2),16);return a;}
@@ -112,9 +120,11 @@ main{max-width:720px;margin:0 auto;padding:12px 16px 80px}
     var ck='bm27scan-doc:'+KEY.slice(0,12);
     Promise.all([docIdFor(KEY),crypto.subtle.importKey('raw',hexToBytes(KEY),{name:'AES-GCM'},false,['decrypt'])]).then(function(r){
       return fetch('r/'+r[0]+'.json',{cache:'no-store'}).then(function(res){if(!res.ok)throw 0;return res.json();}).then(function(doc){
-        return crypto.subtle.decrypt({name:'AES-GCM',iv:b64ToBytes(doc.iv),tagLength:128},r[1],b64ToBytes(doc.ct)).then(function(buf){D=JSON.parse(new TextDecoder().decode(buf));ls(ck,JSON.stringify(D));start();});
+        return crypto.subtle.decrypt({name:'AES-GCM',iv:b64ToBytes(doc.iv),tagLength:128},r[1],b64ToBytes(doc.ct)).then(function(buf){D=JSON.parse(new TextDecoder().decode(buf));ls(ck,JSON.stringify(D));});
       });
-    }).catch(function(){var c=ls(ck);if(c){try{D=JSON.parse(c);return start();}catch(e){}}app.innerHTML='<div class="msg">Tidak dapat buka senarai. Semak internet dan cuba lagi.<br><span class="en">Could not load - check internet.</span></div>';});
+    }).then(start,function(){var c=ls(ck),d=null;if(c){try{d=JSON.parse(c);}catch(e){}}
+      if(!d){app.innerHTML='<div class="msg">Tidak dapat buka senarai. Semak internet dan cuba lagi.<br><span class="en">Could not load - check internet.</span></div>';return;}
+      D=d;OFFLINE=true;start();});
   }
   // ---------------------------------------------------------------- region marks (same geometry as wh_bm27: unit box, y down)
   function pts(a){return a.map(function(p){return (p[0]*100).toFixed(1)+','+(p[1]*100).toFixed(1);}).join(' ');}
@@ -148,6 +158,7 @@ main{max-width:720px;margin:0 auto;padding:12px 16px 80px}
     mode=ls('bm27scan:mode')==='L'?'L':'B';
     document.getElementById('mB').onclick=function(){setMode('B');};
     document.getElementById('mL').onclick=function(){setMode('L');};
+    if(OFFLINE){var b=document.createElement('div');b.className='offl';b.innerHTML='Data simpanan (offline) &middot; '+esc(D.updatedAt)+' &middot; senarai HANTAR mungkin lama <span style="font-weight:400">/ saved data, may be old</span>';document.body.insertBefore(b,app);}
     setMode(mode,true);draw();
   }
   function setMode(m,quiet){mode=m;ls('bm27scan:mode',m);document.getElementById('mB').className=m==='B'?'on':'';document.getElementById('mL').className=m==='L'?'on':'';
@@ -173,8 +184,8 @@ main{max-width:720px;margin:0 auto;padding:12px 16px 80px}
     }else{
       var c=IDX[r.ic],o=c[0],O=D.outlets[o],rg=O[1],x=cnt(o),N=O[3],snd=!!SEND[o];
       cls=(r.k==='dup'?'dup':'')+(snd?' send':'');
-      var top='<div class="top"><span class="st'+(r.k==='ok'?' inv':'')+'">'+(r.k==='ok'?'OK':'SUDAH SCAN')+'</span><span>'+markSVG(rg,false).replace('<svg','<svg style="width:26px;height:26px;vertical-align:middle"')+' '+esc(rg)+' '+D.tally[rg]+'</span></div>';
-      var mid='<div class="mid">'+(r.k==='dup'?'<div class="dupw">SUDAH SCAN</div>':'')+(snd?'<div class="sendb">HANTAR SEKARANG</div>':'');
+      var top='<div class="top"><span class="st'+(r.k==='ok'?' inv':'')+'">'+(r.k==='ok'?'OK':'SUDAH SCAN')+'</span><span>'+markSVG(rg,false).replace('<svg','<svg style="width:26px;height:26px;vertical-align:middle"')+' '+esc(rg)+' '+D.tally[rg]+'</span>'+(r.k==='dup'||snd?'<div class="strip">'+(r.k==='dup'&&snd?'SUDAH SCAN &middot; HANTAR SEKARANG':r.k==='dup'?'SUDAH SCAN &middot; jangan kira lagi':'HANTAR SEKARANG')+'</div>':'')+'</div>';
+      var mid='<div class="mid">';
       if(mode==='B'){
         var w=D.word[rg];
         mid+='<div class="mark">'+markSVG(rg)+'</div>'+tallySVG(rg)+'<div class="word">'+esc(w[2])+'</div><div class="word2"><b>'+esc(w[0])+'</b> &middot; '+esc(w[1])+'</div>';
@@ -214,9 +225,10 @@ main{max-width:720px;margin:0 auto;padding:12px 16px 80px}
       stats();return;
     }
     var m=S(),h='<div class="row" style="margin-top:0"><button class="btn p" id="back">&lsaquo; Kembali scan</button></div><div class="box" id="stat" style="margin-top:12px"></div>';
-    D.regions.forEach(function(rg){
+    var lr=lastScan&&IDX[lastScan.ic]?D.outlets[IDX[lastScan.ic][0]][1]:null;
+    (mode==='L'&&D.release?D.release:D.regions).forEach(function(rg){
       var os=D.order.filter(function(o){return D.outlets[o][1]===rg;}),c=0,n=0;os.forEach(function(o){c+=D.outlets[o][3];n+=cnt(o);});
-      h+='<div class="rg">'+markSVG(rg)+'<div><b>'+esc(rg)+' '+D.tally[rg]+' &middot; '+esc(D.word[rg][2])+'</b><div class="mute">'+os.length+' outlet &middot; '+n+'/'+c+' karton</div></div></div>';
+      h+='<div class="rg">'+markSVG(rg)+'<div><b>'+esc(rg)+' '+D.tally[rg]+' &middot; '+esc(D.word[rg][2])+'</b>'+(rg===lr?'<span class="hs">SCAN TERAKHIR</span>':'')+'<div class="mute">'+os.length+' outlet &middot; '+n+'/'+c+' karton</div></div></div>';
       os.forEach(function(o){var O=D.outlets[o],x=cnt(o);
         h+='<div class="orow"><div class="ln">'+esc(O[2])+'</div><div class="nm"><b>'+esc(o)+'</b>'+(SEND[o]?'<span class="hs">HANTAR</span>':'')+'<div>'+esc(O[0])+' &middot; '+O[4]+' palet</div></div><span class="tag'+(x===O[3]?' full':x?'':' none')+'">'+x+'/'+O[3]+'</span></div>';});
     });
