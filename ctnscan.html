@@ -93,9 +93,17 @@ pre{white-space:pre-wrap;font-size:13px;background:#f8fafc;border:1px solid var(
     return{rows:rows,extra:extra,short:short,over:over,wrong:wrong,n:n,exp:c.lines.reduce(function(a,l){return a+l[1];},0)};
   }
   function status(c){var st=getS(c.id);if(!st.s.length)return['t0','Belum'];var t=tally(c,st);
+    if(D.free)return st.done?['t2','Siap '+t.n+' pcs'+(st.sent?' ✓HQ':' (belum HQ)')]:['t1','Sedang '+t.n+' pcs'];
     if(!st.done)return['t1','Sedang '+t.n+'/'+t.exp];
     var hq=st.sent?' ✓HQ':' (belum HQ)';return(t.short||t.over||t.wrong)?['t3','Beza: -'+t.short+' / +'+(t.over+t.wrong)+hq]:['t2','Tepat '+t.n+hq];}
+  // FREE mode (D.free, Tze 6 Nov 2026): no expected list. Staff make a new carton (number written on the box), scan every
+  // piece, tap Siap -> the contents go to HQ, who then gives the carton its SO / label.
+  function freeIds(){try{return JSON.parse(localStorage.getItem('ctnscan-free:'+D.wave)||'[]');}catch(e){return[];}}
+  function freeAdd(id){var a=freeIds();if(a.indexOf(id)<0){a.push(id);try{localStorage.setItem('ctnscan-free:'+D.wave,JSON.stringify(a));}catch(e){}}
+    if(D.ctnIdx[id]===undefined){D.cartons.push({id:id,chute:'',lines:[]});D.ctnIdx[id]=D.cartons.length-1;}}
+  function freeId(v){v=String(v||'').trim().toUpperCase().replace(/\s+/g,'');if(!v)return null;if(/^\d+$/.test(v))v=(D.prefix||'K')+'-'+('000'+v).slice(-3);return v;}
   function start(){
+    if(D.free){D.cartons=[];D.ctnIdx={};freeIds().forEach(function(id){D.cartons.push({id:id,chute:'',lines:[]});});}
     D.ctnIdx={};D.cartons.forEach(function(c,i){D.ctnIdx[c.id]=i;});migrate();
     D.skuSet={};Object.keys(D.bc).forEach(function(b){D.skuSet[D.bc[b]]=1;});
     window.addEventListener('hashchange',function(){});
@@ -107,6 +115,7 @@ pre{white-space:pre-wrap;font-size:13px;background:#f8fafc;border:1px solid var(
     // Tze 29 Oct: show WHICH load is on screen (time + total) so staff can match it with the LOAD message in the group
     var tc=0,tp=0;D.cartons.forEach(function(c){if(c.w&&c.w!==sel)return;tc++;tp+=c.lines.reduce(function(a,l){return a+l[1];},0);});
     var ld=(D.loads||{})[sel];
+    if(D.free)return freeList();
     var h='<div class="card" style="background:#fff4c2;border:2px solid #e0a800;text-align:center"><div style="font-size:20px;font-weight:700">'+esc(sel)+(ld?' &middot; LOAD '+esc(ld):'')+'</div><div style="font-size:18px;font-weight:700;margin-top:4px">JUMLAH: '+tp+' pcs &middot; '+tc+' karton</div><div class="mute">Mesti sama dengan mesej LOAD dalam group. Kalau tak sama, refresh.</div></div>'+
       ((D.fix||{})[sel]?'<div class="card" style="background:#fff4c2;border:2px solid #e0a800"><b>BETULKAN dulu</b><div>'+D.fix[sel].map(esc).join('<br>')+'</div></div>':'')+'<div class="card"><b>Cara guna</b><div class="mute">1. Scan label karton (atau tekan karton di bawah).<br>2. Scan SETIAP helai dalam karton, satu demi satu.<br>3. Tekan <b>Siap</b>. Keputusan terus dihantar ke HQ (tak perlu WhatsApp).</div>'+
       (WS.length>1?'<div class="row" style="margin-top:10px">'+WS.map(function(w){return '<button class="btn'+(w===sel?' p':'')+' wsel" data-w="'+w+'">'+w+'</button>';}).join('')+'</div><div class="mute">Pilih wave, atau terus scan label mana-mana karton.</div>':'')+'<input id="scanin" placeholder="Scan / taip label karton..." autocomplete="off" style="margin-top:10px"><div class="row"><button class="btn" id="cambtn">&#128247; Kamera</button></div><div id="cam"></div><div class="mute" id="dbg"></div></div>';
@@ -121,8 +130,22 @@ pre{white-space:pre-wrap;font-size:13px;background:#f8fafc;border:1px solid var(
     inp.focus();inp.onkeydown=function(ev){if(ev.key==='Enter'||ev.key==='Tab'){ev.preventDefault();var r=lookup(inp.value);inp.value='';if(r&&r.ctn)open(r.ctn);else alert('Bukan label karton');}};
     var tl=null;inp.oninput=function(){clearTimeout(tl);tl=setTimeout(function(){var r=lookup(inp.value);if(r&&r.ctn){inp.value='';open(r.ctn);}},400);};
   }
+  function freeList(){
+    ttl.textContent=D.title||('Scan Karton '+D.wave);var n=0,p=0;D.cartons.forEach(function(c){var st=getS(c.id);if(st.done){n++;p+=st.s.filter(function(x){return !x.u||x.raw;}).length;}});
+    var h='<div class="card" style="background:#fff4c2;border:2px solid #e0a800"><div style="font-size:18px;font-weight:700">'+esc(D.title||D.wave)+'</div><div class="mute">Siap: '+n+' karton &middot; '+p+' pcs (di terminal ini)</div></div>'+
+      '<div class="card"><b>Cara guna</b><div class="mute">1. Tulis nombor pada kotak (1, 2, 3...).<br>2. Taip nombor itu di bawah dan tekan <b>Karton baru</b>.<br>3. Scan SETIAP helai dalam kotak, satu demi satu.<br>4. Tekan <b>Siap</b>. Isi karton terus dihantar ke HQ. HQ akan beri label / SO untuk ditampal.</div>'+
+      '<input id="scanin" placeholder="Nombor kotak, cth 1" autocomplete="off" inputmode="numeric" style="margin-top:10px"><div class="row"><button class="btn p" id="newc">Karton baru</button></div></div>';
+    D.cartons.slice().reverse().forEach(function(c){var s=status(c);h+='<div class="card ctn" data-id="'+esc(c.id)+'"><div class="chute">'+esc(c.id.split('-').pop())+'</div><div class="nm">'+esc(c.id)+'</div><span class="tag '+s[0]+'">'+esc(s[1])+'</span></div>';});
+    h+='<div class="row"><button class="btn p" id="allrep">Hantar laporan SEMUA karton</button></div>';
+    app.innerHTML=h;
+    app.querySelectorAll('.ctn').forEach(function(e){e.onclick=function(){open(e.getAttribute('data-id'));};});
+    document.getElementById('allrep').onclick=function(){share(reportAll());};
+    var inp=document.getElementById('scanin'),go=function(){var id=freeId(inp.value);if(!id)return alert('Taip nombor kotak dulu');
+      if(freeIds().indexOf(id)>=0&&!confirm(id+' sudah ada di terminal ini. Buka semula?'))return;freeAdd(id);open(id);};
+    document.getElementById('newc').onclick=go;inp.onkeydown=function(ev){if(ev.key==='Enter'){ev.preventDefault();go();}};inp.focus();
+  }
   function open(id){
-    var c=D.cartons[D.ctnIdx[id]];if(!c)return;cur=c;backB.hidden=false;ttl.textContent=c.chute+' · '+c.id;
+    var c=D.cartons[D.ctnIdx[id]];if(!c)return;cur=c;backB.hidden=false;ttl.textContent=D.free?c.id:c.chute+' · '+c.id;
     app.innerHTML='<div class="card"><input id="scanin" placeholder="Scan barcode helai..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">'+
       '<div id="flash"></div><div class="mute" id="dbg"></div><div class="row"><button class="btn" id="cambtn">&#128247; Kamera</button><button class="btn" id="undo">Undo</button><button class="btn" id="reset">Reset</button><button class="btn g" id="done">Siap</button></div><div id="cam"></div></div><div id="body"></div>';
     var inp=document.getElementById('scanin');
@@ -149,6 +172,7 @@ pre{white-space:pre-wrap;font-size:13px;background:#f8fafc;border:1px solid var(
     // Tze 28 Oct: a barcode not in the system must be CHECKED against the tag before Siap
     if(r.unk){var x={u:r.unk,t:Date.now()};st.s.push(x);putS(c.id,st);beep(false);flash('bad','TIDAK ADA DALAM SISTEM: '+r.unk+' - semak tag helai');draw();checkUnk(c,st.s.length-1);return;}
     st.s.push({k:r.sku,t:Date.now()});putS(c.id,st);
+    if(D.free){beep(true);flash('ok','OK '+r.sku+' ('+st.s.filter(function(x){return x.k===r.sku;}).length+') · jumlah '+st.s.length);draw();return;}
     var e=null;c.lines.forEach(function(l){if(l[0]===r.sku)e=l[1];});
     var g=st.s.filter(function(x){return x.k===r.sku;}).length;
     if(e===null){beep(false);flash('bad','BUKAN karton ini: '+r.sku+' — asingkan');}
@@ -171,6 +195,11 @@ pre{white-space:pre-wrap;font-size:13px;background:#f8fafc;border:1px solid var(
   }
   function draw(){
     var c=cur,st=getS(c.id),t=tally(c,st),b=document.getElementById('body');if(!b)return;
+    if(D.free){var g={};st.s.forEach(function(x){var k=x.k||x.u;g[k]=(g[k]||0)+1;});var ks=Object.keys(g).sort();
+      var h='<div class="card"><div style="font-size:22px;font-weight:700">'+st.s.length+' pcs</div><div class="mute">'+ks.length+' SKU</div>'+
+        (st.done?'<div style="margin-top:8px;font-weight:700;color:'+(st.sent?'var(--ok)':'var(--warn)')+'">'+(st.sent?'&#10003; Sudah dihantar ke HQ':'Belum sampai HQ')+'</div><div class="row">'+(st.sent?'':'<button class="btn p" id="hq">Hantar ke HQ</button>')+'<button class="btn" id="rep">WhatsApp (pilihan)</button></div>':'')+'</div>'+
+        '<h2>Isi karton</h2><div class="card"><table><tr><th>SKU</th><th class="n">Pcs</th></tr>'+ks.map(function(k){return '<tr><td class="sku">'+esc(k)+'</td><td class="n"><b>'+g[k]+'</b></td></tr>';}).join('')+'</table></div>';
+      b.innerHTML=h;var hq=document.getElementById('hq');if(hq)hq.onclick=function(){send(c);};var rp=document.getElementById('rep');if(rp)rp.onclick=function(){share(report(c));};return;}
     var pct=Math.min(100,Math.round(100*t.n/Math.max(1,t.exp)));
     var h='<div class="card"><b>'+t.n+'</b> discan · label sorter <b>'+t.exp+'</b>'+(st.done?' · <span class="tag '+((t.short||t.over||t.wrong)?'t3':'t2')+'">SIAP</span>':'')+
       '<div class="prog"><i style="width:'+pct+'%"></i></div><div class="mute" style="margin-top:6px">Kurang '+t.short+' · <b style="color:var(--bad)">Lebihan '+(t.over+t.wrong)+'</b> (lebih '+t.over+', bukan karton ini '+t.wrong+')</div>'+
@@ -193,6 +222,11 @@ pre{white-space:pre-wrap;font-size:13px;background:#f8fafc;border:1px solid var(
     var cp=document.getElementById('copy');if(cp)cp.onclick=function(){var tx=report(c);(navigator.clipboard?navigator.clipboard.writeText(tx):Promise.reject()).then(function(){alert('Disalin');},function(){prompt('Salin:',tx);});};
   }
   function report(c){
+    if(D.free){var s0=getS(c.id),g={};s0.s.forEach(function(x){var k=x.k||x.u;g[k]=(g[k]||0)+1;});
+      var L0=[D.wave+' SEMAK '+c.id+' (BARU)','Scan '+s0.s.length+' pcs'],tg=s0.s.filter(function(x){return x.raw;}),un=s0.s.filter(function(x){return x.u&&x.ok;});
+      if(tg.length){L0.push('SEMAK TAG (barcode salah baca):');tg.forEach(function(x){L0.push(x.raw+' = '+x.k);});}
+      if(un.length){L0.push('DISAHKAN TIADA TAG / BUKAN KITA:');un.forEach(function(x){L0.push(x.u);});}
+      L0.push('ISI:'+Object.keys(g).sort().map(function(k){return k+'='+g[k];}).join(','));return L0.join('\n');}
     var st=getS(c.id),t=tally(c,st),L=[wv(c.id)+' SEMAK '+c.id+' ('+c.chute+')','Scan '+t.n+' / label '+t.exp,'Kurang '+t.short+' | Lebihan '+(t.over+t.wrong)];
     var sh=t.rows.filter(function(r){return r.d<0;}),ov=t.rows.filter(function(r){return r.d>0;});
     if(!sh.length&&!ov.length&&!t.extra.length)L.push('TEPAT - tiada beza');
