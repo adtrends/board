@@ -17,7 +17,7 @@ h1{font-size:16px;margin:2px 0 0}
 .bar{position:sticky;top:0;z-index:5;background:var(--bg);padding:5px 0;border-bottom:1px solid var(--line)}
 .stats{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:4px}
 .stat{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:2px 7px}
-.stat b{font-size:13px}.stat.warn{background:var(--warns);border-color:var(--warn)}
+.stat b{font-size:13px}.yb{white-space:nowrap}.stat.warn{background:var(--warns);border-color:var(--warn)}
 .ctl{display:flex;flex-wrap:wrap;gap:4px;align-items:center}
 select,input,button{font:inherit;font-size:12px;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:6px;padding:3px 7px}
 button{cursor:pointer;background:var(--accs);border-color:var(--acc);color:var(--acc);font-weight:600}
@@ -195,9 +195,10 @@ function render(){
   var ch=changes(),pool=0,placed=0,un=[];
   C.forEach(function(c){var q=fq(c);if(!q)return;pool+=q;var d=dest(c);if(d)placed+=q;else un.push(c);});
   var unp=un.reduce(function(a,c){return a+fq(c);},0);
+  var YT={},YO={};C.forEach(function(c){var d=dest(c);c.L.forEach(function(l){YT[l.y]=(YT[l.y]||0)+l.q;if(d)YO[l.y]=(YO[l.y]||0)+l.q;});});
   var nch=ch.n.length+ch.t.length+ch.m.length+ch.y.length+ch.ad.length+ch.no.length;
   var h='<h1>BM 2027 old stock: reallocate</h1><div class="muted small">Plan '+esc(D.ver)+' · built '+esc(D.built)+' · '+esc(D.src)+'</div>';
-  h+='<div class="bar"><div class="stats"><div class="stat">Pool <b>'+fmt(pool)+'</b> pcs</div><div class="stat">At outlets <b>'+fmt(placed)+'</b></div>'+
+  h+='<div class="bar"><div class="stats"><div class="stat">Pool <b>'+fmt(pool)+'</b> pcs</div><div class="stat">By year '+Object.keys(YT).sort().reverse().map(function(y){return '<span class="yb">'+"BM "+y+' <b>'+fmt(YT[y])+'</b>'+((YO[y]||0)<YT[y]?' <span class="small muted">('+fmt(YO[y]||0)+' out)</span>':"")+'</span>';}).join(" · ")+'</div><div class="stat">At outlets <b>'+fmt(placed)+'</b></div>'+
      '<div class="stat'+(unp?" warn":"")+'">Not placed <b>'+fmt(unp)+'</b> pcs / '+un.length+' ctns</div><div class="stat">2027 total <b>'+fmt(N27.t+placedAll+FL)+'</b> = new '+fmt(N27.t)+' + old '+fmt(placedAll)+' + floor '+fmt(FL)+'<span class="ak">A '+fmt(N27.a+placedAll-kidAll+FA)+' · K '+fmt(N27.k+kidAll+FK)+' · floor = BM on the counter '+esc(D.fdate)+'</span></div><div class="stat">Changes <b>'+nch+'</b></div>'+(RESTORED?'<div class="stat warn">Your changes from plan <b>'+esc(RESTORED)+'</b> were brought over</div>':"")+(filt()?'<div class="stat warn">Showing only <b>'+esc([F.y?"BM "+F.y:"",F.a?"art "+F.a.toUpperCase()+"...":""].filter(Boolean).join(", "))+'</b></div>':"")+'</div>'+
      '<div class="ctl" style="margin-bottom:4px"><button id="vo" class="'+(VIEW==="o"?"pri":"")+'">By outlet</button><button id="va" class="'+(VIEW==="a"?"pri":"")+'">By article</button>'+
      '<select id="fy"><option value="">All years</option>'+YEARS.map(function(y){return '<option value="'+y+'"'+(F.y===y?" selected":"")+'>BM '+y+'</option>';}).join("")+'</select>'+
