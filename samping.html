@@ -376,7 +376,7 @@ document.addEventListener("click",function(e){var t=e.target;
   else if(t.id==="copy"){var s=text();(navigator.clipboard?navigator.clipboard.writeText(s):Promise.reject()).then(function(){t.textContent="Copied ✓";setTimeout(render,1500);},function(){window.prompt("Copy this:",s);});}
   else if(t.id==="csvc"){var ch=changes(),T=tallies(),nm=function(k){return O[k]?O[k].name:"";};
     var rows=[["Change","Outlet","Outlet name","Art / carton","Year","Pcs / value","Plan","Detail"]];
-    ch.n.forEach(function(k){rows.push(["NO BM",k,nm(k),"","","","",""]);});
+    ch.n.forEach(function(k){rows.push(["NO SAMPING",k,nm(k),"","","","",""]);});
     ch.t.forEach(function(k){rows.push(["TARGET",k,nm(k),"","",TARGET[k],T.orig[k]||0,"target old pcs"]);});
     ch.y.forEach(function(k){rows.push(["YEARS",k,nm(k),"",YRS[k].join(" + "),"","","only these years"]);});
     ch.ad.forEach(function(k){Object.keys(ADDS[k]).forEach(function(a){var v=ADDS[k][a];
