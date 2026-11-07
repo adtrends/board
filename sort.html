@@ -60,7 +60,7 @@ main{max-width:720px;margin:0 auto;padding:12px 16px 90px}
   function docIdFor(k){return crypto.subtle.digest('SHA-256',new TextEncoder().encode(k)).then(function(buf){var b=new Uint8Array(buf),s='';for(var i=0;i<8;i++)s+=(b[i]<16?'0':'')+b[i].toString(16);return s;});}
   function load(){
     if(window.__DOC){D=window.__DOC;return start();}
-    KEY=(location.hash||'').slice(1).toLowerCase();
+    KEY=((location.hash||'').slice(1)||window.__SORTKEY||'').toLowerCase();   // typed short link has no #key: use the built-in one
     if(!/^[0-9a-f]{64}$/.test(KEY)){app.innerHTML='<div class="msg">Link tidak lengkap. Buka semula link penuh dari WhatsApp.</div>';return;}
     var ck='sortscan-doc:'+KEY.slice(0,12);
     Promise.all([docIdFor(KEY),crypto.subtle.importKey('raw',hexToBytes(KEY),{name:'AES-GCM'},false,['decrypt'])]).then(function(r){
