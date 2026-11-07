@@ -27,6 +27,7 @@ main{max-width:720px;margin:0 auto;padding:12px 16px 90px}
 .btn.p{background:var(--acc);color:#fff;border-color:var(--acc)}
 #res{border-radius:14px;padding:16px;text-align:center;margin-top:10px;border:3px solid var(--line);background:#fff;min-height:170px}
 #res.ok{border-color:var(--ok);background:var(--okbg)}#res.dup{border-color:var(--warn);background:var(--warnbg)}#res.bad{border-color:var(--bad);background:var(--badbg)}
+#res .big{display:flex;justify-content:center;gap:12px;margin:6px 0}#res .big>div{background:#111827;color:#fff;border-radius:14px;padding:6px 12px;min-width:100px}#res .big small{display:block;font-size:13px;letter-spacing:2px;opacity:.8}#res .big b{display:block;font-size:46px;line-height:1.05;white-space:nowrap}
 #res .zn{display:inline-block;background:#111827;color:#fff;border-radius:12px;padding:4px 16px;font-size:34px;font-weight:800;margin-bottom:6px;letter-spacing:1px}
 #res .zn small{font-size:16px;letter-spacing:2px;margin-right:6px;opacity:.8}
 .zh{display:flex;align-items:center;gap:10px;margin:14px 2px 4px;font-weight:800;font-size:17px}.zh .zb{background:#111827;color:#fff;border-radius:8px;padding:4px 10px}
@@ -47,7 +48,7 @@ main{max-width:720px;margin:0 auto;padding:12px 16px 90px}
 .msg{padding:30px 16px;text-align:center;color:var(--mute)}
 </style>
 <!--DOC-->
-<header><h1 id="ttl">Sort Karton</h1><button id="tScan" class="on">Scan</button><button id="tLot">Senarai LOT</button></header>
+<header><h1 id="ttl">Sort Karton</h1><button id="tScan" class="on">Scan</button><button id="tLot">LOT</button></header>
 <main id="app"><div class="msg">Memuatkan...</div></main>
 <script>
 (function(){
@@ -102,24 +103,24 @@ main{max-width:720px;margin:0 auto;padding:12px 16px 90px}
   }
   function cnt(o){var ids=OUT[o]||[],n=0;ids.forEach(function(i){if(done(i))n++;});return [n,ids.length];}
   function stats(){var el=document.getElementById('stat');if(!el)return;var n=0;D.cartons.forEach(function(c){if(done(c[0]))n++;});
-    el.innerHTML='Sudah sort: <b>'+n+'</b> / '+D.cartons.length+' karton<div class="prog"><i style="width:'+(100*n/D.cartons.length).toFixed(1)+'%"></i></div>';}
+    el.innerHTML='Siap: <b>'+n+'</b> / '+D.cartons.length+' karton<div class="prog"><i style="width:'+(100*n/D.cartons.length).toFixed(1)+'%"></i></div>';}
   function res(){
-    if(!last)return '<div id="res"><div class="msg">Scan barcode pada label AWB karton.</div></div>';
+    if(!last)return '<div id="res"><div class="msg">Scan barcode pada label karton.</div></div>';
     var r=last;
-    if(r.k==='bad')return '<div id="res" class="bad"><div class="st">TIDAK ADA DALAM PLAN</div><div class="ct">'+esc(r.id)+'</div><div class="on">Asingkan karton ini, tanya HQ.</div></div>';
-    if(r.k==='gwp')return '<div id="res" class="dup"><div class="st">GWP - ASINGKAN</div><div class="ct">'+esc(r.id)+'</div><div class="on">Karton SPX untuk GWP. Simpan tepi, tunggu arahan HQ.</div></div>';
-    var c=r.c,ids=OUT[c[1]],k=ids.indexOf(c[0])+1,ct=cnt(c[1]),wh=c[1]==='ADECOMM',nm=(D.outlets[c[1]]||[''])[0];
-    var zn=(D.outlets[c[1]]||[])[2];
-    return '<div id="res" class="'+r.k+'">'+(zn&&zn!=='WH'?'<div class="zn"><small>ZON</small>'+esc(zn.slice(1))+'</div>':'')+'<div class="lotl">LOT</div><div class="lot">'+esc(c[3])+'</div><div class="oc">'+esc(c[1])+'</div><div class="on">'+esc(wh?'SIMPAN DI WH (Ecomm)':nm)+'</div>'+
-      '<div class="ct">'+esc(c[0])+' &middot; '+c[2]+' pcs &middot; karton '+k+' dari '+ids.length+'</div>'+
-      '<div class="st">'+(r.k==='dup'?'SUDAH SCAN - letak di '+(zn&&zn!=='WH'?'ZON '+esc(zn.slice(1))+' ':'')+'LOT '+esc(c[3]):'OK')+' &middot; LOT ini '+ct[0]+'/'+ct[1]+'</div></div>';
+    if(r.k==='bad')return '<div id="res" class="bad"><div class="st">BUKAN DALAM PLAN</div><div class="ct">'+esc(r.id)+'</div><div class="on">Asingkan. Tanya HQ.</div></div>';
+    if(r.k==='gwp')return '<div id="res" class="dup"><div class="st">GWP - SIMPAN TEPI</div><div class="ct">'+esc(r.id)+'</div></div>';
+    var c=r.c,ct=cnt(c[1]),wh=c[1]==='ADECOMM',zn=(D.outlets[c[1]]||[])[2];
+    var big=wh?'<div class="big"><div><b>WH</b><small>SIMPAN DI GUDANG</small></div></div>'
+      :'<div class="big"><div><small>ZON</small><b>'+esc((zn||'').slice(1))+'</b></div><div><small>LOT</small><b>'+esc(c[3])+'</b></div></div>';
+    return '<div id="res" class="'+r.k+'"><div class="st">'+(r.k==='dup'?'SUDAH SCAN':'OK')+'</div>'+big+'<div class="oc">'+esc(c[1])+'</div>'+
+      '<div class="on">LOT ini: '+ct[0]+' / '+ct[1]+' karton</div></div>';
   }
   function draw(){
     document.getElementById('tScan').className=view==='scan'?'on':'';document.getElementById('tLot').className=view==='lot'?'on':'';
     if(view==='scan'){
-      app.innerHTML='<div class="card"><input id="scanin" placeholder="Scan / taip no. karton" autocomplete="off" autocapitalize="characters">'+
-        '<div class="row"><button class="btn p" id="cambtn">'+(scanner?'Tutup kamera':'Kamera')+'</button><button class="btn" id="undo">Batal scan terakhir</button></div><div id="cam"></div>'+res()+'</div>'+
-        '<div class="card" id="stat"></div><div class="mute" style="padding:0 4px">Setiap scan dihantar ke HQ. Semua telefon nampak kemajuan yang sama (kemas kini setiap 30 saat).</div>';
+      app.innerHTML='<div class="card"><input id="scanin" placeholder="Scan karton" autocomplete="off" autocapitalize="characters">'+
+        '<div class="row"><button class="btn p" id="cambtn">'+(scanner?'Tutup kamera':'Kamera')+'</button><button class="btn" id="undo">Batal</button></div><div id="cam"></div>'+res()+'</div>'+
+        '<div class="card" id="stat"></div>';
       var i=document.getElementById('scanin');i.focus();
       i.onkeydown=function(e){if(e.key==='Enter'){e.preventDefault();var v=i.value;i.value='';if(v)onScan(v);}};
       document.getElementById('cambtn').onclick=toggleCam;
