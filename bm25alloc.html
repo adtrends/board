@@ -46,6 +46,7 @@ table.ct{border-collapse:collapse;width:100%;font-size:12.5px}
 .pk button{width:24px;height:24px;padding:0;font-size:15px;line-height:1}
 .pk b{min-width:18px;text-align:center;font-size:14px}.pk b.z{color:var(--mut);font-weight:400}.pk.chg b{color:var(--warn)}
 .hd2{text-align:center;line-height:1.2}
+.srt{cursor:pointer;user-select:none}.srt:hover{color:var(--acc)}.srt.on{color:var(--acc)}
 .rch{display:flex;flex-wrap:wrap;gap:2px}.rc{display:inline-block;font-size:9.5px;font-weight:700;border-radius:3px;padding:1px 3px;border:1px solid var(--line);color:var(--mut)}
 .rc.has{background:var(--ink);color:var(--card);border-color:var(--ink)}.rc.add{background:var(--ok);color:var(--card);border-color:var(--ok)}
 .rc.gap{border-color:var(--warn);color:var(--warn);background:var(--warns)}.rc.no{border-style:dashed;opacity:.55}
@@ -79,11 +80,12 @@ textarea{width:100%;font:12px/1.35 ui-monospace,Consolas,monospace;border:1px so
 <script>
 (function(){
 "use strict";
-var D,KEYHEX,STORE,BR="AD",U={},OPEN={},F={q:"",r:"",s:"",g:false},O=[],BY={},C=[],DEST={},GOT={},NG={},RB={},PJ={},CODES=[],AV={};
+var SK={k:"lane",d:1},D,KEYHEX,STORE,BR="AD",U={},OPEN={},F={q:"",r:"",s:"",g:false},O=[],BY={},C=[],DEST={},GOT={},NG={},RB={},PJ={},CODES=[],AV={};
 function $(s){return document.querySelector(s);}
 function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
 function fmt(n){return n?(Math.round(n)||0).toLocaleString("en-US"):"–";}
 function x1(v){return v==null?"–":v.toFixed(1);}
+function sm(m){var t=0;Object.keys(m).forEach(function(k){t+=m[k];});return t;}
 function pm(s){var m={};(s||"").split(";").forEach(function(p){if(!p)return;var e=p.split(":");m[e[0]]=+e[1];});return m;}
 function shape(r,s){s=s||15;var h='<svg class="sh" width="'+s+'" height="'+s+'" viewBox="0 0 20 20" aria-label="'+r+'">';
   if(r==="CE")h+='<circle cx="10" cy="10" r="9.5" fill="currentColor"/>';
@@ -94,8 +96,8 @@ function shape(r,s){s=s||15;var h='<svg class="sh" width="'+s+'" height="'+s+'" 
   return h+'</svg>';}
 function boot(){
   O=D.o.map(function(r){return {code:r[0],name:r[1],sup:r[2],rg:r[3],brand:r[4],lane:r[5],sold:r[6],sA:r[7],sK:r[8],nA:r[9],nK:r[10],oA:r[11],oK:r[12],octn:r[13],fA:r[14],fK:r[15],
-    sent:r[18],st:r[19],r27:pm(r[20]),rOld:pm(r[21])};});
-  O.forEach(function(o){o.nw=o.nA+o.nK;o.old=o.oA+o.oK;o.fl=o.fA+o.fK;o.have=o.nw+o.old+o.fl;o.tg=D.target[o.code]||0;BY[o.code]=o;PJ[o.code]=pm(D.packs[o.code]);});
+    sent:r[18],st:r[19],r27:pm(r[20]),rOld:pm(r[21]),r25o:pm(r[23])};});
+  O.forEach(function(o){o.nw=o.nA+o.nK;o.old=o.oA+o.oK;o.o26=sm(o.rOld);o.o25=sm(o.r25o);o.fl=o.fA+o.fK;o.have=o.nw+o.old+o.fl;o.tg=D.target[o.code]||0;BY[o.code]=o;PJ[o.code]=pm(D.packs[o.code]);});
   C=D.c.map(function(r){return {id:r[0],brand:r[1],type:r[2],pcs:r[3],kids:r[4],wave:r[5],acs:r[6],code:r[7],col:r[8]};});
   CODES=Object.keys(D.codes).sort(function(a,b){var x=D.codes[a],y=D.codes[b];return x.brand<y.brand?-1:x.brand>y.brand?1:D.ranges.indexOf(x.rng)-D.ranges.indexOf(y.rng);});
   CODES.forEach(function(d){AV[D.codes[d].brand+D.codes[d].rng]=1;});
@@ -122,35 +124,40 @@ function alloc(){
     Object.keys(by[d]).sort().forEach(function(col){by[d][col].slice().sort(function(a,b){return a.id<b.id?-1:1;}).forEach(function(x){
       if(!hold.length){DEST[x.id]="";return;}var best=null,bv=-1e18;hold.forEach(function(o){var v=o.tg-GOT[o.code];if(best===null||v>bv||(v===bv&&o.code>best.code)){bv=v;best=o;}});put(x,best.code);});});});
 }
-function hr(o,r){return (o.r27[r]||0)+(o.rOld[r]||0);}
+function hr(o,r){return (o.r27[r]||0)+(o.rOld[r]||0)+(o.r25o[r]||0);}
 function rb(o,r){var t=0;CODES.forEach(function(d){if(D.codes[d].rng===r)t+=RB[o.code][d]||0;});return t;}
 function gaps(o){return D.ranges.filter(function(r){return hr(o,r)+rb(o,r)<D.miss&&AV[o.brand+r];});}
 function chips(o){return '<div class="rch">'+D.ranges.map(function(r){var h=hr(o,r),b=rb(o,r),cl,t;
-    if(h>=D.miss){cl="has";t="has "+h+" pcs in 2027 sets + old stock"+(b?" + BM 2025 "+b:"");}
+    if(h>=D.miss){cl="has";t="has "+h+" pcs in BM 2027 / 2026"+(b?" + BM 2025 "+b:"");}
     else if(h+b>=D.miss){cl="add";t="BM 2025 brings it ("+b+" pcs)";}
     else if(AV[o.brand+r]){cl="gap";t="missing - a BM 2025 code has it";}
     else{cl="no";t="missing - not in BM 2025 "+o.brand;}
     return '<span class="rc '+cl+'" title="'+esc(D.rname[r]+": "+t)+'">'+r+'</span>';}).join("")+'</div>';}
 function bcodes(){return CODES.filter(function(d){return D.codes[d].brand===BR;});}
-function tot(list){var t={n:list.length,sold:0,nw:0,old:0,fl:0,have:0,g:0,ng:0,gp:0};
-  list.forEach(function(o){t.sold+=o.sold;t.nw+=o.nw;t.old+=o.old;t.fl+=o.fl;t.have+=o.have;t.g+=GOT[o.code];t.ng+=NG[o.code];if(o.sold&&gaps(o).length)t.gp++;});return t;}
+function tot(list){var t={n:list.length,sold:0,nw:0,old:0,o26:0,fl:0,have:0,g:0,ng:0,gp:0};
+  list.forEach(function(o){t.o26+=o.o26;t.sold+=o.sold;t.nw+=o.nw;t.old+=o.old;t.fl+=o.fl;t.have+=o.have;t.g+=GOT[o.code];t.ng+=NG[o.code];if(o.sold&&gaps(o).length)t.gp++;});return t;}
 function shown(){var q=F.q.trim().toUpperCase();return O.filter(function(o){if(o.brand!==BR)return false;if(F.r&&o.rg!==F.r)return false;if(F.s&&o.sup!==F.s)return false;
   if(F.g&&!(o.sold&&gaps(o).length))return false;if(q&&(o.code+" "+o.name+" "+o.sup+" "+o.lane).toUpperCase().indexOf(q)<0)return false;return true;});}
 function grid(){return "20px 40px minmax(170px,1.8fr) repeat(5,minmax(48px,.45fr)) 92px "+bcodes().map(function(){return "74px";}).join(" ")+" repeat(3,minmax(52px,.45fr))";}
-function head(){return '<div class="orow head" style="grid-template-columns:'+grid()+'"><div class="c-i"></div><div>Lane</div><div class="c-o">Outlet</div><div class="num">Sold 26</div><div class="num">2027 sets</div><div class="num">Old v16</div><div class="num">Has now</div><div class="num">Cover now</div><div>Ranges</div>'+
-  bcodes().map(function(d){var k=D.codes[d];return '<div class="hd2">'+esc(k.rng)+'<span class="ak2">'+esc(d)+'</span></div>';}).join("")+'<div class="num">BM 2025</div><div class="num">Raya total</div><div class="num">Cover after</div></div>';}
+function th(k,lab,cls,tip){var on=SK.k===k;return '<div class="srt '+(cls||"")+(on?" on":"")+'" data-sort="'+k+'" title="'+esc(tip||"Sort")+'">'+lab+(on?(SK.d>0?" ▲":" ▼"):"")+'</div>';}
+function head(){return '<div class="orow head" style="grid-template-columns:'+grid()+'"><div class="c-i"></div>'+th("lane","Lane","","Sort by lane (region blocks)")+th("code","Outlet","c-o")+
+  th("sold","Sold 2026","num","BM sold in 2026")+th("nw","BM 2027","num","BM 2027 new arrival sets")+th("o26","BM 2026","num","BM 2026 stock allocated (old stock)")+
+  th("have","Total now","num","BM 2027 + BM 2026 + BM on the counter")+th("cov","Cover now","num","Total now / 2026 sold")+'<div>Ranges</div>'+
+  bcodes().map(function(d){var k=D.codes[d];return '<div class="hd2">'+esc(k.rng)+'<span class="ak2">'+esc(d)+'</span></div>';}).join("")+
+  th("b25","BM 2025","num","BM 2025 you are allocating now")+th("raya","Raya total","num")+th("cova","Cover after","num")+'</div>';}
+function skey(o){var g=GOT[o.code];return {lane:o.lane||"zz",code:o.code,sold:o.sold,nw:o.nw,o26:o.o26,have:o.have,cov:o.sold?o.have/o.sold:1e9,b25:g,raya:o.have+g,cova:o.sold?(o.have+g)/o.sold:1e9}[SK.k];}
 function row(o){var g=GOT[o.code],chg=!!U[o.code];
   return '<div class="orow'+(chg?" chg":"")+'" data-o="'+o.code+'" style="grid-template-columns:'+grid()+'"><div class="c-i">'+shape(o.rg)+'</div><div class="c-l">'+esc(o.lane||"–")+'</div>'+
    '<div class="c-o"><span class="code">'+esc(o.code)+'</span><span class="nm">'+esc(o.name)+'</span><span class="ak2">'+esc(o.sup)+'</span></div>'+
-   '<div class="c-s num" data-l="Sold 26">'+fmt(o.sold)+'<span class="ak2">'+(o.st?Math.round(o.st*100)+"% sold":"")+'</span></div>'+
-   '<div class="c-n num" data-l="2027 sets">'+fmt(o.nw)+'</div><div class="c-d num" data-l="Old v16">'+fmt(o.old)+'</div>'+
-   '<div class="c-h num" data-l="Has now">'+fmt(o.have)+'</div><div class="c-x num" data-l="Cover now">'+x1(o.sold?o.have/o.sold:null)+'</div><div class="c-q">'+chips(o)+'</div>'+
+   '<div class="c-s num" data-l="Sold 2026">'+fmt(o.sold)+'<span class="ak2">'+(o.st?Math.round(o.st*100)+"% sold":"")+'</span></div>'+
+   '<div class="c-n num" data-l="BM 2027">'+fmt(o.nw)+'</div><div class="c-d num" data-l="BM 2026">'+fmt(o.o26)+'</div>'+
+   '<div class="c-h num" data-l="Total now" title="BM 2027 '+fmt(o.nw)+' + BM 2026 '+fmt(o.o26)+(o.o25?' + BM 2025 already '+fmt(o.o25):"")+' + counter '+fmt(o.fl)+'">'+fmt(o.have)+'</div><div class="c-x num" data-l="Cover now">'+x1(o.sold?o.have/o.sold:null)+'</div><div class="c-q">'+chips(o)+'</div>'+
    '<div class="c-p" style="display:contents">'+bcodes().map(function(d){var n=pk(o.code,d),ch=U[o.code]&&d in U[o.code];
      return '<div class="pk'+(ch?" chg":"")+'" data-l="'+esc(D.codes[d].rng)+'"><button data-dn="'+o.code+'|'+d+'" aria-label="less">−</button><b class="'+(n?"":"z")+'">'+n+'</b><button data-up="'+o.code+'|'+d+'" aria-label="more">+</button></div>';}).join("")+'</div>'+
-   '<div class="c-g num" data-l="BM 2025"><b>'+fmt(g)+'</b><span class="ak2">'+(NG[o.code]?NG[o.code]+" ctn":"")+'</span></div>'+
+   '<div class="c-g num" data-l="BM 2025"><b>'+fmt(g)+'</b><span class="ak2">'+(NG[o.code]?NG[o.code]+" ctn":"")+(o.o25?(NG[o.code]?" · ":"")+"+"+fmt(o.o25)+" before":"")+'</span></div>'+
    '<div class="c-r num" data-l="Raya total">'+fmt(o.have+g)+'</div><div class="c-x2 num" data-l="Cover after">'+x1(o.sold?(o.have+g)/o.sold:null)+'</div></div>'+(OPEN[o.code]?detail(o):"");}
 function subrow(lab,t,ic){return '<div class="orow sub" style="grid-template-columns:'+grid()+'"><div class="c-i">'+(ic?shape(ic):"")+'</div><div></div><div class="c-o">'+lab+' <span class="nm">'+t.n+' outlets</span></div>'+
-  '<div class="c-s num" data-l="Sold 26">'+fmt(t.sold)+'</div><div class="c-n num" data-l="2027 sets">'+fmt(t.nw)+'</div><div class="c-d num" data-l="Old v16">'+fmt(t.old)+'</div><div class="c-h num" data-l="Has now">'+fmt(t.have)+'</div>'+
+  '<div class="c-s num" data-l="Sold 2026">'+fmt(t.sold)+'</div><div class="c-n num" data-l="BM 2027">'+fmt(t.nw)+'</div><div class="c-d num" data-l="BM 2026">'+fmt(t.o26)+'</div><div class="c-h num" data-l="Total now">'+fmt(t.have)+'</div>'+
   '<div class="c-x num" data-l="Cover now">'+x1(t.sold?t.have/t.sold:null)+'</div><div class="c-q small muted">'+(t.gp?t.gp+" missing a range":"")+'</div>'+bcodes().map(function(){return "<div></div>";}).join("")+
   '<div class="c-g num" data-l="BM 2025">'+fmt(t.g)+'<span class="ak2">'+t.ng+' ctn</span></div><div class="c-r num" data-l="Raya total">'+fmt(t.have+t.g)+'</div><div class="c-x2 num">'+x1(t.sold?(t.have+t.g)/t.sold:null)+'</div></div>';}
 function gets(o){var L=bcodes().filter(function(d){return RB[o.code][d];});if(!L.length)return '<div class="muted small">No BM 2025 for this outlet. Press + on a code to give it one colour pack.</div>';
@@ -159,9 +166,9 @@ function gets(o){var L=bcodes().filter(function(d){return RB[o.code][d];});if(!L
     return '<div class="gets"><div class="t">'+esc(d)+' '+esc(D.rname[k.rng])+' · '+n+' pack'+(n===1?"":"s")+' · '+cs.length+' ctn · '+fmt(RB[o.code][d])+' pcs</div>'+
       '<div class="cols" style="margin-top:3px">'+k.cols.map(function(c){return '<span class="cl'+(cc[c]?"":" out")+'">'+esc(c)+(cc[c]>1?" ×"+cc[c]:"")+'</span>';}).join("")+'</div>'+
       (miss.length?'<div class="w">Colour '+miss.join(", ")+' has run out for this outlet</div>':'<div class="small muted">all '+k.cols.length+' colours</div>')+'</div>';}).join("");}
-function rtable(o){var A=0,B=0,Cc=0,h='<table class="rt"><tr><th class="l">Range</th><th>2027 sets</th><th>Old v16</th><th>BM 2025</th><th>Total</th></tr>';
-  D.ranges.forEach(function(r){var a=o.r27[r]||0,b=o.rOld[r]||0,c=rb(o,r),t=a+b+c;A+=a;B+=b;Cc+=c;
-    h+='<tr class="'+(t<D.miss?(AV[o.brand+r]?"gap":"no"):(a+b<D.miss?"add":""))+'"><td class="l">'+r+' '+esc(D.rname[r])+'</td><td>'+fmt(a)+'</td><td>'+fmt(b)+'</td><td>'+fmt(c)+'</td><td><b>'+fmt(t)+'</b></td></tr>';});
+function rtable(o){var A=0,B=0,Cc=0,h='<table class="rt"><tr><th class="l">Range</th><th>BM 2027</th><th>BM 2026</th><th>BM 2025</th><th>Total</th></tr>';
+  D.ranges.forEach(function(r){var a=o.r27[r]||0,b=o.rOld[r]||0,c=rb(o,r)+(o.r25o[r]||0),t=a+b+c;A+=a;B+=b;Cc+=c;
+    h+='<tr class="'+(t<D.miss?(AV[o.brand+r]?"gap":"no"):(hr(o,r)<D.miss?"add":""))+'"><td class="l">'+r+' '+esc(D.rname[r])+'</td><td>'+fmt(a)+'</td><td>'+fmt(b)+'</td><td>'+fmt(c)+'</td><td><b>'+fmt(t)+'</b></td></tr>';});
   return h+'<tr class="tt"><td class="l">Total</td><td>'+fmt(A)+'</td><td>'+fmt(B)+'</td><td>'+fmt(Cc)+'</td><td>'+fmt(A+B+Cc)+'</td></tr></table>';}
 function advice(o){var miss=D.ranges.filter(function(r){return hr(o,r)<D.miss;}),av=miss.filter(function(r){return AV[o.brand+r];}),na=miss.filter(function(r){return !AV[o.brand+r];}),
     added=av.filter(function(r){return rb(o,r)+hr(o,r)>=D.miss;}),still=av.filter(function(r){return added.indexOf(r)<0;}),L=[];
@@ -171,7 +178,7 @@ function advice(o){var miss=D.ranges.filter(function(r){return hr(o,r)<D.miss;})
   if(na.length)L.push('<span class="muted">not in BM 2025 '+o.brand+': '+na.map(function(r){return esc(D.rname[r]);}).join(", ")+'</span>');
   return '<div class="adv"><b>Suggested:</b> '+L.join(" · ")+'</div>';}
 function detail(o){return '<div class="det"><div class="muted small" style="margin-bottom:6px">'+esc(o.code)+' '+esc(o.name)+' · sup '+esc(o.sup)+' · 2026 sent '+fmt(o.sent)+', sold '+fmt(o.sold)+' (kids '+fmt(o.sK)+')'+(o.st?', '+Math.round(o.st*100)+'% sold':"")+
-  ' · 2027 sets '+fmt(o.nw)+' · old v16 '+fmt(o.old)+' · counter '+fmt(o.fl)+'</div>'+advice(o)+'<div class="dg"><div>'+rtable(o)+'</div><div>'+gets(o)+'</div></div></div>';}
+  ' · BM 2027 new '+fmt(o.nw)+' · BM 2026 '+fmt(o.o26)+(o.o25?' · BM 2025 before '+fmt(o.o25):"")+' · counter '+fmt(o.fl)+'</div>'+advice(o)+'<div class="dg"><div>'+rtable(o)+'</div><div>'+gets(o)+'</div></div></div>';}
 function codesPanel(){
   var h='<div class="panel"><div class="ph"><h2>BM 2025 codes ('+BR+')</h2><span class="muted small">1 pack = 1 carton of every colour (~30 pcs each)</span></div><table class="ct"><tr><th class="l">Code</th><th class="l">Range</th><th class="l hm">Colours (cartons)</th><th>Cartons</th><th>Packs given</th><th>Packs left</th><th class="hm">Pack ≈ pcs</th></tr>';
   bcodes().forEach(function(d){var k=D.codes[d],given=0;O.forEach(function(o){given+=pk(o.code,d);});var left=k.packs-given;
@@ -183,12 +190,12 @@ function render(){
   var BO=O.filter(function(o){return o.brand===BR;}),BT=tot(BO),BC=C.filter(function(x){return x.brand===BR;}),pool=BC.reduce(function(s,x){return s+x.pcs;},0),
       U0=BC.filter(function(x){return !DEST[x.id];}),up=U0.reduce(function(s,x){return s+x.pcs;},0),sups={},nch=Object.keys(U).length,getn=BO.filter(function(o){return GOT[o.code];}).length;
   BO.forEach(function(o){sups[o.sup]=1;});
-  var h='<h1>BM 2025: which codes go to which outlet</h1><div class="muted small">BM 2025 cartons on the sorter now · on top of the 2027 sets + old stock v16 (final) + counter · built '+esc(D.built)+'</div>'+
+  var h='<h1>BM 2025: which codes go to which outlet</h1><div class="muted small">BM 2027 = new arrival sets · BM 2026 = 2026 stock already allocated · BM 2025 = cartons on the sorter now, allocate them here · built '+esc(D.built)+'</div>'+
    '<div class="ctl"><div class="tabs"><button data-br="AD" class="'+(BR==="AD"?"on":"")+'">AD</button><button data-br="BF" class="'+(BR==="BF"?"on":"")+'">BF</button></div></div>'+
-   '<div class="steps"><ol><li>Each outlet row shows what it already has for Raya (2027 sets + old stock) and which <b>ranges</b> it has: '+
+   '<div class="steps"><ol><li>Each outlet shows what it already has for Raya (<b>BM 2027</b> new + <b>BM 2026</b>) and which <b>ranges</b> it has: '+
    '<span class="rc has">has</span> already · <span class="rc add">add</span> BM 2025 brings it · <span class="rc gap">gap</span> still missing · <span class="rc no">no</span> not in BM 2025.</li>'+
    '<li>Press <b>+ / −</b> under a code to give an outlet more or fewer <b>colour packs</b> (all colours of that code). Cartons are picked for you.</li>'+
-   '<li>Tap an outlet to see exactly what it gets. When done press <b>Copy for group</b> and paste it in the group.</li></ol></div>'+
+   '<li>Tap an outlet to see exactly what it gets. Click a column header to sort. When done press <b>Copy for group</b> and paste it in the group.</li></ol></div>'+
    '<div class="stats"><div class="stat">BM 2025 '+BR+' <b>'+fmt(pool)+'</b> pcs<span class="ak">'+BC.length+' cartons</span></div>'+
    '<div class="stat '+(up?"warn":"ok")+'">Sent out <b>'+fmt(pool-up)+'</b><span class="ak">'+(up?"left in WH "+fmt(up)+" pcs / "+U0.length+" ctn":"all placed")+'</span></div>'+
    '<div class="stat">Outlets getting BM 2025 <b>'+getn+'</b><span class="ak">of '+BO.length+'</span></div>'+
@@ -203,7 +210,8 @@ function render(){
   var list=shown();
   h+='<div class="panel">'+head();
   if(!list.length)h+='<div class="msg muted">No outlet matches.</div>';
-  D.regions.forEach(function(r){var g=list.filter(function(o){return o.rg===r;});if(!g.length)return;g.forEach(function(o){h+=row(o);});h+=subrow(r+" "+esc(D.words[r][0]),tot(g),r);});
+  if(SK.k==="lane")D.regions.forEach(function(r){var g=list.filter(function(o){return o.rg===r;});if(!g.length)return;if(SK.d<0)g.reverse();g.forEach(function(o){h+=row(o);});h+=subrow(r+" "+esc(D.words[r][0]),tot(g),r);});
+  else list.slice().sort(function(a,b){var x=skey(a),y=skey(b);return (x<y?-1:x>y?1:0)*SK.d||(a.code<b.code?-1:1);}).forEach(function(o){h+=row(o);});
   if(list.length)h+=subrow("TOTAL "+BR+" shown",tot(list),"");h+='</div>';
   h+='<div class="panel" id="outp" style="display:none"><div class="ph"><h2>Copy this to the group</h2></div><div style="padding:8px 12px"><textarea id="ta" rows="12" readonly></textarea></div></div>';
   $("#app").innerHTML=h;
@@ -220,11 +228,12 @@ function dl(name,rows){var b=new Blob(["﻿"+rows.map(function(r){return r.map(f
   var a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=name;a.click();}
 document.addEventListener("click",function(e){var t=e.target;
   if(t.dataset.br){BR=t.dataset.br;OPEN={};save();render();return;}
+  var so=t.closest&&t.closest("[data-sort]");if(so){var k=so.dataset.sort;if(SK.k===k)SK.d=-SK.d;else{SK.k=k;SK.d=(k==="lane"||k==="code"||k==="cov"||k==="cova")?1:-1;}render();return;}
   if(t.dataset.up||t.dataset.dn){var p=(t.dataset.up||t.dataset.dn).split("|");setpk(p[0],p[1],pk(p[0],p[1])+(t.dataset.up?1:-1));return;}
   if(t.id==="copy"){var x=copyText();$("#outp").style.display="";$("#ta").value=x;$("#ta").select();$("#outp").scrollIntoView({block:"nearest"});
     (navigator.clipboard?navigator.clipboard.writeText(x):Promise.reject()).then(function(){t.textContent="Copied";setTimeout(function(){t.textContent="Copy for group";},1500);},function(){try{document.execCommand("copy");}catch(e){}});return;}
-  if(t.id==="csv"){var rows=[["Brand","Region","Lane","Outlet","Name","Sup","Sold 26","2027 sets","Old v16","Has now"].concat(CODES.map(function(d){return d+" packs";}),["BM25 pcs","BM25 ctn","Raya total"])];
-    O.forEach(function(o){rows.push([o.brand,o.rg,o.lane,o.code,o.name,o.sup,o.sold,o.nw,o.old,o.have].concat(CODES.map(function(d){return D.codes[d].brand===o.brand?pk(o.code,d):"";}),[GOT[o.code],NG[o.code],o.have+GOT[o.code]]));});
+  if(t.id==="csv"){var rows=[["Brand","Region","Lane","Outlet","Name","Sup","Sold 2026","BM 2027 new","BM 2026","BM 2025 before","Total now"].concat(CODES.map(function(d){return d+" packs";}),["BM 2025 pcs","BM 2025 ctn","Raya total"])];
+    O.forEach(function(o){rows.push([o.brand,o.rg,o.lane,o.code,o.name,o.sup,o.sold,o.nw,o.o26,o.o25,o.have].concat(CODES.map(function(d){return D.codes[d].brand===o.brand?pk(o.code,d):"";}),[GOT[o.code],NG[o.code],o.have+GOT[o.code]]));});
     rows.push([]);rows.push(["Carton","Outlet","Code","Colour","Pcs","Kids pcs","Sorter pile","Art-cols"]);
     C.slice().sort(function(a,b){return a.id<b.id?-1:1;}).forEach(function(x){rows.push([x.id,DEST[x.id]||"LEFT IN WH",x.code,x.col,x.pcs,x.kids,x.wave,x.acs]);});
     dl("BM2025 codes per outlet "+new Date().toISOString().slice(0,10)+".csv",rows);return;}
