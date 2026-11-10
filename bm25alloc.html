@@ -108,9 +108,8 @@ function boot(){
 function save(){try{localStorage.setItem(STORE,JSON.stringify({u:U,b:BR}));}catch(e){}}
 function pk(c,d){return (U[c]&&d in U[c])?U[c][d]:(PJ[c][d]||0);}
 function setpk(c,d,n){n=Math.max(0,Math.min(4,n));U[c]=U[c]||{};if(n===(PJ[c][d]||0))delete U[c][d];else U[c][d]=n;if(!Object.keys(U[c]).length)delete U[c];save();render();}
-/* packs -> cartons, same steps as bm25_proj.assign(): bigger outlets first; one carton of every colour per pack
-   (kids-carrying family carton for an outlet that sells kids); cartons left over go to the outlet holding that code
-   with the most room under its projected target. */
+/* packs -> cartons, same steps as bm25_proj.assign(): bigger outlets first; exactly one carton of every colour per pack
+   (kids-carrying family carton for an outlet that sells kids). Cartons not in a pack stay in WH. */
 function alloc(){
   DEST={};GOT={};NG={};RB={};O.forEach(function(o){GOT[o.code]=0;NG[o.code]=0;RB[o.code]={};});
   var by={};C.slice().sort(function(a,b){return (b.kids-a.kids)||(a.id<b.id?-1:1);}).forEach(function(x){((by[x.code]=by[x.code]||{})[x.col]=by[x.code][x.col]||[]).push(x);});
@@ -120,9 +119,7 @@ function alloc(){
     for(var r=1;r<=mx;r++)order.forEach(function(o){if(pk(o.code,d)<r)return;var kd=!!o.sK;
       Object.keys(by[d]).sort().forEach(function(col){var L=by[d][col];if(!L.length)return;var i=0;for(var j=0;j<L.length;j++)if(!!L[j].kids===kd){i=j;break;}
         put(L.splice(i,1)[0],o.code);});});});
-  Object.keys(by).sort().forEach(function(d){var hold=order.filter(function(o){return pk(o.code,d)>0;});
-    Object.keys(by[d]).sort().forEach(function(col){by[d][col].slice().sort(function(a,b){return a.id<b.id?-1:1;}).forEach(function(x){
-      if(!hold.length){DEST[x.id]="";return;}var best=null,bv=-1e18;hold.forEach(function(o){var v=o.tg-GOT[o.code];if(best===null||v>bv||(v===bv&&o.code>best.code)){bv=v;best=o;}});put(x,best.code);});});});
+  Object.keys(by).forEach(function(d){Object.keys(by[d]).forEach(function(col){by[d][col].forEach(function(x){DEST[x.id]="";});});});   /* not in a pack = stays in WH */
 }
 function hr(o,r){return (o.r27[r]||0)+(o.rOld[r]||0)+(o.r25o[r]||0);}
 function rb(o,r){var t=0;CODES.forEach(function(d){if(D.codes[d].rng===r)t+=RB[o.code][d]||0;});return t;}
@@ -180,10 +177,12 @@ function advice(o){var miss=D.ranges.filter(function(r){return hr(o,r)<D.miss;})
 function detail(o){return '<div class="det"><div class="muted small" style="margin-bottom:6px">'+esc(o.code)+' '+esc(o.name)+' · sup '+esc(o.sup)+' · 2026 sent '+fmt(o.sent)+', sold '+fmt(o.sold)+' (kids '+fmt(o.sK)+')'+(o.st?', '+Math.round(o.st*100)+'% sold':"")+
   ' · BM 2027 new '+fmt(o.nw)+' · BM 2026 '+fmt(o.o26)+(o.o25?' · BM 2025 before '+fmt(o.o25):"")+' · counter '+fmt(o.fl)+'</div>'+advice(o)+'<div class="dg"><div>'+rtable(o)+'</div><div>'+gets(o)+'</div></div></div>';}
 function codesPanel(){
-  var h='<div class="panel"><div class="ph"><h2>BM 2025 codes ('+BR+')</h2><span class="muted small">1 pack = 1 carton of every colour (~30 pcs each)</span></div><table class="ct"><tr><th class="l">Code</th><th class="l">Range</th><th class="l hm">Colours (cartons)</th><th>Cartons</th><th>Packs given</th><th>Packs left</th><th class="hm">Pack ≈ pcs</th></tr>';
-  bcodes().forEach(function(d){var k=D.codes[d],given=0;O.forEach(function(o){given+=pk(o.code,d);});var left=k.packs-given;
-    h+='<tr><td class="l"><b>'+esc(d)+'</b></td><td class="l">'+esc(D.rname[k.rng])+'</td><td class="l hm"><div class="cols">'+k.cols.map(function(c){return '<span class="cl">'+esc(c)+' ('+k.ctn[c]+')</span>';}).join("")+'</div></td>'+
-      '<td>'+k.n+'</td><td><b>'+given+'</b></td><td class="'+(left<=0?"left0":"")+'">'+left+(left<0?' (colours run short)':"")+'</td><td class="hm">'+fmt(k.pack_pcs)+'</td></tr>';});
+  var lw={};C.forEach(function(x){if(!DEST[x.id]){lw[x.code]=lw[x.code]||{};lw[x.code][x.col]=(lw[x.code][x.col]||0)+1;}});
+  var h='<div class="panel"><div class="ph"><h2>BM 2025 codes ('+BR+')</h2><span class="muted small">1 pack = exactly 1 carton of every colour in stock (~30 pcs each). Colours: cartons in WH now / total</span></div><table class="ct"><tr><th class="l">Code</th><th class="l">Range</th><th class="l hm">Colours: left in WH / cartons</th><th>Cartons</th><th>Packs given</th><th>Left in WH</th><th class="hm">1 pack ≈ pcs</th></tr>';
+  bcodes().forEach(function(d){var k=D.codes[d],given=0,L=lw[d]||{},ln=0;O.forEach(function(o){given+=pk(o.code,d);});Object.keys(L).forEach(function(c){ln+=L[c];});
+    var nc=k.cols.filter(function(c){return L[c];}).length;
+    h+='<tr><td class="l"><b>'+esc(d)+'</b></td><td class="l">'+esc(D.rname[k.rng])+'</td><td class="l hm"><div class="cols">'+k.cols.map(function(c){return '<span class="cl'+(L[c]?"":" out")+'">'+esc(c)+' '+(L[c]||0)+'/'+k.ctn[c]+'</span>';}).join("")+'</div></td>'+
+      '<td>'+k.n+'</td><td><b>'+given+'</b></td><td class="'+(nc<k.need?"left0":"")+'">'+ln+' ctn'+(ln?'<span class="ak2">'+nc+' of '+k.cols.length+' colours'+(nc<k.need?' - too few for a pack':"")+'</span>':"")+'</td><td class="hm">'+fmt(k.pack_pcs)+'</td></tr>';});
   return h+'</table></div>';}
 function render(){
   alloc();
@@ -194,7 +193,7 @@ function render(){
    '<div class="ctl"><div class="tabs"><button data-br="AD" class="'+(BR==="AD"?"on":"")+'">AD</button><button data-br="BF" class="'+(BR==="BF"?"on":"")+'">BF</button></div></div>'+
    '<div class="steps"><ol><li>Each outlet shows what it already has for Raya (<b>BM 2027</b> new + <b>BM 2026</b>) and which <b>ranges</b> it has: '+
    '<span class="rc has">has</span> already · <span class="rc add">add</span> BM 2025 brings it · <span class="rc gap">gap</span> still missing · <span class="rc no">no</span> not in BM 2025.</li>'+
-   '<li>Press <b>+ / −</b> under a code to give an outlet more or fewer <b>colour packs</b> (all colours of that code). Cartons are picked for you.</li>'+
+   '<li>Press <b>+ / −</b> under a code to give an outlet more or fewer <b>colour packs</b>: 1 pack = 1 carton of every colour of that code (~10 ctn). Cartons are picked for you.</li>'+
    '<li>Tap an outlet to see exactly what it gets. Click a column header to sort. When done press <b>Copy for group</b> and paste it in the group.</li></ol></div>'+
    '<div class="stats"><div class="stat">BM 2025 '+BR+' <b>'+fmt(pool)+'</b> pcs<span class="ak">'+BC.length+' cartons</span></div>'+
    '<div class="stat '+(up?"warn":"ok")+'">Sent out <b>'+fmt(pool-up)+'</b><span class="ak">'+(up?"left in WH "+fmt(up)+" pcs / "+U0.length+" ctn":"all placed")+'</span></div>'+
