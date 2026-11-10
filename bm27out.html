@@ -56,6 +56,10 @@ table.mt{border-collapse:collapse;font-size:12px;width:100%}
 .pal{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:5px 7px;margin-bottom:5px}
 .pal b{font-size:12px}.pal .ics{font-size:11.5px;color:var(--mut);font-variant-numeric:tabular-nums;margin-top:2px;overflow-wrap:anywhere}
 .note{width:100%;margin-top:6px}
+.b25{margin-top:8px;border-top:1px dashed var(--line);padding-top:6px}.b25h{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:5px}.b25h input{width:80px}
+.g25{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:5px}
+.ct25{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:5px 7px}.ct25.mv{background:var(--warns);border-color:var(--warn)}
+.ct25 .small{overflow-wrap:anywhere;margin:2px 0 4px}.ct25 select{width:100%}
 .msg{padding:40px 16px;text-align:center}
 .lab{display:none}
 textarea{width:100%;font:12px/1.35 ui-monospace,Consolas,monospace;border:1px solid var(--line);border-radius:6px;background:var(--card);color:var(--ink);padding:6px}
@@ -66,10 +70,10 @@ textarea{width:100%;font:12px/1.35 ui-monospace,Consolas,monospace;border:1px so
 @media (max-width:820px){
  .regs{grid-template-columns:repeat(2,1fr)}
  .bar{position:static}
- .orow{grid-template-columns:22px repeat(4,1fr) 34px;grid-template-areas:"i o o o o s" ". d n c p p";gap:2px 6px;padding:6px 10px}
+ .orow{grid-template-columns:22px repeat(4,1fr) 34px;grid-template-areas:"i o o o o s" ". d p n c c";gap:2px 6px;padding:6px 10px}
  .orow>*{display:none}
  .orow>.c-i{display:block;grid-area:i}.orow>.c-o{display:block;grid-area:o}.orow>.c-d{display:block;grid-area:d}.orow>.c-n{display:block;grid-area:n}
- .orow>.c-c{display:block;grid-area:c}.orow>.c-p{display:block;grid-area:p}.orow>.sn{display:flex;grid-area:s}
+ .orow>.c-c{display:block;grid-area:c}.orow>.c-b{display:block;grid-area:p}.orow>.sn{display:flex;grid-area:s}
  .orow .num:before{content:attr(data-l);display:block;font-size:10px;color:var(--mut);font-weight:400}
  .orow.head{display:none}
  .orow.sub{grid-template-areas:"o o o o o o" "d d n n c p"}.orow.sub>.c-i{display:none}
@@ -85,7 +89,7 @@ textarea{width:100%;font:12px/1.35 ui-monospace,Consolas,monospace;border:1px so
 <script>
 (function(){
 "use strict";
-var D,KEYHEX,STORE,SEND={},NOTES={},REL=[],OPEN={},F={q:"",r:"",b:"",s:"",only:false},O=[],BY={};
+var D,KEYHEX,STORE,SEND={},NOTES={},REL=[],OPEN={},F={q:"",r:"",b:"",s:"",only:false},O=[],BY={},B25=[],M25={},T25={};
 var ADULT=["3XS","XXS","XS","S","M","L","XL","XXL","3XL"],KIDS=["3/4","5/6","7/8","9/10","11/12","13/14"];
 function $(s){return document.querySelector(s);}
 function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
@@ -102,19 +106,23 @@ function shape(r,s){s=s||16;var h='<svg class="sh" width="'+s+'" height="'+s+'" 
 function boot(){
   O=D.o.map(function(r){return {code:r[0],name:r[1],sup:r[2]||"-",rg:r[3],lane:r[4],sold:r[5],nw:r[6],old:r[7],a:r[8],k:r[9],cols:r[10],sz:r[11],y25:r[12],y26:r[13],rm:r[14],ctn:r[15],pal:r[16],lines:r[17],cts:r[18],raya:r[6]+r[7]};});
   O.forEach(function(o){BY[o.code]=o;});
+  B25=(D.b25||[]).map(function(r){return {id:r[0],brand:r[1],type:r[2],pcs:r[3],kids:r[4],wave:r[5],acs:r[6],orig:r[7]};});
   STORE="bm27out:"+D.ver;
-  try{var s=JSON.parse(localStorage.getItem(STORE)||"{}");SEND=s.s||{};NOTES=s.n||{};REL=s.r||[];}catch(e){}
+  try{var s=JSON.parse(localStorage.getItem(STORE)||"{}");SEND=s.s||{};NOTES=s.n||{};REL=s.r||[];M25=s.m||{};T25=s.t||{};}catch(e){}
   if(!REL.length)REL=D.release.slice();
   render();
 }
-function save(){try{localStorage.setItem(STORE,JSON.stringify({s:SEND,n:NOTES,r:REL}));}catch(e){}}
-function tot(list){var t={n:list.length,sold:0,nw:0,old:0,a:0,k:0,y25:0,y26:0,rm:0,ctn:0,pal:0,raya:0};
-  list.forEach(function(o){["sold","nw","old","a","k","y25","y26","rm","ctn","pal","raya"].forEach(function(f){t[f]+=o[f];});});return t;}
+function save(){try{localStorage.setItem(STORE,JSON.stringify({s:SEND,n:NOTES,r:REL,m:M25,t:T25}));}catch(e){}}
+function d25(x){return x.id in M25?M25[x.id]:x.orig;}
+function calc25(){O.forEach(function(o){o.b25=0;o.c25=0;});B25.forEach(function(x){var o=BY[d25(x)];if(o){o.b25+=x.pcs;o.c25++;}});
+  O.forEach(function(o){o.raya=o.nw+o.old+o.b25;});}
+function tot(list){var t={n:list.length,sold:0,nw:0,old:0,a:0,k:0,y25:0,y26:0,rm:0,ctn:0,pal:0,raya:0,b25:0,c25:0};
+  list.forEach(function(o){["sold","nw","old","a","k","y25","y26","rm","ctn","pal","raya","b25","c25"].forEach(function(f){t[f]+=o[f];});});return t;}
 function shown(){var q=F.q.trim().toUpperCase();return O.filter(function(o){
   if(F.r&&o.rg!==F.r)return false;if(F.b&&o.code.slice(0,2)!==F.b)return false;if(F.s&&o.sup!==F.s)return false;
   if(F.only&&!SEND[o.code])return false;
   if(q&&(o.code+" "+o.name+" "+o.sup+" "+o.lane).toUpperCase().indexOf(q)<0)return false;return true;});}
-var HEAD=[["c-i",""],["c-l","Lane"],["c-o","Outlet"],["c-u","Sup"],["c-s num","Sold 26"],["c-n num","New 27"],["c-d num","OLD"],["c-a num","Adult"],["c-k num","Kids"],["c-cl num","Col"],["c-z","Sizes"],["c-25 num","'25"],["c-26 num","'26"],["c-rm num","RM"],["c-c num","Ctn"],["c-p num","Pal"],["c-r num","Raya"],["sn","Send now"]];
+var HEAD=[["c-i",""],["c-l","Lane"],["c-o","Outlet"],["c-u","Sup"],["c-s num","Sold 26"],["c-n num","New 27"],["c-d num","OLD"],["c-a num","Adult"],["c-k num","Kids"],["c-cl num","Col"],["c-z","Sizes"],["c-25 num","'25"],["c-26 num","'26"],["c-b num","BM25"],["c-c num","Ctn"],["c-p num","Pal"],["c-r num","Raya"],["sn","Send now"]];
 function row(o){var sn=!!SEND[o.code];
   return '<div class="orow'+(sn?" send":"")+'" data-o="'+o.code+'">'+
    '<div class="c-i">'+shape(o.rg)+'</div><div class="c-l">'+esc(o.lane)+'</div>'+
@@ -123,12 +131,12 @@ function row(o){var sn=!!SEND[o.code];
    '<div class="c-s num" data-l="Sold 26">'+fmt(o.sold)+'</div><div class="c-n num" data-l="New 27">'+fmt(o.nw)+'</div>'+
    '<div class="c-d num old" data-l="Old">'+fmt(o.old)+'</div><div class="c-a num">'+fmt(o.a)+'</div><div class="c-k num">'+fmt(o.k)+'</div>'+
    '<div class="c-cl num">'+o.cols+'</div><div class="c-z small">'+esc(o.sz)+'</div>'+
-   '<div class="c-25 num">'+fmt(o.y25)+'</div><div class="c-26 num">'+fmt(o.y26)+'</div><div class="c-rm num">'+fmt(o.rm)+'</div>'+
-   '<div class="c-c num" data-l="Ctn">'+o.ctn+'</div><div class="c-p num" data-l="Pal">'+o.pal+'</div><div class="c-r num">'+fmt(o.raya)+'</div>'+
+   '<div class="c-25 num">'+fmt(o.y25)+'</div><div class="c-26 num">'+fmt(o.y26)+'</div><div class="c-b num" data-l="BM25">'+fmt(o.b25)+(T25[o.code]!=null?'<span class="ntag">tgt</span>':"")+'</div>'+
+   '<div class="c-c num" data-l="Ctn">'+o.ctn+'</div><div class="c-p num" data-l="Pal">'+o.pal+'</div><div class="c-r num" data-l="Raya">'+fmt(o.raya)+'</div>'+
    '<div class="sn"><input type="checkbox" data-sn="'+o.code+'"'+(sn?" checked":"")+' title="Send now" aria-label="Send now"></div></div>'+(OPEN[o.code]?detail(o):"");}
 function subrow(lab,t,ic){return '<div class="orow sub"><div class="c-i">'+(ic?shape(ic):"")+'</div><div class="c-l"></div><div class="c-o">'+lab+' <span class="nm">'+t.n+' outlets</span></div><div class="c-u"></div>'+
   '<div class="c-s num" data-l="Sold 26">'+fmt(t.sold)+'</div><div class="c-n num" data-l="New 27">'+fmt(t.nw)+'</div><div class="c-d num" data-l="Old">'+fmt(t.old)+'</div><div class="c-a num">'+fmt(t.a)+'</div><div class="c-k num">'+fmt(t.k)+'</div><div class="c-cl"></div><div class="c-z"></div>'+
-  '<div class="c-25 num">'+fmt(t.y25)+'</div><div class="c-26 num">'+fmt(t.y26)+'</div><div class="c-rm num">'+fmt(t.rm)+'</div><div class="c-c num" data-l="Ctn">'+fmt(t.ctn)+'</div><div class="c-p num" data-l="Pal">'+fmt(t.pal)+'</div><div class="c-r num">'+fmt(t.raya)+'</div><div></div></div>';}
+  '<div class="c-25 num">'+fmt(t.y25)+'</div><div class="c-26 num">'+fmt(t.y26)+'</div><div class="c-b num" data-l="BM25">'+fmt(t.b25)+'</div><div class="c-c num" data-l="Ctn">'+fmt(t.ctn)+'</div><div class="c-p num" data-l="Pal">'+fmt(t.pal)+'</div><div class="c-r num">'+fmt(t.raya)+'</div><div></div></div>';}
 function detail(o){
   var L=o.lines.split(";").map(function(x){var i=x.indexOf(":"),k=x.slice(0,i),j=k.lastIndexOf("-"),sz={};
     x.slice(i+1).split(",").forEach(function(p){var e=p.split("=");sz[e[0]]=+e[1];});return {a:k.slice(0,j),col:k.slice(j+1),sz:sz};});
@@ -145,13 +153,23 @@ function detail(o){
       cs.map(function(c){return esc(c.ic)+" ("+c.pcs+")";}).join(" · ")+'</div></div>';}).join("");
   return '<div class="det"><div class="muted small" style="margin-bottom:5px">'+esc(o.code)+' '+esc(o.name)+' · sup '+esc(o.sup)+' · '+o.cols+' colours · '+esc(o.sz)+' · lane '+esc(o.lane)+
     ' · old '+fmt(o.old)+' + new 2027 '+fmt(o.nw)+' = <b>'+fmt(o.raya)+'</b> for Raya</div><div class="dgrid"><div class="scroll">'+h+'</div><div>'+pal+'</div></div>'+
-    '<input class="note" data-note="'+o.code+'" placeholder="Note for this outlet (comes out in Copy for group)" value="'+esc(NOTES[o.code]||"")+'"></div>';}
-function render(){
+    det25(o)+'<input class="note" data-note="'+o.code+'" placeholder="Note for this outlet (comes out in Copy for group)" value="'+esc(NOTES[o.code]||"")+'"></div>';}
+function sel25(x){var h='<select data-mv="'+x.id+'"><option value="">— not placed —</option>';
+  O.forEach(function(p){if(p.code.slice(0,2)===x.brand)h+='<option value="'+p.code+'"'+(p.code===d25(x)?" selected":"")+'>'+p.code+(p.lane?" "+p.lane:"")+'</option>';});return h+'</select>';}
+function arts25(x){return x.acs.split(";").map(function(p){var e=p.split(":"),i=e[0].lastIndexOf("-"),a=e[0].slice(0,i);return esc(e[0])+(isKid(a)?" kids":"")+" "+e[1];}).join(" · ");}
+function card25(x){var mv=(x.id in M25);return '<div class="ct25'+(mv?" mv":"")+'"><b>'+esc(x.id)+'</b> <span class="muted small">'+esc(x.type.toLowerCase())+' · '+x.pcs+' pcs'+(x.kids?' ('+x.kids+' kids)':"")+(mv?' · plan '+esc(x.orig||"not placed"):"")+'</span><div class="small">'+arts25(x)+'</div>'+sel25(x)+'</div>';}
+function det25(o){var cs=B25.filter(function(x){return d25(x)===o.code;}),tg=D.b25t[o.code];
+  return '<div class="b25"><div class="b25h"><b>BM 2025 (sorting now): '+fmt(o.b25)+' pcs in '+cs.length+' ctn</b> <span class="muted small">projected '+(tg!=null?fmt(tg):"0")+' pcs</span>'+
+    '<label class="small">Target pcs <input type="number" min="0" step="30" data-tg="'+o.code+'" value="'+(T25[o.code]!=null?T25[o.code]:"")+'" placeholder="'+(tg!=null?tg:0)+'"></label></div>'+
+    '<div class="g25">'+cs.map(card25).join("")+'</div></div>';}
+function render(){calc25();
+  var U25=B25.filter(function(x){return !BY[d25(x)];}),P25=B25.reduce(function(s,x){return s+x.pcs;},0);
   var A=tot(O),S=O.filter(function(o){return SEND[o.code];}),ST=tot(S),sups={};O.forEach(function(o){sups[o.sup]=1;});
-  var h='<div class="bar"><h1>BM 2027 old stock: final outcome per outlet</h1><div class="muted small">Plan '+esc(D.ver)+' (FINAL) · built '+esc(D.built)+' · '+D.perpal+' cartons per pallet · cartons stay in storage until each outlet is released</div>'+
+  var h='<div class="bar"><h1>BM 2027 old stock: final outcome per outlet</h1><div class="muted small">Old stock plan '+esc(D.ver)+' (FINAL) · BM 2025 sort cartons: projection, move them as needed · built '+esc(D.built)+' · '+D.perpal+' cartons per pallet · cartons stay in storage until each outlet is released</div>'+
    '<div class="stats"><div class="stat">Outlets <b>'+A.n+'</b></div><div class="stat">Old pcs <b>'+fmt(A.old)+'</b><span class="ak">adult '+fmt(A.a)+' · kids '+fmt(A.k)+'</span></div>'+
    '<div class="stat">Cartons <b>'+fmt(A.ctn)+'</b><span class="ak">'+fmt(A.pal)+' pallets</span></div><div class="stat">New 2027 sets <b>'+fmt(A.nw)+'</b></div>'+
-   '<div class="stat">Raya total <b>'+fmt(A.raya)+'</b><span class="ak">new + old</span></div><div class="stat">RM (RSP) <b>'+fmt(A.rm)+'</b></div>'+
+   '<div class="stat">Raya total <b>'+fmt(A.raya)+'</b><span class="ak">new + old + BM25</span></div><div class="stat">RM (RSP) <b>'+fmt(A.rm)+'</b></div>'+
+   '<div class="stat">BM 2025 sorting <b>'+fmt(P25)+'</b> pcs<span class="ak">'+B25.length+' ctn · not placed '+fmt(U25.reduce(function(s,x){return s+x.pcs;},0))+' pcs / '+U25.length+' ctn</span></div>'+
    '<div class="stat">Old by year <b>\'25 '+fmt(A.y25)+' · \'26 '+fmt(A.y26)+'</b></div>'+
    '<div class="stat'+(S.length?" warn":"")+'">Send now <b>'+S.length+'</b> outlets<span class="ak">'+fmt(ST.ctn)+' ctn · '+fmt(ST.old)+' pcs</span></div></div>'+
    '<div class="ctl"><input type="search" id="fq" placeholder="Search outlet code, name, supervisor, lane" value="'+esc(F.q)+'">'+
@@ -170,6 +188,7 @@ function render(){
     g.forEach(function(o){h+=row(o);});h+=subrow(r+" "+esc(D.words[r][0]),tot(g),r);});
   if(list.length)h+=subrow("TOTAL shown",tot(list),"");
   h+='</div>';
+  h+='<div class="panel"><div class="ph"><h2>BM 2025 cartons not placed ('+U25.length+')</h2><span class="muted small">pick an outlet for each, or set a Target on an outlet</span></div><div class="g25" style="padding:8px 12px">'+(U25.length?U25.map(card25).join(""):'<span class="muted small">All BM 2025 cartons are placed.</span>')+'</div></div>';
   h+='<div class="panel"><div class="ph"><h2>In the plan but no old stock ('+D.none.length+')</h2><span class="muted small">these doors get only their 2027 sets</span></div><div style="padding:6px 12px" class="small">'+
     D.none.map(function(r){return '<span class="stat" style="display:inline-block;margin:2px"><b>'+esc(r[0])+'</b> '+esc(r[1])+(r[3]?' · new '+fmt(r[3]):"")+(r[4]?' · <span style="color:var(--bad)">'+esc(r[4])+'</span>':"")+'</span>';}).join("")+'</div></div>';
   h+='<div class="panel" id="outp" style="display:none"><div class="ph"><h2>Copy this to the group</h2></div><div style="padding:8px 12px"><textarea id="ta" rows="10" readonly></textarea></div></div>';
@@ -180,6 +199,8 @@ function copyText(){var S=O.filter(function(o){return SEND[o.code];}),t=tot(S),L
   if(S.length){L.push("SEND NOW: "+S.length+" outlets, "+t.ctn+" ctn, "+t.old+" pcs");
     D.regions.forEach(function(r){var g=S.filter(function(o){return o.rg===r;});if(g.length)L.push(r+": "+g.map(function(o){return o.code;}).join(", "));});}
   else L.push("SEND NOW: none ticked");
+  Object.keys(T25).sort().forEach(function(c){L.push("BM25 TARGET: "+c+" "+T25[c]+" pcs");});
+  Object.keys(M25).sort().forEach(function(id){L.push("BM25 MOVE: "+id+" -> "+(M25[id]||"NOT PLACED"));});
   Object.keys(NOTES).sort().forEach(function(c){L.push("NOTE: "+c+" - "+NOTES[c]);});
   return L.join("\n");}
 function dl(name,rows){var b=new Blob(["﻿"+rows.map(function(r){return r.map(function(v){return '"'+String(v==null?"":v).replace(/"/g,'""')+'"';}).join(",");}).join("\r\n")],{type:"text/csv"});
@@ -188,11 +209,13 @@ document.addEventListener("click",function(e){var t=e.target;
   if(t.matches("input,button,textarea,select,label")||t.closest("label")){
     if(t.id==="copy"){var x=copyText();$("#outp").style.display="";$("#ta").value=x;$("#ta").select();
       (navigator.clipboard?navigator.clipboard.writeText(x):Promise.reject()).then(function(){t.textContent="Copied";setTimeout(function(){t.textContent="Copy for group";},1500);},function(){try{document.execCommand("copy");}catch(e){}});}
-    else if(t.id==="csv")dl("BM2027 final outcome "+D.ver+".csv",[["Region","Lane","Outlet","Name","Sup","Sold 26","New 27","Old pcs","Adult","Kids","Colours","Sizes","Old 2025","Old 2026","RM RSP","Cartons","Pallets","Raya total","Send now","Note"]].concat(
-      O.map(function(o){return [o.rg,o.lane,o.code,o.name,o.sup,o.sold,o.nw,o.old,o.a,o.k,o.cols,o.sz,o.y25,o.y26,o.rm,o.ctn,o.pal,o.raya,SEND[o.code]?"YES":"",NOTES[o.code]||""];})));
+    else if(t.id==="csv")dl("BM2027 final outcome "+D.ver+".csv",[["Region","Lane","Outlet","Name","Sup","Sold 26","New 27","Old pcs","Adult","Kids","Colours","Sizes","Old 2025","Old 2026","RM RSP","Cartons","Pallets","BM25 pcs","BM25 ctn","Raya total","Send now","Note"]].concat(
+      O.map(function(o){return [o.rg,o.lane,o.code,o.name,o.sup,o.sold,o.nw,o.old,o.a,o.k,o.cols,o.sz,o.y25,o.y26,o.rm,o.ctn,o.pal,o.b25,o.c25,o.raya,SEND[o.code]?"YES":"",NOTES[o.code]||""];})));
     else if(t.id==="csvc"){var rows=[["IC","Outlet","Lane","Location","Pallet","Pcs","Kids pcs"]];O.forEach(function(o){o.cts.split(";").forEach(function(x){var p=x.split(":");rows.push([p[0],o.code,o.lane,"BM27-"+o.lane+"-P"+p[1],p[1],p[2],p[3]]);});});
-      rows=[rows[0]].concat(rows.slice(1).sort(function(a,b){return a[0]<b[0]?-1:1;}));dl("BM2027 cartons "+D.ver+".csv",rows);}
-    else if(t.id==="clr"){if(confirm("Clear your Send now ticks, notes and release order on this device?")){SEND={};NOTES={};REL=D.release.slice();save();render();}}
+      rows=[rows[0]].concat(rows.slice(1).sort(function(a,b){return a[0]<b[0]?-1:1;}));
+      B25.forEach(function(x){rows.push([x.id,d25(x)||"NOT PLACED",(BY[d25(x)]||{}).lane||"","BM 2025 sort ("+x.wave+")","",x.pcs,x.kids,x.acs]);});
+      rows[0].push("Art-cols");dl("BM2027 cartons "+D.ver+" + BM25.csv",rows);}
+    else if(t.id==="clr"){if(confirm("Clear your Send now ticks, BM25 moves / targets, notes and release order on this device?")){SEND={};NOTES={};M25={};T25={};REL=D.release.slice();save();render();}}
     else if(t.id==="all"){if(Object.keys(OPEN).length)OPEN={};else shown().forEach(function(o){OPEN[o.code]=1;});render();}
     else if(t.dataset.up){var i=REL.indexOf(t.dataset.up);REL.splice(i,1);REL.splice(i-1,0,t.dataset.up);save();render();}
     return;}
@@ -200,7 +223,9 @@ document.addEventListener("click",function(e){var t=e.target;
   var r=t.closest(".orow[data-o]");if(r&&!t.closest(".det")){var c=r.dataset.o;if(OPEN[c])delete OPEN[c];else OPEN[c]=1;render();}
 });
 document.addEventListener("change",function(e){var t=e.target;
-  if(t.dataset.sn){if(t.checked)SEND[t.dataset.sn]=1;else delete SEND[t.dataset.sn];save();render();}
+  if(t.dataset.mv){var x=B25.filter(function(c){return c.id===t.dataset.mv;})[0];if(t.value===x.orig)delete M25[x.id];else M25[x.id]=t.value;save();render();}
+  else if(t.dataset.tg){var k=t.dataset.tg;if(t.value==="")delete T25[k];else T25[k]=Math.max(0,+t.value);save();render();}
+  else if(t.dataset.sn){if(t.checked)SEND[t.dataset.sn]=1;else delete SEND[t.dataset.sn];save();render();}
   else if(t.dataset.note){var v=t.value.trim();if(v)NOTES[t.dataset.note]=v;else delete NOTES[t.dataset.note];save();render();}
   else if(t.id==="fb"){F.b=t.value;render();}else if(t.id==="fs"){F.s=t.value;render();}else if(t.id==="fo"){F.only=t.checked;render();}
 });
