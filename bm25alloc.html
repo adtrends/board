@@ -102,7 +102,7 @@ function boot(){
   C=D.c.map(function(r){return {id:r[0],brand:r[1],type:r[2],pcs:r[3],kids:r[4],wave:r[5],acs:r[6],code:r[7],col:r[8],sz:(r[9]||"").split(",").filter(Boolean).map(function(p){var e=p.split("|");return {a:e[0],s:e[1],q:+e[2]};})};});
   CODES=Object.keys(D.codes).sort(function(a,b){var x=D.codes[a],y=D.codes[b];return x.brand<y.brand?-1:x.brand>y.brand?1:D.ranges.indexOf(x.rng)-D.ranges.indexOf(y.rng);});
   CODES.forEach(function(d){AV[D.codes[d].brand+D.codes[d].rng]=1;});
-  STORE="bm25alloc2:"+D.ver;
+  STORE="bm25alloc3:"+D.ver;
   try{var s=JSON.parse(localStorage.getItem(STORE)||"{}");U=s.u||{};if(s.b)BR=s.b;}catch(e){}
   render();
 }
@@ -211,13 +211,13 @@ function render(){
    '<div class="stat '+(up?"warn":"ok")+'">Sent out <b>'+fmt(pool-up)+'</b><span class="ak">'+(up?"left in WH "+fmt(up)+" pcs / "+U0.length+" ctn":"all placed")+'</span></div>'+
    '<div class="stat">Outlets getting BM 2025 <b>'+getn+'</b><span class="ak">of '+BO.length+'</span></div>'+
    '<div class="stat">Raya total <b>'+fmt(BT.have+BT.g)+'</b><span class="ak">cover '+x1(BT.sold?BT.have/BT.sold:null)+' → '+x1(BT.sold?(BT.have+BT.g)/BT.sold:null)+' x 2026 sold</span></div>'+
-   '<div class="stat">Outlets missing a range <b>'+BT.gp+'</b><span class="ak">BM 2025 has it, but packs are limited</span></div>'+
-   '<div class="stat'+(nch?" warn":"")+'">Your changes <b>'+nch+'</b> outlets</div></div>'+codesPanel()+
+   '<div class="stat">Outlets missing a range <b>'+BT.gp+'</b><span class="ak">that a BM 2025 code has</span></div>'+
+   '<div class="stat">Allocated by you <b>'+nch+'</b> outlets</div></div>'+codesPanel()+
    '<div class="ctl"><input type="search" id="fq" placeholder="Search outlet, name, supervisor" value="'+esc(F.q)+'">'+
    '<select id="fr"><option value="">All regions</option>'+D.regions.map(function(r){return '<option value="'+r+'"'+(F.r===r?" selected":"")+'>'+r+' '+esc(D.words[r][0])+'</option>';}).join("")+'</select>'+
    '<select id="fs"><option value="">All supervisors</option>'+Object.keys(sups).sort().map(function(s){return '<option'+(F.s===s?" selected":"")+'>'+esc(s)+'</option>';}).join("")+'</select>'+
    '<label class="small"><input type="checkbox" id="fg"'+(F.g?" checked":"")+'> Missing a range only</label>'+
-   '<button class="pri" id="copy">Copy for group</button><button id="csv">CSV</button><button id="proj">Back to projection</button></div>';
+   '<button class="pri" id="copy">Copy for group</button><button id="csv">CSV</button><button id="proj">Clear all</button></div>';
   var list=shown();
   h+='<div class="panel">'+head();
   if(!list.length)h+='<div class="msg muted">No outlet matches.</div>';
@@ -231,9 +231,9 @@ function copyText(){var L=["BM 2025 codes per outlet (page "+D.ver+")"];
   ["AD","BF"].forEach(function(br){var t=tot(O.filter(function(o){return o.brand===br;})),left=C.filter(function(x){return x.brand===br&&!DEST[x.id];});
     L.push(br+": "+t.g+" pcs to "+O.filter(function(o){return o.brand===br&&GOT[o.code];}).length+" outlets"+(left.length?", "+left.length+" ctn left in WH":""));});
   var ch=Object.keys(U).sort();
-  if(!ch.length)L.push("No changes - projection OK");
-  else{L.push("CHANGES ("+ch.length+" outlets, the rest as projected):");
-    ch.forEach(function(c){L.push("CODES: "+c+" "+CODES.filter(function(d){return D.codes[d].brand===BY[c].brand;}).map(function(d){return d+" x"+pk(c,d);}).join(", "));});}
+  if(!ch.length)L.push("Nothing allocated yet");
+  else{L.push(ch.length+" outlets:");
+    ch.forEach(function(c){L.push("CODES: "+c+" "+CODES.filter(function(d){return D.codes[d].brand===BY[c].brand;}).filter(function(d){return pk(c,d)>0;}).map(function(d){return d+" x"+pk(c,d);}).join(", ")||"none");});}
   return L.join("\n");}
 function dl(name,rows){var b=new Blob(["﻿"+rows.map(function(r){return r.map(function(v){return '"'+String(v==null?"":v).replace(/"/g,'""')+'"';}).join(",");}).join("\r\n")],{type:"text/csv"});
   var a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=name;a.click();}
@@ -248,7 +248,7 @@ document.addEventListener("click",function(e){var t=e.target;
     rows.push([]);rows.push(["Carton","Outlet","Code","Colour","Pcs","Kids pcs","Sorter pile","Art-cols"]);
     C.slice().sort(function(a,b){return a.id<b.id?-1:1;}).forEach(function(x){rows.push([x.id,DEST[x.id]||"LEFT IN WH",x.code,x.col,x.pcs,x.kids,x.wave,x.acs]);});
     dl("BM2025 codes per outlet "+new Date().toISOString().slice(0,10)+".csv",rows);return;}
-  if(t.id==="proj"){if(confirm("Drop your changes on "+Object.keys(U).length+" outlets and go back to the projection?")){U={};save();render();}return;}
+  if(t.id==="proj"){if(confirm("Clear all BM 2025 packs on "+Object.keys(U).length+" outlets?")){U={};save();render();}return;}
   if(t.matches("input,select,button,textarea,label,option")||t.closest(".det"))return;
   var r=t.closest(".orow[data-o]");if(r){var c=r.dataset.o;if(OPEN[c])delete OPEN[c];else OPEN[c]=1;render();}
 });
