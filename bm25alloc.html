@@ -56,6 +56,7 @@ table.rt{border-collapse:collapse;font-size:12px;width:100%;background:var(--car
 .rt th{color:var(--mut);font-weight:600}.rt .l{text-align:left}.rt tr.gap td{background:var(--warns)}.rt tr.add td{background:var(--oks)}.rt tr.no td{color:var(--mut)}.rt tr.tt td{font-weight:700;border-top:2px solid var(--line)}
 .gets{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:7px 9px;margin-bottom:6px}
 .gets .t{font-weight:700}.gets .w{color:var(--warn);font-size:12px}
+.scroll{overflow-x:auto;margin-top:6px}table.szt th,table.szt td{padding:2px 5px;white-space:nowrap}.szt .kd{background:var(--accs)}
 .adv{font-size:12.5px;margin:0 0 8px;line-height:1.5}.okc{color:var(--ok);font-weight:600}.short{color:var(--warn)}
 .msg{padding:40px 16px;text-align:center}
 svg.sh{flex:none;color:var(--ink)}
@@ -98,7 +99,7 @@ function boot(){
   O=D.o.map(function(r){return {code:r[0],name:r[1],sup:r[2],rg:r[3],brand:r[4],lane:r[5],sold:r[6],sA:r[7],sK:r[8],nA:r[9],nK:r[10],oA:r[11],oK:r[12],octn:r[13],fA:r[14],fK:r[15],
     sent:r[18],st:r[19],r27:pm(r[20]),rOld:pm(r[21]),r25o:pm(r[23])};});
   O.forEach(function(o){o.nw=o.nA+o.nK;o.old=o.oA+o.oK;o.o26=sm(o.rOld);o.o25=sm(o.r25o);o.fl=o.fA+o.fK;o.have=o.nw+o.old+o.fl;o.tg=D.target[o.code]||0;BY[o.code]=o;PJ[o.code]=pm(D.packs[o.code]);});
-  C=D.c.map(function(r){return {id:r[0],brand:r[1],type:r[2],pcs:r[3],kids:r[4],wave:r[5],acs:r[6],code:r[7],col:r[8]};});
+  C=D.c.map(function(r){return {id:r[0],brand:r[1],type:r[2],pcs:r[3],kids:r[4],wave:r[5],acs:r[6],code:r[7],col:r[8],sz:(r[9]||"").split(",").filter(Boolean).map(function(p){var e=p.split("|");return {a:e[0],s:e[1],q:+e[2]};})};});
   CODES=Object.keys(D.codes).sort(function(a,b){var x=D.codes[a],y=D.codes[b];return x.brand<y.brand?-1:x.brand>y.brand?1:D.ranges.indexOf(x.rng)-D.ranges.indexOf(y.rng);});
   CODES.forEach(function(d){AV[D.codes[d].brand+D.codes[d].rng]=1;});
   STORE="bm25alloc2:"+D.ver;
@@ -157,12 +158,23 @@ function subrow(lab,t,ic){return '<div class="orow sub" style="grid-template-col
   '<div class="c-s num" data-l="Sold 2026">'+fmt(t.sold)+'</div><div class="c-n num" data-l="BM 2027">'+fmt(t.nw)+'</div><div class="c-d num" data-l="BM 2026">'+fmt(t.o26)+'</div><div class="c-h num" data-l="Total now">'+fmt(t.have)+'</div>'+
   '<div class="c-x num" data-l="Cover now">'+x1(t.sold?t.have/t.sold:null)+'</div><div class="c-q small muted">'+(t.gp?t.gp+" missing a range":"")+'</div>'+bcodes().map(function(){return "<div></div>";}).join("")+
   '<div class="c-g num" data-l="BM 2025">'+fmt(t.g)+'<span class="ak2">'+t.ng+' ctn</span></div><div class="c-r num" data-l="Raya total">'+fmt(t.have+t.g)+'</div><div class="c-x2 num">'+x1(t.sold?(t.have+t.g)/t.sold:null)+'</div></div>';}
+var SZO=["3XS","XXS","XS","S","M","L","XL","XXL","3XL","3/4","5/6","7/8","9/10","11/12","13/14"];
+function kidA(a){return (a.indexOf("1902")===0&&a.charAt(5)==="5")||(a.indexOf("392")===0&&a.charAt(4)==="5");}
+function ctable(cs){var cols={},SA={},SK={};cs.forEach(function(x){var c=cols[x.col]=cols[x.col]||{n:0,a:{},k:{},A:0,K:0};c.n++;
+    x.sz.forEach(function(z){var k=kidA(z.a);(k?c.k:c.a)[z.s]=((k?c.k:c.a)[z.s]||0)+z.q;if(k){c.K+=z.q;SK[z.s]=1;}else{c.A+=z.q;SA[z.s]=1;}});});
+  var sa=SZO.filter(function(z){return SA[z];}),sk=SZO.filter(function(z){return SK[z];}),TA=0,TK=0;
+  var h='<div class="scroll"><table class="rt szt"><tr><th class="l">Colour</th><th>Ctn</th>'+sa.map(function(z){return "<th>"+z+"</th>";}).join("")+'<th>Adult</th>'+
+    (sk.length?sk.map(function(z){return '<th class="kd">'+z+"</th>";}).join("")+'<th>Kids</th>':"")+'<th>Pcs</th></tr>';
+  Object.keys(cols).sort().forEach(function(cl){var c=cols[cl];TA+=c.A;TK+=c.K;
+    h+='<tr><td class="l"><b>'+esc(cl)+'</b></td><td>'+c.n+'</td>'+sa.map(function(z){return "<td>"+(c.a[z]||"")+"</td>";}).join("")+'<td><b>'+c.A+'</b></td>'+
+      (sk.length?sk.map(function(z){return '<td class="kd">'+(c.k[z]||"")+"</td>";}).join("")+'<td><b>'+c.K+'</b></td>':"")+'<td><b>'+(c.A+c.K)+'</b></td></tr>';});
+  return h+'<tr class="tt"><td class="l">Total</td><td>'+cs.length+'</td>'+sa.map(function(){return "<td></td>";}).join("")+'<td>'+TA+'</td>'+(sk.length?sk.map(function(){return "<td></td>";}).join("")+'<td>'+TK+'</td>':"")+'<td>'+(TA+TK)+'</td></tr></table></div>';}
 function gets(o){var L=bcodes().filter(function(d){return RB[o.code][d];});if(!L.length)return '<div class="muted small">No BM 2025 for this outlet. Press + on a code to give it one colour pack.</div>';
   return L.map(function(d){var k=D.codes[d],cs=C.filter(function(x){return DEST[x.id]===o.code&&x.code===d;}),cc={};cs.forEach(function(x){cc[x.col]=(cc[x.col]||0)+1;});
     var miss=k.cols.filter(function(c){return !cc[c];}),n=pk(o.code,d);
     return '<div class="gets"><div class="t">'+esc(d)+' '+esc(D.rname[k.rng])+' · '+n+' pack'+(n===1?"":"s")+' · '+cs.length+' ctn · '+fmt(RB[o.code][d])+' pcs</div>'+
       '<div class="cols" style="margin-top:3px">'+k.cols.map(function(c){return '<span class="cl'+(cc[c]?"":" out")+'">'+esc(c)+(cc[c]>1?" ×"+cc[c]:"")+'</span>';}).join("")+'</div>'+
-      (miss.length?'<div class="w">Colour '+miss.join(", ")+' has run out for this outlet</div>':'<div class="small muted">all '+k.cols.length+' colours</div>')+'</div>';}).join("");}
+      (miss.length?'<div class="w">Colour '+miss.join(", ")+' not in stock any more for this outlet</div>':'<div class="small muted">all '+k.cols.length+' colours</div>')+ctable(cs)+'</div>';}).join("");}
 function rtable(o){var A=0,B=0,Cc=0,h='<table class="rt"><tr><th class="l">Range</th><th>BM 2027</th><th>BM 2026</th><th>BM 2025</th><th>Total</th></tr>';
   D.ranges.forEach(function(r){var a=o.r27[r]||0,b=o.rOld[r]||0,c=rb(o,r)+(o.r25o[r]||0),t=a+b+c;A+=a;B+=b;Cc+=c;
     h+='<tr class="'+(t<D.miss?(AV[o.brand+r]?"gap":"no"):(hr(o,r)<D.miss?"add":""))+'"><td class="l">'+r+' '+esc(D.rname[r])+'</td><td>'+fmt(a)+'</td><td>'+fmt(b)+'</td><td>'+fmt(c)+'</td><td><b>'+fmt(t)+'</b></td></tr>';});
