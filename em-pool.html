@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>EM Pooling Planner</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* layout: one column of city cards; sticky control bar on top; each mall (shipping code) is one row */
+:root{--bg:#f5f6f4;--card:#ffffff;--fg:#1d2321;--mute:#5d6863;--line:#d9dfdb;--accent:#0f6b5c;--ok:#1f7a3f;--okbg:#e4f3e8;--warn:#9a5b00;--warnbg:#fdf0db;--bad:#a3261d;--badbg:#fbe6e3;
+--sans:"IBM Plex Sans",system-ui,sans-serif;--mono:"IBM Plex Mono",ui-monospace,monospace}
+@media (prefers-color-scheme:dark){:root{--bg:#141917;--card:#1c2320;--fg:#e7ece9;--mute:#9aa6a0;--line:#2f3934;--accent:#4fc2ab;--ok:#7fd59b;--okbg:#1d3226;--warn:#f0b65a;--warnbg:#3a2c14;--bad:#f08a80;--badbg:#3b1f1c;color-scheme:dark}}
+*{box-sizing:border-box}html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.45 var(--sans);padding:env(safe-area-inset-top,0px) max(14px,env(safe-area-inset-right,0px)) 40px max(14px,env(safe-area-inset-left,0px))}
+.wrap{max-width:760px;margin:0 auto}
+h1{font-size:21px;margin:14px 0 2px;text-wrap:balance}.sub{color:var(--mute);margin:0 0 12px;font-size:13.5px}
+.bar{position:sticky;top:0;z-index:5;background:var(--bg);padding:8px 0;border-bottom:1px solid var(--line);display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.bar label{font-size:13px;color:var(--mute)}input,select,button{font:inherit;color:var(--fg)}
+input[type=number]{width:58px;padding:5px 6px;border:1px solid var(--line);border-radius:6px;background:var(--card);font-family:var(--mono);font-variant-numeric:tabular-nums}
+button{border:1px solid var(--line);background:var(--card);border-radius:7px;padding:6px 11px;cursor:pointer}button.pri{background:var(--accent);color:#fff;border-color:var(--accent)}
+button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.ctn{display:flex;flex-wrap:wrap;gap:6px 14px;margin:10px 0;font-size:13px;color:var(--mute)}
+.ctn input{width:72px}.ctn label{white-space:nowrap}
+.city{background:var(--card);border:1px solid var(--line);border-radius:10px;margin:12px 0;overflow:hidden}
+.city h2{font-size:16px;margin:0;padding:10px 12px;display:flex;justify-content:space-between;gap:8px;border-bottom:1px solid var(--line)}
+.city h2 small{font-weight:500;color:var(--mute);font-size:13px;font-family:var(--mono)}
+.loc{padding:9px 12px;border-bottom:1px solid var(--line)}.loc:last-child{border-bottom:0}
+.lochead{display:flex;flex-wrap:wrap;justify-content:space-between;gap:6px;align-items:center}
+.code{font-family:var(--mono);font-size:13px;color:var(--mute)}.m3{font-family:var(--mono);font-variant-numeric:tabular-nums;font-weight:500}
+.pill{font-size:12px;font-weight:600;padding:2px 8px;border-radius:99px;white-space:nowrap}.ok{background:var(--okbg);color:var(--ok)}.warn{background:var(--warnbg);color:var(--warn)}.bad{background:var(--badbg);color:var(--bad)}
+.ol{display:grid;grid-template-columns:minmax(0,1fr) auto auto auto;gap:4px 8px;align-items:center;margin-top:6px;font-size:13.5px}
+.ol .nm{min-width:0}.ol .nm b{font-family:var(--mono);font-weight:500}.ol .nm div{color:var(--mute);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ol .hd{font-size:11px;color:var(--mute);text-transform:uppercase;letter-spacing:.04em}
+.ol .x input{width:46px}
+.pool[hidden]{display:none}.pool{display:flex;gap:6px;align-items:center;font-size:13px;margin-top:6px}
+.plan{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px;margin:14px 0}
+.plan h2{font-size:16px;margin:0 0 6px}pre{white-space:pre-wrap;font:13px/1.5 var(--mono);margin:0}
+.rules{font-size:13px;color:var(--mute);padding-left:20px}.rules li{margin:2px 0}
+.ex{background:var(--warnbg);color:var(--warn);padding:6px 10px;border-radius:8px;font-size:13px;margin:8px 0}
+@media (max-width:480px){.ol{grid-template-columns:minmax(0,1fr) auto auto}.ol .x,.ol .hx{display:none}}
+</style></head><body><div class="wrap">
+<h1>EM Pooling Planner</h1>
+<p class="sub">Key in cartons per East Malaysia outlet. Outlets with the same SRA shipping code are one mall and one delivery location. The page shows which locations go SRA direct, which to pool, and which go via WH21.</p>
+<div class="bar"><label for="min">Minimum per drop (m³)</label><input id="min" type="number" step="0.05" value="0.3">
+<button class="pri" id="copy">Copy plan</button><button id="clear">Clear all</button><button id="example">Load example</button></div>
+<div id="exnote" class="ex" hidden>Example loaded: 三佳 #426 / #427 / #442, 11 Nov 2026. Press Clear all for a new lot.</div>
+<div class="ctn" id="ctn"></div>
+<ol class="rules">
+<li>Each mall is one location: the AD, BF and FE counters there share one SRA drop. Each counter keeps its own SO.</li>
+<li>A location at or above the minimum goes SRA direct, on its own. Moving stock between outlets is troublesome and costly.</li>
+<li>Locations under the minimum: tick the ones to pool in the same city. If the ticked ones reach the minimum, one drop goes to the biggest, which ITs the rest on.</li>
+<li>If they still don't reach it, those outlets go via WH21 (ADCEWHTR-O), then straight to each outlet.</li></ol>
+<div id="cities"></div>
+<div class="plan"><h2>Plan</h2><pre id="plan">Key in cartons to see the plan.</pre></div>
+</div>
+<script>
+const OUTLETS=[{"c": "ADEMBOMR-C", "n": "BOULEVARD HYPERMARKET & DEPARTMENTAL STORE", "s": "SW-ADT-MR02", "city": "Miri"}, {"c": "ADEMPGMR-C", "n": "PARKSON - MIRI", "s": "SW-ADT-MR01", "city": "Miri"}, {"c": "ADEMPGBI-C", "n": "PARKSON - THE SPRING BINTULU", "s": "SW-ADT-BT01", "city": "Bintulu"}, {"c": "ADEMPGSB-C", "n": "PARKSON - RIA SIBU", "s": "SW-ADT-SB04", "city": "Sibu"}, {"c": "ADEMCTKK-C", "n": "CT DEPT STORE (SABAH)", "s": "SB-ADT-KK04", "city": "Kota Kinabalu"}, {"c": "ADEMPGOB-C", "n": "PARKSON - ONE BORNEO", "s": "SB-ADT-KK03", "city": "Kota Kinabalu"}, {"c": "ADEMDASM-C", "n": "DAESCO SIBU - STAR MEGAMALL", "s": "SW-ADT-SB03", "city": "Sibu"}, {"c": "ADEMFASB-C", "n": "FARLEY SIBU", "s": "SW-ADT-SB02", "city": "Sibu"}, {"c": "ADEMPGPM-C", "n": "PARKSON - PLAZA MERDEKA", "s": "SW-ADT-KC02", "city": "Kuching"}, {"c": "ADEMTDKK-C", "n": "TONG'S DEPARTMENTAL STORE KK", "s": "SB-ADT-KK02", "city": "Kota Kinabalu"}, {"c": "ADEMFABI-C", "n": "FARLEY BINTULU", "s": "SW-ADT-BT02", "city": "Bintulu"}, {"c": "ADEMAEKC-C", "n": "AEON - KUCHING", "s": "SW-ADT-KC03", "city": "Kuching"}, {"c": "ADEMPRSB-C", "n": "PREMIER DEPARTMENT STORE SIBU", "s": "SW-ADT-SB01", "city": "Sibu"}, {"c": "ADEMFAKC-C", "n": "FARLEY KUCHING", "s": "SW-ADT-KC04", "city": "Kuching"}, {"c": "ADEMPGVC-C", "n": "PARKSON - VIVACITY MEGAMALL", "s": "SW-ADT-KC01", "city": "Kuching"}, {"c": "ADEMPGIK-C", "n": "PARKSON - IMAGO SHOPPING MALL", "s": "SB-ADT-KK01", "city": "Kota Kinabalu"}, {"c": "BFEMPGOB-C", "n": "PARKSON - ONE BORNEO BF", "s": "SB-ADT-KK03", "city": "Kota Kinabalu"}, {"c": "ADEMPGSM-C", "n": "PARKSON - THE SUMMER SHOPPING ML", "s": "SW-ADT-KC05", "city": "Kuching"}, {"c": "ADEMEMKC-C", "n": "EMART - (BOULEVARD HYPERMARKET KUCHING)", "s": "SW-ADT-KC06", "city": "Kuching"}, {"c": "ADEMSHPT-C", "n": "SERVAY EVERGREEN - PUTATAN BRANCH (SHPT)", "s": "SB-ADT-KK06", "city": "Kota Kinabalu"}, {"c": "ADEMSPCP-C", "n": "SERVAY EVERGREEN - CENTRE POINT SPCP", "s": "SB-ADT-KK05", "city": "Kota Kinabalu"}, {"c": "ADEMSSDK-C", "n": "SERVAY EVERGREEN - SANDAKAN BRANCH (SSDK)", "s": "SB-ADT-SD01", "city": "Sandakan"}, {"c": "ADEMSHTW-C", "n": "SERVAY EVERGREEN - TAWAU BRANCH (SHT)", "s": "SB-ADT-TW01", "city": "Tawau"}, {"c": "BFEMPGIK-C", "n": "PARKSON - IMAGO SHOPPING MALL BF", "s": "SB-ADT-KK01", "city": "Kota Kinabalu"}, {"c": "BFEMPGVC-C", "n": "PARKSON - VIVACITY MEGAMALL BF", "s": "SW-ADT-KC01", "city": "Kuching"}, {"c": "ADEMPGLB-C", "n": "PARKSON - RIA LABUAN", "s": "SB-ADT-LB01", "city": "Labuan"}, {"c": "ADEMBOIM-C", "n": "BOULEVARD HYPERMARKET & DEPARTMENTAL STORE (IMPERIAL MALL)", "s": "SW-ADT-MR03", "city": "Miri"}, {"c": "ADEMSHLD-C", "n": "SERVAY EVERGREEN - LAHAD DATU BRANCH (SHLD)", "s": "SB-ADT-LD01", "city": "Lahad Datu"}, {"c": "BFEMPGSB-C", "n": "PARKSON - RIA SIBU BF", "s": "SW-ADT-SB04", "city": "Sibu"}, {"c": "FEEMFAKC-C", "n": "FARLEY KUCHING - FE", "s": "SW-ADT-KC04", "city": "Kuching"}, {"c": "FEEMBOMR-C", "n": "BOULEVARD HYPERMARKET & DEPARTMENTAL STORE - FE", "s": "SW-ADT-MR02", "city": "Miri"}];
+const CT=[{k:"bf",n:"BF 20-pc combo",m:0.0693},{k:"ad",n:"AD 24-pc",m:0.0839},{k:"cb",n:"14426 combo",m:0.0758},{k:"jq",n:"Jacquard 28-pc",m:0.053}];
+const EX={"BFEMPGIK-C":{bf:8},"ADEMPGIK-C":{ad:1},"BFEMPGOB-C":{bf:5},"ADEMTDKK-C":{ad:1},"BFEMPGVC-C":{bf:6},"ADEMPGVC-C":{ad:1},"ADEMPGPM-C":{ad:1},"BFEMPGSB-C":{bf:4},"ADEMPRSB-C":{ad:1}};
+let S={},POOL={};const M={};CT.forEach(c=>M[c.k]=c.m);
+const $=id=>document.getElementById(id);
+const key=s=>s.replace(/\W/g,"");
+function save(){try{localStorage.setItem("empool",JSON.stringify({S,POOL,M,min:$("min").value}))}catch(e){}}
+function load(){try{const d=JSON.parse(localStorage.getItem("empool")||"null");if(d){S=d.S||{};POOL=d.POOL||{};Object.assign(M,d.M||{});$("min").value=d.min||0.3;return true}}catch(e){}return false}
+const om3=c=>CT.reduce((a,t)=>a+(+((S[c]||{})[t.k])||0)*M[t.k],0);
+function groups(){const g={};OUTLETS.forEach(o=>{g[o.city]=g[o.city]||{};(g[o.city][o.s]=g[o.city][o.s]||[]).push(o)});return g}
+function renderCtn(){$("ctn").innerHTML="Carton m³:"+CT.map(t=>' <label>'+t.n+' <input id="m_'+t.k+'" type="number" step="0.001" value="'+M[t.k]+'"></label>').join("");
+CT.forEach(t=>{$("m_"+t.k).oninput=e=>{M[t.k]=+e.target.value||0;save();calc()}})}
+function cell(o,t,cls){return '<input type="number" min="0" step="1" data-o="'+o.c+'" data-t="'+t.k+'" title="'+t.n+'" aria-label="'+o.c+' '+t.n+' cartons"'+(cls?' placeholder="'+t.k+'"':'')+'>'}
+function render(){const g=groups();let h="";
+for(const city of Object.keys(g).sort()){h+='<section class="city"><h2>'+city+'<small id="ct_'+key(city)+'"></small></h2>';
+for(const ship of Object.keys(g[city])){const os=g[city][ship];
+h+='<div class="loc"><div class="lochead"><span><span class="code">'+ship+'</span> <span class="m3" id="m3_'+key(ship)+'">0.000 m³</span></span><span class="pill" id="st_'+key(ship)+'"></span></div>';
+h+='<div class="ol"><span class="hd">Outlet</span><span class="hd">BF ctn</span><span class="hd">AD ctn</span><span class="hd hx">Other</span>';
+for(const o of os){h+='<span class="nm"><b>'+o.c+'</b><div>'+o.n+'</div></span>'+cell(o,CT[0])+cell(o,CT[1])+'<span class="x">'+cell(o,CT[2],1)+' '+cell(o,CT[3],1)+'</span>'}
+h+='</div><label class="pool" id="pl_'+key(ship)+'" hidden><input type="checkbox" id="p_'+key(ship)+'" data-s="'+ship+'"> pool with other small locations in '+city+'</label></div>'}
+h+='</section>'}
+$("cities").innerHTML=h;
+document.querySelectorAll("input[data-o]").forEach(i=>{const v=(S[i.dataset.o]||{})[i.dataset.t];if(v)i.value=v;i.oninput=()=>{(S[i.dataset.o]=S[i.dataset.o]||{})[i.dataset.t]=+i.value||0;save();calc()}});
+document.querySelectorAll("input[data-s]").forEach(i=>{const s=i.dataset.s;i.checked=POOL[s]!==false;i.onchange=()=>{POOL[s]=i.checked;save();calc()}});calc()}
+function calc(){const min=+$("min").value||0.3,g=groups(),out=[];let tot=0;
+for(const city of Object.keys(g).sort()){const L=Object.keys(g[city]).map(s=>{const os=g[city][s];return{s,os:os.filter(o=>om3(o.c)>0),m:os.reduce((a,o)=>a+om3(o.c),0)}});
+const used=L.filter(l=>l.m>0);const cm=used.reduce((a,l)=>a+l.m,0);tot+=cm;
+const small=used.filter(l=>l.m<min-1e-9),ticked=small.filter(l=>POOL[l.s]!==false),pm=ticked.reduce((a,l)=>a+l.m,0),poolOK=ticked.length>1&&pm>=min-1e-9;
+const hub=poolOK?ticked.slice().sort((a,b)=>b.m-a.m)[0]:null;
+for(const l of L){const st=$("st_"+key(l.s)),pl=$("pl_"+key(l.s));$("m3_"+key(l.s)).textContent=l.m.toFixed(3)+" m³";pl.hidden=!(l.m>0&&l.m<min-1e-9);
+if(!l.m){st.textContent="";st.className="pill";continue}
+if(l.m>=min-1e-9){st.textContent="SRA direct";st.className="pill ok";out.push(city+" | SRA direct | "+l.s+" | "+l.m.toFixed(2)+" m3 | "+l.os.map(o=>o.c).join(" + "))}
+else if(poolOK&&POOL[l.s]!==false){st.textContent=l===hub?"Pool: drop here":"Pool: IT from "+hub.os[0].c;st.className="pill warn"}
+else{st.textContent="Via WH21";st.className="pill bad";out.push(city+" | via WH21 (ADCEWHTR-O) | "+l.s+" | "+l.m.toFixed(2)+" m3 | "+l.os.map(o=>o.c).join(" + "))}}
+if(poolOK){const others=ticked.filter(l=>l!==hub).flatMap(l=>l.os.map(o=>o.c));out.push(city+" | SRA pooled "+pm.toFixed(2)+" m3 | drop to "+hub.s+" ("+hub.os.map(o=>o.c).join(" + ")+") | then IT to "+others.join(", "))}
+$("ct_"+key(city)).textContent=cm?cm.toFixed(2)+" m³":""}
+$("plan").textContent=out.length?"EM drops (min "+min+" m3), total "+tot.toFixed(2)+" m3\n"+out.join("\n"):"Key in cartons to see the plan."}
+$("min").oninput=()=>{save();calc()};
+$("clear").onclick=()=>{S={};POOL={};$("exnote").hidden=true;save();render()};
+$("example").onclick=()=>{S=JSON.parse(JSON.stringify(EX));POOL={};$("exnote").hidden=false;save();render()};
+$("copy").onclick=async()=>{const t=$("plan").textContent;try{await navigator.clipboard.writeText(t);$("copy").textContent="Copied"}catch(e){const r=document.createRange();r.selectNode($("plan"));getSelection().removeAllRanges();getSelection().addRange(r);$("copy").textContent="Selected, copy it"}setTimeout(()=>{$("copy").textContent="Copy plan"},1800)};
+if(!load()){S=JSON.parse(JSON.stringify(EX));$("exnote").hidden=false}renderCtn();render();
+</script></body></html>
