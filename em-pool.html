@@ -44,14 +44,16 @@ const RATE={"Kuching":[0.3,430,201],"Sibu":[0.3,580,211],"Bintulu":[0.3,590,239]
 const R=c=>RATE[c]||[0.3,0,0];const MIN=0.3;
 const cost=(city,m)=>{const [mn,sra,sasa]=R(city);return{mn,sra:sra*Math.max(m,mn),wh:(370+sasa)*m}};
 const $=id=>document.getElementById(id);let G={};
-try{G=JSON.parse(localStorage.getItem("empool_sj426r")||"{}")}catch(e){}
-const DEF={"BFEMPGSB-C": "Group 1", "ADEMPRSB-C": "Group 1", "ADEMTDKK-C": "Via WH21", "ADEMPGPM-C": "Via WH21"};const gOf=c=>G[c]||DEF[c]||"Own mall";
+try{G=JSON.parse(localStorage.getItem("empool_sj426final")||"{}")}catch(e){}
+const DEF={"BFEMPGIK-C": "Group 1", "ADEMPGIK-C": "Group 1", "ADEMTDKK-C": "Group 1", "BFEMPGOB-C": "Group 2", "BFEMPGVC-C": "Group 1", "ADEMPGVC-C": "Group 1", "ADEMPGPM-C": "Group 1", "BFEMPGSB-C": "Group 1", "ADEMPRSB-C": "Group 1"};function dropTxt(rows,hub){const same=rows.filter(r=>r!==hub&&r.s===hub.s).map(r=>r.c),it=rows.filter(r=>r.s!==hub.s).map(r=>r.c);
+return "drop at "+hub.c+(same.length?" (with "+same.join(", ")+", same mall)":"")+(it.length?", then IT to "+it.join(", "):"")}
+const gOf=c=>G[c]||DEF[c]||"Own mall";
 function render(){let h="",city="";
 for(const r of ROWS){if(r.city!==city){city=r.city;h+='<tr class="city"><td colspan="4">'+city+'</td></tr>'}
 const g=gOf(r.c),cls=g.startsWith("Group")?"g"+g.slice(-1):"";
 h+='<tr class="'+cls+'"><td><b>'+r.c+'</b><small>'+r.n+' · '+r.s+'</small></td><td class="n">'+r.k+'</td><td class="n">'+r.m.toFixed(3)+'</td><td><select data-c="'+r.c+'" aria-label="send '+r.c+'">'+OPTS.map(o=>'<option'+(o===g?" selected":"")+'>'+o+'</option>').join("")+'</select></td></tr>'}
 $("tb").innerHTML=h;
-document.querySelectorAll("select[data-c]").forEach(s=>s.onchange=()=>{G[s.dataset.c]=s.value;try{localStorage.setItem("empool_sj426r",JSON.stringify(G))}catch(e){}render()});summary()}
+document.querySelectorAll("select[data-c]").forEach(s=>s.onchange=()=>{G[s.dataset.c]=s.value;try{localStorage.setItem("empool_sj426final",JSON.stringify(G))}catch(e){}render()});summary()}
 function plan(){const out=[];
 const malls={};for(const r of ROWS)if(gOf(r.c)==="Own mall")(malls[r.s]=malls[r.s]||[]).push(r);
 for(const s in malls)out.push({t:"Own mall",rows:malls[s]});
@@ -63,14 +65,14 @@ const cls=p.t.startsWith("Group")?"g"+p.t.slice(-1):"";const sh=p.rows.length===
 const pay=p.wh?k.wh:k.sra;p.wh?tW+=pay:tS+=pay;
 h+='<div class="grp" style="background:var(--'+(cls||"bg")+')"><span>'+(p.t==="Own mall"?hub.city+" · "+hub.s:p.t+" · "+hub.city)+'</span><span><b>'+m.toFixed(3)+' m³</b> '+
 (p.wh?'<span class="pill">WH21</span>':ok?'<span class="pill ok">SRA OK</span>':'<span class="pill bad">under '+k.mn+'</span>')+'</span>'+
-'<span class="who">'+(p.wh||sh?p.rows.map(r=>r.c).join(" + "):'Drop at '+hub.c+', then IT to '+p.rows.filter(r=>r!==hub).map(r=>r.c).join(", "))+
+'<span class="who">'+(p.wh||sh?p.rows.map(r=>r.c).join(" + "):dropTxt(p.rows,hub))+
 ' · '+(p.wh?'via WH21 ≈ RM'+Math.round(k.wh)+' (SRA direct would be RM'+Math.round(k.sra)+')':'SRA ≈ RM'+Math.round(k.sra)+' (billed '+Math.max(m,k.mn).toFixed(2)+' m³; via WH21 would be RM'+Math.round(k.wh)+')')+'</span></div>'}
 h+='<div class="grp"><span>Total freight, est.</span><span><b>RM'+Math.round(tS+tW)+'</b></span><span class="who">SRA RM'+Math.round(tS)+' · via WH21 RM'+Math.round(tW)+'</span></div>';
 $("groups").innerHTML=h}
-$("clr").onclick=()=>{G={};try{localStorage.removeItem("empool_sj426r")}catch(e){}render()};
+$("clr").onclick=()=>{G={};try{localStorage.removeItem("empool_sj426final")}catch(e){}render()};
 $("copy").onclick=async()=>{const lines=plan().map(p=>{const m=p.rows.reduce((a,r)=>a+r.m,0);const hub=p.rows.slice().sort((a,b)=>b.m-a.m)[0];
 const k=cost(hub.city,m),sh=p.rows.length===1||p.t==="Own mall";
-return (p.wh?"Via WH21":p.t==="Own mall"?"SRA "+hub.s:"SRA "+p.t)+" ("+m.toFixed(2)+" m3, ~RM"+Math.round(p.wh?k.wh:k.sra)+"): "+(p.wh||sh?p.rows.map(r=>r.c).join(" + "):"drop at "+hub.c+", IT to "+p.rows.filter(r=>r!==hub).map(r=>r.c).join(", "))});
+return (p.wh?"Via WH21":p.t==="Own mall"?"SRA "+hub.s:"SRA "+p.t)+" ("+m.toFixed(2)+" m3, ~RM"+Math.round(p.wh?k.wh:k.sra)+"): "+(p.wh||sh?p.rows.map(r=>r.c).join(" + "):dropTxt(p.rows,hub))});
 const t="三佳 #426 / #427 / #442 - EM drops\n"+lines.join("\n");
 try{await navigator.clipboard.writeText(t);$("copy").textContent="Copied"}catch(e){$("copy").textContent="Copy failed"}setTimeout(()=>{$("copy").textContent="Copy plan"},1600)};
 $("rt").innerHTML=[...new Set(ROWS.map(r=>r.city))].map(c=>{const [mn,s,w]=R(c);return '<tr><td>'+c+'</td><td class="n">'+mn+'</td><td class="n">'+s+'</td><td class="n">'+(370+w)+'</td></tr>'}).join("")+'<tr><td colspan="4"><small>SRA China to outlet door rate (eff. 09.07.2026), billed at the bigger of actual m³ and the minimum. Via WH21 = RM370 China to WH21 + SASA WM to EM, rides with other stock, no minimum. Estimates; re-quote before a big run.</small></td></tr>';
