@@ -3,49 +3,76 @@
 <title>EM Pooling - 三佳 #426 / #427 / #442</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
 <style>
-/* layout: one table of this order's EM outlets; sticky total bar at the bottom */
-:root{--bg:#f5f6f4;--card:#fff;--fg:#1d2321;--mute:#5d6863;--line:#d9dfdb;--accent:#0f6b5c;--ok:#1f7a3f;--okbg:#e4f3e8;--bad:#a3261d;--badbg:#fbe6e3;--sel:#e8f1ee;
+/* layout: one table of this order's EM outlets with a group picker per row; group totals below */
+:root{--bg:#f5f6f4;--card:#fff;--fg:#1d2321;--mute:#5d6863;--line:#d9dfdb;--accent:#0f6b5c;--ok:#1f7a3f;--okbg:#e4f3e8;--bad:#a3261d;--badbg:#fbe6e3;
+--g1:#dcebf7;--g2:#f6e3cf;--g3:#e7def5;--g4:#dff1e1;--g5:#f7dde4;
 --sans:"IBM Plex Sans",system-ui,sans-serif;--mono:"IBM Plex Mono",ui-monospace,monospace}
-@media (prefers-color-scheme:dark){:root{--bg:#141917;--card:#1c2320;--fg:#e7ece9;--mute:#9aa6a0;--line:#2f3934;--accent:#4fc2ab;--ok:#7fd59b;--okbg:#1d3226;--bad:#f08a80;--badbg:#3b1f1c;--sel:#22302b;color-scheme:dark}}
+@media (prefers-color-scheme:dark){:root{--bg:#141917;--card:#1c2320;--fg:#e7ece9;--mute:#9aa6a0;--line:#2f3934;--accent:#4fc2ab;--ok:#7fd59b;--okbg:#1d3226;--bad:#f08a80;--badbg:#3b1f1c;
+--g1:#1d2c3a;--g2:#3a2c1d;--g3:#2b2238;--g4:#1d3322;--g5:#3a1f27;color-scheme:dark}}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.45 var(--sans);padding:env(safe-area-inset-top,0px) max(14px,env(safe-area-inset-right,0px)) 120px max(14px,env(safe-area-inset-left,0px))}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.45 var(--sans);padding:env(safe-area-inset-top,0px) max(14px,env(safe-area-inset-right,0px)) 40px max(14px,env(safe-area-inset-left,0px))}
 .wrap{max-width:720px;margin:0 auto}
 h1{font-size:20px;margin:14px 0 2px;text-wrap:balance}.sub{color:var(--mute);margin:0 0 12px;font-size:13.5px}
 .tw{overflow-x:auto;background:var(--card);border:1px solid var(--line);border-radius:10px}
 table{border-collapse:collapse;width:100%;font-size:14px}
 th,td{padding:7px 8px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}
 th{font-size:11.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--mute);font-weight:600}
-td.n{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+td.n,th.n{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
 td b{font-family:var(--mono);font-weight:500}td small{display:block;color:var(--mute);font-size:12px}
 tr.city td{background:var(--bg);font-weight:600;font-size:13px}
-tr.on td{background:var(--sel)}
-input[type=checkbox]{width:20px;height:20px;accent-color:var(--accent)}
+tr.g1 td{background:var(--g1)}tr.g2 td{background:var(--g2)}tr.g3 td{background:var(--g3)}tr.g4 td{background:var(--g4)}tr.g5 td{background:var(--g5)}
+select{font:inherit;font-size:13.5px;padding:5px 6px;border:1px solid var(--line);border-radius:6px;background:var(--card);color:var(--fg)}
 .pill{font-size:12px;font-weight:600;padding:2px 8px;border-radius:99px;white-space:nowrap}.ok{background:var(--okbg);color:var(--ok)}.bad{background:var(--badbg);color:var(--bad)}
-.foot{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);padding:10px max(14px,env(safe-area-inset-right,0px)) calc(10px + env(safe-area-inset-bottom,0px)) max(14px,env(safe-area-inset-left,0px))}
-.fi{max-width:720px;margin:0 auto;display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;justify-content:space-between}
-.tot{font-family:var(--mono);font-size:17px;font-weight:500}
+.sum{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:14px 0}
+.sum h2{font-size:15px;margin:0 0 6px}.grp{display:flex;justify-content:space-between;gap:8px;padding:6px 8px;border-radius:7px;margin:4px 0;flex-wrap:wrap}
+.grp b{font-family:var(--mono);font-weight:500}.grp .who{font-size:13px;color:var(--mute);flex-basis:100%}
+.btns{display:flex;gap:8px;margin-top:8px}
 button{font:inherit;border:1px solid var(--line);background:var(--card);color:var(--fg);border-radius:7px;padding:6px 11px;cursor:pointer}button.pri{background:var(--accent);color:#fff;border-color:var(--accent)}
-button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 </style></head><body><div class="wrap">
 <h1>EM pooling - 三佳 #426 / #427 / #442</h1>
-<p class="sub">m³ per East Malaysia outlet for this order. Outlets at 0.3 m³ or more can go SRA on their own. Tick the outlets to send together in one drop; the bar at the bottom adds them up.</p>
-<div class="tw"><table><thead><tr><th></th><th>Outlet</th><th style="text-align:right">Ctns</th><th style="text-align:right">m³</th><th></th></tr></thead><tbody id="tb"></tbody></table></div>
+<p class="sub">m³ per East Malaysia outlet for this order. Outlets at 0.3 m³ or more can go SRA on their own. To send outlets together in one drop, give them the same group. A drop must reach the SRA minimum for its region (below). Own mall = the AD, BF and FE counters of one mall go together.</p>
+<div class="tw" style="margin-bottom:12px"><table><thead><tr><th>Region</th><th class="n">SRA min m³</th><th class="n">SRA RM/m³</th><th class="n">Via WH21 RM/m³</th></tr></thead><tbody id="rt"></tbody></table></div>
+<div class="tw"><table><thead><tr><th>Outlet</th><th class="n">Ctns</th><th class="n">m³</th><th>Send</th></tr></thead><tbody id="tb"></tbody></table></div>
+<div class="sum"><h2>Drops</h2><div id="groups"></div>
+<div class="btns"><button class="pri" id="copy">Copy plan</button><button id="clr">Reset</button></div></div>
 </div>
-<div class="foot"><div class="fi"><span>Ticked: <span id="cnt">0</span> outlets · <span class="tot" id="tot">0.000 m³</span> <span class="pill" id="st"></span></span>
-<span><button class="pri" id="copy">Copy ticked</button> <button id="clr">Clear</button></span></div></div>
 <script>
-const ROWS=[{"c": "ADEMPGIK-C", "n": "PARKSON - IMAGO SHOPPING MALL", "s": "SB-ADT-KK01", "city": "Kota Kinabalu", "k": 1.0, "m": 0.0839}, {"c": "BFEMPGIK-C", "n": "PARKSON - IMAGO SHOPPING MALL BF", "s": "SB-ADT-KK01", "city": "Kota Kinabalu", "k": 8.0, "m": 0.5545}, {"c": "ADEMTDKK-C", "n": "TONG'S DEPARTMENTAL STORE KK", "s": "SB-ADT-KK02", "city": "Kota Kinabalu", "k": 1.0, "m": 0.0839}, {"c": "BFEMPGOB-C", "n": "PARKSON - ONE BORNEO BF", "s": "SB-ADT-KK03", "city": "Kota Kinabalu", "k": 5.0, "m": 0.3466}, {"c": "ADEMPGVC-C", "n": "PARKSON - VIVACITY MEGAMALL", "s": "SW-ADT-KC01", "city": "Kuching", "k": 1.0, "m": 0.0839}, {"c": "BFEMPGVC-C", "n": "PARKSON - VIVACITY MEGAMALL BF", "s": "SW-ADT-KC01", "city": "Kuching", "k": 6.0, "m": 0.4159}, {"c": "ADEMPGPM-C", "n": "PARKSON - PLAZA MERDEKA", "s": "SW-ADT-KC02", "city": "Kuching", "k": 1.0, "m": 0.0839}, {"c": "ADEMPRSB-C", "n": "PREMIER DEPARTMENT STORE SIBU", "s": "SW-ADT-SB01", "city": "Sibu", "k": 1.0, "m": 0.0839}, {"c": "BFEMPGSB-C", "n": "PARKSON - RIA SIBU BF", "s": "SW-ADT-SB04", "city": "Sibu", "k": 4.0, "m": 0.2772}], MIN=0.3;
-const $=id=>document.getElementById(id);let T=new Set();
-try{(JSON.parse(localStorage.getItem("empool_sj426")||"[]")).forEach(c=>T.add(c))}catch(e){}
+const ROWS=[{"c": "ADEMPGIK-C", "n": "PARKSON - IMAGO SHOPPING MALL", "s": "SB-ADT-KK01", "city": "Kota Kinabalu", "k": 1.0, "m": 0.0839}, {"c": "BFEMPGIK-C", "n": "PARKSON - IMAGO SHOPPING MALL BF", "s": "SB-ADT-KK01", "city": "Kota Kinabalu", "k": 8.0, "m": 0.5545}, {"c": "ADEMTDKK-C", "n": "TONG'S DEPARTMENTAL STORE KK", "s": "SB-ADT-KK02", "city": "Kota Kinabalu", "k": 1.0, "m": 0.0839}, {"c": "BFEMPGOB-C", "n": "PARKSON - ONE BORNEO BF", "s": "SB-ADT-KK03", "city": "Kota Kinabalu", "k": 5.0, "m": 0.3466}, {"c": "ADEMPGVC-C", "n": "PARKSON - VIVACITY MEGAMALL", "s": "SW-ADT-KC01", "city": "Kuching", "k": 1.0, "m": 0.0839}, {"c": "BFEMPGVC-C", "n": "PARKSON - VIVACITY MEGAMALL BF", "s": "SW-ADT-KC01", "city": "Kuching", "k": 6.0, "m": 0.4159}, {"c": "ADEMPGPM-C", "n": "PARKSON - PLAZA MERDEKA", "s": "SW-ADT-KC02", "city": "Kuching", "k": 1.0, "m": 0.0839}, {"c": "ADEMPRSB-C", "n": "PREMIER DEPARTMENT STORE SIBU", "s": "SW-ADT-SB01", "city": "Sibu", "k": 1.0, "m": 0.0839}, {"c": "BFEMPGSB-C", "n": "PARKSON - RIA SIBU BF", "s": "SW-ADT-SB04", "city": "Sibu", "k": 4.0, "m": 0.2772}], OPTS=["Own mall","Group 1","Group 2","Group 3","Group 4","Group 5","Via WH21"];
+// SRA GZ->EM door rates (eff. 09.07.2026; mins from 2024 sheets) and via-WH21 = Baiyun C1 RM370 + SASA WM->EM (2025-03)
+const RATE={"Kuching":[0.3,430,201],"Sibu":[0.3,580,211],"Bintulu":[0.3,590,239],"Miri":[0.3,610,239],"Kota Kinabalu":[0.3,430,211],"Sandakan":[0.3,560,241],"Tawau":[0.3,570,241],"Lahad Datu":[0.3,570,331],"Labuan":[0.5,500,331]};
+const R=c=>RATE[c]||[0.3,0,0];const MIN=0.3;
+const cost=(city,m)=>{const [mn,sra,sasa]=R(city);return{mn,sra:sra*Math.max(m,mn),wh:(370+sasa)*m}};
+const $=id=>document.getElementById(id);let G={};
+try{G=JSON.parse(localStorage.getItem("empool_sj426h")||"{}")}catch(e){}
+const gOf=c=>G[c]||"Own mall";
 function render(){let h="",city="";
-for(const r of ROWS){if(r.city!==city){city=r.city;h+='<tr class="city"><td colspan="5">'+city+'</td></tr>'}
-const on=T.has(r.c);h+='<tr class="'+(on?"on":"")+'"><td><input type="checkbox" data-c="'+r.c+'"'+(on?" checked":"")+' aria-label="pool '+r.c+'"></td><td><b>'+r.c+'</b><small>'+r.n+' · '+r.s+'</small></td><td class="n">'+r.k+'</td><td class="n">'+r.m.toFixed(3)+'</td><td>'+(r.m>=MIN-1e-9?'<span class="pill ok">alone</span>':'')+'</td></tr>'}
-$("tb").innerHTML=h;document.querySelectorAll("input[data-c]").forEach(i=>i.onchange=()=>{i.checked?T.add(i.dataset.c):T.delete(i.dataset.c);try{localStorage.setItem("empool_sj426",JSON.stringify([...T]))}catch(e){}render()});sum()}
-function sum(){const sel=ROWS.filter(r=>T.has(r.c)),m=sel.reduce((a,r)=>a+r.m,0);$("cnt").textContent=sel.length;$("tot").textContent=m.toFixed(3)+" m³";
-const st=$("st");if(!sel.length){st.textContent="";st.className="pill"}else if(m>=MIN-1e-9){st.textContent="reaches 0.3";st.className="pill ok"}else{st.textContent="under 0.3";st.className="pill bad"}}
-$("clr").onclick=()=>{T.clear();try{localStorage.removeItem("empool_sj426")}catch(e){}render()};
-$("copy").onclick=async()=>{const sel=ROWS.filter(r=>T.has(r.c));const m=sel.reduce((a,r)=>a+r.m,0);
-const t="三佳 #426 / #427 / #442 - send together ("+m.toFixed(2)+" m3):\n"+sel.map(r=>r.c+" "+r.m.toFixed(2)+" m3").join("\n");
-try{await navigator.clipboard.writeText(t);$("copy").textContent="Copied"}catch(e){$("copy").textContent="Copy failed"}setTimeout(()=>{$("copy").textContent="Copy ticked"},1600)};
+for(const r of ROWS){if(r.city!==city){city=r.city;h+='<tr class="city"><td colspan="4">'+city+'</td></tr>'}
+const g=gOf(r.c),cls=g.startsWith("Group")?"g"+g.slice(-1):"";
+h+='<tr class="'+cls+'"><td><b>'+r.c+'</b><small>'+r.n+' · '+r.s+'</small></td><td class="n">'+r.k+'</td><td class="n">'+r.m.toFixed(3)+'</td><td><select data-c="'+r.c+'" aria-label="send '+r.c+'">'+OPTS.map(o=>'<option'+(o===g?" selected":"")+'>'+o+'</option>').join("")+'</select></td></tr>'}
+$("tb").innerHTML=h;
+document.querySelectorAll("select[data-c]").forEach(s=>s.onchange=()=>{G[s.dataset.c]=s.value;try{localStorage.setItem("empool_sj426h",JSON.stringify(G))}catch(e){}render()});summary()}
+function plan(){const out=[];
+const malls={};for(const r of ROWS)if(gOf(r.c)==="Own mall")(malls[r.s]=malls[r.s]||[]).push(r);
+for(const s in malls)out.push({t:"Own mall",rows:malls[s]});
+for(const g of OPTS.filter(o=>o.startsWith("Group"))){const rs=ROWS.filter(r=>gOf(r.c)===g);if(rs.length)out.push({t:g,rows:rs})}
+const wh=ROWS.filter(r=>gOf(r.c)==="Via WH21");if(wh.length)out.push({t:"Via WH21",rows:wh,wh:1});return out}
+function summary(){let h="",tS=0,tW=0;
+for(const p of plan()){const m=p.rows.reduce((a,r)=>a+r.m,0);const hub=p.rows.slice().sort((a,b)=>b.m-a.m)[0];const k=cost(hub.city,m),ok=p.wh||m>=k.mn-1e-9;
+const cls=p.t.startsWith("Group")?"g"+p.t.slice(-1):"";const sh=p.rows.length===1||p.t==="Own mall";
+const pay=p.wh?k.wh:k.sra;p.wh?tW+=pay:tS+=pay;
+h+='<div class="grp" style="background:var(--'+(cls||"bg")+')"><span>'+(p.t==="Own mall"?hub.city+" · "+hub.s:p.t+" · "+hub.city)+'</span><span><b>'+m.toFixed(3)+' m³</b> '+
+(p.wh?'<span class="pill">WH21</span>':ok?'<span class="pill ok">SRA OK</span>':'<span class="pill bad">under '+k.mn+'</span>')+'</span>'+
+'<span class="who">'+(p.wh||sh?p.rows.map(r=>r.c).join(" + "):'Drop at '+hub.c+', then IT to '+p.rows.filter(r=>r!==hub).map(r=>r.c).join(", "))+
+' · '+(p.wh?'via WH21 ≈ RM'+Math.round(k.wh)+' (SRA direct would be RM'+Math.round(k.sra)+')':'SRA ≈ RM'+Math.round(k.sra)+' (billed '+Math.max(m,k.mn).toFixed(2)+' m³; via WH21 would be RM'+Math.round(k.wh)+')')+'</span></div>'}
+h+='<div class="grp"><span>Total freight, est.</span><span><b>RM'+Math.round(tS+tW)+'</b></span><span class="who">SRA RM'+Math.round(tS)+' · via WH21 RM'+Math.round(tW)+'</span></div>';
+$("groups").innerHTML=h}
+$("clr").onclick=()=>{G={};try{localStorage.removeItem("empool_sj426h")}catch(e){}render()};
+$("copy").onclick=async()=>{const lines=plan().map(p=>{const m=p.rows.reduce((a,r)=>a+r.m,0);const hub=p.rows.slice().sort((a,b)=>b.m-a.m)[0];
+const k=cost(hub.city,m),sh=p.rows.length===1||p.t==="Own mall";
+return (p.wh?"Via WH21":p.t==="Own mall"?"SRA "+hub.s:"SRA "+p.t)+" ("+m.toFixed(2)+" m3, ~RM"+Math.round(p.wh?k.wh:k.sra)+"): "+(p.wh||sh?p.rows.map(r=>r.c).join(" + "):"drop at "+hub.c+", IT to "+p.rows.filter(r=>r!==hub).map(r=>r.c).join(", "))});
+const t="三佳 #426 / #427 / #442 - EM drops\n"+lines.join("\n");
+try{await navigator.clipboard.writeText(t);$("copy").textContent="Copied"}catch(e){$("copy").textContent="Copy failed"}setTimeout(()=>{$("copy").textContent="Copy plan"},1600)};
+$("rt").innerHTML=[...new Set(ROWS.map(r=>r.city))].map(c=>{const [mn,s,w]=R(c);return '<tr><td>'+c+'</td><td class="n">'+mn+'</td><td class="n">'+s+'</td><td class="n">'+(370+w)+'</td></tr>'}).join("")+'<tr><td colspan="4"><small>SRA China to outlet door rate (eff. 09.07.2026), billed at the bigger of actual m³ and the minimum. Via WH21 = RM370 China to WH21 + SASA WM to EM, rides with other stock, no minimum. Estimates; re-quote before a big run.</small></td></tr>';
 render();
 </script></body></html>
