@@ -31,7 +31,7 @@ button{font:inherit;border:1px solid var(--line);background:var(--card);color:va
 button:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 </style></head><body><div class="wrap">
 <h1>EM pooling - 三佳 #426 / #427 / #442</h1>
-<p class="sub">m³ per East Malaysia outlet for this order. Outlets at 0.3 m³ or more can go SRA on their own. To send outlets together in one drop, give them the same group. A drop must reach the SRA minimum for its region (below). Own mall = the AD, BF and FE counters of one mall go together.</p>
+<p class="sub">m³ per East Malaysia outlet for this order. Outlets at 0.3 m³ or more can go SRA on their own. To send outlets together in one drop, give them the same group. Groups are per region: Group 1 in Kuching and Group 1 in KK are separate drops. A drop must reach the SRA minimum for its region (below). Own mall = the AD, BF and FE counters of one mall go together.</p>
 <div class="tw" style="margin-bottom:12px"><table><thead><tr><th>Region</th><th class="n">SRA min m³</th><th class="n">SRA RM/m³</th><th class="n">Via WH21 RM/m³</th></tr></thead><tbody id="rt"></tbody></table></div>
 <div class="tw"><table><thead><tr><th>Outlet</th><th class="n">Ctns</th><th class="n">m³</th><th>Send</th></tr></thead><tbody id="tb"></tbody></table></div>
 <div class="sum"><h2>Drops</h2><div id="groups"></div>
@@ -55,8 +55,8 @@ document.querySelectorAll("select[data-c]").forEach(s=>s.onchange=()=>{G[s.datas
 function plan(){const out=[];
 const malls={};for(const r of ROWS)if(gOf(r.c)==="Own mall")(malls[r.s]=malls[r.s]||[]).push(r);
 for(const s in malls)out.push({t:"Own mall",rows:malls[s]});
-for(const g of OPTS.filter(o=>o.startsWith("Group"))){const rs=ROWS.filter(r=>gOf(r.c)===g);if(rs.length)out.push({t:g,rows:rs})}
-const wh=ROWS.filter(r=>gOf(r.c)==="Via WH21");if(wh.length)out.push({t:"Via WH21",rows:wh,wh:1});return out}
+for(const city of [...new Set(ROWS.map(r=>r.city))])for(const g of OPTS.filter(o=>o.startsWith("Group"))){const rs=ROWS.filter(r=>r.city===city&&gOf(r.c)===g);if(rs.length)out.push({t:g,rows:rs})}
+for(const r of ROWS)if(gOf(r.c)==="Via WH21")out.push({t:"Via WH21",rows:[r],wh:1});return out}
 function summary(){let h="",tS=0,tW=0;
 for(const p of plan()){const m=p.rows.reduce((a,r)=>a+r.m,0);const hub=p.rows.slice().sort((a,b)=>b.m-a.m)[0];const k=cost(hub.city,m),ok=p.wh||m>=k.mn-1e-9;
 const cls=p.t.startsWith("Group")?"g"+p.t.slice(-1):"";const sh=p.rows.length===1||p.t==="Own mall";
