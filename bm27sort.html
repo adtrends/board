@@ -179,12 +179,14 @@ main{max-width:720px;margin:0 auto;padding:10px 12px 90px}
   // ================================================================ 1 LABEL
   function drawLab(){
     var pad='';['1','2','3','4','5','6','7','8','9','C','0','<'].forEach(function(k){pad+='<button data-k="'+k+'"'+(k==='C'||k==='<'?' class="x"':'')+'>'+(k==='<'?'&#9003;':k==='C'?'PADAM':k)+'</button>';});
-    var pc=isPC(),ent='<div class="card"><h2>1. KENAL KARTON &rarr; '+(pc?'CETAK LABEL':'HANTAR KE KOMPUTER')+'</h2><div id="disp"></div><div class="pad" id="pad">'+pad+'</div><div id="cand"></div>'+
-      '<div class="row"><button class="btn" id="pal">Pilih ikut PALET KIRAAN</button></div></div><div class="card" id="queue"></div>';
+    var pc=isPC(),ent='<div class="card"><h2>1. PILIH PALET KIRAAN &rarr; '+(pc?'CETAK':'HANTAR')+' SEMUA LABEL PALET ITU</h2>'+
+      '<div class="row" style="margin-top:0"><button class="btn p" id="pal" style="font-size:17px;padding:16px 12px">PILIH PALET (P1, P2, P3 ...)</button></div>'+
+      '<div class="mute" style="margin-top:6px">Baca nombor palet, pilih di sini. Label semua karton palet itu '+(pc?'dicetak terus.':'dihantar ke komputer pencetak.')+'</div></div>'+
+      '<div class="card"><h2>KARTON TIADA LABEL / PALET TIADA NOMBOR: TAIP IC</h2><div id="disp"></div><div class="pad" id="pad">'+pad+'</div><div id="cand"></div></div><div class="card" id="queue"></div>';
     var role='<div class="card"><div class="mute">Peranti ini: <b>'+(pc?'KOMPUTER PENCETAK':'TELEFON / TERMINAL')+'</b></div><div class="row"><button class="btn" id="role">Tukar kepada '+(pc?'TELEFON / TERMINAL':'KOMPUTER PENCETAK')+'</button></div></div>';
     app.innerHTML=(pc?'<div class="card" id="batches"></div>'+ent:ent+'<div class="card" id="batches"></div>')+'<div class="card" id="stat"></div>'+role+
-      '<p class="mute">'+(pc?'Komputer ini mencetak. Label yang dihantar dari telefon keluar di BARISAN CETAK. Tekan CETAK, cetak PDF, tekan SUDAH CETAK.'
-        :'Taip 6 nombor akhir IC pada karton (cth IC-260900108 = <b>900108</b>). Semak PALET / CTN / kod baju, tekan TAMBAH. Cukup satu palet, tekan HANTAR. Label keluar di komputer pencetak.')+'</p>';
+      '<p class="mute">'+(pc?'Komputer ini mencetak. Pilih palet untuk cetak terus, atau tekan CETAK pada BARISAN CETAK (dihantar dari telefon). Lepas cetak tekan SUDAH CETAK.'
+        :'Pilih palet = semua label palet itu keluar di komputer pencetak. Karton tanpa label: taip 6 nombor akhir IC (cth IC-260900108 = <b>900108</b>), semak, TAMBAH, HANTAR.')+'</p>';
     document.getElementById('role').onclick=function(){ls('bm27s:pc',pc?'0':'1');draw();};
     [].forEach.call(document.querySelectorAll('#pad button'),function(b){b.onclick=function(){key(b.getAttribute('data-k'));};});
     document.getElementById('pal').onclick=pallets;
@@ -223,13 +225,14 @@ main{max-width:720px;margin:0 auto;padding:10px 12px 90px}
     var p=document.getElementById('prn');if(p)p.onclick=function(){batch(true);};
     var s=document.getElementById('snd');if(s)s.onclick=function(){batch(false);};
   }
-  function batch(here){
-    var q=Q();if(!q.length)return;var d=dev(),n=new Date(),hm=(''+(n.getHours()+100)).slice(1)+(''+(n.getMinutes()+100)).slice(1);
-    var bid=d+'-'+(Math.floor(n.getTime()/1000)%46656).toString(36).toUpperCase();
-    var m=MB();m[bid]={t:n.getTime(),hm:hm,ics:q,p:0,dev:d};putMB(m);putQ([]);
-    post('BM27 LABEL '+bid+' '+d+' '+hm+' '+q.join(','));
-    drawQueue();drawBatches();stats();
-    if(here)pdfSheet(bid);else alert('Dihantar ke komputer: '+bid+' ('+q.length+' label).\nAmbil label di pencetak bila status SUDAH CETAK.');
+  function batch(here){var q=Q();if(!q.length)return;putQ([]);batchOf(q,here,null);}
+  function batchOf(ics,here,pk){
+    if(!ics.length)return;var d=dev(),n=new Date(),hm=(''+(n.getHours()+100)).slice(1)+(''+(n.getMinutes()+100)).slice(1);
+    var bid=(pk&&/^[A-Z0-9-]+$/.test(pk)?pk:d)+'-'+(Math.floor(n.getTime()/1000)%46656).toString(36).toUpperCase();
+    var m=MB();m[bid]={t:n.getTime(),hm:hm,ics:ics,p:0,dev:d};putMB(m);
+    post('BM27 LABEL '+bid+' '+d+' '+hm+' '+ics.join(','));
+    drawQueue();drawCand();drawBatches();stats();
+    if(here)pdfSheet(bid);else alert('Dihantar ke komputer: '+bid+' ('+ics.length+' label).\nAmbil label di pencetak bila status SUDAH CETAK.');
   }
   function allBatches(){var a={},m=MB(),b;for(b in BATCH)a[b]={dev:BATCH[b].dev,hm:BATCH[b].hm,ics:BATCH[b].ics,p:BATCH[b].p};
     for(b in m){if(!a[b])a[b]={dev:m[b].dev,hm:m[b].hm,ics:m[b].ics,p:m[b].p};else if(m[b].p)a[b].p=1;if(!a[b].ics.length)a[b].ics=m[b].ics;}
@@ -256,7 +259,7 @@ main{max-width:720px;margin:0 auto;padding:10px 12px 90px}
     var share=file&&navigator.canShare&&navigator.canShare({files:[file]});
     ov.className='show';
     ov.innerHTML='<div class="sheet"><h3>'+esc(bid)+' &middot; '+a.ics.length+' label (100 x 150)</h3>'+
-      '<div class="mute">Label keluar ikut susunan yang ditaip. Padankan 6 nombor besar dengan IC pada karton.</div>'+
+      '<div class="mute">Padankan 6 nombor besar dengan IC pada karton. Label lebih = karton tiada di palet itu: simpan. Karton tiada label: taip IC.</div>'+
       '<div class="row"><a class="btn p" style="text-align:center;text-decoration:none" href="'+url+'" target="_blank" rel="noopener">BUKA PDF / CETAK</a></div>'+
       '<div class="row"><a class="btn" style="text-align:center;text-decoration:none" href="'+url+'" download="'+esc(name)+'">Muat turun</a>'+(share?'<button class="btn" id="shr">Kongsi (WhatsApp)</button>':'')+'</div>'+
       '<div class="row"><button class="btn g" id="okp">SUDAH CETAK &#10003;</button><button class="btn" id="cls">Tutup</button></div></div>';
@@ -280,15 +283,18 @@ main{max-width:720px;margin:0 auto;padding:10px 12px 90px}
   }
   function palList(p,ics){
     ics=ics.slice().sort(function(a,b){return (parseInt(IDX[a][5],10)||999)-(parseInt(IDX[b][5],10)||999)||(a<b?-1:1);});
-    var q=Q(),h='<div class="sheet"><h3>'+esc(pkl(p))+' &middot; '+ics.length+' karton</h3><div class="mute">Tanda karton yang ADA di depan anda. Yang tiada: biarkan kosong.</div>';
+    var pc=isPC(),h='<div class="sheet"><h3>'+esc(pkl(p))+' &middot; '+ics.length+' karton</h3><div class="mute">Semua karton palet ini sudah ditanda. Buang tanda hanya kalau karton itu TIADA.</div>';
     ics.forEach(function(ic){var c=IDX[ic],lb=labOf(ic);
-      h+='<label class="pl"><input type="checkbox" value="'+ic+'"'+(q.indexOf(ic)>=0?' checked':'')+(lb?' disabled':'')+'><div class="i"><b>'+esc(s6(ic))+'</b> '+(c[5]?'&middot; CTN '+esc(c[5]):'')+
+      h+='<label class="pl"><input type="checkbox" value="'+ic+'"'+(lb?'':' checked')+'><div class="i"><b>'+esc(s6(ic))+'</b> '+(c[5]?'&middot; CTN '+esc(c[5]):'')+
         '<div class="mute">'+c[3]+' pcs &middot; '+esc(c[6])+'</div></div>'+(lb?'<span class="tag t2">LABEL '+esc(lb)+'</span>':'')+'</label>';});
-    h+='<div class="act"><div class="row" style="margin-top:0"><button class="btn" id="all">Tanda semua</button><button class="btn g" id="addp">TAMBAH KE SENARAI</button></div><div class="row"><button class="btn" id="bk">&lsaquo; Palet lain</button><button class="btn" id="cls">Tutup</button></div></div></div>';
+    h+='<div class="act"><div class="row" style="margin-top:0"><button class="btn p" id="go" style="font-size:16px;padding:14px 12px"></button></div>'+
+      '<div class="row"><button class="btn" id="none">Buang semua tanda</button><button class="btn" id="bk">&lsaquo; Palet lain</button><button class="btn" id="cls">Tutup</button></div></div></div>';
     ov.innerHTML=h;
-    document.getElementById('all').onclick=function(){[].forEach.call(ov.querySelectorAll('input:not(:disabled)'),function(i){i.checked=true;});};
-    document.getElementById('addp').onclick=function(){var q=Q().filter(function(i){return ics.indexOf(i)<0;});
-      [].forEach.call(ov.querySelectorAll('input:checked'),function(i){q.push(i.value);});putQ(q);closeOv();drawQueue();drawCand();};
+    function upd(){var n=ov.querySelectorAll('input:checked').length,b=document.getElementById('go');b.textContent=(pc?'CETAK ':'HANTAR ')+n+' LABEL'+(pc?'':' KE KOMPUTER');b.disabled=!n;}
+    [].forEach.call(ov.querySelectorAll('input'),function(i){i.onchange=upd;});upd();
+    document.getElementById('none').onclick=function(){[].forEach.call(ov.querySelectorAll('input'),function(i){i.checked=false;});upd();};
+    document.getElementById('go').onclick=function(){var l=[];[].forEach.call(ov.querySelectorAll('input:checked'),function(i){l.push(i.value);});
+      var q=Q().filter(function(i){return l.indexOf(i)<0;});putQ(q);closeOv();batchOf(l,pc,p);};
     document.getElementById('bk').onclick=pallets;document.getElementById('cls').onclick=closeOv;
   }
   // ================================================================ 2 SORT
@@ -362,11 +368,10 @@ main{max-width:720px;margin:0 auto;padding:10px 12px 90px}
   function pe(s){return asc(s).replace(/([\\()])/g,'\\$1');}
   function c128(t){var v=[104],i,sum=104;for(i=0;i<t.length;i++){var x=t.charCodeAt(i)-32;v.push(x);sum+=x*(i+1);}v.push(sum%103);v.push(106);return v.map(function(x){return C128[x];}).join('');}
   function labelPDF(bid,ics){
-    var MM=72/25.4,W=100*MM,H=150*MM,objs=[],pages=[];
+    var MM=72/25.4,W=100*MM,H=150*MM,pages=[];
     function n2(x){return (Math.round(x*100)/100).toString();}
     function X(mm){return n2(mm*MM);}function Y(mm){return n2(H-mm*MM);}
-    ics.forEach(function(ic,idx){
-      var c=IDX[ic],o=O(ic),code=oc(ic),rg=o[1],s=[];
+    function ctx(){var s=[];
       function txt(x,y,str,sz,bold,align,white){str=asc(str);var w=tw(str,sz,!bold),px=x*MM-(align==='r'?w:align==='c'?w/2:0);
         s.push((white?'1':'0')+' g BT /'+(bold?'F1':'F2')+' '+n2(sz)+' Tf '+n2(px)+' '+Y(y)+' Td ('+pe(str)+') Tj ET');}
       function fit(str,maxmm,sz){while(sz>6&&tw(asc(str),sz)>maxmm*MM)sz-=1;return sz;}
@@ -374,45 +379,68 @@ main{max-width:720px;margin:0 auto;padding:10px 12px 90px}
       function circ(cx,cy,r,op){var k=.5523*r,a=cx*MM,b=H-cy*MM;r*=MM;k*=MM;
         s.push(n2(a+r)+' '+n2(b)+' m '+n2(a+r)+' '+n2(b+k)+' '+n2(a+k)+' '+n2(b+r)+' '+n2(a)+' '+n2(b+r)+' c '+n2(a-k)+' '+n2(b+r)+' '+n2(a-r)+' '+n2(b+k)+' '+n2(a-r)+' '+n2(b)+' c '+
           n2(a-r)+' '+n2(b-k)+' '+n2(a-k)+' '+n2(b-r)+' '+n2(a)+' '+n2(b-r)+' c '+n2(a+k)+' '+n2(b-r)+' '+n2(a+r)+' '+n2(b-k)+' '+n2(a+r)+' '+n2(b)+' c '+op);}
+      return {s:s,txt:txt,fit:fit,line:line,circ:circ};}
+    // ---- cover page when the batch is one count pallet: the bundle of labels says which pallet it is for
+    var pks={};ics.forEach(function(ic){pks[IDX[ic][4]]=1;});var pkk=Object.keys(pks);
+    if(pkk.length===1&&ics.length>1){var g=ctx(),pk=asc(pkl(pkk[0])),cds=ics.map(function(i){return parseInt(IDX[i][5],10);}).filter(function(v){return v>0;});
+      g.s.push('0 g 0 '+Y(34)+' '+n2(W)+' '+n2(34*MM)+' re f');
+      g.txt(50,16,'PALET KIRAAN',24,true,'c',true);g.txt(50,27,'label untuk palet ini sahaja',11,false,'c',true);
+      g.txt(50,78,pk,g.fit(pk,90,120),true,'c');
+      g.txt(50,95,ics.length+' LABEL',28,true,'c');
+      if(cds.length)g.txt(50,104,'CTN '+Math.min.apply(null,cds)+' - '+Math.max.apply(null,cds),13,false,'c');
+      g.line(110);
+      ['1. Cari palet '+pk+' (nombor semasa kiraan).','2. Tampal label: 6 nombor IC mesti SAMA.','3. Label lebih = karton tiada di sini. Simpan.','4. Karton tiada label: taip IC di telefon.','5. Lepas tampal: scan label, pergi ZON + LOT.'].forEach(function(t,i){g.txt(6,118+i*6.2,t,10.5,i===1,'l');});
+      g.txt(50,148.6,bid+'  BM27 '+D.plan,6.5,false,'c');
+      pages.push(g.s.join('\n'));}
+    ics.forEach(function(ic,idx){
+      var c=IDX[ic],o=O(ic),code=oc(ic),rg=o[1],g=ctx(),s=g.s,txt=g.txt,fit=g.fit,line=g.line,circ=g.circ;
       // ---- top: region shape + ZON
-      var sx=6,sy=6,ss=36,sh=D.shape[rg];
+      var sx=6,sy=5,ss=29,sh=D.shape[rg];
       if(sh==='circle'){s.push('0 g');circ(sx+ss/2,sy+ss/2,ss/2,'f');txt(sx+ss/2,sy+ss*.62,rg,ss*MM*.34,true,'c',true);}
       else if(sh==='triangle'){s.push('0 g '+X(sx+ss/2)+' '+Y(sy)+' m '+X(sx)+' '+Y(sy+ss)+' l '+X(sx+ss)+' '+Y(sy+ss)+' l f');txt(sx+ss/2,sy+ss*.88,rg,ss*MM*.26,true,'c',true);}
       else if(sh==='square'){var lw=ss*.085;s.push('0 G '+n2(lw*MM)+' w '+X(sx+lw/2)+' '+Y(sy+ss-lw/2)+' '+n2((ss-lw)*MM)+' '+n2((ss-lw)*MM)+' re S');txt(sx+ss/2,sy+ss*.62,rg,ss*MM*.34,true,'c');}
       else if(sh==='diamond'){s.push('0 g '+X(sx+ss/2)+' '+Y(sy)+' m '+X(sx+ss)+' '+Y(sy+ss/2)+' l '+X(sx+ss/2)+' '+Y(sy+ss)+' l '+X(sx)+' '+Y(sy+ss/2)+' l f');txt(sx+ss/2,sy+ss*.585,rg,ss*MM*.24,true,'c',true);}
       else{var rw=ss*(D.ringW||.13);s.push('0 G '+n2(rw*MM)+' w');circ(sx+ss/2,sy+ss/2,ss/2-rw/2,'S');txt(sx+ss/2,sy+ss*.605,rg,ss*MM*.30,true,'c');}
-      txt(95,11,D.word[rg][0],11,true,'r');
-      txt(48,20,'ZON',13,true);
-      var zn=o[6].slice(1);txt(95,42,zn,92,true,'r');
-      line(46);
+      txt(95,9.5,D.word[rg][0],10,true,'r');
+      txt(42,17,'ZON',12,true);
+      txt(95,34,o[6].slice(1),76,true,'r');
+      line(37.5);
       // ---- LOT (lane) = the outlet's spot
-      txt(5,52,'LOT',11,true);
-      var lf=fit(o[2],90,96);txt(50,81,o[2],lf,true,'c');
-      line(85);
+      txt(5,42.5,'LOT',10,true);
+      txt(50,66,o[2],fit(o[2],90,84),true,'c');
+      line(69.5);
       // ---- outlet code + pallet
-      txt(5,95,code,fit(code,56,25),true);
-      txt(95,95,'PALET '+c[2]+'/'+o[4],15,true,'r');
-      var nm=asc(o[0]);if(nm.length>44)nm=nm.slice(0,43)+'.';txt(5,101,nm,8.5,false);
-      txt(95,101,'KARTON '+c[1]+'/'+o[3],8.5,true,'r');
-      line(104);
+      txt(5,78,code,fit(code,56,24),true);
+      txt(95,78,'PALET '+c[2]+'/'+o[4],15,true,'r');
+      var nm=asc(o[0]);if(nm.length>44)nm=nm.slice(0,43)+'.';txt(5,83,nm,8,false);
+      txt(95,83,'KARTON '+c[1]+'/'+o[3],8,true,'r');
+      line(85.5);
+      // ---- what is inside: art-colour, pcs and sizes (Tze 18 Nov 2026: "Can the label include the art-col details?")
+      var ar=c[7]||[],na=ar.length,show=na>3?2:na,f=na===1?[17,9.5,95,5.2]:na===2?[14,8.5,92.5,4.3]:[11.5,7.5,90.8,3.3],pitch=na===2?10:7.3,k;
+      for(k=0;k<show;k++){var a=ar[k],yy=f[2]+k*pitch,sz=asc(a[2]);
+        txt(5,yy,a[0],f[0],true);txt(95,yy,a[1]+' pcs',f[0]*.85,true,'r');
+        while(tw(sz,f[1],true)>90*MM&&sz.indexOf(' ')>0)sz=sz.slice(0,sz.lastIndexOf(' '));
+        txt(5,yy+f[3],sz,f[1],false);}
+      if(na>3){var rest=0;for(k=2;k<na;k++)rest+=ar[k][1];txt(5,f[2]+2*pitch+1.5,'+ '+(na-2)+' kod lain, '+rest+' pcs (campur)',10,true);}
+      line(111);
       // ---- IC: big last 6 digits (match with the writing on the box) + count pallet / carton no.
-      txt(5,110,'IC',9,true);txt(5,122,s6(ic),46,true);
-      var pk=asc(pkl(c[4]));txt(95,110,'PALET KIRA',7,false,'r');txt(95,116.5,pk.length>12?pk.slice(0,12):pk,fit(pk.slice(0,12),30,15),true,'r');
-      if(c[5])txt(95,122,'CTN '+c[5],12,true,'r');
+      txt(5,115.5,'IC',8,true);txt(5,126.5,s6(ic),40,true);
+      var pk=asc(pkl(c[4])).slice(0,12);txt(95,115,'PALET KIRA',6.5,false,'r');txt(95,120.8,pk,fit(pk,30,14),true,'r');
+      if(c[5])txt(95,126,'CTN '+c[5],11,true,'r');
       // ---- Code128 of the full IC no.
       var bars=c128('IC-'+ic),tot=0,i;for(i=0;i<bars.length;i++)tot+=+bars[i];
       var bx=6,bwmm=88,q=10,mod=bwmm/(tot+2*q),x=bx+q*mod;s.push('0 g');
-      for(i=0;i<bars.length;i++){var wd=+bars[i]*mod;if(i%2===0)s.push(X(x)+' '+Y(141)+' '+n2(wd*MM)+' '+n2(16*MM)+' re f');x+=wd;}
-      txt(50,145,'IC-'+ic,9,true,'c');
-      txt(5,148.6,c[3]+' pcs  '+c[6],6.5,false);
-      txt(95,148.6,bid+'  '+(idx+1)+'/'+ics.length+'  BM27 '+D.plan,6.5,false,'r');
+      for(i=0;i<bars.length;i++){var wd=+bars[i]*mod;if(i%2===0)s.push(X(x)+' '+Y(142.5)+' '+n2(wd*MM)+' '+n2(13.5*MM)+' re f');x+=wd;}
+      txt(50,146.2,'IC-'+ic,8.5,true,'c');
+      txt(5,149.2,c[3]+' pcs',6,false);
+      txt(95,149.2,bid+'  '+(idx+1)+'/'+ics.length+'  BM27 '+D.plan,6,false,'r');
       pages.push(s.join('\n'));
     });
     // ---- assemble
-    var out='%PDF-1.4\n',off=[],np=pages.length;
+    var out='%PDF-1.4\n',off=[],np=pages.length,p;
     function obj(n,body){off[n]=out.length;out+=n+' 0 obj\n'+body+'\nendobj\n';}
     obj(1,'<< /Type /Catalog /Pages 2 0 R >>');
-    var kids=[];for(var p=0;p<np;p++)kids.push((5+p*2)+' 0 R');
+    var kids=[];for(p=0;p<np;p++)kids.push((5+p*2)+' 0 R');
     obj(2,'<< /Type /Pages /Count '+np+' /Kids ['+kids.join(' ')+'] >>');
     obj(3,'<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>');
     obj(4,'<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>');
@@ -420,7 +448,7 @@ main{max-width:720px;margin:0 auto;padding:10px 12px 90px}
       obj(5+p*2,'<< /Type /Page /Parent 2 0 R /MediaBox [0 0 '+n2(W)+' '+n2(H)+'] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents '+(6+p*2)+' 0 R >>');
       obj(6+p*2,'<< /Length '+pages[p].length+' >>\nstream\n'+pages[p]+'\nendstream');}
     var xr=out.length,n=4+np*2;out+='xref\n0 '+(n+1)+'\n0000000000 65535 f \n';
-    for(var k=1;k<=n;k++)out+=('0000000000'+off[k]).slice(-10)+' 00000 n \n';
+    for(var kk=1;kk<=n;kk++)out+=('0000000000'+off[kk]).slice(-10)+' 00000 n \n';
     out+='trailer\n<< /Size '+(n+1)+' /Root 1 0 R >>\nstartxref\n'+xr+'\n%%EOF\n';
     return new Blob([out],{type:'application/pdf'});
   }
