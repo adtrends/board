@@ -78,15 +78,15 @@ h2{font-size:15px;margin:4px 0 6px}
     var x=info(it);
     if(!x)flash(it+' TIADA dalam senarai - asingkan, HQ semak','#fde8e6','#b42318');
     else if(x[4])flash(it+' REJECT - JANGAN suap, asingkan','#111','#fff');
-    else if(x[3]==='Completed')flash(it+' sudah diterima dlm iDCP - asingkan, HQ semak','#fff1dc','#a85a00');
+    else if(x[3]==='Completed')flash(it+' sudah diterima dlm iDCP - OK, suap bersama','#e7f6ec','#1a7f37');
     else flash(it+' OK - '+x[0]+' - '+x[1]+' pcs','#e5f5ec','#127a3e');
   }
-  function feedable(it){var x=info(it);return x&&!x[4]&&x[3]!=='Completed';}
+  function feedable(it){var x=info(it);return x&&!x[4];}   /* Tze 25 Nov: received (Completed) ITs are still sorted - feed them */
   function report(){
     var l=getL(),f=l.filter(feedable),o=l.filter(function(i){return !feedable(i);}),p=0;
     f.forEach(function(i){p+=info(i)[1];});
     var t='RETURN SORT '+f.length+' IT, '+p+' pcs\n'+f.join('\n');
-    if(o.length)t+='\nASING (jangan suap): '+o.map(function(i){var x=info(i);return i+(x?(x[4]?' REJECT':' DITERIMA'):' TIADA');}).join(', ');
+    if(o.length)t+='\nASING (jangan suap): '+o.map(function(i){var x=info(i);return i+(x?' REJECT':' TIADA');}).join(', ');
     return t;
   }
   function draw(){
@@ -100,7 +100,7 @@ h2{font-size:15px;margin:4px 0 6px}
       h+='<div class="card"><h2>Senarai ('+l.length+')</h2>';
       l.forEach(function(it){var x=info(it),tg='';
         if(!x)tg='<span class="tag unk">TIADA DALAM SENARAI</span>';
-        else{if(x[4])tg+='<span class="tag rej">REJECT - JANGAN SUAP</span> ';if(x[3]==='Completed')tg+='<span class="tag done">SUDAH DITERIMA</span>';}
+        else{if(x[4])tg+='<span class="tag rej">REJECT - JANGAN SUAP</span> ';if(x[3]==='Completed')tg+='<span class="tag done">SUDAH DITERIMA - suap</span>';}
         h+='<div class="it'+(feedable(it)?'':' r')+'"><div class="bd"><div class="no">'+esc(it)+'</div><div class="mute">'+(x?esc(x[0])+' &middot; '+esc(x[2])+' &rarr; '+esc(x[5]):'')+'</div>'+tg+'</div>'+
            '<div class="pc">'+(x?x[1]:'?')+'</div><button data-del="'+esc(it)+'" aria-label="Buang">&times;</button></div>';});
       h+='</div><div class="row"><button class="btn p" id="send">Hantar ke HQ</button></div>'+
